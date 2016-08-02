@@ -18,6 +18,12 @@ pub enum Token {
     EqBangEq,
     Carot,
     Eof,
+    LBrack,
+    RBrack,
+    LBrace,
+    RBrace,
+    Plus,
+    Minus,
     Error(String),
 }
 
@@ -40,6 +46,12 @@ impl<'a> Iterator for TokenIterator<'a> {
         let res = match self.0.next().unwrap() {
             ' ' | '\t' => return self.next(),
             '\n' => Token::Newline,
+            '[' => Token::LBrack,
+            ']' => Token::RBrack,
+            '{' => Token::LBrace,
+            '}' => Token::RBrace,
+            '+' => Token::Plus,
+            '-' => Token::Minus,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
@@ -59,7 +71,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 },
                 _ => Token::Slash
             },
-            x @ '0'...'9' | x @ '-' => {
+            x @ '0'...'9' => {
                 let mut buf = String::new();
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
@@ -133,7 +145,9 @@ pub enum Expr {
     Const(f64),
     Frac(Box<Expr>, Box<Expr>),
     Mul(Vec<Expr>),
-    Pow(Box<Expr>, f64),
+    Pow(Box<Expr>, Box<Expr>),
+    Neg(Box<Expr>),
+    Plus(Box<Expr>),
     Error(String),
 }
 
@@ -150,6 +164,8 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(name) => Expr::Unit(name),
         Token::Number(num) => Expr::Const(num),
+        Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
+        Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         x => Expr::Error(format!("Expected term, got {:?}", x))
     }
 }
@@ -160,10 +176,7 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
         Token::Carot => {
             iter.next();
             let right = parse_pow(iter);
-            match right {
-                Expr::Const(n) => Expr::Pow(Box::new(left), n),
-                x => Expr::Error(format!("NYI: Pow requires const, got {:?}", x)) //unimplemented!()
-            }
+            Expr::Pow(Box::new(left), Box::new(right))
         },
         _ => left
     }
@@ -249,6 +262,16 @@ pub fn parse(mut iter: &mut Iter) -> (HashMap<String, Rc<Def>>, Vec<(Expr, Strin
                         _ => Def::Error(format!("Malformed dimensionless unit"))
                     },
                     Token::ColonEq => Def::Unit(parse_expr(iter)),
+                    Token::LBrack => {
+                        // NYI
+                        loop {
+                            match iter.next().unwrap() {
+                                Token::RBrace => break,
+                                _ => ()
+                            }
+                        }
+                        Def::Error(format!("NYI: functions"))
+                    }
                     _ => {
                         parse_unknown(iter);
                         Def::Error(format!("Unknown definition"))
