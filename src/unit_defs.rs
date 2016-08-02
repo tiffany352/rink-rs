@@ -18,7 +18,7 @@ pub enum Token {
     EqBangEq,
     Carot,
     Eof,
-    Error,
+    Error(String),
 }
 
 #[derive(Clone)]
@@ -54,7 +54,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                         }
                     }
                     if self.0.peek() == None {
-                        return Some(Token::Error)
+                        return Some(Token::Error(format!("Expected `*/`, got EOF")))
                     }
                 },
                 _ => Token::Slash
@@ -64,45 +64,55 @@ impl<'a> Iterator for TokenIterator<'a> {
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
                     match c {
-                        '0'...'9' | 'e' | 'E' | '.' => buf.push(self.0.next().unwrap()),
+                        'e' | 'E' => {
+                            buf.push(self.0.next().unwrap());
+                            loop {
+                                match self.0.peek().cloned() {
+                                    Some('e') | Some('E') => self.0.next(),
+                                    _ => break
+                                };
+                            }
+                        },
+                        '0'...'9' | '.' | '-' | '+' => buf.push(self.0.next().unwrap()),
                         _ => break
                     }
                 }
-                FromStr::from_str(&*buf).map(|x| Token::Number(x)).unwrap_or(Token::Error)
+                FromStr::from_str(&*buf).map(|x| Token::Number(x))
+                    .unwrap_or(Token::Error(format!("Invalid number literal: `{}`", buf)))
             },
             ':' => match self.0.next() {
                 Some(':') => match self.0.next() {
                     Some('-') => Token::DColonDash,
-                    _ => Token::Error
+                    x => Token::Error(format!("Unexpected {:?}", x)),
                 },
                 Some('-') => Token::ColonDash,
                 Some('=') => Token::ColonEq,
-                _ => Token::Error
+                x => Token::Error(format!("Unexpected {:?}", x))
             },
             '|' => if let Some('|') = self.0.next() {
                 if let Some('|') = self.0.next() {
                     Token::TriplePipe
                 } else {
-                    Token::Error
+                    Token::Error(format!("Unknown symbol"))
                 }
             } else {
-                Token::Error
+                Token::Error(format!("Unknown symbol"))
             },
             '=' => if let Some('!') = self.0.next() {
                 if let Some('=') = self.0.next() {
                     Token::EqBangEq
                 } else {
-                    Token::Error
+                    Token::Error(format!("Unknown symbol"))
                 }
             } else {
-                Token::Error
+                Token::Error(format!("Unknown symbol"))
             },
             '^' => Token::Carot,
             x => {
                 let mut buf = String::new();
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
-                    if c.is_alphanumeric() {
+                    if c.is_alphanumeric() || c == '_' {
                         buf.push(self.0.next().unwrap());
                     } else {
                         break;
