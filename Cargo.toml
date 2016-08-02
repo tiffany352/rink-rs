@@ -1,0 +1,6 @@
+[package]
+name = "units-rs"
+version = "0.1.0"
+authors = ["Tiffany Bennett <tiffany@stormbit.net>"]
+
+[dependencies]
