@@ -8,6 +8,12 @@ subset of frink's features.
 
 `cargo install rink`
 
+You must then download
+[units.txt](https://raw.githubusercontent.com/tiffany352/rink-rs/master/units.txt)
+and install it in `~/.config/rink/units.txt` (Linux),
+`%APPDATA%\rink\units.txt` (Windows), or `~/Library/Application
+Support/rink/units.txt` (MacOS).
+
 ## Examples
 
 ```
@@ -35,7 +41,7 @@ The number of atoms in 12kg of lead:
 34877263650579153000000000 (dimensionless)
 ```
 
-## Usage
+## Library Usage
 
 Add this to your `Cargo.toml`:
 

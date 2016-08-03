@@ -10,7 +10,13 @@ fn main() {
     use rustyline::Editor;
 
     let mut rl = Editor::new();
-    let mut ctx = load();
+    let mut ctx = match load() {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            println!("{}", e);
+            return
+        }
+    };
     loop {
         let readline = rl.readline("> ");
         match readline {
@@ -34,7 +40,13 @@ fn main() {
 fn main() {
     use std::io::{stdin, stdout, Write};
 
-    let mut ctx = load();
+    let mut ctx = match load() {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            println!("{}", e);
+            return
+        }
+    };
     let f = stdin();
     let mut line = String::new();
     loop {
