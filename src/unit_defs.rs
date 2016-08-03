@@ -25,6 +25,7 @@ pub enum Token {
     RPar,
     Plus,
     Minus,
+    Asterisk,
     ImaginaryUnit,
     Error(String),
 }
@@ -56,6 +57,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             ')' => Token::RPar,
             '+' => Token::Plus,
             '-' => Token::Minus,
+            '*' => Token::Asterisk,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
@@ -75,7 +77,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 },
                 _ => Token::Slash
             },
-            x @ '0'...'9' => {
+            x @ '0'...'9' | x @ '.' => {
                 let mut buf = String::new();
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
@@ -229,6 +231,9 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
     loop { match *iter.peek().unwrap() {
         Token::Slash | Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment |
         Token::Eof => break,
+        Token::Asterisk => {
+            iter.next();
+        },
         _ => terms.push(parse_pow(iter))
     }}
     if terms.len() == 1 {
@@ -337,9 +342,16 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     Token::ColonEq => Def::Unit(parse_expr(iter)),
                     Token::LBrack => {
                         // NYI
+                        let mut n = 0;
+                        let mut first = true;
                         loop {
                             match iter.next().unwrap() {
-                                Token::RBrace => break,
+                                Token::LBrace => n += 1,
+                                Token::RBrace if n == 1 => break,
+                                Token::RBrace => n -= 1,
+                                Token::Newline | Token::Comment if !first && n == 0 => break,
+                                Token::Newline if first => first = false,
+                                Token::Eof => break,
                                 _ => ()
                             }
                         }
