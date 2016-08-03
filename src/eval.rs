@@ -102,6 +102,11 @@ impl Context {
     }
 
     pub fn lookup(&self, name: &str) -> Option<Value> {
+        for (i, ref k) in self.dimensions.iter().enumerate() {
+            if name == *k {
+                return Some(Value::new_unit(1.0, i))
+            }
+        }
         self.units.get(name).cloned().or_else(|| {
             if name.ends_with("s") {
                 if let Some(v) = self.lookup(&name[0..name.len()-1]) {
@@ -114,11 +119,6 @@ impl Context {
                         v.0 *= value;
                         return Some(v)
                     }
-                }
-            }
-            for (i, ref k) in self.dimensions.iter().enumerate() {
-                if name == *k {
-                    return Some(Value::new_unit(1.0, i))
                 }
             }
             None
