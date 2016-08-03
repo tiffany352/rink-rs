@@ -103,6 +103,11 @@ impl Context {
 
     pub fn lookup(&self, name: &str) -> Option<Value> {
         self.units.get(name).cloned().or_else(|| {
+            if name.ends_with("s") {
+                if let Some(v) = self.lookup(&name[0..name.len()-1]) {
+                    return Some(v)
+                }
+            }
             for &(ref pre, value) in &self.prefixes {
                 if name.starts_with(pre) {
                     if let Some(mut v) = self.lookup(&name[pre.len()..]) {
