@@ -6,6 +6,6 @@ description = "Unit conversion tool and library, similar to frink"
 homepage = "https://github.com/tiffany352/rink-rs"
 repository = "https://github.com/tiffany352/rink-rs"
 readme = "readme.md"
-keywords = ["unit", "units", "convert", "conversion", "math", "cli", "repl", "tool"]
+keywords = ["unit", "math", "conversion", "cli", "tool"]
 
 [dependencies]
