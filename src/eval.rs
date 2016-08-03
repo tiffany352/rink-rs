@@ -80,6 +80,18 @@ impl Value {
               .map(|(&k, &power)| (k, power * exp as i64))
               .collect::<Unit>())
     }
+
+    pub fn root(&self, exp: i32) -> Option<Value> {
+        let mut res = Unit::new();
+        for (&dim, &power) in &self.1 {
+            if power % exp as i64 != 0 {
+                return None
+            } else {
+                res.insert(dim, power / exp as i64);
+            }
+        }
+        Some(Value(self.0.powf(1.0 / exp as f64), res))
+    }
 }
 
 impl Context {
@@ -170,10 +182,12 @@ impl Context {
                 let exp = try!(self.eval(&**exp));
                 if exp.1.len() != 0 {
                     Err(format!("Exponent not dimensionless"))
-                } else if exp.0.trunc() != exp.0 {
-                    Err(format!("Exponent not integer"))
-                } else {
+                } else if exp.0.trunc() == exp.0 {
                     Ok(base.pow(exp.0 as i32))
+                } else if (1.0 / exp.0).trunc() == 1.0 / exp.0 {
+                    base.root((1.0 / exp.0) as i32).ok_or(format!("Unit roots must result in integer dimensions"))
+                } else {
+                    Err(format!("Exponent not integer"))
                 }
             },
             Expr::Error(ref e) => Err(e.clone()),
