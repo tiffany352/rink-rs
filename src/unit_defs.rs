@@ -21,6 +21,8 @@ pub enum Token {
     RBrack,
     LBrace,
     RBrace,
+    LPar,
+    RPar,
     Plus,
     Minus,
     Error(String),
@@ -49,6 +51,8 @@ impl<'a> Iterator for TokenIterator<'a> {
             ']' => Token::RBrack,
             '{' => Token::LBrace,
             '}' => Token::RBrace,
+            '(' => Token::LPar,
+            ')' => Token::RPar,
             '+' => Token::Plus,
             '-' => Token::Minus,
             '/' => match self.0.peek() {
@@ -171,6 +175,7 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         Token::Number(num) => Expr::Const(num),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
+        Token::LPar => parse_expr(iter),
         x => Expr::Error(format!("Expected term, got {:?}", x))
     }
 }
@@ -190,7 +195,8 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match *iter.peek().unwrap() {
-        Token::Slash | Token::TriplePipe | Token::Newline | Token::Comment | Token::Eof => break,
+        Token::Slash | Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment |
+        Token::Eof => break,
         _ => terms.push(parse_pow(iter))
     }}
     if terms.len() == 1 {
@@ -207,6 +213,10 @@ pub fn parse_expr(mut iter: &mut Iter) -> Expr {
         Token::Slash => {
             iter.next();
             terms.push(parse_mul(iter));
+        },
+        Token::RPar => {
+            iter.next();
+            break
         },
         Token::TriplePipe | Token::Newline | Token::Comment | Token::Eof | _ => break,
     } }
