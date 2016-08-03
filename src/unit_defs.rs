@@ -175,7 +175,7 @@ impl<'a> Iterator for TokenIterator<'a> {
 
 pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     Unit(String),
     Const(f64),
@@ -190,6 +190,8 @@ pub enum Expr {
 #[derive(Debug)]
 pub enum Def {
     Dimension(String),
+    Prefix(Expr),
+    SPrefix(Expr),
     Unit(Expr),
     Error(String),
 }
@@ -198,7 +200,6 @@ pub enum Def {
 pub struct Defs {
     pub defs: Vec<(String, Rc<Def>)>,
     pub aliases: Vec<(Expr, String)>,
-    pub prefixes: Vec<(String, f64)>,
 }
 
 fn parse_term(mut iter: &mut Iter) -> Expr {
@@ -293,7 +294,6 @@ fn parse_alias(mut iter: &mut Iter) -> Option<(Expr, String)> {
 pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
     let mut aliases = vec![];
-    let mut prefixes = vec![];
     loop {
         let mut copy = iter.clone();
         if let Some(a) = parse_alias(&mut copy) {
@@ -307,33 +307,13 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
             Token::Eof => break,
             Token::Ident(name) => {
                 let def = match iter.next().unwrap() {
-                    Token::ColonDash => match iter.next().unwrap() {
-                        Token::Number(n) => {
-                            prefixes.push((name, n));
-                            continue
-                        },
-                        Token::Ident(ref n) => {
-                            let mut found = None;
-                            for &(ref n2, value) in &prefixes {
-                                if n == n2 {
-                                    found = Some(value);
-                                    break;
-                                }
-                            }
-                            if let Some(found) = found {
-                                prefixes.push((name, found));
-                                continue
-                            }
-                            Def::Error(format!("No such prefix {}", n))
-                        },
-                        x => Def::Error(format!("Expected number, got {:?}", x))
+                    Token::ColonDash => {
+                        let expr = parse_expr(iter);
+                        Def::Prefix(expr)
                     },
-                    Token::DColonDash => match iter.next().unwrap() {
-                        Token::Number(n) => {
-                            prefixes.push((name.clone(), n));
-                            Def::Unit(Expr::Const(n))
-                        },
-                        x => Def::Error(format!("Expected number, got {:?}", x))
+                    Token::DColonDash => {
+                        let expr = parse_expr(iter);
+                        Def::SPrefix(expr)
                     },
                     Token::EqBangEq => match iter.next().unwrap() {
                         Token::Ident(val) => Def::Dimension(val),
@@ -371,7 +351,6 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
     Defs {
         defs: map,
         aliases: aliases,
-        prefixes: prefixes,
     }
 }
 

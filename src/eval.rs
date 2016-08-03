@@ -11,7 +11,7 @@ pub struct Context {
     dimensions: Vec<String>,
     units: HashMap<String, Value>,
     aliases: HashMap<Unit, String>,
-    prefixes: Vec<(String, f64)>,
+    prefixes: Vec<(String, Value)>,
 }
 
 impl Value {
@@ -143,11 +143,10 @@ impl Context {
                     return Some(v)
                 }
             }
-            for &(ref pre, value) in &self.prefixes {
+            for &(ref pre, ref value) in &self.prefixes {
                 if name.starts_with(pre) {
-                    if let Some(mut v) = self.lookup(&name[pre.len()..]) {
-                        v.0 *= value;
-                        return Some(v)
+                    if let Some(v) = self.lookup(&name[pre.len()..]) {
+                        return Some(v.mul(&value))
                     }
                 }
             }
@@ -201,8 +200,10 @@ impl Context {
             dimensions: Vec::new(),
             units: HashMap::new(),
             aliases: HashMap::new(),
-            prefixes: defs.prefixes,
+            prefixes: Vec::new(),
         };
+
+        ctx.prefixes.sort_by(|a, b| a.0.cmp(&b.0));
 
         for (name, def) in defs.defs {
             match *def {
@@ -214,6 +215,19 @@ impl Context {
                         ctx.units.insert(name.clone(), v);
                     },
                     Err(e) => println!("Unit {} is malformed: {}", name, e)
+                },
+                Def::Prefix(ref expr) => match ctx.eval(expr) {
+                    Ok(v) => {
+                        ctx.prefixes.push((name.clone(), v));
+                    },
+                    Err(e) => println!("Prefix {} is malformed: {}", name, e)
+                },
+                Def::SPrefix(ref expr) => match ctx.eval(expr) {
+                    Ok(v) => {
+                        ctx.prefixes.push((name.clone(), v.clone()));
+                        ctx.units.insert(name.clone(), v);
+                    },
+                    Err(e) => println!("Prefix {} is malformed: {}", name, e)
                 },
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
@@ -227,8 +241,6 @@ impl Context {
                 Err(e) => println!("Alias {}: {}", name, e)
             }
         }
-
-        ctx.prefixes.sort_by(|a, b| a.0.cmp(&b.0));
 
         ctx
     }
