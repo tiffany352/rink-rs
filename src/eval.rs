@@ -87,9 +87,27 @@ impl Context {
         use std::io::Write;
 
         let mut out = vec![];
+        let mut frac = vec![];
         write!(out, "{}", value.0).unwrap();
         for (&dim, &exp) in &value.1 {
-            write!(out, " {}^{}", self.dimensions[dim], exp).unwrap();
+            if exp < 0 {
+                frac.push((dim, exp));
+            } else {
+                write!(out, " {}", self.dimensions[dim]).unwrap();
+                if exp != 1 {
+                    write!(out, "^{}", exp).unwrap();
+                }
+            }
+        }
+        if frac.len() > 0 {
+            write!(out, " /").unwrap();
+            for (dim, exp) in frac {
+                let exp = -exp;
+                write!(out, " {}", self.dimensions[dim]).unwrap();
+                if exp != 1 {
+                    write!(out, "^{}", exp).unwrap();
+                }
+            }
         }
         if let Some(name) = self.aliases.get(&value.1) {
             write!(out, " ({})", name).unwrap();
