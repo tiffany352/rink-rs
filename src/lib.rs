@@ -18,7 +18,7 @@ pub fn load() -> Context {
 }
 
 pub fn one_line(ctx: &mut Context, line: &str) -> Result<Value, String> {
-    let mut iter = unit_defs::TokenIterator::new(&*line).peekable();
+    let mut iter = unit_defs::TokenIterator::new(line.trim()).peekable();
     let expr = unit_defs::parse_expr(&mut iter);
     ctx.eval(&expr)
 }

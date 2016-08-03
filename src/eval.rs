@@ -82,15 +82,22 @@ impl Value {
 }
 
 impl Context {
-    pub fn print(&self, value: &Value) {
-        print!("{}", value.0);
+    pub fn show(&self, value: &Value) -> String {
+        use std::io::Write;
+
+        let mut out = vec![];
+        write!(out, "{}", value.0).unwrap();
         for (&dim, &exp) in &value.1 {
-            print!(" {}^{}", self.dimensions[dim], exp);
+            write!(out, " {}^{}", self.dimensions[dim], exp).unwrap();
         }
         if let Some(name) = self.aliases.get(&value.1) {
-            print!(" ({})", name);
+            write!(out, " ({})", name).unwrap();
         }
-        println!("");
+        String::from_utf8(out).unwrap()
+    }
+
+    pub fn print(&self, value: &Value) {
+        println!("{}", self.show(value));
     }
 
     pub fn lookup(&self, name: &str) -> Option<Value> {

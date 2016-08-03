@@ -15,7 +15,7 @@ fn main() {
             Ok(_) => (),
             Err(_) => return
         };
-        match one_line(&mut ctx, line.trim()) {
+        match one_line(&mut ctx, &*line) {
             Ok(v) => ctx.print(&v),
             Err(e) => println!("{}", e)
         };
