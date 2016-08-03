@@ -47,7 +47,7 @@ rink = "0.1"
 and this to your crate root:
 
 ```rust
-extern crate num
+extern crate rink;
 ```
 
 ## License
