@@ -205,6 +205,8 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         Token::Number(num) => Expr::Const(num),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
+        // NYI: Imaginary numbers
+        Token::ImaginaryUnit => Expr::Const(0.0),
         Token::LPar => parse_expr(iter),
         x => Expr::Error(format!("Expected term, got {:?}", x))
     }
@@ -341,7 +343,8 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                                 _ => ()
                             }
                         }
-                        Def::Error(format!("NYI: functions"))
+                        continue
+                        //Def::Error(format!("NYI: functions"))
                     }
                     _ => {
                         parse_unknown(iter);
