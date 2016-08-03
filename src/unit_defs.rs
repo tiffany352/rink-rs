@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::str::Chars;
 use std::iter::Peekable;
 use std::str::FromStr;
@@ -160,6 +159,12 @@ pub enum Def {
     Error(String),
 }
 
+#[derive(Debug)]
+pub struct Defs {
+    pub defs: Vec<(String, Rc<Def>)>,
+    pub aliases: Vec<(Expr, String)>,
+}
+
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(name) => Expr::Unit(name),
@@ -194,7 +199,7 @@ fn parse_frac(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_expr(mut iter: &mut Iter) -> Expr {
+pub fn parse_expr(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![];
     loop {
         match *iter.peek().unwrap() {
@@ -239,8 +244,8 @@ fn parse_alias(mut iter: &mut Iter) -> Option<(Expr, String)> {
     Some((expr, name))
 }
 
-pub fn parse(mut iter: &mut Iter) -> (HashMap<String, Rc<Def>>, Vec<(Expr, String)>) {
-    let mut map = HashMap::new();
+pub fn parse(mut iter: &mut Iter) -> Defs {
+    let mut map = vec![];
     let mut aliases = vec![];
     loop {
         let mut copy = iter.clone();
@@ -277,12 +282,15 @@ pub fn parse(mut iter: &mut Iter) -> (HashMap<String, Rc<Def>>, Vec<(Expr, Strin
                         Def::Error(format!("Unknown definition"))
                     }
                 };
-                map.insert(name.clone(), Rc::new(def));
+                map.push((name.clone(), Rc::new(def)));
             },
             _ => parse_unknown(iter)
         };
     }
-    (map, aliases)
+    Defs {
+        defs: map,
+        aliases: aliases
+    }
 }
 
 pub fn tokens(mut iter: &mut Iter) -> Vec<Token> {
