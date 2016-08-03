@@ -223,6 +223,10 @@ fn parse_unknown(mut iter: &mut Iter) {
 }
 
 fn parse_alias(mut iter: &mut Iter) -> Option<(Expr, String)> {
+    match *iter.peek().unwrap() {
+        Token::Newline | Token::Comment | Token::Eof => return None,
+        _ => ()
+    }
     let expr = parse_expr(iter);
     match iter.next().unwrap() {
         Token::TriplePipe => (),
