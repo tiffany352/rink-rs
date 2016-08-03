@@ -26,6 +26,7 @@ pub enum Token {
     Plus,
     Minus,
     Asterisk,
+    DashArrow,
     ImaginaryUnit,
     Error(String),
 }
@@ -56,7 +57,13 @@ impl<'a> Iterator for TokenIterator<'a> {
             '(' => Token::LPar,
             ')' => Token::RPar,
             '+' => Token::Plus,
-            '-' => Token::Minus,
+            '-' => match self.0.peek().cloned().unwrap() {
+                '>' => {
+                    self.0.next();
+                    Token::DashArrow
+                },
+                _ => Token::Minus
+            },
             '*' => Token::Asterisk,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
@@ -190,6 +197,7 @@ pub enum Expr {
     Pow(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
     Plus(Box<Expr>),
+    Convert(Box<Expr>, Box<Expr>),
     Error(String),
 }
 
@@ -242,7 +250,7 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match *iter.peek().unwrap() {
-        Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) |
+        Token::DashArrow | Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) |
         Token::Eof => break,
         Token::Slash => {
             iter.next();
@@ -267,7 +275,15 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
 }
 
 pub fn parse_expr(mut iter: &mut Iter) -> Expr {
-    parse_mul(iter)
+    let left = parse_mul(iter);
+    match iter.peek().cloned().unwrap() {
+        Token::DashArrow => {
+            iter.next();
+            let right = parse_mul(iter);
+            Expr::Convert(Box::new(left), Box::new(right))
+        },
+        _ => left
+    }
 }
 
 fn parse_unknown(mut iter: &mut Iter) {

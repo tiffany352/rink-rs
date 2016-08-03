@@ -123,6 +123,8 @@ impl Context {
         }
         if let Some(name) = self.aliases.get(&value.1) {
             write!(out, " ({})", name).unwrap();
+        } else if value.1.len() == 1 {
+            write!(out, " ({})", self.dimensions[*value.1.iter().next().unwrap().0]).unwrap();
         }
         String::from_utf8(out).unwrap()
     }
@@ -154,6 +156,61 @@ impl Context {
         })
     }
 
+    pub fn describe_unit(&self, value: &Value) -> (bool, String) {
+        use std::io::Write;
+
+        let mut buf = vec![];
+        let mut recip = false;
+        if let Some(name) = self.aliases.get(&value.1) {
+            write!(buf, "{}", name).unwrap();
+        } else {
+            let mut frac = vec![];
+            let mut found = false;
+            for (&dim, &pow) in &value.1 {
+                if pow < 0 {
+                    frac.push((dim, -pow));
+                } else {
+                    found = true;
+                    let mut map = Unit::new();
+                    map.insert(dim, pow);
+                    if let Some(name) = self.aliases.get(&map) {
+                        write!(buf, " {}", name).unwrap();
+                    } else {
+                        let mut map = Unit::new();
+                        map.insert(dim, 1);
+                        write!(buf, " {}", self.aliases[&map]).unwrap();
+                        if pow != 1 {
+                            write!(buf, "^{}", pow).unwrap();
+                        }
+                    }
+                }
+            }
+            if frac.len() > 0 {
+                if !found {
+                    recip = true;
+                } else {
+                    write!(buf, " /").unwrap();
+                }
+                for (dim, pow) in frac {
+                    let mut map = Unit::new();
+                    map.insert(dim, pow);
+                    if let Some(name) = self.aliases.get(&map) {
+                        write!(buf, " {}", name).unwrap();
+                    } else {
+                        let mut map = Unit::new();
+                        map.insert(dim, 1);
+                        write!(buf, " {}", self.aliases[&map]).unwrap();
+                        if pow != 1 {
+                            write!(buf, "^{}", pow).unwrap();
+                        }
+                    }
+                }
+            }
+        }
+
+        (recip, String::from_utf8(buf).unwrap())
+    }
+
     pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
         use unit_defs::Expr;
 
@@ -167,6 +224,44 @@ impl Context {
             Expr::Plus(ref expr) => self.eval(&**expr),
             Expr::Frac(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
                 (Ok(top), Ok(bottom)) => Ok(top.mul(&bottom.invert())),
+                (Err(e), _) => Err(e),
+                (_, Err(e)) => Err(e),
+            },
+            Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
+                (Ok(top), Ok(bottom)) => {
+                    if top.1 != bottom.1 {
+                        use std::io::Write;
+
+                        let mut buf = vec![];
+                        let width = 12;
+                        writeln!(buf, "Conformance error").unwrap();
+                        let mut topu = top.clone();
+                        topu.0 = 1.0;
+                        let mut bottomu = bottom.clone();
+                        bottomu.0 = 1.0;
+                        writeln!(buf, "{:>width$}: {}", "Left side", self.show(&topu), width=width).unwrap();
+                        writeln!(buf, "{:>width$}: {}", "Right side", self.show(&bottomu), width=width).unwrap();
+                        let diff = topu.mul(&bottomu.invert());
+                        let (recip, desc) = self.describe_unit(&diff.invert());
+                        let word = match recip {
+                            false => "multiply",
+                            true => "divide"
+                        };
+                        writeln!(buf, "{:>width$}: {word} left side by {}", "Suggestion",
+                                 desc.trim(), width=width, word=word).unwrap();
+                        let (recip, desc) = self.describe_unit(&diff);
+                        let word = match recip {
+                            false => "multiply",
+                            true => "divide"
+                        };
+                        writeln!(buf, "{:>width$}  {word} right side by {}", "",
+                                 desc.trim(), width=width, word=word).unwrap();
+
+                        Err(String::from_utf8(buf).unwrap())
+                    } else {
+                        Ok(top.mul(&bottom.invert()))
+                    }
+                },
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
@@ -207,8 +302,12 @@ impl Context {
 
         for (name, def) in defs.defs {
             match *def {
-                Def::Dimension(ref name) => {
-                    ctx.dimensions.push(name.clone());
+                Def::Dimension(ref dname) => {
+                    let i = ctx.dimensions.len();
+                    ctx.dimensions.push(dname.clone());
+                    let mut map = Unit::new();
+                    map.insert(i, 1);
+                    ctx.aliases.insert(map, name.clone());
                 },
                 Def::Unit(ref expr) => match ctx.eval(expr) {
                     Ok(v) => {
