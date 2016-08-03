@@ -11,6 +11,7 @@ pub struct Context {
     dimensions: Vec<String>,
     units: HashMap<String, Value>,
     aliases: HashMap<Unit, String>,
+    prefixes: Vec<(String, f64)>,
 }
 
 impl Value {
@@ -102,6 +103,14 @@ impl Context {
 
     pub fn lookup(&self, name: &str) -> Option<Value> {
         self.units.get(name).cloned().or_else(|| {
+            for &(ref pre, value) in &self.prefixes {
+                if name.starts_with(pre) {
+                    if let Some(mut v) = self.lookup(&name[pre.len()..]) {
+                        v.0 *= value;
+                        return Some(v)
+                    }
+                }
+            }
             for (i, ref k) in self.dimensions.iter().enumerate() {
                 if name == *k {
                     return Some(Value::new_unit(1.0, i))
@@ -155,6 +164,7 @@ impl Context {
             dimensions: Vec::new(),
             units: HashMap::new(),
             aliases: HashMap::new(),
+            prefixes: defs.prefixes,
         };
 
         for (name, def) in defs.defs {
@@ -169,7 +179,6 @@ impl Context {
                     Err(e) => println!("Unit {} is malformed: {}", name, e)
                 },
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
-                _ => ()
             };
         }
 
@@ -181,6 +190,8 @@ impl Context {
                 Err(e) => println!("Alias {}: {}", name, e)
             }
         }
+
+        ctx.prefixes.sort_by(|a, b| a.0.cmp(&b.0));
 
         ctx
     }
