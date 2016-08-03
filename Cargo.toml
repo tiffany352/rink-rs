@@ -9,4 +9,8 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["unit", "math", "conversion", "cli", "tool"]
 
+[features]
+default = ["rustyline"]
+
 [dependencies]
+rustyline = { version = "0.2.3", optional = true }
