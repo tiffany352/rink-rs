@@ -6,7 +6,7 @@ use std::rc::Rc;
 #[derive(Debug, Clone)]
 pub enum Token {
     Newline,
-    Comment,
+    Comment(usize),
     Ident(String),
     Number(f64),
     Slash,
@@ -61,18 +61,24 @@ impl<'a> Iterator for TokenIterator<'a> {
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
-                        Some('\n') => return Some(Token::Comment),
+                        Some('\n') => return Some(Token::Comment(1)),
                         _ => ()
                     }
                 },
-                Some(&'*') => loop {
-                    if let Some('*') = self.0.next() {
-                        if let Some(&'/') = self.0.peek() {
-                            return Some(Token::Comment)
+                Some(&'*') => {
+                    let mut lines = 0;
+                    loop {
+                        if let Some(&'\n') = self.0.peek() {
+                            lines += 1;
                         }
-                    }
-                    if self.0.peek() == None {
-                        return Some(Token::Error(format!("Expected `*/`, got EOF")))
+                        if let Some('*') = self.0.next() {
+                            if let Some(&'/') = self.0.peek() {
+                                return Some(Token::Comment(lines))
+                            }
+                        }
+                        if self.0.peek() == None {
+                            return Some(Token::Error(format!("Expected `*/`, got EOF")))
+                        }
                     }
                 },
                 _ => Token::Slash
@@ -210,7 +216,13 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         // NYI: Imaginary numbers
         Token::ImaginaryUnit => Expr::Const(0.0),
-        Token::LPar => parse_expr(iter),
+        Token::LPar => {
+            let res = parse_expr(iter);
+            match iter.next().unwrap() {
+                Token::RPar => res,
+                x => Expr::Error(format!("Expected ), got {:?}", x))
+            }
+        },
         x => Expr::Error(format!("Expected term, got {:?}", x))
     }
 }
@@ -230,7 +242,7 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match *iter.peek().unwrap() {
-        Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment |
+        Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) |
         Token::Eof => break,
         Token::Slash => {
             iter.next();
@@ -260,16 +272,16 @@ pub fn parse_expr(mut iter: &mut Iter) -> Expr {
 
 fn parse_unknown(mut iter: &mut Iter) {
     loop {
-        match iter.next().unwrap() {
-            Token::Newline | Token::Comment | Token::Eof => break,
-            _ => ()
-        }
+        match iter.peek().cloned().unwrap() {
+            Token::Newline | Token::Comment(_) | Token::Eof => break,
+            _ => iter.next()
+        };
     }
 }
 
 fn parse_alias(mut iter: &mut Iter) -> Option<(Expr, String)> {
     match *iter.peek().unwrap() {
-        Token::Newline | Token::Comment | Token::Eof => return None,
+        Token::Newline | Token::Comment(_) | Token::Eof => return None,
         _ => ()
     }
     let expr = parse_expr(iter);
@@ -281,8 +293,8 @@ fn parse_alias(mut iter: &mut Iter) -> Option<(Expr, String)> {
         Token::Ident(name) => name,
         _ => return None
     };
-    match iter.next().unwrap() {
-        Token::Newline | Token::Comment | Token::Eof => (),
+    match iter.peek().cloned().unwrap() {
+        Token::Newline | Token::Comment(_) | Token::Eof => (),
         _ => return None
     };
     Some((expr, name))
@@ -291,6 +303,7 @@ fn parse_alias(mut iter: &mut Iter) -> Option<(Expr, String)> {
 pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
     let mut aliases = vec![];
+    let mut line = 1;
     loop {
         let mut copy = iter.clone();
         if let Some(a) = parse_alias(&mut copy) {
@@ -299,8 +312,8 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
             continue
         }
         match iter.next().unwrap() {
-            Token::Newline => continue,
-            Token::Comment => continue,
+            Token::Newline => line += 1,
+            Token::Comment(lines) => line += lines,
             Token::Eof => break,
             Token::Ident(name) => {
                 let def = match iter.next().unwrap() {
@@ -314,7 +327,7 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     },
                     Token::EqBangEq => match iter.next().unwrap() {
                         Token::Ident(val) => Def::Dimension(val),
-                        _ => Def::Error(format!("Malformed dimensionless unit"))
+                        _ => Def::Error(format!("Line {}: Malformed dimensionless unit", line))
                     },
                     Token::ColonEq => Def::Unit(parse_expr(iter)),
                     Token::LBrack => {
@@ -322,22 +335,27 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                         let mut n = 0;
                         let mut first = true;
                         loop {
-                            match iter.next().unwrap() {
+                            match iter.peek().cloned().unwrap() {
                                 Token::LBrace => n += 1,
-                                Token::RBrace if n == 1 => break,
+                                Token::RBrace if n == 1 => {
+                                    iter.next();
+                                    break
+                                },
                                 Token::RBrace => n -= 1,
-                                Token::Newline | Token::Comment if !first && n == 0 => break,
+                                Token::Newline | Token::Comment(_) if !first && n == 0 => break,
                                 Token::Newline if first => first = false,
                                 Token::Eof => break,
+                                Token::Comment(lines) => line += lines,
                                 _ => ()
                             }
+                            iter.next();
                         }
                         continue
                         //Def::Error(format!("NYI: functions"))
                     }
                     _ => {
                         parse_unknown(iter);
-                        Def::Error(format!("Unknown definition"))
+                        Def::Error(format!("Line {}: Unknown definition", line))
                     }
                 };
                 map.push((name.clone(), Rc::new(def)));
