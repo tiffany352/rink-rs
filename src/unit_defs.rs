@@ -25,6 +25,7 @@ pub enum Token {
     RPar,
     Plus,
     Minus,
+    ImaginaryUnit,
     Error(String),
 }
 
@@ -143,6 +144,15 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 },
                 _ => Token::Error(format!("Unexpected \\"))
+            },
+            '<' => {
+                let mut string = "<IMAGINARY_UNIT>>".chars();
+                while self.0.next() == string.next() {}
+                if string.next() == None {
+                    Token::ImaginaryUnit
+                } else {
+                    Token::Error(format!("Unexpected <"))
+                }
             },
             x => {
                 let mut buf = String::new();
