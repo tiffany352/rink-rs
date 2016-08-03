@@ -1,6 +1,6 @@
-extern crate units_rs;
+extern crate rink;
 
-use units_rs::*;
+use rink::*;
 
 fn main() {
     use std::io::Read;
