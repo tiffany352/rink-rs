@@ -187,35 +187,30 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_frac(mut iter: &mut Iter) -> Expr {
-    let left = parse_pow(iter);
-    match *iter.peek().unwrap() {
-        Token::Slash => {
-            iter.next();
-            let right = parse_frac(iter);
-            Expr::Frac(Box::new(left), Box::new(right))
-        },
-        _ => left
-    }
-}
-
-pub fn parse_expr(mut iter: &mut Iter) -> Expr {
-    let mut terms = vec![];
-    loop {
-        match *iter.peek().unwrap() {
-            Token::TriplePipe => break,
-            Token::Newline | Token::Comment | Token::Eof => {
-                iter.next();
-                break
-            },
-            _ => terms.push(parse_frac(iter))
-        }
-    }
+fn parse_mul(mut iter: &mut Iter) -> Expr {
+    let mut terms = vec![parse_pow(iter)];
+    loop { match *iter.peek().unwrap() {
+        Token::Slash | Token::TriplePipe | Token::Newline | Token::Comment | Token::Eof => break,
+        _ => terms.push(parse_pow(iter))
+    }}
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
         Expr::Mul(terms)
     }
+}
+
+pub fn parse_expr(mut iter: &mut Iter) -> Expr {
+    let left = parse_mul(iter);
+    let mut terms = vec![];
+    loop { match *iter.peek().unwrap() {
+        Token::Slash => {
+            iter.next();
+            terms.push(parse_mul(iter));
+        },
+        Token::TriplePipe | Token::Newline | Token::Comment | Token::Eof | _ => break,
+    } }
+    terms.into_iter().fold(left, |a, b| Expr::Frac(Box::new(a), Box::new(b)))
 }
 
 fn parse_unknown(mut iter: &mut Iter) {
