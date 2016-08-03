@@ -152,6 +152,11 @@ impl Context {
                     }
                 }
             }
+            for (unit, alias) in &self.aliases {
+                if name == alias {
+                    return Some(Value(1.0, unit.clone()))
+                }
+            }
             None
         })
     }
