@@ -9,6 +9,7 @@ fn main() {
     use rink::*;
 
     let mut ctx = load().unwrap();
+    ctx.short_output = true;
     let server = IrcServer::new("config.json").unwrap();
     server.identify().unwrap();
     let mut prefix = server.config().nickname.clone().unwrap();

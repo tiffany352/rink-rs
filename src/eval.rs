@@ -12,6 +12,7 @@ pub struct Context {
     units: HashMap<String, Value>,
     aliases: HashMap<Unit, String>,
     prefixes: Vec<(String, Value)>,
+    pub short_output: bool,
 }
 
 impl Value {
@@ -256,13 +257,21 @@ impl Context {
 
                         let mut buf = vec![];
                         let width = 12;
-                        writeln!(buf, "Conformance error").unwrap();
                         let mut topu = top.clone();
                         topu.0 = 1.0;
                         let mut bottomu = bottom.clone();
                         bottomu.0 = 1.0;
-                        writeln!(buf, "{:>width$}: {}", "Left side", self.show(&topu), width=width).unwrap();
-                        writeln!(buf, "{:>width$}: {}", "Right side", self.show(&bottomu), width=width).unwrap();
+                        let left = self.show(&topu);
+                        let right = self.show(&bottomu);
+                        if self.short_output {
+                            writeln!(buf, "Conformance error [ {left} || {right} ]",
+                                     left=left, right=right).unwrap();
+                        } else {
+                            writeln!(buf, concat!("Conformance error\n",
+                                                  "{:>width$}: {left}\n",
+                                                  "{:>width$}: {right}"),
+                                     "Left side", "Right side", left=left, right=right, width=width).unwrap();
+                        }
                         let diff = topu.mul(&bottomu.invert());
                         let (recip, desc) = self.describe_unit(&diff.invert());
                         let word = match recip {
@@ -318,6 +327,7 @@ impl Context {
             units: HashMap::new(),
             aliases: HashMap::new(),
             prefixes: Vec::new(),
+            short_output: false,
         };
 
         ctx.prefixes.sort_by(|a, b| a.0.cmp(&b.0));
