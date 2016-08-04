@@ -12,12 +12,18 @@ fn main() {
     ctx.short_output = true;
     let server = IrcServer::new("config.json").unwrap();
     server.identify().unwrap();
-    let mut prefix = server.config().nickname.clone().unwrap();
+    let nick = server.config().nickname.clone().unwrap();
+    let mut prefix = nick.clone();
     prefix.push(':');
     for message in server.iter() {
-        if let Ok(Message { command: Command::PRIVMSG(chan, message), ..}) = message {
-            if message.starts_with(&*prefix) {
-                let line = message[prefix.len()..].trim();
+        if let Ok(Message { command: Command::PRIVMSG(ref chan, ref message_str), ..}) = message {
+            if message_str.starts_with(&*prefix) {
+                let reply_to = if &*chan == &*nick {
+                    message.as_ref().unwrap().source_nickname().unwrap()
+                } else {
+                    &*chan
+                };
+                let line = message_str[prefix.len()..].trim();
                 let reply = match one_line(&mut ctx, line) {
                     Ok(v) => ctx.show(&v),
                     Err(e) => e
@@ -25,7 +31,7 @@ fn main() {
                 let mut i = 0;
                 for line in reply.lines() {
                     if line.trim().len() > 0 {
-                        server.send(Command::NOTICE(chan.clone(), line.to_owned())).unwrap();
+                        server.send(Command::NOTICE(reply_to.to_owned(), line.to_owned())).unwrap();
                         i += 1;
                     }
                     // cut off early
