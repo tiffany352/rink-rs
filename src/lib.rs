@@ -1,3 +1,31 @@
+/*! The primary interface of this library is meant to expose a very
+simple command-reply model for frontends, and to allow gradual
+addition of more advanced functionality. For now, only basic
+functionality exists.
+
+Using Rink as a library for uses other than simple unit conversion
+tools is not currently well supported, and if you wish to do so,
+please make issues for any problems you have.
+
+There are currently a number of hardcoded `println!`s and `unwrap()`s
+because most of this code was written in a day without much thought
+towards making it into a library.
+
+For basic flow of the library, the `bins/` directory has a few
+examples. The REPL is very simple, and the IRC bot shows how Rink can
+work in a multi-user environment without sessions or meaningful
+stdin/stdout.
+
+## Example
+
+```rust
+use rink::*;
+
+let mut ctx = load().unwrap();
+println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
+```
+*/
+
 pub mod unit_defs;
 pub mod eval;
 
@@ -41,6 +69,7 @@ fn config_dir() -> Result<PathBuf, String> {
         .map(|mut x: PathBuf| { x.push("Library/Application Support"); x})
 }
 
+/// Creates a context by searching standard directories for units.txt.
 pub fn load() -> Result<Context, String> {
     use std::io::Read;
     use std::fs::File;
@@ -72,6 +101,7 @@ pub fn load() -> Result<Context, String> {
     Ok(eval::Context::new(res))
 }
 
+/// Evaluates a single line within a context.
 pub fn one_line(ctx: &mut Context, line: &str) -> Result<Value, String> {
     let mut iter = unit_defs::TokenIterator::new(line.trim()).peekable();
     let expr = unit_defs::parse_expr(&mut iter);

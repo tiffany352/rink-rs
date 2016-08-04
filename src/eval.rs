@@ -1,12 +1,16 @@
 use std::collections::HashMap;
 use std::collections::BTreeMap;
 
+/// A simple alias to add semantic meaning for when we pass around dimension IDs.
 pub type Dim = usize;
+/// Alias for the primary representation of dimensionality.
 pub type Unit = BTreeMap<Dim, i64>;
 
+/// The basic representation of a number with a unit.
 #[derive(Clone)]
 pub struct Value(f64, Unit);
 
+/// The evaluation context that contains unit definitions.
 pub struct Context {
     dimensions: Vec<String>,
     units: HashMap<String, Value>,
@@ -16,16 +20,19 @@ pub struct Context {
 }
 
 impl Value {
+    /// Creates a dimensionless value.
     pub fn new(num: f64) -> Value {
         Value(num, Unit::new())
     }
 
+    /// Creates a value with a single dimension.
     pub fn new_unit(num: f64, unit: Dim) -> Value {
         let mut map = Unit::new();
         map.insert(unit, 1);
         Value(num, map)
     }
 
+    /// Computes the reciprocal (1/x) of the value.
     pub fn invert(&self) -> Value {
         Value(1.0 / self.0,
               self.1.iter()
@@ -33,6 +40,7 @@ impl Value {
               .collect::<Unit>())
     }
 
+    /// Adds two values. They must have matching units.
     pub fn add(&self, other: &Value) -> Option<Value> {
         if self.1 != other.1 {
             return None
@@ -40,6 +48,7 @@ impl Value {
         Some(Value(self.0 + other.0, self.1.clone()))
     }
 
+    /// Multiplies two values, also multiplying their units.
     pub fn mul(&self, other: &Value) -> Value {
         let mut val = Unit::new();
         let mut a = self.1.iter().peekable();
@@ -82,6 +91,7 @@ impl Value {
         Value(self.0 * other.0, val)
     }
 
+    /// Raises a value to a dimensionless integer power.
     pub fn pow(&self, exp: i32) -> Value {
         Value(self.0.powi(exp),
               self.1.iter()
@@ -89,6 +99,8 @@ impl Value {
               .collect::<Unit>())
     }
 
+    /// Computes the nth root of a value iff all of its units have
+    /// powers divisible by n.
     pub fn root(&self, exp: i32) -> Option<Value> {
         let mut res = Unit::new();
         for (&dim, &power) in &self.1 {
@@ -103,6 +115,9 @@ impl Value {
 }
 
 impl Context {
+    /// Provides a string representation of a Value. We can't impl
+    /// Display because it requires access to the Context for the unit
+    /// names.
     pub fn show(&self, value: &Value) -> String {
         use std::io::Write;
 
@@ -137,10 +152,13 @@ impl Context {
         String::from_utf8(out).unwrap()
     }
 
+    /// Wrapper around show that calls `println!`.
     pub fn print(&self, value: &Value) {
         println!("{}", self.show(value));
     }
 
+    /// Given a unit name, returns its value if it exists. Supports SI
+    /// prefixes, plurals, bare dimensions like length, and aliases.
     pub fn lookup(&self, name: &str) -> Option<Value> {
         for (i, ref k) in self.dimensions.iter().enumerate() {
             if name == *k {
@@ -169,6 +187,9 @@ impl Context {
         })
     }
 
+    /// Describes a value's unit, gives true if the unit is reciprocal
+    /// (e.g. you should prefix "1.0 / " or replace "multiply" with
+    /// "divide" when rendering it).
     pub fn describe_unit(&self, value: &Value) -> (bool, String) {
         use std::io::Write;
 
@@ -224,6 +245,8 @@ impl Context {
         (recip, String::from_utf8(buf).unwrap())
     }
 
+    /// Evaluates an expression to compute its value, including `->`
+    /// conversions.
     pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
         use unit_defs::Expr;
 
@@ -319,6 +342,8 @@ impl Context {
         }
     }
 
+    /// Takes a parsed units.txt from `unit_defs::parse()`. Prints if
+    /// there are errors in the file.
     pub fn new(defs: ::unit_defs::Defs) -> Context {
         use unit_defs::Def;
 
