@@ -195,6 +195,7 @@ pub enum Expr {
     Frac(Box<Expr>, Box<Expr>),
     Mul(Vec<Expr>),
     Pow(Box<Expr>, Box<Expr>),
+    Add(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
     Plus(Box<Expr>),
     Convert(Box<Expr>, Box<Expr>),
@@ -250,8 +251,8 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match *iter.peek().unwrap() {
-        Token::DashArrow | Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) |
-        Token::Eof => break,
+        Token::Plus | Token::DashArrow | Token::TriplePipe | Token::RPar | Token::Newline |
+        Token::Comment(_) | Token::Eof => break,
         Token::Slash => {
             iter.next();
             let right = parse_pow(iter);
@@ -274,12 +275,24 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
     }
 }
 
-pub fn parse_expr(mut iter: &mut Iter) -> Expr {
+fn parse_add(mut iter: &mut Iter) -> Expr {
     let left = parse_mul(iter);
+    match *iter.peek().unwrap() {
+        Token::Plus => {
+            iter.next();
+            let right = parse_add(iter);
+            Expr::Add(Box::new(left), Box::new(right))
+        },
+        _ => left
+    }
+}
+
+pub fn parse_expr(mut iter: &mut Iter) -> Expr {
+    let left = parse_add(iter);
     match iter.peek().cloned().unwrap() {
         Token::DashArrow => {
             iter.next();
-            let right = parse_mul(iter);
+            let right = parse_add(iter);
             Expr::Convert(Box::new(left), Box::new(right))
         },
         _ => left

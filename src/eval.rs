@@ -32,6 +32,13 @@ impl Value {
               .collect::<Unit>())
     }
 
+    pub fn add(&self, other: &Value) -> Option<Value> {
+        if self.1 != other.1 {
+            return None
+        }
+        Some(Value(self.0 + other.0, self.1.clone()))
+    }
+
     pub fn mul(&self, other: &Value) -> Value {
         let mut val = Unit::new();
         let mut a = self.1.iter().peekable();
@@ -229,6 +236,16 @@ impl Context {
             Expr::Plus(ref expr) => self.eval(&**expr),
             Expr::Frac(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
                 (Ok(top), Ok(bottom)) => Ok(top.mul(&bottom.invert())),
+                (Err(e), _) => Err(e),
+                (_, Err(e)) => Err(e),
+            },
+            Expr::Add(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
+                (Ok(top), Ok(bottom)) => {
+                    top.add(&bottom).ok_or_else(|| {
+                        format!("Add of values with differing units is not meaningful: {} + {}",
+                                    self.show(&top), self.show(&bottom))
+                    })
+                },
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
