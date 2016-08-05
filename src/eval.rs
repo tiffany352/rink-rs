@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 use std::collections::BTreeMap;
+use gmp::mpz::Mpz;
+use gmp::mpq::Mpq;
 
+/// Number type
+pub type Num = Mpq;
 /// A simple alias to add semantic meaning for when we pass around dimension IDs.
 pub type Dim = usize;
 /// Alias for the primary representation of dimensionality.
@@ -8,7 +12,7 @@ pub type Unit = BTreeMap<Dim, i64>;
 
 /// The basic representation of a number with a unit.
 #[derive(Clone)]
-pub struct Value(f64, Unit);
+pub struct Value(Num, Unit);
 
 /// The evaluation context that contains unit definitions.
 pub struct Context {
@@ -19,14 +23,42 @@ pub struct Context {
     pub short_output: bool,
 }
 
+fn one() -> Mpq {
+    Mpq::one()
+}
+
+fn zero() -> Mpq {
+    Mpq::zero()
+}
+
+fn pow(left: &Mpq, exp: i32) -> Mpq {
+    if exp < 0 {
+        one() / pow(left, -exp)
+    } else {
+        let num = left.get_num().pow(exp as u32);
+        let den = left.get_den().pow(exp as u32);
+        Mpq::new(&num, &den)
+    }
+}
+
+fn root(left: &Mpq, n: i32) -> Mpq {
+    if n < 0 {
+        one() / root(left, -n)
+    } else {
+        let num = left.get_num().root(n as u32);
+        let den = left.get_den().root(n as u32);
+        Mpq::new(&num, &den)
+    }
+}
+
 impl Value {
     /// Creates a dimensionless value.
-    pub fn new(num: f64) -> Value {
+    pub fn new(num: Num) -> Value {
         Value(num, Unit::new())
     }
 
     /// Creates a value with a single dimension.
-    pub fn new_unit(num: f64, unit: Dim) -> Value {
+    pub fn new_unit(num: Num, unit: Dim) -> Value {
         let mut map = Unit::new();
         map.insert(unit, 1);
         Value(num, map)
@@ -34,7 +66,7 @@ impl Value {
 
     /// Computes the reciprocal (1/x) of the value.
     pub fn invert(&self) -> Value {
-        Value(1.0 / self.0,
+        Value(&one() / &self.0,
               self.1.iter()
               .map(|(&k, &power)| (k, -power))
               .collect::<Unit>())
@@ -45,7 +77,7 @@ impl Value {
         if self.1 != other.1 {
             return None
         }
-        Some(Value(self.0 + other.0, self.1.clone()))
+        Some(Value(&self.0 + &other.0, self.1.clone()))
     }
 
     /// Multiplies two values, also multiplying their units.
@@ -88,15 +120,15 @@ impl Value {
                 (None, None) => break
             }
         }
-        Value(self.0 * other.0, val)
+        Value(&self.0 * &other.0, val)
     }
 
     /// Raises a value to a dimensionless integer power.
     pub fn pow(&self, exp: i32) -> Value {
-        Value(self.0.powi(exp),
-              self.1.iter()
-              .map(|(&k, &power)| (k, power * exp as i64))
-              .collect::<Unit>())
+        let unit = self.1.iter()
+            .map(|(&k, &power)| (k, power * exp as i64))
+            .collect::<Unit>();
+        Value(pow(&self.0, exp), unit)
     }
 
     /// Computes the nth root of a value iff all of its units have
@@ -110,7 +142,7 @@ impl Value {
                 res.insert(dim, power / exp as i64);
             }
         }
-        Some(Value(self.0.powf(1.0 / exp as f64), res))
+        Some(Value(root(&self.0, exp), res))
     }
 }
 
@@ -123,7 +155,9 @@ impl Context {
 
         let mut out = vec![];
         let mut frac = vec![];
-        write!(out, "{}", value.0).unwrap();
+        let mut value = value.clone();
+        value.0.canonicalize();
+        write!(out, "{:?}", value.0).unwrap();
         for (&dim, &exp) in &value.1 {
             if exp < 0 {
                 frac.push((dim, exp));
@@ -144,10 +178,20 @@ impl Context {
                 }
             }
         }
+        let approx = if value.0.get_den() == Mpz::one() {
+            format!("")
+        } else {
+            let tene15 = Mpz::from(10).pow(15);
+            let v = &(&value.0.get_num() * &tene15) / &value.0.get_den();
+            let integer = &v / &tene15;
+            let frac: Option<i64> = (&(&v % &tene15)).into();
+            let frac = frac.unwrap();
+            format!(", approx. {:?}.{:015}", integer, frac)
+        };
         if let Some(name) = self.aliases.get(&value.1) {
-            write!(out, " ({})", name).unwrap();
+            write!(out, " ({}{})", name, approx).unwrap();
         } else if value.1.len() == 1 {
-            write!(out, " ({})", self.dimensions[*value.1.iter().next().unwrap().0]).unwrap();
+            write!(out, " ({}{})", self.dimensions[*value.1.iter().next().unwrap().0], approx).unwrap();
         }
         String::from_utf8(out).unwrap()
     }
@@ -162,7 +206,7 @@ impl Context {
     pub fn lookup(&self, name: &str) -> Option<Value> {
         for (i, ref k) in self.dimensions.iter().enumerate() {
             if name == *k {
-                return Some(Value::new_unit(1.0, i))
+                return Some(Value::new_unit(one(), i))
             }
         }
         self.units.get(name).cloned().or_else(|| {
@@ -180,7 +224,7 @@ impl Context {
             }
             for (unit, alias) in &self.aliases {
                 if name == alias {
-                    return Some(Value(1.0, unit.clone()))
+                    return Some(Value(one(), unit.clone()))
                 }
             }
             None
@@ -252,7 +296,36 @@ impl Context {
 
         match *expr {
             Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)),
-            Expr::Const(num) => Ok(Value::new(num)),
+            Expr::Const(ref num, ref frac, ref exp) => {
+                use std::str::FromStr;
+
+                let num = Mpz::from_str_radix(&*num, 10).unwrap();
+                let frac = if let &Some(ref frac) = frac {
+                    let frac_digits = frac.len();
+                    let frac = Mpz::from_str_radix(&*frac, 10).unwrap();
+                    Mpq::new(&frac, &Mpz::from(10).pow(frac_digits as u32))
+                } else {
+                    zero()
+                };
+                let exp = if let &Some(ref exp) = exp {
+                    let exp: i32 = match FromStr::from_str(&*exp) {
+                        Ok(exp) => exp,
+                        // presumably because it is too large
+                        Err(e) => return Err(format!("Failed to parse exponent: {}", e))
+                    };
+                    let res = Mpz::from(10).pow(exp.abs() as u32);
+                    if exp < 0 {
+                        Mpq::new(&Mpz::one(), &res)
+                    } else {
+                        Mpq::new(&res, &Mpz::one())
+                    }
+                } else {
+                    Mpq::one()
+                };
+                let num = &Mpq::new(&num, &Mpz::one()) + &frac;
+                let num = &num * &exp;
+                Ok(Value::new(num))
+            },
             Expr::Neg(ref expr) => self.eval(&**expr).and_then(|mut v| {
                 v.0 = -v.0;
                 Ok(v)
@@ -281,9 +354,9 @@ impl Context {
                         let mut buf = vec![];
                         let width = 12;
                         let mut topu = top.clone();
-                        topu.0 = 1.0;
+                        topu.0 = one();
                         let mut bottomu = bottom.clone();
-                        bottomu.0 = 1.0;
+                        bottomu.0 = one();
                         let left = self.show(&topu);
                         let right = self.show(&bottomu);
                         if self.short_output {
@@ -319,7 +392,7 @@ impl Context {
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
-            Expr::Mul(ref args) => args.iter().fold(Ok(Value::new(1.0)), |a, b| {
+            Expr::Mul(ref args) => args.iter().fold(Ok(Value::new(one())), |a, b| {
                 a.and_then(|a| {
                     let b = try!(self.eval(b));
                     Ok(a.mul(&b))
@@ -328,12 +401,13 @@ impl Context {
             Expr::Pow(ref base, ref exp) => {
                 let base = try!(self.eval(&**base));
                 let exp = try!(self.eval(&**exp));
+                let fexp: f64 = exp.0.into();
                 if exp.1.len() != 0 {
                     Err(format!("Exponent not dimensionless"))
-                } else if exp.0.trunc() == exp.0 {
-                    Ok(base.pow(exp.0 as i32))
-                } else if (1.0 / exp.0).trunc() == 1.0 / exp.0 {
-                    base.root((1.0 / exp.0) as i32).ok_or(format!("Unit roots must result in integer dimensions"))
+                } else if fexp.trunc() == fexp {
+                    Ok(base.pow(fexp as i32))
+                } else if (1.0 / fexp).trunc() == 1.0 / fexp {
+                    base.root((1.0 / fexp) as i32).ok_or(format!("Unit roots must result in integer dimensions"))
                 } else {
                     Err(format!("Exponent not integer"))
                 }

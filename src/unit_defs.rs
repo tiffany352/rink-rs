@@ -1,6 +1,5 @@
 use std::str::Chars;
 use std::iter::Peekable;
-use std::str::FromStr;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -8,7 +7,7 @@ pub enum Token {
     Newline,
     Comment(usize),
     Ident(String),
-    Number(f64),
+    Number(String, Option<String>, Option<String>),
     Slash,
     ColonDash,
     DColonDash,
@@ -91,25 +90,67 @@ impl<'a> Iterator for TokenIterator<'a> {
                 _ => Token::Slash
             },
             x @ '0'...'9' | x @ '.' => {
-                let mut buf = String::new();
-                buf.push(x);
-                while let Some(c) = self.0.peek().cloned() {
-                    match c {
-                        'e' | 'E' => {
-                            buf.push(self.0.next().unwrap());
-                            loop {
-                                match self.0.peek().cloned() {
-                                    Some('e') | Some('E') => self.0.next(),
-                                    _ => break
-                                };
-                            }
-                        },
-                        '0'...'9' | '.' | '-' | '+' => buf.push(self.0.next().unwrap()),
-                        _ => break
+                use std::ascii::AsciiExt;
+
+                let mut integer = String::new();
+                let mut frac = None;
+                let mut exp = None;
+
+                // integer component
+                if x != '.' {
+                    integer.push(x);
+                    while let Some(c) = self.0.peek().cloned() {
+                        match c {
+                            '0'...'9' => integer.push(self.0.next().unwrap()),
+                            _ => break
+                        }
+                    }
+                } else {
+                    integer.push('0');
+                }
+                // fractional component
+                if let Some('.') = self.0.peek().cloned() {
+                    let mut buf = String::new();
+                    self.0.next();
+                    while let Some(c) = self.0.peek().cloned() {
+                        match c {
+                            '0'...'9' => buf.push(self.0.next().unwrap()),
+                            _ => break
+                        }
+                    }
+                    if buf.len() > 0 {
+                        frac = Some(buf)
                     }
                 }
-                FromStr::from_str(&*buf).map(|x| Token::Number(x))
-                    .unwrap_or(Token::Error(format!("Invalid number literal: `{}`", buf)))
+                // exponent
+                if let Some('e') = self.0.peek().cloned().map(|x| x.to_ascii_lowercase()) {
+                    let mut buf = String::new();
+                    self.0.next();
+                    if let Some('e') = self.0.peek().cloned().map(|x| x.to_ascii_lowercase()) {
+                        self.0.next();
+                    }
+                    if let Some(c) = self.0.peek().cloned() {
+                        match c {
+                            '-' => {
+                                buf.push(self.0.next().unwrap());
+                            },
+                            '+' => {
+                                self.0.next();
+                            },
+                            _ => ()
+                        }
+                    }
+                    while let Some(c) = self.0.peek().cloned() {
+                        match c {
+                            '0'...'9' => buf.push(self.0.next().unwrap()),
+                            _ => break
+                        }
+                    }
+                    if buf.len() > 0 {
+                        exp = Some(buf)
+                    }
+                }
+                Token::Number(integer, frac, exp)
             },
             ':' => match self.0.next() {
                 Some(':') => match self.0.next() {
@@ -191,7 +232,7 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 #[derive(Debug, Clone)]
 pub enum Expr {
     Unit(String),
-    Const(f64),
+    Const(String, Option<String>, Option<String>),
     Frac(Box<Expr>, Box<Expr>),
     Mul(Vec<Expr>),
     Pow(Box<Expr>, Box<Expr>),
@@ -220,11 +261,11 @@ pub struct Defs {
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(name) => Expr::Unit(name),
-        Token::Number(num) => Expr::Const(num),
+        Token::Number(num, frac, exp) => Expr::Const(num, frac, exp),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         // NYI: Imaginary numbers
-        Token::ImaginaryUnit => Expr::Const(0.0),
+        Token::ImaginaryUnit => Expr::Const("0".to_owned(), None, None),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
