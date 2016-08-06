@@ -51,6 +51,69 @@ fn root(left: &Mpq, n: i32) -> Mpq {
     }
 }
 
+fn to_decimal(rational: &Mpq, fracdigits: u32) -> String {
+    use std::char::from_digit;
+
+    let num = rational.get_num();
+    let den = rational.get_den();
+    let intdigits = (&num / &den).size_in_base(10) as u32;
+    let integer = &num / &den;
+
+    let mut buf = String::new();
+    let ten = Mpz::from(10);
+    let mut cursor = ten.pow(intdigits);
+    for _ in 0..intdigits {
+        cursor = &cursor / &ten;
+        let v: Option<i64> = (&(&(&integer / &cursor) % &ten)).into();
+        let v = v.unwrap();
+        buf.push(from_digit(v as u32, 10).unwrap());
+    }
+    if fracdigits > 0 {
+        buf.push('.');
+        let frac = &(&num * &ten.pow(fracdigits)) / &den;
+        let mut cursor = ten.pow(fracdigits);
+        for _ in 0..fracdigits {
+            cursor = &cursor / &ten;
+            let v: Option<i64> = (&(&(&frac / &cursor) % &ten)).into();
+            let v = v.unwrap();
+            buf.push(from_digit(v as u32, 10).unwrap());
+        }
+    }
+    buf
+}
+
+fn to_scientific(rational: &Mpq, prefixdigits: u32) -> String {
+    use std::char::from_digit;
+
+    let num = rational.get_num();
+    let den = rational.get_den();
+    let ten = Mpz::from(10);
+    let n = ten.pow(prefixdigits);
+    let exp = if &num > &den {
+        (&num / &den).size_in_base(10) as i32
+    } else {
+        2 - ((&den / &num).size_in_base(10) as i32)
+    };
+    let teneexp = Mpz::from(10).pow(exp.abs() as u32);
+    let value = if exp >= 0 {
+        &(&(&num * &n) / &den) / &teneexp
+    } else {
+        &(&(&num * &teneexp) * &n) / &den
+    };
+    let mut buf = String::new();
+    let mut cursor = n.clone();
+    for i in 0..prefixdigits {
+        if i == 1 {
+            buf.push('.');
+        }
+        cursor = &cursor / &ten;
+        let v: Option<i64> = (&(&(&value / &cursor) % &ten)).into();
+        let v = v.unwrap();
+        buf.push(from_digit(v as u32, 10).unwrap());
+    }
+    format!("{}e{}", buf, exp - 1)
+}
+
 impl Value {
     /// Creates a dimensionless value.
     pub fn new(num: Num) -> Value {
@@ -157,7 +220,98 @@ impl Context {
         let mut frac = vec![];
         let mut value = value.clone();
         value.0.canonicalize();
-        write!(out, "{:?}", value.0).unwrap();
+        let num = value.0.get_num();
+        let den = value.0.get_den();
+        let ten = Mpz::from(10);
+
+        let use_sci_when = 12;
+        let sci_digits = 12;
+        let approx_prec = 15;
+        //let max_exact = 40;
+
+        let start = num.size_in_base(10) as i32 - den.size_in_base(10) as i32;
+        let end = 1-(den.size_in_base(10) as i32);
+
+        let end = {
+            let n = &(&num * &ten.pow((-end) as u32)) / &den;
+            let mut cursor = Mpz::from(1);
+            let mut end = end;
+            for i in end..start+1 {
+                cursor = &cursor * &ten;
+                end = i;
+                if !n.modulus(&cursor).is_zero() {
+                    break;
+                }
+            }
+            end
+        };
+
+        let exactdigits = {
+            let mut res = None;
+            let o = (if end > 0 { 0 } else { -end }) as u32;
+            for i in 0..approx_prec {
+                if ten.pow(i+o).modulus(&den).is_zero() {
+                    res = Some(i);
+                    break;
+                }
+            }
+            res
+        };
+
+        let spandigits = (start - end) as u32 + 1;
+
+        /*let mut fracdigits = None;
+        for i in 0..approx_prec {
+            if ten.pow(i).modulus(&den).is_zero() {
+                fracdigits = Some(i);
+                break;
+            }
+        }
+        let prefixdigits = match fracdigits {
+            Some(0) => {
+                let mut zerodigits = 0;
+                let mut cursor = Mpz::from(1);
+                for i in 0..intdigits {
+                    if integer.modulus(&cursor).is_zero() {
+                        zerodigits = i;
+                    } else {
+                        break;
+                    }
+                    cursor = &cursor * &ten;
+                }
+                intdigits - zerodigits
+            },
+            Some(fracdigits) => intdigits + fracdigits,
+            None => intdigits
+        };
+
+        println!("intdigits={} fracdigits={:?} prefixdigits={}", intdigits, fracdigits, prefixdigits);*/
+
+        println!("start={} end={} spandigits={} exactdigits={:?}", start, end, spandigits, exactdigits);
+
+        /*let (exact, approx) =
+            if prefixdigits <= sci_digits && fracdigits.map(|f| intdigits+f > use_sci_when).unwrap_or(true) {
+                (to_scientific(&value.0, prefixdigits), None)
+            } else if let Some(fracdigits) = fracdigits {
+                (to_decimal(&value.0, fracdigits), None)
+            } else {
+                (format!("{:?}", value.0), Some(to_decimal(&value.0, approx_prec)))
+            };*/
+
+        let (exact, approx): (String, Option<String>) =
+            if exactdigits.map(|e| e+spandigits <= sci_digits).unwrap_or(false) && (end > use_sci_when || start < -use_sci_when) {
+                (to_scientific(&value.0, spandigits+exactdigits.unwrap_or(0)), None)
+            } else if let Some(exactdigits) = exactdigits {
+                (to_decimal(&value.0, spandigits+exactdigits), None)
+            } else {
+                if end > use_sci_when || start < -use_sci_when {
+                    (format!("{:?}", value.0), Some(to_scientific(&value.0, approx_prec)))
+                } else {
+                    (format!("{:?}", value.0), Some(to_decimal(&value.0, approx_prec)))
+                }
+            };
+
+        write!(out, "{}", exact).unwrap();
         for (&dim, &exp) in &value.1 {
             if exp < 0 {
                 frac.push((dim, exp));
@@ -178,21 +332,25 @@ impl Context {
                 }
             }
         }
-        let approx = if value.0.get_den() == Mpz::one() {
-            format!("")
-        } else {
-            let tene15 = Mpz::from(10).pow(15);
-            let v = &(&value.0.get_num() * &tene15) / &value.0.get_den();
-            let integer = &v / &tene15;
-            let frac: Option<i64> = (&(&v % &tene15)).into();
-            let frac = frac.unwrap();
-            format!(", approx. {:?}.{:015}", integer, frac)
-        };
-        if let Some(name) = self.aliases.get(&value.1) {
-            write!(out, " ({}{})", name, approx).unwrap();
-        } else if value.1.len() == 1 {
-            write!(out, " ({}{})", self.dimensions[*value.1.iter().next().unwrap().0], approx).unwrap();
-        }
+        let alias = self.aliases.get(&value.1).cloned().or_else(|| {
+            if value.1.len() == 1 {
+                let e = value.1.iter().next().unwrap();
+                let ref n = self.dimensions[*e.0];
+                if *e.1 == 1 {
+                    Some(n.clone())
+                } else {
+                    Some(format!("{}^{}", n, e.1))
+                }
+            } else {
+                None
+            }
+        });
+        match (alias, approx) {
+            (Some(alias), Some(approx)) => write!(out, " ({}, approx. {})", alias, approx),
+            (Some(alias), None) => write!(out, " ({})", alias),
+            (None, Some(approx)) => write!(out, " (approx. {})", approx),
+            (None, None) => write!(out, "")
+        }.unwrap();
         String::from_utf8(out).unwrap()
     }
 
