@@ -109,9 +109,11 @@ impl<'a> Iterator for TokenIterator<'a> {
                     integer.push('0');
                 }
                 // fractional component
-                if let Some('.') = self.0.peek().cloned() {
+                if x == '.' || Some('.') == self.0.peek().cloned() {
                     let mut buf = String::new();
-                    self.0.next();
+                    if x != '.' {
+                        self.0.next();
+                    }
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
                             '0'...'9' => buf.push(self.0.next().unwrap()),
