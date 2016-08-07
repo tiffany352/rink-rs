@@ -414,7 +414,12 @@ impl Context {
             }),
             Expr::Plus(ref expr) => self.eval(&**expr),
             Expr::Frac(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
-                (Ok(top), Ok(bottom)) => Ok(top.mul(&bottom.invert())),
+                (Ok(top), Ok(bottom)) => {
+                    if bottom.0 == Mpq::zero() {
+                        return Err(format!("Division by zero: {} / {}", self.show(&top), self.show(&bottom)))
+                    }
+                    Ok(top.mul(&bottom.invert()))
+                },
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
@@ -441,6 +446,10 @@ impl Context {
                 if exp.1.len() != 0 {
                     Err(format!("Exponent not dimensionless"))
                 } else if fexp.trunc() == fexp {
+                    let iexp = fexp as i32;
+                    if iexp < 0 && base.0 == Mpq::zero() {
+                        return Err(format!("Disivion by zero: {}^{}", self.show(&base), iexp))
+                    }
                     Ok(base.pow(fexp as i32))
                 } else if (1.0 / fexp).trunc() == 1.0 / fexp {
                     base.root((1.0 / fexp) as i32).ok_or(format!("Unit roots must result in integer dimensions"))
