@@ -221,6 +221,9 @@ impl Context {
         };
 
         write!(out, "{}", exact).unwrap();
+        if let Some(approx) = approx {
+            write!(out, ", approx. {}", approx).unwrap();
+        }
         for (&dim, &exp) in &value.1 {
             if exp < 0 {
                 frac.push((dim, exp));
@@ -254,12 +257,9 @@ impl Context {
                 None
             }
         });
-        match (alias, approx) {
-            (Some(alias), Some(approx)) => write!(out, " ({}, approx. {})", alias, approx),
-            (Some(alias), None) => write!(out, " ({})", alias),
-            (None, Some(approx)) => write!(out, " (approx. {})", approx),
-            (None, None) => write!(out, "")
-        }.unwrap();
+        if let Some(alias) = alias {
+            write!(out, " ({})", alias).unwrap();
+        }
         String::from_utf8(out).unwrap()
     }
 
