@@ -109,7 +109,9 @@ fn to_string(rational: &Mpq) -> (bool, String) {
         } else if only_zeros {
             zeros += 1;
         }
-        buf.push(from_digit(v as u32, 10).unwrap());
+        if !(v == 0 && only_zeros && n < intdigits-1) {
+            buf.push(from_digit(v as u32, 10).unwrap());
+        }
         cursor = &cursor * &ten_mpq;
         cursor = &cursor - &Mpq::ratio(&digit, &one);
         n += 1;
