@@ -75,11 +75,19 @@ fn to_string(rational: &Mpq) -> (bool, String) {
     let mut placed_decimal = false;
     loop {
         let exact = cursor == zero;
-        let bail = exact || n > 15+intdigits+zeros;
-        if bail && intdigits+zeros > 20 {
+        let use_sci = intdigits+zeros > 9;
+        let placed_ints = n >= intdigits;
+        let bail =
+            (exact && (placed_ints || use_sci)) ||
+            (n-zeros > 6 && use_sci) ||
+            n as i32 - zeros.saturating_sub(1) as i32 + 1 > ::std::cmp::max(intdigits as i32, 6);
+        if bail && use_sci {
             // scientific notation
             buf = buf[zeros as usize + placed_decimal as usize + sign as usize..].to_owned();
             buf.insert(1, '.');
+            if buf.len() == 2 {
+                buf.insert(2, '0');
+            }
             if sign {
                 buf.insert(0, '-');
             }
@@ -217,7 +225,7 @@ impl Context {
 
         let (exact, approx) = match to_string(&value.0) {
             (true, v) => (v, None),
-            (false, v) => if value.0.get_den() > Mpz::from(1_000_000) {
+            (false, v) => if value.0.get_den() > Mpz::from(1_000_000) || value.0.get_num() > Mpz::from(1_000_000_000u64) {
                 (format!("approx. {}", v), None)
             } else {
                 (format!("{:?}", value.0), Some(v))
