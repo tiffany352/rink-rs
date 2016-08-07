@@ -4,6 +4,11 @@ A unit conversion tool in Rust. The name is a subset of `frink`,
 another unit conversion tool, to indicate that this tool implements a
 subset of frink's features.
 
+Select features:
+- High-precision bignum rational arithmetic
+- Detailed error messages
+- IRC bot
+
 ## Install
 
 `cargo install rink`
@@ -18,7 +23,7 @@ Support/rink/units.txt` (MacOS).
 
 ```
 > kWh/year -> W
-0.11407955270702466 (dimensionless)
+approx. 0.1140795 W (power)
 ```
 
 ```
@@ -32,13 +37,18 @@ Conformance error
 
 ```
 > oil tonne -> kWh
-11630 (dimensionless)
+11630 kWh (energy)
+```
+
+```
+> googol^100
+1.0e10000 (dimensionless)
 ```
 
 The number of atoms in 12kg of lead:
 ```
 > 12 kg / lead avogadro
-34877263650579153000000000 (dimensionless)
+approx. 3.487726e25 (dimensionless)
 ```
 
 ## Library Usage
@@ -47,7 +57,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rink = "0.1"
+rink = "0.2"
 ```
 
 and this to your crate root:
@@ -76,3 +86,20 @@ Unless you explicitly state otherwise, any contribution intentionally
 submitted for inclusion in the work by you, as defined in the Apache-2.0
 license, shall be dual licensed as above, without any additional terms or
 conditions.
+
+## Changelog
+
+### 0.2.0
+- Errors for division by zero
+- Better conversion (->) output
+- Bignum arithmetic
+- API docs
+- IRC bot
+- Addition
+
+### 0.1.1
+- Search for units.txt in standard directories
+- Rustyline
+
+### 0.1.0
+- Initial release
