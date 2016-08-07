@@ -79,8 +79,8 @@ fn to_string(rational: &Mpq) -> (bool, String) {
         let placed_ints = n >= intdigits;
         let bail =
             (exact && (placed_ints || use_sci)) ||
-            (n-zeros > 6 && use_sci) ||
-            n as i32 - zeros.saturating_sub(1) as i32 + 1 > ::std::cmp::max(intdigits as i32, 6);
+            (n as i32 - zeros as i32 > 6 && use_sci) ||
+            n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, 6);
         if bail && use_sci {
             // scientific notation
             buf = buf[zeros as usize + placed_decimal as usize + sign as usize..].to_owned();
