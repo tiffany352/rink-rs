@@ -25,7 +25,7 @@ fn main() {
                 };
                 let line = message_str[prefix.len()..].trim();
                 let reply = match one_line(&mut ctx, line) {
-                    Ok(v) => ctx.show(&v),
+                    Ok(v) => v,
                     Err(e) => e
                 };
                 let mut i = 0;

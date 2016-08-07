@@ -104,8 +104,8 @@ pub fn load() -> Result<Context, String> {
 }
 
 /// Evaluates a single line within a context.
-pub fn one_line(ctx: &mut Context, line: &str) -> Result<Value, String> {
+pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
     let mut iter = unit_defs::TokenIterator::new(line.trim()).peekable();
     let expr = unit_defs::parse_expr(&mut iter);
-    ctx.eval(&expr)
+    ctx.eval_outer(&expr)
 }

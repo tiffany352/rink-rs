@@ -371,7 +371,7 @@ impl Context {
         (recip, String::from_utf8(buf).unwrap())
     }
 
-    /// Evaluates an expression to compute its value, including `->`
+    /// Evaluates an expression to compute its value, *excluding* `->`
     /// conversions.
     pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
         use unit_defs::Expr;
@@ -428,8 +428,93 @@ impl Context {
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
-            Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
-                (Ok(top), Ok(bottom)) => {
+            Expr::Mul(ref args) => args.iter().fold(Ok(Value::new(one())), |a, b| {
+                a.and_then(|a| {
+                    let b = try!(self.eval(b));
+                    Ok(a.mul(&b))
+                })
+            }),
+            Expr::Pow(ref base, ref exp) => {
+                let base = try!(self.eval(&**base));
+                let exp = try!(self.eval(&**exp));
+                let fexp: f64 = exp.0.to_f64();
+                if exp.1.len() != 0 {
+                    Err(format!("Exponent not dimensionless"))
+                } else if fexp.trunc() == fexp {
+                    Ok(base.pow(fexp as i32))
+                } else if (1.0 / fexp).trunc() == 1.0 / fexp {
+                    base.root((1.0 / fexp) as i32).ok_or(format!("Unit roots must result in integer dimensions"))
+                } else {
+                    Err(format!("Exponent not integer"))
+                }
+            },
+            Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
+            Expr::Error(ref e) => Err(e.clone()),
+        }
+    }
+
+    pub fn eval_unit_name(&self, expr: &::unit_defs::Expr) -> Result<BTreeMap<String, isize>, String> {
+        use unit_defs::Expr;
+
+        match *expr {
+            Expr::Unit(ref name) => {
+                let mut map = BTreeMap::new();
+                map.insert(name.clone(), 1);
+                Ok(map)
+            },
+            Expr::Const(ref x, None, None) if x == "1" || x == "-1" => Ok(BTreeMap::new()),
+            Expr::Const(_, _, _) => Err(format!("Constants are not allowed in the right hand side of conversions")),
+            Expr::Frac(ref left, ref right) => {
+                let left = try!(self.eval_unit_name(left));
+                let right = try!(self.eval_unit_name(right)).into_iter()
+                    .map(|(k,v)| (k, -v)).collect::<BTreeMap<_, _>>();
+                Ok(btree_merge(&left, &right, |a,b| if a+b != 0 { Some(a + b) } else { None }))
+            },
+            Expr::Mul(ref args) => {
+                args[1..].iter().fold(self.eval_unit_name(&args[0]), |acc, b| {
+                    let acc = try!(acc);
+                    let b = try!(self.eval_unit_name(b));
+                    Ok(btree_merge(&acc, &b, |a,b| if a+b != 0 { Some(a+b) } else { None }))
+                })
+            },
+            Expr::Pow(ref left, ref exp) => {
+                let res = try!(self.eval(exp));
+                if res.1.len() > 0 {
+                    return Err(format!("Exponents must be dimensionless"))
+                }
+                Ok(try!(self.eval_unit_name(left)).into_iter()
+                   .filter_map(|(k, v)| {
+                       let v = v + res.0.to_f64() as isize;
+                       if v != 0 {
+                           Some((k, v))
+                       } else {
+                           None
+                       }
+                   })
+                   .collect::<BTreeMap<_, _>>())
+            },
+            Expr::Add(ref left, ref right) => {
+                let left = try!(self.eval_unit_name(left));
+                let right = try!(self.eval_unit_name(right));
+                if left != right {
+                    return Err(format!("Add of values with differing dimensions is not meaningful"))
+                }
+                Ok(left)
+            },
+            Expr::Neg(ref v) => self.eval_unit_name(v),
+            Expr::Plus(ref v) => self.eval_unit_name(v),
+            Expr::Convert(_, _) => Err(format!("Conversions are not allowed in the right hand of conversions")),
+            Expr::Error(ref e) => Err(e.clone()),
+        }
+    }
+
+    /// Evaluates an expression, include `->` conversions.
+    pub fn eval_outer(&self, expr: &::unit_defs::Expr) -> Result<String, String> {
+        use unit_defs::Expr;
+
+        match *expr {
+            Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom), self.eval_unit_name(&**bottom)) {
+                (Ok(top), Ok(bottom), Ok(bottom_name)) => {
                     if top.1 != bottom.1 {
                         use std::io::Write;
 
@@ -468,33 +553,62 @@ impl Context {
 
                         Err(String::from_utf8(buf).unwrap())
                     } else {
-                        Ok(top.mul(&bottom.invert()))
+                        let raw = &top.0 / &bottom.0;
+                        let (raw_exact, raw) = to_string(&raw);
+                        let approx = if raw_exact {
+                            format!("")
+                        } else {
+                            format!("approx. ")
+                        };
+                        let mut unit_top = vec![];
+                        let mut unit_frac = vec![];
+                        for (name, exp) in bottom_name.into_iter() {
+                            if exp < 0 {
+                                unit_frac.push((name, -exp));
+                            } else {
+                                unit_top.push((name, exp));
+                            }
+                        }
+                        let unit_top = unit_top.into_iter().fold(String::new(), |mut acc, (name, exp)| {
+                            acc.push(' ');
+                            acc.push_str(&*name);
+                            if exp != 1 {
+                                acc.push_str(&*format!("^{}", exp));
+                            }
+                            acc
+                        });
+                        let unit_frac = unit_frac.into_iter().fold(String::new(), |mut acc, (name, exp)| {
+                            if acc.len() > 0 {
+                                acc.push(' ');
+                            }
+                            acc.push_str(&*name);
+                            if exp != 1 {
+                                acc.push_str(&*format!("^{}", exp));
+                            }
+                            acc
+                        });
+                        let unit_frac = if unit_frac.len() > 0 {
+                            format!(" / {}", unit_frac)
+                        } else {
+                            unit_frac
+                        };
+                        let reduced = match self.describe_unit(&bottom) {
+                            (false, v) => v,
+                            (true, v) => format!("1 / {}", v)
+                        };
+                        Ok(format!("{approx}{raw}{unit_top}{unit_frac} ({reduced})",
+                                   approx=approx, raw=raw, unit_top=unit_top,
+                                   unit_frac=unit_frac, reduced=reduced))
                     }
                 },
-                (Err(e), _) => Err(e),
-                (_, Err(e)) => Err(e),
+                (Err(e), _, _) => Err(e),
+                (_, Err(e), _) => Err(e),
+                (_, _, Err(e)) => Err(e),
             },
-            Expr::Mul(ref args) => args.iter().fold(Ok(Value::new(one())), |a, b| {
-                a.and_then(|a| {
-                    let b = try!(self.eval(b));
-                    Ok(a.mul(&b))
-                })
-            }),
-            Expr::Pow(ref base, ref exp) => {
-                let base = try!(self.eval(&**base));
-                let exp = try!(self.eval(&**exp));
-                let fexp: f64 = exp.0.to_f64();
-                if exp.1.len() != 0 {
-                    Err(format!("Exponent not dimensionless"))
-                } else if fexp.trunc() == fexp {
-                    Ok(base.pow(fexp as i32))
-                } else if (1.0 / fexp).trunc() == 1.0 / fexp {
-                    base.root((1.0 / fexp) as i32).ok_or(format!("Unit roots must result in integer dimensions"))
-                } else {
-                    Err(format!("Exponent not integer"))
-                }
+            _ => {
+                let val = try!(self.eval(expr));
+                Ok(self.show(&val))
             },
-            Expr::Error(ref e) => Err(e.clone()),
         }
     }
 
