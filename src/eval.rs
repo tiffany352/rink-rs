@@ -118,6 +118,44 @@ fn to_string(rational: &Mpq) -> (bool, String) {
     }
 }
 
+fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
+    left: &BTreeMap<K, V>, right: &BTreeMap<K, V>, merge_func: F
+) -> BTreeMap<K, V> {
+    let mut res = BTreeMap::new();
+    let mut a = left.iter().peekable();
+    let mut b = right.iter().peekable();
+    loop {
+        match (a.peek().cloned(), b.peek().cloned()) {
+            (Some((akey, aval)), Some((bkey, bval))) if akey == bkey => {
+                if let Some(v) = merge_func(aval, bval) {
+                    res.insert(akey.clone(), v);
+                }
+                a.next();
+                b.next();
+            },
+            (Some((akey, _)), Some((bkey, bval))) if akey > bkey => {
+                res.insert(bkey.clone(), bval.clone());
+                b.next();
+            },
+            (Some((akey, aval)), Some((bkey, _))) if akey < bkey => {
+                res.insert(akey.clone(), aval.clone());
+                a.next();
+            },
+            (Some(_), Some(_)) => panic!(),
+            (None, Some((bkey, bval))) => {
+                res.insert(bkey.clone(), bval.clone());
+                b.next();
+            },
+            (Some((akey, aval)), None) => {
+                res.insert(akey.clone(), aval.clone());
+                a.next();
+            },
+            (None, None) => break,
+        }
+    }
+    res
+}
+
 impl Value {
     /// Creates a dimensionless value.
     pub fn new(num: Num) -> Value {
@@ -149,44 +187,7 @@ impl Value {
 
     /// Multiplies two values, also multiplying their units.
     pub fn mul(&self, other: &Value) -> Value {
-        let mut val = Unit::new();
-        let mut a = self.1.iter().peekable();
-        let mut b = other.1.iter().peekable();
-        loop {
-            match (a.peek().cloned(), b.peek().cloned()) {
-                (Some((ka, pa)), Some((kb, pb))) if ka == kb => {
-                    // merge
-                    let power = pa+pb;
-                    if power != 0 {
-                        val.insert(ka.clone(), power);
-                    }
-                    a.next();
-                    b.next();
-                },
-                (Some((ka, _)), Some((kb, vb))) if ka > kb => {
-                    // push vb, advance
-                    val.insert(kb.clone(), vb.clone());
-                    b.next();
-                },
-                (Some((ka, va)), Some((kb, _))) if ka < kb => {
-                    // push va, advance
-                    val.insert(ka.clone(), va.clone());
-                    a.next();
-                },
-                (Some(_), Some(_)) => panic!(),
-                (None, Some((kb, vb))) => {
-                    // push vb, advance
-                    val.insert(kb.clone(), vb.clone());
-                    b.next();
-                },
-                (Some((ka, va)), None) => {
-                    // push va, advance
-                    val.insert(ka.clone(), va.clone());
-                    a.next();
-                },
-                (None, None) => break
-            }
-        }
+        let val = btree_merge(&self.1, &other.1, |a, b| if a+b != 0 { Some(a + b) } else { None });
         Value(&self.0 * &other.0, val)
     }
 
