@@ -442,7 +442,7 @@ impl Context {
             Expr::Pow(ref base, ref exp) => {
                 let base = try!(self.eval(&**base));
                 let exp = try!(self.eval(&**exp));
-                let fexp: f64 = exp.0.to_f64();
+                let fexp: f64 = exp.0.into();
                 if exp.1.len() != 0 {
                     Err(format!("Exponent not dimensionless"))
                 } else if fexp.trunc() == fexp {
@@ -494,9 +494,10 @@ impl Context {
                 if res.1.len() > 0 {
                     return Err(format!("Exponents must be dimensionless"))
                 }
+                let res: f64 = res.0.into();
                 Ok(try!(self.eval_unit_name(left)).into_iter()
                    .filter_map(|(k, v)| {
-                       let v = v + res.0.to_f64() as isize;
+                       let v = v + res as isize;
                        if v != 0 {
                            Some((k, v))
                        } else {
