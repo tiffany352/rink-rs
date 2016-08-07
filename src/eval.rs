@@ -37,7 +37,7 @@ fn pow(left: &Mpq, exp: i32) -> Mpq {
     } else {
         let num = left.get_num().pow(exp as u32);
         let den = left.get_den().pow(exp as u32);
-        Mpq::new(&num, &den)
+        Mpq::ratio(&num, &den)
     }
 }
 
@@ -47,7 +47,7 @@ fn root(left: &Mpq, n: i32) -> Mpq {
     } else {
         let num = left.get_num().root(n as u32);
         let den = left.get_den().root(n as u32);
-        Mpq::new(&num, &den)
+        Mpq::ratio(&num, &den)
     }
 }
 
@@ -67,8 +67,8 @@ fn to_string(rational: &Mpq) -> (bool, String) {
     let zero = Mpq::zero();
     let one = Mpz::one();
     let ten = Mpz::from(10);
-    let ten_mpq = Mpq::new(&ten, &one);
-    let mut cursor = rational / Mpq::new(&ten.pow(intdigits), &one);
+    let ten_mpq = Mpq::ratio(&ten, &one);
+    let mut cursor = rational / Mpq::ratio(&ten.pow(intdigits), &one);
     let mut n = 0;
     let mut only_zeros = true;
     let mut zeros = 0;
@@ -111,7 +111,7 @@ fn to_string(rational: &Mpq) -> (bool, String) {
         }
         buf.push(from_digit(v as u32, 10).unwrap());
         cursor = &cursor * &ten_mpq;
-        cursor = &cursor - &Mpq::new(&digit, &one);
+        cursor = &cursor - &Mpq::ratio(&digit, &one);
         n += 1;
     }
 }
@@ -382,7 +382,7 @@ impl Context {
                 let frac = if let &Some(ref frac) = frac {
                     let frac_digits = frac.len();
                     let frac = Mpz::from_str_radix(&*frac, 10).unwrap();
-                    Mpq::new(&frac, &Mpz::from(10).pow(frac_digits as u32))
+                    Mpq::ratio(&frac, &Mpz::from(10).pow(frac_digits as u32))
                 } else {
                     zero()
                 };
@@ -394,14 +394,14 @@ impl Context {
                     };
                     let res = Mpz::from(10).pow(exp.abs() as u32);
                     if exp < 0 {
-                        Mpq::new(&Mpz::one(), &res)
+                        Mpq::ratio(&Mpz::one(), &res)
                     } else {
-                        Mpq::new(&res, &Mpz::one())
+                        Mpq::ratio(&res, &Mpz::one())
                     }
                 } else {
                     Mpq::one()
                 };
-                let num = &Mpq::new(&num, &Mpz::one()) + &frac;
+                let num = &Mpq::ratio(&num, &Mpz::one()) + &frac;
                 let num = &num * &exp;
                 Ok(Value::new(num))
             },
@@ -480,7 +480,7 @@ impl Context {
             Expr::Pow(ref base, ref exp) => {
                 let base = try!(self.eval(&**base));
                 let exp = try!(self.eval(&**exp));
-                let fexp: f64 = exp.0.into();
+                let fexp: f64 = exp.0.to_f64();
                 if exp.1.len() != 0 {
                     Err(format!("Exponent not dimensionless"))
                 } else if fexp.trunc() == fexp {
