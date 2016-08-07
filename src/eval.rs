@@ -217,7 +217,11 @@ impl Context {
 
         let (exact, approx) = match to_string(&value.0) {
             (true, v) => (v, None),
-            (false, v) => (format!("{:?}", value.0), Some(v))
+            (false, v) => if value.0.get_den() > Mpz::from(1_000_000) {
+                (format!("approx. {}", v), None)
+            } else {
+                (format!("{:?}", value.0), Some(v))
+            }
         };
 
         write!(out, "{}", exact).unwrap();
