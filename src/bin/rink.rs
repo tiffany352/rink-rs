@@ -23,7 +23,7 @@ fn main() {
             Ok(line) => {
                 rl.add_history_entry(&line);
                 match one_line(&mut ctx, &*line) {
-                    Ok(v) => ctx.print(&v),
+                    Ok(v) => println!("{}", v),
                     Err(e) => println!("{}", e)
                 };
             },
@@ -57,7 +57,7 @@ fn main() {
             Err(_) => return
         };
         match one_line(&mut ctx, &*line) {
-            Ok(v) => ctx.print(&v),
+            Ok(v) => println!("{}", v),
             Err(e) => println!("{}", e)
         };
         line.clear();

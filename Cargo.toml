@@ -13,6 +13,7 @@ keywords = ["unit", "math", "conversion", "cli", "tool"]
 default = ["rustyline"]
 
 [dependencies]
+rust-gmp = { git = "https://github.com/tiffany352/rust-gmp.git" }
 rustyline = { version = "0.2.3", optional = true }
 irc = { version = "0.11.3", optional = true }
 
