@@ -452,6 +452,9 @@ impl Context {
                     }
                     Ok(base.pow(fexp as i32))
                 } else if (1.0 / fexp).trunc() == 1.0 / fexp {
+                    if base.0 < Mpq::zero() {
+                        return Err(format!("Root of a negative number is imaginary, which is not yet implemented: {}^{}", self.show(&base), fexp))
+                    }
                     base.root((1.0 / fexp) as i32).ok_or(format!("Unit roots must result in integer dimensions"))
                 } else {
                     Err(format!("Exponent not integer"))
