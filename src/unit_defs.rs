@@ -239,6 +239,7 @@ pub enum Expr {
     Mul(Vec<Expr>),
     Pow(Box<Expr>, Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
+    Sub(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
     Plus(Box<Expr>),
     Convert(Box<Expr>, Box<Expr>),
@@ -294,7 +295,7 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match *iter.peek().unwrap() {
-        Token::Plus | Token::DashArrow | Token::TriplePipe | Token::RPar | Token::Newline |
+        Token::Plus | Token::Minus | Token::DashArrow | Token::TriplePipe | Token::RPar | Token::Newline |
         Token::Comment(_) | Token::Eof => break,
         Token::Slash => {
             iter.next();
@@ -325,6 +326,11 @@ fn parse_add(mut iter: &mut Iter) -> Expr {
             iter.next();
             let right = parse_add(iter);
             Expr::Add(Box::new(left), Box::new(right))
+        },
+        Token::Minus => {
+            iter.next();
+            let right = parse_add(iter);
+            Expr::Sub(Box::new(left), Box::new(right))
         },
         _ => left
     }

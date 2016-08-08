@@ -433,6 +433,17 @@ impl Context {
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
+            Expr::Sub(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
+                (Ok(top), Ok(mut bottom)) => {
+                    bottom.0 = -bottom.0;
+                    top.add(&bottom).ok_or_else(|| {
+                        format!("Sub of values with differing units is not meaningful: {} - {}",
+                                self.show(&top), self.show(&bottom))
+                    })
+                },
+                (Err(e), _) => Err(e),
+                (_, Err(e)) => Err(e),
+            },
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::new(one())), |a, b| {
                 a.and_then(|a| {
                     let b = try!(self.eval(b));
@@ -506,7 +517,7 @@ impl Context {
                    })
                    .collect::<BTreeMap<_, _>>())
             },
-            Expr::Add(ref left, ref right) => {
+            Expr::Add(ref left, ref right) | Expr::Sub(ref left, ref right) => {
                 let left = try!(self.eval_unit_name(left));
                 let right = try!(self.eval_unit_name(right));
                 if left != right {
