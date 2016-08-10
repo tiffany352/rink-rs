@@ -8,7 +8,10 @@ pub enum Token {
     Comment(usize),
     Ident(String),
     Number(String, Option<String>, Option<String>),
+    Date(String),
+    Quote(String),
     Slash,
+    Colon,
     ColonDash,
     DColonDash,
     TriplePipe,
@@ -154,14 +157,14 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Number(integer, frac, exp)
             },
-            ':' => match self.0.next() {
-                Some(':') => match self.0.next() {
+            ':' => match self.0.peek().cloned() {
+                Some(':') => { self.0.next(); match self.0.next() {
                     Some('-') => Token::DColonDash,
                     x => Token::Error(format!("Unexpected {:?}", x)),
-                },
-                Some('-') => Token::ColonDash,
-                Some('=') => Token::ColonEq,
-                x => Token::Error(format!("Unexpected {:?}", x))
+                }},
+                Some('-') => {self.0.next(); Token::ColonDash},
+                Some('=') => {self.0.next(); Token::ColonEq},
+                _ => Token::Colon,
             },
             '|' => if let Some('|') = self.0.next() {
                 if let Some('|') = self.0.next() {
@@ -212,6 +215,35 @@ impl<'a> Iterator for TokenIterator<'a> {
                     Token::Error(format!("Unexpected <"))
                 }
             },
+            '\'' => {
+                let mut buf = String::new();
+                loop {
+                    match self.0.next() {
+                        None | Some('\n') => return Some(Token::Error(format!("Unexpected newline or EOF"))),
+                        Some('\\') => match self.0.next() {
+                            Some('\'') => buf.push('\''),
+                            Some('n') => buf.push('\n'),
+                            Some('t') => buf.push('\t'),
+                            Some(c) => return Some(Token::Error(format!("Invalid escape sequence \\{}", c))),
+                            None => return Some(Token::Error(format!("Unexpected EOF"))),
+                        },
+                        Some('\'') => break,
+                        Some(c) => buf.push(c),
+                    }
+                }
+                Token::Quote(buf)
+            },
+            '#' => {
+                let mut buf = String::new();
+                loop {
+                    match self.0.next() {
+                        None | Some('\n') => return Some(Token::Error(format!("Unexpected newline or EOF"))),
+                        Some('#') => break,
+                        Some(c) => buf.push(c),
+                    }
+                }
+                Token::Date(buf)
+            },
             x => {
                 let mut buf = String::new();
                 buf.push(x);
@@ -235,6 +267,7 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 pub enum Expr {
     Unit(String),
     Const(String, Option<String>, Option<String>),
+    Date(String),
     Frac(Box<Expr>, Box<Expr>),
     Mul(Vec<Expr>),
     Pow(Box<Expr>, Box<Expr>),
@@ -246,12 +279,23 @@ pub enum Expr {
     Error(String),
 }
 
+#[derive(Debug, Clone)]
+pub enum DatePattern {
+    Literal(String),
+    Match(String),
+    Optional(Vec<DatePattern>),
+    Dash,
+    Colon,
+    Error(String),
+}
+
 #[derive(Debug)]
 pub enum Def {
     Dimension(String),
     Prefix(Expr),
     SPrefix(Expr),
     Unit(Expr),
+    DatePattern(Vec<DatePattern>),
     Error(String),
 }
 
@@ -276,6 +320,7 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                 x => Expr::Error(format!("Expected ), got {:?}", x))
             }
         },
+        Token::Date(date) => Expr::Date(date),
         x => Expr::Error(format!("Expected term, got {:?}", x))
     }
 }
@@ -378,6 +423,31 @@ fn parse_alias(mut iter: &mut Iter) -> Option<(Expr, String)> {
     Some((expr, name))
 }
 
+fn parse_datepattern(mut iter: &mut Iter) -> Vec<DatePattern> {
+    let mut out = vec![];
+    loop {
+        match iter.peek().cloned().unwrap() {
+            Token::Newline | Token::Comment(_) | Token::Eof | Token::RBrack => break,
+            Token::Ident(name) => out.push(DatePattern::Match(name)),
+            Token::Quote(name) => out.push(DatePattern::Literal(name)),
+            Token::Minus => out.push(DatePattern::Dash),
+            Token::Colon => out.push(DatePattern::Colon),
+            Token::LBrack => {
+                iter.next();
+                let res = DatePattern::Optional(parse_datepattern(iter));
+                let res = match iter.next().unwrap() {
+                    Token::RBrack => res,
+                    x => DatePattern::Error(format!("Expected ], got {:?}", x))
+                };
+                out.push(res)
+            },
+            x => out.push(DatePattern::Error(format!("Unexpected token {:?} in date pattern", x)))
+        }
+        iter.next();
+    }
+    out
+}
+
 pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
     let mut aliases = vec![];
@@ -393,6 +463,8 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
             Token::Newline => line += 1,
             Token::Comment(lines) => line += lines,
             Token::Eof => break,
+            Token::Ident(ref name) if name == "datepattern" =>
+                map.push((name.clone(), Rc::new(Def::DatePattern(parse_datepattern(iter))))),
             Token::Ident(name) => {
                 let def = match iter.next().unwrap() {
                     Token::ColonDash => {

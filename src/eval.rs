@@ -408,6 +408,7 @@ impl Context {
                 let num = &num * &exp;
                 Ok(Value::new(num))
             },
+            Expr::Date(_) => unimplemented!(),
             Expr::Neg(ref expr) => self.eval(&**expr).and_then(|mut v| {
                 v.0 = -v.0;
                 Ok(v)
@@ -527,6 +528,7 @@ impl Context {
             },
             Expr::Neg(ref v) => self.eval_unit_name(v),
             Expr::Plus(ref v) => self.eval_unit_name(v),
+            Expr::Date(_) => Err(format!("Dates are not allowed in the right hand side of conversions")),
             Expr::Convert(_, _) => Err(format!("Conversions are not allowed in the right hand of conversions")),
             Expr::Error(ref e) => Err(e.clone()),
         }
@@ -679,6 +681,7 @@ impl Context {
                     },
                     Err(e) => println!("Prefix {} is malformed: {}", name, e)
                 },
+                Def::DatePattern(_) => unimplemented!(),
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
         }
