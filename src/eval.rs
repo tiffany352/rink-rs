@@ -3,17 +3,10 @@ use std::collections::BTreeMap;
 use gmp::mpz::Mpz;
 use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
-
-/// Number type
-pub type Num = Mpq;
-/// A simple alias to add semantic meaning for when we pass around dimension IDs.
-pub type Dim = usize;
-/// Alias for the primary representation of dimensionality.
-pub type Unit = BTreeMap<Dim, i64>;
-
-/// The basic representation of a number with a unit.
-#[derive(Clone)]
-pub struct Number(Num, Unit);
+use number::{Number, Unit};
+use number;
+use date;
+use unit_defs::DatePattern;
 
 #[derive(Clone)]
 pub enum Value {
@@ -27,356 +20,8 @@ pub struct Context {
     units: HashMap<String, Number>,
     aliases: HashMap<Unit, String>,
     prefixes: Vec<(String, Number)>,
-    datepatterns: Vec<Vec<::unit_defs::DatePattern>>,
+    datepatterns: Vec<Vec<DatePattern>>,
     pub short_output: bool,
-}
-
-fn one() -> Mpq {
-    Mpq::one()
-}
-
-fn zero() -> Mpq {
-    Mpq::zero()
-}
-
-fn pow(left: &Mpq, exp: i32) -> Mpq {
-    if exp < 0 {
-        one() / pow(left, -exp)
-    } else {
-        let num = left.get_num().pow(exp as u32);
-        let den = left.get_den().pow(exp as u32);
-        Mpq::ratio(&num, &den)
-    }
-}
-
-fn root(left: &Mpq, n: i32) -> Mpq {
-    if n < 0 {
-        one() / root(left, -n)
-    } else {
-        let num = left.get_num().root(n as u32);
-        let den = left.get_den().root(n as u32);
-        Mpq::ratio(&num, &den)
-    }
-}
-
-fn to_string(rational: &Mpq) -> (bool, String) {
-    use std::char::from_digit;
-
-    let sign = *rational < Mpq::zero();
-    let rational = rational.abs();
-    let num = rational.get_num();
-    let den = rational.get_den();
-    let intdigits = (&num / &den).size_in_base(10) as u32;
-
-    let mut buf = String::new();
-    if sign {
-        buf.push('-');
-    }
-    let zero = Mpq::zero();
-    let one = Mpz::one();
-    let ten = Mpz::from(10);
-    let ten_mpq = Mpq::ratio(&ten, &one);
-    let mut cursor = rational / Mpq::ratio(&ten.pow(intdigits), &one);
-    let mut n = 0;
-    let mut only_zeros = true;
-    let mut zeros = 0;
-    let mut placed_decimal = false;
-    loop {
-        let exact = cursor == zero;
-        let use_sci = intdigits+zeros > 9;
-        let placed_ints = n >= intdigits;
-        let bail =
-            (exact && (placed_ints || use_sci)) ||
-            (n as i32 - zeros as i32 > 6 && use_sci) ||
-            n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, 6);
-        if bail && use_sci {
-            // scientific notation
-            buf = buf[zeros as usize + placed_decimal as usize + sign as usize..].to_owned();
-            buf.insert(1, '.');
-            if buf.len() == 2 {
-                buf.insert(2, '0');
-            }
-            if sign {
-                buf.insert(0, '-');
-            }
-            buf.push_str(&*format!("e{}", intdigits as i32 - zeros as i32 - 1));
-            return (exact, buf)
-        }
-        if bail {
-            return (exact, buf)
-        }
-        if n == intdigits {
-            buf.push('.');
-            placed_decimal = true;
-        }
-        let digit = &(&(&cursor.get_num() * &ten) / &cursor.get_den()) % &ten;
-        let v: Option<i64> = (&digit).into();
-        let v = v.unwrap();
-        if v != 0 {
-            only_zeros = false
-        } else if only_zeros {
-            zeros += 1;
-        }
-        if !(v == 0 && only_zeros && n < intdigits-1) {
-            buf.push(from_digit(v as u32, 10).unwrap());
-        }
-        cursor = &cursor * &ten_mpq;
-        cursor = &cursor - &Mpq::ratio(&digit, &one);
-        n += 1;
-    }
-}
-
-fn parse_date<I>(out: &mut ::chrono::format::parsed::Parsed,
-                 date: &mut ::std::iter::Peekable<I>,
-                 pat: &[::unit_defs::DatePattern]) -> Result<(), String>
-    where I: Iterator<Item=::unit_defs::Token>+Clone {
-    use unit_defs::{DatePattern, Token};
-    use chrono::Weekday;
-
-    let tok = date.peek().cloned();
-
-    macro_rules! numeric_match {
-        ($name:expr, $digits:expr, $field:ident) => {
-            match tok {
-                Some(Token::Number(ref s, None, None)) if $digits == 0 || s.len() == $digits => {
-                    let value = i32::from_str_radix(&**s, 10).unwrap();
-                    out.$field = Some(value as _);
-                    Ok(())
-                },
-                x => Err(format!("Expected {}-digit {}, got {:?}", $digits, $name, x))
-            }
-        }
-    }
-
-    let res = match pat.first() {
-        None if tok.is_some() => Err(format!("Expected EOF, got {:?}", tok.unwrap())),
-        None => return Ok(()),
-        Some(&DatePattern::Literal(ref l)) => match tok {
-            Some(Token::Ident(ref s)) if s == l => Ok(()),
-            x => Err(format!("Expected `{}`, got {:?}", l, x)),
-        },
-        Some(&DatePattern::Match(ref what)) => match &**what {
-            "fullyear"  => numeric_match!("fullyear",  4, year),
-            "shortyear" => numeric_match!("shortyear", 2, year_mod_100),
-            "century"   => numeric_match!("century",   2, year_div_100),
-            "monthnum"  => numeric_match!("monthnum",  2, month),
-            "day"       => numeric_match!("day",       2, day),
-            "hour12"    => numeric_match!("hour12",    2, hour_mod_12),
-            "min"       => numeric_match!("min",       2, minute),
-            "ordinal"   => numeric_match!("ordinal",   3, ordinal),
-            "isoyear"   => numeric_match!("isoyear",   4, isoyear),
-            "isoweek"   => numeric_match!("isoweek",   2, isoweek),
-            "unix"      => numeric_match!("unix",      0, timestamp),
-            "hour24" => match tok {
-                Some(Token::Number(ref s, None, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10).unwrap();
-                    out.hour_div_12 = Some(value / 12);
-                    out.hour_mod_12 = Some(value % 12);
-                    Ok(())
-                },
-                x => Err(format!("Expected 2-digit hour24, got {:?}", x))
-            },
-            "sec" => match tok {
-                Some(Token::Number(ref s, None, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10).unwrap();
-                    out.second = Some(value);
-                    Ok(())
-                },
-                Some(Token::Number(ref s, Some(ref f), None)) if s.len() == 2 => {
-                    let secs = u32::from_str_radix(&**s, 10).unwrap();
-                    let nsecs = u32::from_str_radix(&**f, 10).unwrap() * 10u32.pow(9 - f.len() as u32);
-                    out.second = Some(secs);
-                    out.nanosecond = Some(nsecs);
-                    Ok(())
-                },
-                x => Err(format!("Expected 2-digit sec, got {:?}", x))
-            },
-            "offset" => {
-                macro_rules! take {
-                    ($($pat: pat)|+) => {
-                        match date.peek().cloned() {
-                            $(Some($pat))|+ => date.next().unwrap(),
-                            x => return Err(format!("Expected {}, got {:?}", stringify!($($pat)|+), x))
-                        }
-                    };
-                    ($pat:pat, $var:ident) => {
-                        match date.peek().cloned() {
-                            Some($pat) => {date.next(); $var},
-                            x => return Err(format!("Expected {}, got {:?}", stringify!($pat), x))
-                        }
-                    }
-                }
-                let s = match take!(Token::Plus | Token::Minus) {
-                    Token::Plus => 1, Token::Minus => -1, _ => panic!()
-                };
-                let h = take!(Token::Number(s, None, None), s);
-                let h = i32::from_str_radix(&*h, 10).unwrap();
-                take!(Token::Colon);
-                let m = take!(Token::Number(s, None, None), s);
-                let m = i32::from_str_radix(&*m, 10).unwrap();
-                out.offset = Some(s * (h*3600 + m*60));
-                Ok(())
-            },
-            "monthname" => match tok {
-                Some(Token::Ident(ref s)) => {
-                    let res = match &*s.to_lowercase() {
-                        "jan" | "january" => 1,
-                        "feb" | "february" => 2,
-                        "mar" | "march" => 3,
-                        "apr" | "april" => 4,
-                        "may" => 5,
-                        "jun" | "june" => 6,
-                        "jul" | "july" => 7,
-                        "aug" | "august" => 8,
-                        "sep" | "september" => 9,
-                        "oct" | "october" => 10,
-                        "nov" | "november" => 11,
-                        "dec" | "december" => 12,
-                        x => return Err(format!("Unknown month name: {}", x))
-                    };
-                    out.month = Some(res);
-                    Ok(())
-                },
-                x => Err(format!("Expected month name, got {:?}", x))
-            },
-            "weekday" => match tok {
-                Some(Token::Ident(ref s)) => {
-                    let res = match &*s.to_lowercase() {
-                        "mon" | "monday" => Weekday::Mon,
-                        "tue" | "tuesday" => Weekday::Tue,
-                        "wed" | "wednesday" => Weekday::Wed,
-                        "thu" | "thursday" => Weekday::Thu,
-                        "fri" | "friday" => Weekday::Fri,
-                        "sat" | "saturday" => Weekday::Sat,
-                        "sun" | "sunday" => Weekday::Sun,
-                        x => return Err(format!("Unknown weekday: {}", x))
-                    };
-                    out.weekday = Some(res);
-                    Ok(())
-                },
-                x => Err(format!("Expected weekday, got {:?}", x))
-            },
-            x => Err(format!("Unknown match pattern `{}`", x))
-        },
-        Some(&DatePattern::Optional(ref pats)) => {
-            let mut iter = date.clone();
-            match parse_date(out, &mut iter, &pats[..]) {
-                Ok(()) => *date = iter,
-                Err(_) => ()
-            };
-            Ok(())
-        }
-        Some(&DatePattern::Dash) => match tok {
-            Some(Token::Minus) => Ok(()),
-            x => Err(format!("Expected `-`, got {:?}", x))
-        },
-        Some(&DatePattern::Colon) => match tok {
-            Some(Token::Colon) => Ok(()),
-            x => Err(format!("Expected `:`, got {:?}", x))
-        },
-        Some(&DatePattern::Error(ref err)) => Err(err.clone())
-    };
-    date.next();
-    match res {
-        Ok(()) => parse_date(out, date, &pat[1..]),
-        Err(e) => Err(e)
-    }
-}
-
-fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
-    left: &BTreeMap<K, V>, right: &BTreeMap<K, V>, merge_func: F
-) -> BTreeMap<K, V> {
-    let mut res = BTreeMap::new();
-    let mut a = left.iter().peekable();
-    let mut b = right.iter().peekable();
-    loop {
-        match (a.peek().cloned(), b.peek().cloned()) {
-            (Some((akey, aval)), Some((bkey, bval))) if akey == bkey => {
-                if let Some(v) = merge_func(aval, bval) {
-                    res.insert(akey.clone(), v);
-                }
-                a.next();
-                b.next();
-            },
-            (Some((akey, _)), Some((bkey, bval))) if akey > bkey => {
-                res.insert(bkey.clone(), bval.clone());
-                b.next();
-            },
-            (Some((akey, aval)), Some((bkey, _))) if akey < bkey => {
-                res.insert(akey.clone(), aval.clone());
-                a.next();
-            },
-            (Some(_), Some(_)) => panic!(),
-            (None, Some((bkey, bval))) => {
-                res.insert(bkey.clone(), bval.clone());
-                b.next();
-            },
-            (Some((akey, aval)), None) => {
-                res.insert(akey.clone(), aval.clone());
-                a.next();
-            },
-            (None, None) => break,
-        }
-    }
-    res
-}
-
-impl Number {
-    /// Creates a dimensionless value.
-    pub fn new(num: Num) -> Number {
-        Number(num, Unit::new())
-    }
-
-    /// Creates a value with a single dimension.
-    pub fn new_unit(num: Num, unit: Dim) -> Number {
-        let mut map = Unit::new();
-        map.insert(unit, 1);
-        Number(num, map)
-    }
-
-    /// Computes the reciprocal (1/x) of the value.
-    pub fn invert(&self) -> Number {
-        Number(&one() / &self.0,
-              self.1.iter()
-              .map(|(&k, &power)| (k, -power))
-              .collect::<Unit>())
-    }
-
-    /// Adds two values. They must have matching units.
-    pub fn add(&self, other: &Number) -> Option<Number> {
-        if self.1 != other.1 {
-            return None
-        }
-        Some(Number(&self.0 + &other.0, self.1.clone()))
-    }
-
-    /// Multiplies two values, also multiplying their units.
-    pub fn mul(&self, other: &Number) -> Number {
-        let val = btree_merge(&self.1, &other.1, |a, b| if a+b != 0 { Some(a + b) } else { None });
-        Number(&self.0 * &other.0, val)
-    }
-
-    /// Raises a value to a dimensionless integer power.
-    pub fn pow(&self, exp: i32) -> Number {
-        let unit = self.1.iter()
-            .map(|(&k, &power)| (k, power * exp as i64))
-            .collect::<Unit>();
-        Number(pow(&self.0, exp), unit)
-    }
-
-    /// Computes the nth root of a value iff all of its units have
-    /// powers divisible by n.
-    pub fn root(&self, exp: i32) -> Option<Number> {
-        let mut res = Unit::new();
-        for (&dim, &power) in &self.1 {
-            if power % exp as i64 != 0 {
-                return None
-            } else {
-                res.insert(dim, power / exp as i64);
-            }
-        }
-        Some(Number(root(&self.0, exp), res))
-    }
 }
 
 impl Context {
@@ -391,7 +36,7 @@ impl Context {
         let mut value = value.clone();
         value.0.canonicalize();
 
-        let (exact, approx) = match to_string(&value.0) {
+        let (exact, approx) = match number::to_string(&value.0) {
             (true, v) => (v, None),
             (false, v) => if value.0.get_den() > Mpz::from(1_000_000) || value.0.get_num() > Mpz::from(1_000_000_000u64) {
                 (format!("approx. {}", v), None)
@@ -453,7 +98,7 @@ impl Context {
     pub fn lookup(&self, name: &str) -> Option<Number> {
         for (i, ref k) in self.dimensions.iter().enumerate() {
             if name == *k {
-                return Some(Number::new_unit(one(), i))
+                return Some(Number::one_unit(i))
             }
         }
         self.units.get(name).cloned().or_else(|| {
@@ -471,7 +116,7 @@ impl Context {
             }
             for (unit, alias) in &self.aliases {
                 if name == alias {
-                    return Some(Number(one(), unit.clone()))
+                    return Some(Number(Number::one().0, unit.clone()))
                 }
             }
             None
@@ -552,7 +197,7 @@ impl Context {
                     let frac = Mpz::from_str_radix(&*frac, 10).unwrap();
                     Mpq::ratio(&frac, &Mpz::from(10).pow(frac_digits as u32))
                 } else {
-                    zero()
+                    Mpq::zero()
                 };
                 let exp = if let &Some(ref exp) = exp {
                     let exp: i32 = match FromStr::from_str(&*exp) {
@@ -580,7 +225,7 @@ impl Context {
                 for pat in &self.datepatterns {
                     let attempt = || {
                         let mut parsed = Parsed::new();
-                        try!(parse_date(&mut parsed, &mut date.iter().cloned().peekable(), &pat[..]));
+                        try!(date::parse_date(&mut parsed, &mut date.iter().cloned().peekable(), &pat[..]));
                         let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
                         let time = parsed.to_naive_time();
                         let date = parsed.to_naive_date();
@@ -635,7 +280,7 @@ impl Context {
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
-            Expr::Mul(ref args) => args.iter().fold(Ok(Number::new(one())), |a, b| {
+            Expr::Mul(ref args) => args.iter().fold(Ok(Number::one()), |a, b| {
                 a.and_then(|a| {
                     let b = try!(self.eval(b));
                     Ok(a.mul(&b))
@@ -682,13 +327,13 @@ impl Context {
                 let left = try!(self.eval_unit_name(left));
                 let right = try!(self.eval_unit_name(right)).into_iter()
                     .map(|(k,v)| (k, -v)).collect::<BTreeMap<_, _>>();
-                Ok(btree_merge(&left, &right, |a,b| if a+b != 0 { Some(a + b) } else { None }))
+                Ok(::btree_merge(&left, &right, |a,b| if a+b != 0 { Some(a + b) } else { None }))
             },
             Expr::Mul(ref args) => {
                 args[1..].iter().fold(self.eval_unit_name(&args[0]), |acc, b| {
                     let acc = try!(acc);
                     let b = try!(self.eval_unit_name(b));
-                    Ok(btree_merge(&acc, &b, |a,b| if a+b != 0 { Some(a+b) } else { None }))
+                    Ok(::btree_merge(&acc, &b, |a,b| if a+b != 0 { Some(a+b) } else { None }))
                 })
             },
             Expr::Pow(ref left, ref exp) => {
@@ -737,9 +382,9 @@ impl Context {
                         let mut buf = vec![];
                         let width = 12;
                         let mut topu = top.clone();
-                        topu.0 = one();
+                        topu.0 = Mpq::one();
                         let mut bottomu = bottom.clone();
-                        bottomu.0 = one();
+                        bottomu.0 = Mpq::one();
                         let left = self.show(&topu);
                         let right = self.show(&bottomu);
                         if self.short_output {
@@ -770,7 +415,7 @@ impl Context {
                         Err(String::from_utf8(buf).unwrap())
                     } else {
                         let raw = &top.0 / &bottom.0;
-                        let (raw_exact, raw) = to_string(&raw);
+                        let (raw_exact, raw) = number::to_string(&raw);
                         let approx = if raw_exact {
                             format!("")
                         } else {
