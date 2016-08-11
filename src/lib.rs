@@ -27,6 +27,7 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 */
 
 extern crate gmp;
+extern crate chrono;
 
 pub mod unit_defs;
 pub mod eval;

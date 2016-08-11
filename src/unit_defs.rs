@@ -8,7 +8,6 @@ pub enum Token {
     Comment(usize),
     Ident(String),
     Number(String, Option<String>, Option<String>),
-    Date(String),
     Quote(String),
     Slash,
     Colon,
@@ -29,6 +28,7 @@ pub enum Token {
     Minus,
     Asterisk,
     DashArrow,
+    Hash,
     ImaginaryUnit,
     Error(String),
 }
@@ -233,17 +233,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Quote(buf)
             },
-            '#' => {
-                let mut buf = String::new();
-                loop {
-                    match self.0.next() {
-                        None | Some('\n') => return Some(Token::Error(format!("Unexpected newline or EOF"))),
-                        Some('#') => break,
-                        Some(c) => buf.push(c),
-                    }
-                }
-                Token::Date(buf)
-            },
+            '#' => Token::Hash,
             x => {
                 let mut buf = String::new();
                 buf.push(x);
@@ -267,7 +257,7 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 pub enum Expr {
     Unit(String),
     Const(String, Option<String>, Option<String>),
-    Date(String),
+    Date(Vec<Token>),
     Frac(Box<Expr>, Box<Expr>),
     Mul(Vec<Expr>),
     Pow(Box<Expr>, Box<Expr>),
@@ -320,7 +310,16 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                 x => Expr::Error(format!("Expected ), got {:?}", x))
             }
         },
-        Token::Date(date) => Expr::Date(date),
+        Token::Hash => {
+            let mut out = vec![];
+            loop {
+                match iter.next().unwrap() {
+                    Token::Hash => break,
+                    x => out.push(x),
+                }
+            }
+            Expr::Date(out)
+        },
         x => Expr::Error(format!("Expected term, got {:?}", x))
     }
 }

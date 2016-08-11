@@ -4703,3 +4703,6 @@ HMS[time] :=
 }
 
 
+datepattern fullyear-monthnum-day'T'hour24:min:sec
+datepattern fullyear-monthnum-day
+datepattern hour24:min:sec offset
