@@ -32,7 +32,7 @@ extern crate chrono;
 pub mod unit_defs;
 pub mod eval;
 
-pub use eval::{Context, Value};
+pub use eval::{Context, Number, Value};
 
 use std::env;
 use std::convert::From;

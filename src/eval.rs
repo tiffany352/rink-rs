@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::collections::BTreeMap;
 use gmp::mpz::Mpz;
 use gmp::mpq::Mpq;
+use chrono::{DateTime, FixedOffset};
 
 /// Number type
 pub type Num = Mpq;
@@ -12,14 +13,20 @@ pub type Unit = BTreeMap<Dim, i64>;
 
 /// The basic representation of a number with a unit.
 #[derive(Clone)]
-pub struct Value(Num, Unit);
+pub struct Number(Num, Unit);
+
+#[derive(Clone)]
+pub enum Value {
+    Number(Number),
+    DateTime(DateTime<FixedOffset>),
+}
 
 /// The evaluation context that contains unit definitions.
 pub struct Context {
     dimensions: Vec<String>,
-    units: HashMap<String, Value>,
+    units: HashMap<String, Number>,
     aliases: HashMap<Unit, String>,
-    prefixes: Vec<(String, Value)>,
+    prefixes: Vec<(String, Number)>,
     datepatterns: Vec<Vec<::unit_defs::DatePattern>>,
     pub short_output: bool,
 }
@@ -314,52 +321,52 @@ fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
     res
 }
 
-impl Value {
+impl Number {
     /// Creates a dimensionless value.
-    pub fn new(num: Num) -> Value {
-        Value(num, Unit::new())
+    pub fn new(num: Num) -> Number {
+        Number(num, Unit::new())
     }
 
     /// Creates a value with a single dimension.
-    pub fn new_unit(num: Num, unit: Dim) -> Value {
+    pub fn new_unit(num: Num, unit: Dim) -> Number {
         let mut map = Unit::new();
         map.insert(unit, 1);
-        Value(num, map)
+        Number(num, map)
     }
 
     /// Computes the reciprocal (1/x) of the value.
-    pub fn invert(&self) -> Value {
-        Value(&one() / &self.0,
+    pub fn invert(&self) -> Number {
+        Number(&one() / &self.0,
               self.1.iter()
               .map(|(&k, &power)| (k, -power))
               .collect::<Unit>())
     }
 
     /// Adds two values. They must have matching units.
-    pub fn add(&self, other: &Value) -> Option<Value> {
+    pub fn add(&self, other: &Number) -> Option<Number> {
         if self.1 != other.1 {
             return None
         }
-        Some(Value(&self.0 + &other.0, self.1.clone()))
+        Some(Number(&self.0 + &other.0, self.1.clone()))
     }
 
     /// Multiplies two values, also multiplying their units.
-    pub fn mul(&self, other: &Value) -> Value {
+    pub fn mul(&self, other: &Number) -> Number {
         let val = btree_merge(&self.1, &other.1, |a, b| if a+b != 0 { Some(a + b) } else { None });
-        Value(&self.0 * &other.0, val)
+        Number(&self.0 * &other.0, val)
     }
 
     /// Raises a value to a dimensionless integer power.
-    pub fn pow(&self, exp: i32) -> Value {
+    pub fn pow(&self, exp: i32) -> Number {
         let unit = self.1.iter()
             .map(|(&k, &power)| (k, power * exp as i64))
             .collect::<Unit>();
-        Value(pow(&self.0, exp), unit)
+        Number(pow(&self.0, exp), unit)
     }
 
     /// Computes the nth root of a value iff all of its units have
     /// powers divisible by n.
-    pub fn root(&self, exp: i32) -> Option<Value> {
+    pub fn root(&self, exp: i32) -> Option<Number> {
         let mut res = Unit::new();
         for (&dim, &power) in &self.1 {
             if power % exp as i64 != 0 {
@@ -368,15 +375,15 @@ impl Value {
                 res.insert(dim, power / exp as i64);
             }
         }
-        Some(Value(root(&self.0, exp), res))
+        Some(Number(root(&self.0, exp), res))
     }
 }
 
 impl Context {
-    /// Provides a string representation of a Value. We can't impl
+    /// Provides a string representation of a Number. We can't impl
     /// Display because it requires access to the Context for the unit
     /// names.
-    pub fn show(&self, value: &Value) -> String {
+    pub fn show(&self, value: &Number) -> String {
         use std::io::Write;
 
         let mut out = vec![];
@@ -437,16 +444,16 @@ impl Context {
     }
 
     /// Wrapper around show that calls `println!`.
-    pub fn print(&self, value: &Value) {
+    pub fn print(&self, value: &Number) {
         println!("{}", self.show(value));
     }
 
     /// Given a unit name, returns its value if it exists. Supports SI
     /// prefixes, plurals, bare dimensions like length, and aliases.
-    pub fn lookup(&self, name: &str) -> Option<Value> {
+    pub fn lookup(&self, name: &str) -> Option<Number> {
         for (i, ref k) in self.dimensions.iter().enumerate() {
             if name == *k {
-                return Some(Value::new_unit(one(), i))
+                return Some(Number::new_unit(one(), i))
             }
         }
         self.units.get(name).cloned().or_else(|| {
@@ -464,7 +471,7 @@ impl Context {
             }
             for (unit, alias) in &self.aliases {
                 if name == alias {
-                    return Some(Value(one(), unit.clone()))
+                    return Some(Number(one(), unit.clone()))
                 }
             }
             None
@@ -474,7 +481,7 @@ impl Context {
     /// Describes a value's unit, gives true if the unit is reciprocal
     /// (e.g. you should prefix "1.0 / " or replace "multiply" with
     /// "divide" when rendering it).
-    pub fn describe_unit(&self, value: &Value) -> (bool, String) {
+    pub fn describe_unit(&self, value: &Number) -> (bool, String) {
         use std::io::Write;
 
         let mut buf = vec![];
@@ -531,7 +538,7 @@ impl Context {
 
     /// Evaluates an expression to compute its value, *excluding* `->`
     /// conversions.
-    pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
+    pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Number, String> {
         use unit_defs::Expr;
 
         match *expr {
@@ -564,7 +571,7 @@ impl Context {
                 };
                 let num = &Mpq::ratio(&num, &Mpz::one()) + &frac;
                 let num = &num * &exp;
-                Ok(Value::new(num))
+                Ok(Number::new(num))
             },
             Expr::Date(ref date) => {
                 use chrono::format::Parsed;
@@ -628,7 +635,7 @@ impl Context {
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
-            Expr::Mul(ref args) => args.iter().fold(Ok(Value::new(one())), |a, b| {
+            Expr::Mul(ref args) => args.iter().fold(Ok(Number::new(one())), |a, b| {
                 a.and_then(|a| {
                     let b = try!(self.eval(b));
                     Ok(a.mul(&b))
