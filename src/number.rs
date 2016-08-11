@@ -1,6 +1,8 @@
 use gmp::mpq::Mpq;
 use gmp::mpz::Mpz;
 use std::collections::BTreeMap;
+use eval::Show;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Number type
 pub type Num = Mpq;
@@ -133,30 +135,47 @@ impl Number {
         Number(num, map)
     }
 
+    pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Number, String> {
+        use std::str::FromStr;
+
+        let num = Mpz::from_str_radix(integer, 10).unwrap();
+        let frac = if let Some(ref frac) = frac {
+            let frac_digits = frac.len();
+            let frac = Mpz::from_str_radix(&*frac, 10).unwrap();
+            Mpq::ratio(&frac, &Mpz::from(10).pow(frac_digits as u32))
+        } else {
+            Mpq::zero()
+        };
+        let exp = if let Some(ref exp) = exp {
+            let exp: i32 = match FromStr::from_str(&*exp) {
+                Ok(exp) => exp,
+                // presumably because it is too large
+                Err(e) => return Err(format!("Failed to parse exponent: {}", e))
+            };
+            let res = Mpz::from(10).pow(exp.abs() as u32);
+            if exp < 0 {
+                Mpq::ratio(&Mpz::one(), &res)
+            } else {
+                Mpq::ratio(&res, &Mpz::one())
+            }
+        } else {
+            Mpq::one()
+        };
+        let num = &Mpq::ratio(&num, &Mpz::one()) + &frac;
+        let num = &num * &exp;
+        Ok(Number::new(num))
+    }
+
     /// Computes the reciprocal (1/x) of the value.
     pub fn invert(&self) -> Number {
         Number(&one() / &self.0,
-              self.1.iter()
-              .map(|(&k, &power)| (k, -power))
-              .collect::<Unit>())
-    }
-
-    /// Adds two values. They must have matching units.
-    pub fn add(&self, other: &Number) -> Option<Number> {
-        if self.1 != other.1 {
-            return None
-        }
-        Some(Number(&self.0 + &other.0, self.1.clone()))
-    }
-
-    /// Multiplies two values, also multiplying their units.
-    pub fn mul(&self, other: &Number) -> Number {
-        let val = ::btree_merge(&self.1, &other.1, |a, b| if a+b != 0 { Some(a + b) } else { None });
-        Number(&self.0 * &other.0, val)
+               self.1.iter()
+               .map(|(&k, &power)| (k, -power))
+               .collect::<Unit>())
     }
 
     /// Raises a value to a dimensionless integer power.
-    pub fn pow(&self, exp: i32) -> Number {
+    pub fn powi(&self, exp: i32) -> Number {
         let unit = self.1.iter()
             .map(|(&k, &power)| (k, power * exp as i64))
             .collect::<Unit>();
@@ -175,5 +194,143 @@ impl Number {
             }
         }
         Some(Number(root(&self.0, exp), res))
+    }
+
+    pub fn pow(&self, exp: &Number) -> Result<Number, String> {
+        use std::convert::Into;
+
+        if exp.1.len() != 0 {
+            return Err(format!("Exponent must be dimensionless"))
+        }
+        let mut exp = exp.0.clone();
+        exp.canonicalize();
+        let num = exp.get_num();
+        let den = exp.get_den();
+        let one = Mpz::one();
+        if den == one {
+            let exp: Option<i64> = (&num).into();
+            Ok(self.powi(exp.unwrap() as i32))
+        } else if num == one {
+            let exp: Option<i64> = (&den).into();
+            self.root(exp.unwrap() as i32).ok_or(format!(
+                "Unit roots must be in integer dimensions, i.e. you \
+                 can only take the nth root of a unit to the nth \
+                 power"))
+        } else {
+            Err(format!("Exponent must be either an integer or the reciprocal of an integer"))
+        }
+    }
+}
+
+impl Show for Number {
+    fn show(&self, context: &::eval::Context) -> String {
+        use std::io::Write;
+
+        let mut out = vec![];
+        let mut frac = vec![];
+        let mut value = self.clone();
+        value.0.canonicalize();
+
+        let (exact, approx) = match to_string(&value.0) {
+            (true, v) => (v, None),
+            (false, v) => if value.0.get_den() > Mpz::from(1_000_000) || value.0.get_num() > Mpz::from(1_000_000_000u64) {
+                (format!("approx. {}", v), None)
+            } else {
+                (format!("{:?}", value.0), Some(v))
+            }
+        };
+
+        write!(out, "{}", exact).unwrap();
+        if let Some(approx) = approx {
+            write!(out, ", approx. {}", approx).unwrap();
+        }
+        for (&dim, &exp) in &value.1 {
+            if exp < 0 {
+                frac.push((dim, exp));
+            } else {
+                write!(out, " {}", context.dimensions[dim]).unwrap();
+                if exp != 1 {
+                    write!(out, "^{}", exp).unwrap();
+                }
+            }
+        }
+        if frac.len() > 0 {
+            write!(out, " /").unwrap();
+            for (dim, exp) in frac {
+                let exp = -exp;
+                write!(out, " {}", context.dimensions[dim]).unwrap();
+                if exp != 1 {
+                    write!(out, "^{}", exp).unwrap();
+                }
+            }
+        }
+        let alias = context.aliases.get(&value.1).cloned().or_else(|| {
+            if value.1.len() == 1 {
+                let e = value.1.iter().next().unwrap();
+                let ref n = context.dimensions[*e.0];
+                if *e.1 == 1 {
+                    Some(n.clone())
+                } else {
+                    Some(format!("{}^{}", n, e.1))
+                }
+            } else {
+                None
+            }
+        });
+        if let Some(alias) = alias {
+            write!(out, " ({})", alias).unwrap();
+        }
+        String::from_utf8(out).unwrap()
+    }
+}
+
+impl<'a, 'b> Add<&'b Number> for &'a Number {
+    type Output = Option<Number>;
+
+    fn add(self, other: &Number) -> Self::Output {
+        if self.1 != other.1 {
+            return None
+        }
+        Some(Number(&self.0 + &other.0, self.1.clone()))
+    }
+}
+
+impl<'a, 'b> Sub<&'b Number> for &'a Number {
+    type Output = Option<Number>;
+
+    fn sub(self, other: &Number) -> Self::Output {
+        if self.1 != other.1 {
+            return None
+        }
+        Some(Number(&self.0 - &other.0, self.1.clone()))
+    }
+}
+
+impl<'a> Neg for &'a Number {
+    type Output = Option<Number>;
+
+    fn neg(self) -> Self::Output {
+        Some(Number(-&self.0, self.1.clone()))
+    }
+}
+
+impl<'a, 'b> Mul<&'b Number> for &'a Number {
+    type Output = Option<Number>;
+
+    fn mul(self, other: &Number) -> Self::Output {
+        let val = ::btree_merge(&self.1, &other.1, |a, b| if a+b != 0 { Some(a + b) } else { None });
+        Some(Number(&self.0 * &other.0, val))
+    }
+}
+
+impl<'a, 'b> Div<&'b Number> for &'a Number {
+    type Output = Option<Number>;
+
+    fn div(self, other: &Number) -> Self::Output {
+        if self.0 == zero() {
+            None
+        } else {
+            self * &other.invert()
+        }
     }
 }

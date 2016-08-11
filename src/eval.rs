@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::collections::BTreeMap;
-use gmp::mpz::Mpz;
 use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
 use number::{Number, Unit};
@@ -16,81 +15,32 @@ pub enum Value {
 
 /// The evaluation context that contains unit definitions.
 pub struct Context {
-    dimensions: Vec<String>,
-    units: HashMap<String, Number>,
-    aliases: HashMap<Unit, String>,
-    prefixes: Vec<(String, Number)>,
-    datepatterns: Vec<Vec<DatePattern>>,
+    pub dimensions: Vec<String>,
+    pub units: HashMap<String, Number>,
+    pub aliases: HashMap<Unit, String>,
+    pub prefixes: Vec<(String, Number)>,
+    pub datepatterns: Vec<Vec<DatePattern>>,
     pub short_output: bool,
 }
 
-impl Context {
-    /// Provides a string representation of a Number. We can't impl
-    /// Display because it requires access to the Context for the unit
-    /// names.
-    pub fn show(&self, value: &Number) -> String {
-        use std::io::Write;
+pub trait Show {
+    /// Provides a string representation of something, using information contained in a Context.
+    fn show(&self, context: &Context) -> String;
+}
 
-        let mut out = vec![];
-        let mut frac = vec![];
-        let mut value = value.clone();
-        value.0.canonicalize();
-
-        let (exact, approx) = match number::to_string(&value.0) {
-            (true, v) => (v, None),
-            (false, v) => if value.0.get_den() > Mpz::from(1_000_000) || value.0.get_num() > Mpz::from(1_000_000_000u64) {
-                (format!("approx. {}", v), None)
-            } else {
-                (format!("{:?}", value.0), Some(v))
-            }
-        };
-
-        write!(out, "{}", exact).unwrap();
-        if let Some(approx) = approx {
-            write!(out, ", approx. {}", approx).unwrap();
+impl Show for Value {
+    fn show(&self, context: &Context) -> String {
+        match *self {
+            Value::Number(ref num) => num.show(context),
+            Value::DateTime(ref dt) => format!("{}", dt)
         }
-        for (&dim, &exp) in &value.1 {
-            if exp < 0 {
-                frac.push((dim, exp));
-            } else {
-                write!(out, " {}", self.dimensions[dim]).unwrap();
-                if exp != 1 {
-                    write!(out, "^{}", exp).unwrap();
-                }
-            }
-        }
-        if frac.len() > 0 {
-            write!(out, " /").unwrap();
-            for (dim, exp) in frac {
-                let exp = -exp;
-                write!(out, " {}", self.dimensions[dim]).unwrap();
-                if exp != 1 {
-                    write!(out, "^{}", exp).unwrap();
-                }
-            }
-        }
-        let alias = self.aliases.get(&value.1).cloned().or_else(|| {
-            if value.1.len() == 1 {
-                let e = value.1.iter().next().unwrap();
-                let ref n = self.dimensions[*e.0];
-                if *e.1 == 1 {
-                    Some(n.clone())
-                } else {
-                    Some(format!("{}^{}", n, e.1))
-                }
-            } else {
-                None
-            }
-        });
-        if let Some(alias) = alias {
-            write!(out, " ({})", alias).unwrap();
-        }
-        String::from_utf8(out).unwrap()
     }
+}
 
+impl Context {
     /// Wrapper around show that calls `println!`.
     pub fn print(&self, value: &Number) {
-        println!("{}", self.show(value));
+        println!("{}", value.show(self));
     }
 
     /// Given a unit name, returns its value if it exists. Supports SI
@@ -110,7 +60,7 @@ impl Context {
             for &(ref pre, ref value) in &self.prefixes {
                 if name.starts_with(pre) {
                     if let Some(v) = self.lookup(&name[pre.len()..]) {
-                        return Some(v.mul(&value))
+                        return Some((&v * &value).unwrap())
                     }
                 }
             }
@@ -188,36 +138,8 @@ impl Context {
 
         match *expr {
             Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)),
-            Expr::Const(ref num, ref frac, ref exp) => {
-                use std::str::FromStr;
-
-                let num = Mpz::from_str_radix(&*num, 10).unwrap();
-                let frac = if let &Some(ref frac) = frac {
-                    let frac_digits = frac.len();
-                    let frac = Mpz::from_str_radix(&*frac, 10).unwrap();
-                    Mpq::ratio(&frac, &Mpz::from(10).pow(frac_digits as u32))
-                } else {
-                    Mpq::zero()
-                };
-                let exp = if let &Some(ref exp) = exp {
-                    let exp: i32 = match FromStr::from_str(&*exp) {
-                        Ok(exp) => exp,
-                        // presumably because it is too large
-                        Err(e) => return Err(format!("Failed to parse exponent: {}", e))
-                    };
-                    let res = Mpz::from(10).pow(exp.abs() as u32);
-                    if exp < 0 {
-                        Mpq::ratio(&Mpz::one(), &res)
-                    } else {
-                        Mpq::ratio(&res, &Mpz::one())
-                    }
-                } else {
-                    Mpq::one()
-                };
-                let num = &Mpq::ratio(&num, &Mpz::one()) + &frac;
-                let num = &num * &exp;
-                Ok(Number::new(num))
-            },
+            Expr::Const(ref num, ref frac, ref exp) =>
+                Number::from_parts(num, frac.as_ref().map(AsRef::as_ref), exp.as_ref().map(AsRef::as_ref)),
             Expr::Date(ref date) => {
                 use chrono::format::Parsed;
                 use chrono::{DateTime, UTC, FixedOffset};
@@ -250,31 +172,28 @@ impl Context {
             }),
             Expr::Plus(ref expr) => self.eval(&**expr),
             Expr::Frac(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
-                (Ok(top), Ok(bottom)) => {
-                    if bottom.0 == Mpq::zero() {
-                        return Err(format!("Division by zero: {} / {}", self.show(&top), self.show(&bottom)))
-                    }
-                    Ok(top.mul(&bottom.invert()))
-                },
+                (Ok(top), Ok(bottom)) =>
+                    (&top / &bottom).ok_or_else(|| {
+                        format!("Division by zero: {} / {}", top.show(self), bottom.show(self))
+                    }),
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
             Expr::Add(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
                 (Ok(top), Ok(bottom)) => {
-                    top.add(&bottom).ok_or_else(|| {
+                    (&top + &bottom).ok_or_else(|| {
                         format!("Add of values with differing units is not meaningful: {} + {}",
-                                    self.show(&top), self.show(&bottom))
+                                    top.show(self), bottom.show(self))
                     })
                 },
                 (Err(e), _) => Err(e),
                 (_, Err(e)) => Err(e),
             },
             Expr::Sub(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
-                (Ok(top), Ok(mut bottom)) => {
-                    bottom.0 = -bottom.0;
-                    top.add(&bottom).ok_or_else(|| {
+                (Ok(top), Ok(bottom)) => {
+                    (&top - &bottom).ok_or_else(|| {
                         format!("Sub of values with differing units is not meaningful: {} - {}",
-                                self.show(&top), self.show(&bottom))
+                                top.show(self), bottom.show(self))
                     })
                 },
                 (Err(e), _) => Err(e),
@@ -283,29 +202,13 @@ impl Context {
             Expr::Mul(ref args) => args.iter().fold(Ok(Number::one()), |a, b| {
                 a.and_then(|a| {
                     let b = try!(self.eval(b));
-                    Ok(a.mul(&b))
+                    Ok((&a * &b).unwrap())
                 })
             }),
-            Expr::Pow(ref base, ref exp) => {
-                let base = try!(self.eval(&**base));
-                let exp = try!(self.eval(&**exp));
-                let fexp: f64 = exp.0.into();
-                if exp.1.len() != 0 {
-                    Err(format!("Exponent not dimensionless"))
-                } else if fexp.trunc() == fexp {
-                    let iexp = fexp as i32;
-                    if iexp < 0 && base.0 == Mpq::zero() {
-                        return Err(format!("Disivion by zero: {}^{}", self.show(&base), iexp))
-                    }
-                    Ok(base.pow(fexp as i32))
-                } else if (1.0 / fexp).trunc() == 1.0 / fexp {
-                    if base.0 < Mpq::zero() {
-                        return Err(format!("Root of a negative number is imaginary, which is not yet implemented: {}^{}", self.show(&base), fexp))
-                    }
-                    base.root((1.0 / fexp) as i32).ok_or(format!("Unit roots must result in integer dimensions"))
-                } else {
-                    Err(format!("Exponent not integer"))
-                }
+            Expr::Pow(ref base, ref exp) => match (self.eval(&**base), self.eval(&**exp)) {
+                (Ok(base), Ok(exp)) => base.pow(&exp),
+                (Err(e), _) => Err(e),
+                (_, Err(e)) => Err(e),
             },
             Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
             Expr::Error(ref e) => Err(e.clone()),
@@ -385,8 +288,8 @@ impl Context {
                         topu.0 = Mpq::one();
                         let mut bottomu = bottom.clone();
                         bottomu.0 = Mpq::one();
-                        let left = self.show(&topu);
-                        let right = self.show(&bottomu);
+                        let left = topu.show(self);
+                        let right = bottomu.show(self);
                         if self.short_output {
                             writeln!(buf, "Conformance error [ {left} || {right} ]",
                                      left=left, right=right).unwrap();
@@ -396,7 +299,7 @@ impl Context {
                                                   "{:>width$}: {right}"),
                                      "Left side", "Right side", left=left, right=right, width=width).unwrap();
                         }
-                        let diff = topu.mul(&bottomu.invert());
+                        let diff = (&topu / &bottomu).unwrap();
                         let (recip, desc) = self.describe_unit(&diff.invert());
                         let word = match recip {
                             false => "multiply",
@@ -468,7 +371,7 @@ impl Context {
             },
             _ => {
                 let val = try!(self.eval(expr));
-                Ok(self.show(&val))
+                Ok(val.show(self))
             },
         }
     }
