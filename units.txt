@@ -515,6 +515,10 @@ s^-1   ||| frequency
 
 m s^-1 ||| velocity
 m s^-2 ||| acceleration
+m s^-3 ||| jerk
+m s^-4 ||| snap
+m s^-5 ||| crackle
+m s^-6 ||| pop
 m kg s^-1 ||| momentum
 
 m kg s^-2    ||| force
