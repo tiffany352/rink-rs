@@ -6,6 +6,7 @@ use number::{Number, Unit};
 use number;
 use date;
 use unit_defs::DatePattern;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Clone)]
 pub enum Value {
@@ -33,6 +34,84 @@ impl Show for Value {
         match *self {
             Value::Number(ref num) => num.show(context),
             Value::DateTime(ref dt) => format!("{}", dt)
+        }
+    }
+}
+
+impl Value {
+    fn pow(&self, exp: &Value) -> Result<Value, String> {
+        match (self, exp) {
+            (&Value::Number(ref left), &Value::Number(ref right)) =>
+                left.pow(right).map(Value::Number),
+            (_, _) => Err(format!("Operation is not defined"))
+        }
+    }
+}
+
+impl<'a,'b> Add<&'b Value> for &'a Value {
+    type Output = Result<Value, String>;
+
+    fn add(self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) =>
+                (left + right)
+                .ok_or(format!("Addition of units with mismatched units is not meaningful"))
+                .map(Value::Number),
+            (_, _) => Err(format!("Operation is not defined"))
+        }
+    }
+}
+
+impl<'a,'b> Sub<&'b Value> for &'a Value {
+    type Output = Result<Value, String>;
+
+    fn sub(self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) =>
+                (left - right)
+                .ok_or(format!("Subtraction of units with mismatched units is not meaningful"))
+                .map(Value::Number),
+            (_, _) => Err(format!("Operation is not defined"))
+        }
+    }
+}
+
+impl<'a> Neg for &'a Value {
+    type Output = Result<Value, String>;
+
+    fn neg(self) -> Self::Output {
+        match *self {
+            Value::Number(ref num) =>
+                (-num).ok_or(format!("Bug: Negation should not fail")).map(Value::Number),
+            _ => Err(format!("Operation is not defined"))
+        }
+    }
+}
+
+impl<'a,'b> Mul<&'b Value> for &'a Value {
+    type Output = Result<Value, String>;
+
+    fn mul(self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) =>
+                (left * right)
+                .ok_or(format!("Bug: Mul should not fail"))
+                .map(Value::Number),
+            (_, _) => Err(format!("Operation is not defined"))
+        }
+    }
+}
+
+impl<'a,'b> Div<&'b Value> for &'a Value {
+    type Output = Result<Value, String>;
+
+    fn div(self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) =>
+                (left / right)
+                .ok_or(format!("Division by zero"))
+                .map(Value::Number),
+            (_, _) => Err(format!("Operation is not defined"))
         }
     }
 }
@@ -133,83 +212,35 @@ impl Context {
 
     /// Evaluates an expression to compute its value, *excluding* `->`
     /// conversions.
-    pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Number, String> {
+    pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
         use unit_defs::Expr;
 
         match *expr {
-            Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)),
+            Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)).map(Value::Number),
             Expr::Const(ref num, ref frac, ref exp) =>
-                Number::from_parts(num, frac.as_ref().map(AsRef::as_ref), exp.as_ref().map(AsRef::as_ref)),
-            Expr::Date(ref date) => {
-                use chrono::format::Parsed;
-                use chrono::{DateTime, UTC, FixedOffset};
-
-                for pat in &self.datepatterns {
-                    let attempt = || {
-                        let mut parsed = Parsed::new();
-                        try!(date::parse_date(&mut parsed, &mut date.iter().cloned().peekable(), &pat[..]));
-                        let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
-                        let time = parsed.to_naive_time();
-                        let date = parsed.to_naive_date();
-                        match (time, date) {
-                            (Ok(time), Ok(date)) =>
-                                Ok(DateTime::<FixedOffset>::from_utc(date.and_time(time), offset)),
-                            (Ok(time), Err(_)) =>
-                                Ok(UTC::now().with_timezone(&offset).date().and_time(time).unwrap()),
-                            _ => Err(format!("Failed to construct a useful datetime"))
-                        }
-                    };
-                    match attempt() {
-                        Ok(_datetime) => unimplemented!(),
-                        Err(_) => ()
-                    }
-                }
-                unimplemented!()
-            },
-            Expr::Neg(ref expr) => self.eval(&**expr).and_then(|mut v| {
-                v.0 = -v.0;
-                Ok(v)
-            }),
+                Number::from_parts(
+                    num,
+                    frac.as_ref().map(AsRef::as_ref),
+                    exp.as_ref().map(AsRef::as_ref))
+                .map(Value::Number),
+            Expr::Date(ref date) => date::try_decode(date, self).map(Value::DateTime),
+            Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| -&v),
             Expr::Plus(ref expr) => self.eval(&**expr),
-            Expr::Frac(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
-                (Ok(top), Ok(bottom)) =>
-                    (&top / &bottom).ok_or_else(|| {
-                        format!("Division by zero: {} / {}", top.show(self), bottom.show(self))
-                    }),
-                (Err(e), _) => Err(e),
-                (_, Err(e)) => Err(e),
-            },
-            Expr::Add(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
-                (Ok(top), Ok(bottom)) => {
-                    (&top + &bottom).ok_or_else(|| {
-                        format!("Add of values with differing units is not meaningful: {} + {}",
-                                    top.show(self), bottom.show(self))
-                    })
-                },
-                (Err(e), _) => Err(e),
-                (_, Err(e)) => Err(e),
-            },
-            Expr::Sub(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom)) {
-                (Ok(top), Ok(bottom)) => {
-                    (&top - &bottom).ok_or_else(|| {
-                        format!("Sub of values with differing units is not meaningful: {} - {}",
-                                top.show(self), bottom.show(self))
-                    })
-                },
-                (Err(e), _) => Err(e),
-                (_, Err(e)) => Err(e),
-            },
-            Expr::Mul(ref args) => args.iter().fold(Ok(Number::one()), |a, b| {
+            Expr::Frac(ref top, ref bottom) =>
+                &try!(self.eval(&**top)) / &try!(self.eval(&**bottom)),
+            Expr::Add(ref top, ref bottom) =>
+                &try!(self.eval(&**top)) / &try!(self.eval(&**bottom)),
+            Expr::Sub(ref top, ref bottom) =>
+                &try!(self.eval(&**top)) / &try!(self.eval(&**bottom)),
+            // TODO: A type might not implement * on Number, and this would fail
+            Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
                 a.and_then(|a| {
                     let b = try!(self.eval(b));
                     Ok((&a * &b).unwrap())
                 })
             }),
-            Expr::Pow(ref base, ref exp) => match (self.eval(&**base), self.eval(&**exp)) {
-                (Ok(base), Ok(exp)) => base.pow(&exp),
-                (Err(e), _) => Err(e),
-                (_, Err(e)) => Err(e),
-            },
+            Expr::Pow(ref base, ref exp) =>
+                try!(self.eval(&**base)).pow(&try!(self.eval(&**exp))),
             Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
             Expr::Error(ref e) => Err(e.clone()),
         }
@@ -241,6 +272,10 @@ impl Context {
             },
             Expr::Pow(ref left, ref exp) => {
                 let res = try!(self.eval(exp));
+                let res = match res {
+                    Value::Number(num) => num,
+                    _ => return Err(format!("Exponents must be numbers"))
+                };
                 if res.1.len() > 0 {
                     return Err(format!("Exponents must be dimensionless"))
                 }
@@ -279,6 +314,10 @@ impl Context {
         match *expr {
             Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom), self.eval_unit_name(&**bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
+                    let (top, bottom) = match (top, bottom) {
+                        (Value::Number(top), Value::Number(bottom)) => (top, bottom),
+                        _ => return Err(format!("Conversion of non-numbers is not defined"))
+                    };
                     if top.1 != bottom.1 {
                         use std::io::Write;
 
@@ -402,22 +441,25 @@ impl Context {
                     ctx.aliases.insert(map, name.clone());
                 },
                 Def::Unit(ref expr) => match ctx.eval(expr) {
-                    Ok(v) => {
+                    Ok(Value::Number(v)) => {
                         ctx.units.insert(name.clone(), v);
                     },
+                    Ok(_) => println!("Unit {} is not a number", name),
                     Err(e) => println!("Unit {} is malformed: {}", name, e)
                 },
                 Def::Prefix(ref expr) => match ctx.eval(expr) {
-                    Ok(v) => {
+                    Ok(Value::Number(v)) => {
                         ctx.prefixes.push((name.clone(), v));
                     },
+                    Ok(_) => println!("Prefix {} is not a number", name),
                     Err(e) => println!("Prefix {} is malformed: {}", name, e)
                 },
                 Def::SPrefix(ref expr) => match ctx.eval(expr) {
-                    Ok(v) => {
+                    Ok(Value::Number(v)) => {
                         ctx.prefixes.push((name.clone(), v.clone()));
                         ctx.units.insert(name.clone(), v);
                     },
+                    Ok(_) => println!("Prefix {} is not a number", name),
                     Err(e) => println!("Prefix {} is malformed: {}", name, e)
                 },
                 Def::DatePattern(ref pat) => ctx.datepatterns.push(pat.clone()),
@@ -427,9 +469,10 @@ impl Context {
 
         for (expr, name) in defs.aliases {
             match ctx.eval(&expr) {
-                Ok(v) => {
+                Ok(Value::Number(v)) => {
                     ctx.aliases.insert(v.1, name);
                 },
+                Ok(_) => println!("Alias {} is not a number", name),
                 Err(e) => println!("Alias {}: {}", name, e)
             }
         }

@@ -1,7 +1,8 @@
 use unit_defs::{DatePattern, Token};
-use chrono::Weekday;
-use chrono::format::parsed::Parsed;
+use chrono::format::Parsed;
 use std::iter::Peekable;
+use chrono::{Weekday, DateTime, UTC, FixedOffset};
+use eval::Context;
 
 pub fn parse_date<I>(
     out: &mut Parsed,
@@ -158,4 +159,28 @@ pub fn parse_date<I>(
         Ok(()) => parse_date(out, date, &pat[1..]),
         Err(e) => Err(e)
     }
+}
+
+pub fn try_decode(date: &[Token], context: &Context) -> Result<DateTime<FixedOffset>, String> {
+    for pat in &context.datepatterns {
+        let attempt = || {
+            let mut parsed = Parsed::new();
+            try!(parse_date(&mut parsed, &mut date.iter().cloned().peekable(), &pat[..]));
+            let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
+            let time = parsed.to_naive_time();
+            let date = parsed.to_naive_date();
+            match (time, date) {
+                (Ok(time), Ok(date)) =>
+                    Ok(DateTime::<FixedOffset>::from_utc(date.and_time(time), offset)),
+                (Ok(time), Err(_)) =>
+                    Ok(UTC::now().with_timezone(&offset).date().and_time(time).unwrap()),
+                _ => Err(format!("Failed to construct a useful datetime"))
+            }
+        };
+        match attempt() {
+            Ok(datetime) => return Ok(datetime),
+            Err(_) => ()
+        }
+    }
+    Err(format!("Invalid date literal"))
 }
