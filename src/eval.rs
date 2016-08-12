@@ -215,6 +215,17 @@ impl Context {
     pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
         use unit_defs::Expr;
 
+        macro_rules! operator {
+            ($left:ident $op:ident $opname:tt $right:ident) => {{
+                let left = try!(self.eval(&**$left));
+                let right = try!(self.eval(&**$right));
+                ((&left).$op(&right)).map_err(|e| {
+                    format!("{}: <{}> {} <{}>",
+                            e, left.show(self), stringify!($opname), right.show(self))
+                })
+            }}
+        }
+
         match *expr {
             Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)).map(Value::Number),
             Expr::Const(ref num, ref frac, ref exp) =>
@@ -226,12 +237,12 @@ impl Context {
             Expr::Date(ref date) => date::try_decode(date, self).map(Value::DateTime),
             Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| -&v),
             Expr::Plus(ref expr) => self.eval(&**expr),
-            Expr::Frac(ref top, ref bottom) =>
-                &try!(self.eval(&**top)) / &try!(self.eval(&**bottom)),
-            Expr::Add(ref top, ref bottom) =>
-                &try!(self.eval(&**top)) / &try!(self.eval(&**bottom)),
-            Expr::Sub(ref top, ref bottom) =>
-                &try!(self.eval(&**top)) / &try!(self.eval(&**bottom)),
+
+            Expr::Frac(ref left, ref right) => operator!(left div / right),
+            Expr::Add(ref left, ref right)  => operator!(left add + right),
+            Expr::Sub(ref left, ref right)  => operator!(left sub - right),
+            Expr::Pow(ref left, ref right)  => operator!(left pow ^ right),
+
             // TODO: A type might not implement * on Number, and this would fail
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
                 a.and_then(|a| {
@@ -239,8 +250,6 @@ impl Context {
                     Ok((&a * &b).unwrap())
                 })
             }),
-            Expr::Pow(ref base, ref exp) =>
-                try!(self.eval(&**base)).pow(&try!(self.eval(&**exp))),
             Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
             Expr::Error(ref e) => Err(e.clone()),
         }
