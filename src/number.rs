@@ -220,14 +220,11 @@ impl Number {
             Err(format!("Exponent must be either an integer or the reciprocal of an integer"))
         }
     }
-}
 
-impl Show for Number {
-    fn show(&self, context: &::eval::Context) -> String {
+    pub fn show_number_part(&self) -> String {
         use std::io::Write;
 
         let mut out = vec![];
-        let mut frac = vec![];
         let mut value = self.clone();
         value.0.canonicalize();
 
@@ -244,6 +241,21 @@ impl Show for Number {
         if let Some(approx) = approx {
             write!(out, ", approx. {}", approx).unwrap();
         }
+
+        String::from_utf8(out).unwrap()
+    }
+}
+
+impl Show for Number {
+    fn show(&self, context: &::eval::Context) -> String {
+        use std::io::Write;
+
+        let mut out = vec![];
+        let mut frac = vec![];
+        let mut value = self.clone();
+        value.0.canonicalize();
+
+        write!(out, "{}", self.show_number_part()).unwrap();
         for (&dim, &exp) in &value.1 {
             if exp < 0 {
                 frac.push((dim, exp));

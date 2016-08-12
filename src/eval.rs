@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
 use number::{Number, Unit};
-use number;
 use date;
 use unit_defs::DatePattern;
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -365,13 +364,12 @@ impl Context {
 
                         Err(String::from_utf8(buf).unwrap())
                     } else {
-                        let raw = &top.0 / &bottom.0;
-                        let (raw_exact, raw) = number::to_string(&raw);
-                        let approx = if raw_exact {
-                            format!("")
-                        } else {
-                            format!("approx. ")
+                        let raw = match &top / &bottom {
+                            Some(raw) => raw,
+                            None => return Err(format!("Division by zero: {} / {}",
+                                                       top.show(self), bottom.show(self)))
                         };
+                        let number = raw.show_number_part();
                         let mut unit_top = vec![];
                         let mut unit_frac = vec![];
                         for (name, exp) in bottom_name.into_iter() {
@@ -408,8 +406,8 @@ impl Context {
                             (false, v) => v,
                             (true, v) => format!("1 / {}", v)
                         };
-                        Ok(format!("{approx}{raw}{unit_top}{unit_frac} ({reduced})",
-                                   approx=approx, raw=raw, unit_top=unit_top,
+                        Ok(format!("{number}{unit_top}{unit_frac} ({reduced})",
+                                   number=number, unit_top=unit_top,
                                    unit_frac=unit_frac, reduced=reduced))
                     }
                 },
