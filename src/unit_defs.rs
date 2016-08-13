@@ -319,6 +319,8 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
             loop {
                 match iter.next().unwrap() {
                     Token::Hash => break,
+                    Token::Eof | Token::Comment(_) | Token::Newline =>
+                        return Expr::Error(format!("Unterminated date literal")),
                     x => out.push(x),
                 }
             }
