@@ -3,11 +3,12 @@ use gmp::mpz::Mpz;
 use std::collections::BTreeMap;
 use eval::Show;
 use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::rc::Rc;
 
 /// Number type
 pub type Num = Mpq;
 /// A simple alias to add semantic meaning for when we pass around dimension IDs.
-pub type Dim = usize;
+pub type Dim = Rc<String>;
 /// Alias for the primary representation of dimensionality.
 pub type Unit = BTreeMap<Dim, i64>;
 
@@ -170,14 +171,14 @@ impl Number {
     pub fn invert(&self) -> Number {
         Number(&one() / &self.0,
                self.1.iter()
-               .map(|(&k, &power)| (k, -power))
+               .map(|(k, &power)| (k.clone(), -power))
                .collect::<Unit>())
     }
 
     /// Raises a value to a dimensionless integer power.
     pub fn powi(&self, exp: i32) -> Number {
         let unit = self.1.iter()
-            .map(|(&k, &power)| (k, power * exp as i64))
+            .map(|(k, &power)| (k.clone(), power * exp as i64))
             .collect::<Unit>();
         Number(pow(&self.0, exp), unit)
     }
@@ -186,11 +187,11 @@ impl Number {
     /// powers divisible by n.
     pub fn root(&self, exp: i32) -> Option<Number> {
         let mut res = Unit::new();
-        for (&dim, &power) in &self.1 {
+        for (dim, &power) in &self.1 {
             if power % exp as i64 != 0 {
                 return None
             } else {
-                res.insert(dim, power / exp as i64);
+                res.insert(dim.clone(), power / exp as i64);
             }
         }
         Some(Number(root(&self.0, exp), res))
@@ -256,11 +257,11 @@ impl Show for Number {
         value.0.canonicalize();
 
         write!(out, "{}", self.show_number_part()).unwrap();
-        for (&dim, &exp) in &value.1 {
+        for (dim, &exp) in &value.1 {
             if exp < 0 {
-                frac.push((dim, exp));
+                frac.push((dim.clone(), exp));
             } else {
-                write!(out, " {}", context.dimensions[dim]).unwrap();
+                write!(out, " {}", dim).unwrap();
                 if exp != 1 {
                     write!(out, "^{}", exp).unwrap();
                 }
@@ -270,7 +271,7 @@ impl Show for Number {
             write!(out, " /").unwrap();
             for (dim, exp) in frac {
                 let exp = -exp;
-                write!(out, " {}", context.dimensions[dim]).unwrap();
+                write!(out, " {}", dim).unwrap();
                 if exp != 1 {
                     write!(out, "^{}", exp).unwrap();
                 }
@@ -279,9 +280,9 @@ impl Show for Number {
         let alias = context.aliases.get(&value.1).cloned().or_else(|| {
             if value.1.len() == 1 {
                 let e = value.1.iter().next().unwrap();
-                let ref n = context.dimensions[*e.0];
+                let ref n = *e.0;
                 if *e.1 == 1 {
-                    Some(n.clone())
+                    Some((**n).clone())
                 } else {
                     Some(format!("{}^{}", n, e.1))
                 }

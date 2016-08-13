@@ -6,6 +6,7 @@ use number::{Number, Unit};
 use date;
 use unit_defs::DatePattern;
 use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub enum Value {
@@ -15,7 +16,7 @@ pub enum Value {
 
 /// The evaluation context that contains unit definitions.
 pub struct Context {
-    pub dimensions: Vec<String>,
+    pub dimensions: Vec<Rc<String>>,
     pub units: HashMap<String, Number>,
     pub aliases: HashMap<Unit, String>,
     pub prefixes: Vec<(String, Number)>,
@@ -124,9 +125,9 @@ impl Context {
     /// Given a unit name, returns its value if it exists. Supports SI
     /// prefixes, plurals, bare dimensions like length, and aliases.
     pub fn lookup(&self, name: &str) -> Option<Number> {
-        for (i, ref k) in self.dimensions.iter().enumerate() {
-            if name == *k {
-                return Some(Number::one_unit(i))
+        for k in &self.dimensions {
+            if name == &***k {
+                return Some(Number::one_unit(k.to_owned()))
             }
         }
         self.units.get(name).cloned().or_else(|| {
@@ -164,18 +165,18 @@ impl Context {
         } else {
             let mut frac = vec![];
             let mut found = false;
-            for (&dim, &pow) in &value.1 {
+            for (dim, &pow) in &value.1 {
                 if pow < 0 {
                     frac.push((dim, -pow));
                 } else {
                     found = true;
                     let mut map = Unit::new();
-                    map.insert(dim, pow);
+                    map.insert(dim.clone(), pow);
                     if let Some(name) = self.aliases.get(&map) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         let mut map = Unit::new();
-                        map.insert(dim, 1);
+                        map.insert(dim.clone(), 1);
                         write!(buf, " {}", self.aliases[&map]).unwrap();
                         if pow != 1 {
                             write!(buf, "^{}", pow).unwrap();
@@ -191,12 +192,12 @@ impl Context {
                 }
                 for (dim, pow) in frac {
                     let mut map = Unit::new();
-                    map.insert(dim, pow);
+                    map.insert(dim.clone(), pow);
                     if let Some(name) = self.aliases.get(&map) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         let mut map = Unit::new();
-                        map.insert(dim, 1);
+                        map.insert(dim.clone(), 1);
                         write!(buf, " {}", self.aliases[&map]).unwrap();
                         if pow != 1 {
                             write!(buf, "^{}", pow).unwrap();
@@ -441,10 +442,10 @@ impl Context {
         for (name, def) in defs.defs {
             match *def {
                 Def::Dimension(ref dname) => {
-                    let i = ctx.dimensions.len();
+                    let dname = Rc::new(dname.clone());
                     ctx.dimensions.push(dname.clone());
                     let mut map = Unit::new();
-                    map.insert(i, 1);
+                    map.insert(dname, 1);
                     ctx.aliases.insert(map, name.clone());
                 },
                 Def::Unit(ref expr) => match ctx.eval(expr) {
