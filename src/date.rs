@@ -1,8 +1,9 @@
 use unit_defs::{DatePattern, Token};
 use chrono::format::Parsed;
 use std::iter::Peekable;
-use chrono::{Weekday, DateTime, UTC, FixedOffset};
+use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration};
 use eval::Context;
+use number::Number;
 
 pub fn parse_date<I>(
     out: &mut Parsed,
@@ -183,4 +184,19 @@ pub fn try_decode(date: &[Token], context: &Context) -> Result<DateTime<FixedOff
         }
     }
     Err(format!("Invalid date literal"))
+}
+
+pub fn to_duration(num: &Number) -> Result<Duration, String> {
+    use gmp::mpq::Mpq;
+    use gmp::mpz::Mpz;
+
+    if num.1.len() != 1 || num.1.get(&"s".to_owned()) != Some(&1) {
+        return Err(format!("Expected seconds"))
+    }
+    let max = Mpq::ratio(&Mpz::from(i64::max_value() / 1000), &Mpz::one());
+    if num.0.abs() > max {
+        return Err(format!("Implementation error: Number is out of range ({:?})", max))
+    }
+    let num: Option<i64> = (&(&num.0.get_num() / &num.0.get_den())).into();
+    Ok(Duration::seconds(num.unwrap()))
 }

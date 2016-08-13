@@ -57,6 +57,11 @@ impl<'a,'b> Add<&'b Value> for &'a Value {
                 (left + right)
                 .ok_or(format!("Addition of units with mismatched units is not meaningful"))
                 .map(Value::Number),
+            (&Value::DateTime(ref left), &Value::Number(ref right)) |
+            (&Value::Number(ref right), &Value::DateTime(ref left)) =>
+                left.checked_add(try!(date::to_duration(right)))
+                .ok_or(format!("Implementation error: value is out of range representable by datetime"))
+                .map(Value::DateTime),
             (_, _) => Err(format!("Operation is not defined"))
         }
     }
@@ -71,6 +76,11 @@ impl<'a,'b> Sub<&'b Value> for &'a Value {
                 (left - right)
                 .ok_or(format!("Subtraction of units with mismatched units is not meaningful"))
                 .map(Value::Number),
+            (&Value::DateTime(ref left), &Value::Number(ref right)) |
+            (&Value::Number(ref right), &Value::DateTime(ref left)) =>
+                left.checked_sub(try!(date::to_duration(right)))
+                .ok_or(format!("Implementation error: value is out of range representable by datetime"))
+                .map(Value::DateTime),
             (_, _) => Err(format!("Operation is not defined"))
         }
     }
