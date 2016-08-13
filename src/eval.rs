@@ -29,11 +29,26 @@ pub trait Show {
     fn show(&self, context: &Context) -> String;
 }
 
+#[cfg(feature = "chrono-humanize")]
+impl Show for DateTime<FixedOffset> {
+    fn show(&self, _context: &Context) -> String {
+        use chrono_humanize::HumanTime;
+        format!("{} ({})", self, HumanTime::from(*self))
+    }
+}
+
+#[cfg(not(feature = "chrono-humanize"))]
+impl Show for DateTime<FixedOffset> {
+    fn show(&self, _context: &Context) -> String {
+        format!("{}", self)
+    }
+}
+
 impl Show for Value {
     fn show(&self, context: &Context) -> String {
         match *self {
             Value::Number(ref num) => num.show(context),
-            Value::DateTime(ref dt) => format!("{}", dt)
+            Value::DateTime(ref dt) => dt.show(context),
         }
     }
 }

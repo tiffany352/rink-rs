@@ -28,6 +28,8 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 
 extern crate gmp;
 extern crate chrono;
+#[cfg(feature = "chrono-humanize")]
+extern crate chrono_humanize;
 
 pub mod unit_defs;
 pub mod eval;
