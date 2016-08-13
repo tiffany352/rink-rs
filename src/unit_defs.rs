@@ -16,6 +16,7 @@ pub enum Token {
     TriplePipe,
     ColonEq,
     EqBangEq,
+    Equals,
     Carot,
     Eof,
     LBrack,
@@ -175,14 +176,15 @@ impl<'a> Iterator for TokenIterator<'a> {
             } else {
                 Token::Error(format!("Unknown symbol"))
             },
-            '=' => if let Some('!') = self.0.next() {
+            '=' => if let Some('!') = self.0.peek().cloned() {
+                self.0.next();
                 if let Some('=') = self.0.next() {
                     Token::EqBangEq
                 } else {
                     Token::Error(format!("Unknown symbol"))
                 }
             } else {
-                Token::Error(format!("Unknown symbol"))
+                Token::Equals
             },
             '^' => Token::Carot,
             '\\' => match self.0.next() {
@@ -266,6 +268,7 @@ pub enum Expr {
     Neg(Box<Expr>),
     Plus(Box<Expr>),
     Convert(Box<Expr>, Box<Expr>),
+    Equals(Box<Expr>, Box<Expr>),
     Error(String),
 }
 
@@ -298,6 +301,7 @@ pub struct Defs {
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(name) => Expr::Unit(name),
+        Token::Quote(name) => Expr::Unit(name),
         Token::Number(num, frac, exp) => Expr::Const(num, frac, exp),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
@@ -339,8 +343,8 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match *iter.peek().unwrap() {
-        Token::Plus | Token::Minus | Token::DashArrow | Token::TriplePipe | Token::RPar | Token::Newline |
-        Token::Comment(_) | Token::Eof => break,
+        Token::Equals | Token::Plus | Token::Minus | Token::DashArrow | Token::TriplePipe |
+        Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof => break,
         Token::Slash => {
             iter.next();
             let right = parse_pow(iter);
@@ -380,12 +384,24 @@ fn parse_add(mut iter: &mut Iter) -> Expr {
     }
 }
 
-pub fn parse_expr(mut iter: &mut Iter) -> Expr {
+fn parse_eq(mut iter: &mut Iter) -> Expr {
     let left = parse_add(iter);
+    match iter.peek().cloned().unwrap() {
+        Token::Equals => {
+            iter.next();
+            let right = parse_add(iter);
+            Expr::Equals(Box::new(left), Box::new(right))
+        },
+        _ => left
+    }
+}
+
+pub fn parse_expr(mut iter: &mut Iter) -> Expr {
+    let left = parse_eq(iter);
     match iter.peek().cloned().unwrap() {
         Token::DashArrow => {
             iter.next();
-            let right = parse_add(iter);
+            let right = parse_eq(iter);
             Expr::Convert(Box::new(left), Box::new(right))
         },
         _ => left

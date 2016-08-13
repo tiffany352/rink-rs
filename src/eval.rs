@@ -276,6 +276,7 @@ impl Context {
                 })
             }),
             Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
+            Expr::Equals(_, ref right) => self.eval(right),
             Expr::Error(ref e) => Err(e.clone()),
         }
     }
@@ -284,6 +285,14 @@ impl Context {
         use unit_defs::Expr;
 
         match *expr {
+            Expr::Equals(ref left, ref _right) => match **left {
+                Expr::Unit(ref name) => {
+                    let mut map = BTreeMap::new();
+                    map.insert(name.clone(), 1);
+                    Ok(map)
+                },
+                ref x => Err(format!("Expected identifier, got {:?}", x))
+            },
             Expr::Unit(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(name.clone(), 1);
