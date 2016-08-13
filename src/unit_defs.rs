@@ -71,7 +71,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
-                        Some('\n') => return Some(Token::Comment(1)),
+                        None | Some('\n') => return Some(Token::Comment(1)),
                         _ => ()
                     }
                 },
