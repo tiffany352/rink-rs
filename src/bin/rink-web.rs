@@ -32,6 +32,7 @@ fn main() {
     use url::form_urlencoded;
 
     let req = move |mut req: Request, mut res: Response| {
+        res.headers_mut().set::<header::AccessControlAllowOrigin>(header::AccessControlAllowOrigin::Any);
         match req.method {
             hyper::Get => {
                 write!(res.start().unwrap(), "{}", TEMPLATE).unwrap();
