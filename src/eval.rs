@@ -202,7 +202,11 @@ impl Context {
                     } else {
                         let mut map = Unit::new();
                         map.insert(dim.clone(), 1);
-                        write!(buf, " {}", self.aliases[&map]).unwrap();
+                        if let Some(name) = self.aliases.get(&map) {
+                            write!(buf, " {}", name).unwrap();
+                        } else {
+                            write!(buf, " '{}'", dim).unwrap();
+                        }
                         if pow != 1 {
                             write!(buf, "^{}", pow).unwrap();
                         }
@@ -223,13 +227,18 @@ impl Context {
                     } else {
                         let mut map = Unit::new();
                         map.insert(dim.clone(), 1);
-                        write!(buf, " {}", self.aliases[&map]).unwrap();
+                        if let Some(name) = self.aliases.get(&map) {
+                            write!(buf, " {}", name).unwrap();
+                        } else {
+                            write!(buf, " '{}'", dim).unwrap();
+                        }
                         if pow != 1 {
                             write!(buf, "^{}", pow).unwrap();
                         }
                     }
                 }
             }
+            buf.remove(0);
         }
 
         (recip, String::from_utf8(buf).unwrap())
@@ -253,6 +262,7 @@ impl Context {
 
         match *expr {
             Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)).map(Value::Number),
+            Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Rc::new(name.clone())))),
             Expr::Const(ref num, ref frac, ref exp) =>
                 Number::from_parts(
                     num,
@@ -293,7 +303,7 @@ impl Context {
                 },
                 ref x => Err(format!("Expected identifier, got {:?}", x))
             },
-            Expr::Unit(ref name) => {
+            Expr::Unit(ref name) | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(name.clone(), 1);
                 Ok(map)

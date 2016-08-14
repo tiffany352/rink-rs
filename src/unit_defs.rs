@@ -258,6 +258,7 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 #[derive(Debug, Clone)]
 pub enum Expr {
     Unit(String),
+    Quote(String),
     Const(String, Option<String>, Option<String>),
     Date(Vec<Token>),
     Frac(Box<Expr>, Box<Expr>),
@@ -301,7 +302,7 @@ pub struct Defs {
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(name) => Expr::Unit(name),
-        Token::Quote(name) => Expr::Unit(name),
+        Token::Quote(name) => Expr::Quote(name),
         Token::Number(num, frac, exp) => Expr::Const(num, frac, exp),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
