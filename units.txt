@@ -1189,13 +1189,13 @@ basispoint :=          1/100 percent// Used in finance
 // Temperature difference
 // The units below are NOT an absolute temperature measurement in Fahrenheit,
 // but represents the size of a degree in the specified systems.
-degcelsius :=          K
-degreeCelsius :=       K     // Per http://physics.nist.gov/Pubs/SP811/sec04.html#4.2.1.1     
+//degcelsius :=          K
+//degreeCelsius :=       K     // Per http://physics.nist.gov/Pubs/SP811/sec04.html#4.2.1.1     
 
   // This is allowable in the SI under resolutions 3 and 4 of the 13th CGPM:
   // http://www.bipm.org/en/CGPM/db/13/3/
 
-degC :=                K     // The *size* of a degree in the Celsius scale.
+//degC :=                K     // The *size* of a degree in the Celsius scale.
                              // This is identical to the size of a Kelvin.
                              // WARNING: This should only be used when 
                              // you're indicating the *difference* between
@@ -1234,11 +1234,11 @@ zerocelsius := 273.15 K      // Defined by the 10th CGPM, 1954, Resolution 3;
                              // and a degree Celsius are the same, but
                              // the zero point of the Celsius scale is actually
                              // set to .01 Kelvin below the triple point.
-                        
 
-degfahrenheit :=  5/9 degC   // The *size* of a degree in the Fahrenheit scale.
-degreeFahrenheit := degfahrenheit // The *size* of a degree in the Fahrenheit scale.
-degF :=        degfahrenheit // WARNING: These should only be used when 
+
+//degfahrenheit :=  5/9 kelvin   // The *size* of a degree in the Fahrenheit scale.
+//degreeFahrenheit := degfahrenheit // The *size* of a degree in the Fahrenheit scale.
+//degF :=        degfahrenheit // WARNING: These should only be used when 
                              // you're indicating the *difference* between
                              // two temperatures, (say, how much energy to 
                              // raise the temperature of a gram of water by 5
@@ -1254,7 +1254,7 @@ degF :=        degfahrenheit // WARNING: These should only be used when
                              // to body heat (for reasons unknown).
 
 
-\u2109 :=              degfahrenheit  // Single Unicode codepoint for 
+//\u2109 :=              degfahrenheit  // Single Unicode codepoint for 
                                       // DEGREE FAHRENHEIT
 
 degreesRankine :=      5/9 K
@@ -1264,7 +1264,9 @@ degreerankine :=       degrankine       // is at absolute zero.
 degR :=                degrankine
 Rankine :=             degreesrankine
 
-degreaumur :=          10/8 degC // The Reaumur scale was used in Europe and
+zerofahrenheit := zerocelsius - 32 degR
+
+//degreaumur :=          10/8 kelvin // The Reaumur scale was used in Europe and
                                  // particularly in France.  It is defined
                                  // to be 0 at the freezing point of water
                                  // and 80 at the boiling point.  Reaumur
@@ -2857,7 +2859,7 @@ Wh :=                  watt hour
 
 Rvalue :=         degrankine ft^2 hr / Btu  // r-value, U.S. insulation figure
 Cvalue :=         1/Rvalue       // C-value U.S. insulation conductance rating
-kvalue := Btu in / (ft^2 hr degF) // k-value, insulation conductance/in thick
+kvalue := Btu in / (ft^2 hr degrankine) // k-value, insulation conductance/in thick
 Uvalue :=         1/Rvalue
 europeanUvalue := watt / (m^2 K)
 RSI :=                 K m^2 / W                 // SI insulation figure

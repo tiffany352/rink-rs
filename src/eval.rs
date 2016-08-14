@@ -247,7 +247,7 @@ impl Context {
     /// Evaluates an expression to compute its value, *excluding* `->`
     /// conversions.
     pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
-        use unit_defs::Expr;
+        use unit_defs::{Expr, SuffixOp};
 
         macro_rules! operator {
             ($left:ident $op:ident $opname:tt $right:ident) => {{
@@ -272,11 +272,42 @@ impl Context {
             Expr::Date(ref date) => date::try_decode(date, self).map(Value::DateTime),
             Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| -&v),
             Expr::Plus(ref expr) => self.eval(&**expr),
+            Expr::DegC => Err(format!("°C is an operator")),
+            Expr::DegF => Err(format!("°F is an operator")),
 
             Expr::Frac(ref left, ref right) => operator!(left div / right),
             Expr::Add(ref left, ref right)  => operator!(left add + right),
             Expr::Sub(ref left, ref right)  => operator!(left sub - right),
             Expr::Pow(ref left, ref right)  => operator!(left pow ^ right),
+
+            Expr::Suffix(SuffixOp::Celsius, ref left) => {
+                let left = try!(self.eval(&**left));
+                let left = match left {
+                    Value::Number(left) => left,
+                    _ => return Err(format!("Left-hand side of celsius literal must be number"))
+                };
+                if left.1 != BTreeMap::new() {
+                    Err(format!("Left-hand side of celsius literal must be dimensionless"))
+                } else {
+                    let left = (&left * &self.lookup("kelvin").expect("Missing kelvin unit")).unwrap();
+                    Ok(Value::Number((&left + &self.lookup("zerocelsius")
+                                      .expect("Missing zerocelsius constant")).unwrap()))
+                }
+            },
+            Expr::Suffix(SuffixOp::Fahrenheit, ref left) => {
+                let left = try!(self.eval(&**left));
+                let left = match left {
+                    Value::Number(left) => left,
+                    _ => return Err(format!("Left-hand side of fahrenheit literal must be number"))
+                };
+                if left.1 != BTreeMap::new() {
+                    Err(format!("Left-hand side of fahrenheit literal must be dimensionless"))
+                } else {
+                    let left = (&left * &self.lookup("Rankine").expect("Missing rankine unit")).unwrap();
+                    Ok(Value::Number((&left + &self.lookup("zerofahrenheit")
+                                      .expect("Missing zerofahrenheit constant")).unwrap()))
+                }
+            },
 
             // TODO: A type might not implement * on Number, and this would fail
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
@@ -354,6 +385,8 @@ impl Context {
             },
             Expr::Neg(ref v) => self.eval_unit_name(v),
             Expr::Plus(ref v) => self.eval_unit_name(v),
+            Expr::Suffix(_, _) | Expr::DegC | Expr::DegF =>
+                Err(format!("Temperature conversions must not be compound units")),
             Expr::Date(_) => Err(format!("Dates are not allowed in the right hand side of conversions")),
             Expr::Convert(_, _) => Err(format!("Conversions are not allowed in the right hand of conversions")),
             Expr::Error(ref e) => Err(e.clone()),
@@ -364,6 +397,88 @@ impl Context {
     pub fn eval_outer(&self, expr: &::unit_defs::Expr) -> Result<String, String> {
         use unit_defs::Expr;
 
+        let conformance_err = |top: &Number, bottom: &Number| -> String {
+            use std::io::Write;
+
+            let mut buf = vec![];
+            let width = 12;
+            let mut topu = top.clone();
+            topu.0 = Mpq::one();
+            let mut bottomu = bottom.clone();
+            bottomu.0 = Mpq::one();
+            let left = topu.show(self);
+            let right = bottomu.show(self);
+            if self.short_output {
+                writeln!(buf, "Conformance error [ {left} || {right} ]",
+                         left=left, right=right).unwrap();
+            } else {
+                writeln!(buf, concat!("Conformance error\n",
+                                      "{:>width$}: {left}\n",
+                                      "{:>width$}: {right}"),
+                         "Left side", "Right side", left=left, right=right, width=width).unwrap();
+            }
+            let diff = (&topu / &bottomu).unwrap();
+            let (recip, desc) = self.describe_unit(&diff.invert());
+            let word = match recip {
+                false => "multiply",
+                true => "divide"
+            };
+            writeln!(buf, "{:>width$}: {word} left side by {}", "Suggestion",
+                     desc.trim(), width=width, word=word).unwrap();
+            let (recip, desc) = self.describe_unit(&diff);
+            let word = match recip {
+                false => "multiply",
+                true => "divide"
+            };
+            writeln!(buf, "{:>width$}  {word} right side by {}", "",
+                     desc.trim(), width=width, word=word).unwrap();
+
+            String::from_utf8(buf).unwrap()
+        };
+
+        let show = |raw: &Number, bottom: &Number, bottom_name: BTreeMap<String, isize>| -> String {
+            let number = raw.show_number_part();
+            let mut unit_top = vec![];
+            let mut unit_frac = vec![];
+            for (name, exp) in bottom_name.into_iter() {
+                if exp < 0 {
+                    unit_frac.push((name, -exp));
+                } else {
+                    unit_top.push((name, exp));
+                }
+            }
+            let unit_top = unit_top.into_iter().fold(String::new(), |mut acc, (name, exp)| {
+                acc.push(' ');
+                acc.push_str(&*name);
+                if exp != 1 {
+                    acc.push_str(&*format!("^{}", exp));
+                }
+                acc
+            });
+            let unit_frac = unit_frac.into_iter().fold(String::new(), |mut acc, (name, exp)| {
+                if acc.len() > 0 {
+                    acc.push(' ');
+                }
+                acc.push_str(&*name);
+                if exp != 1 {
+                    acc.push_str(&*format!("^{}", exp));
+                }
+                acc
+            });
+            let unit_frac = if unit_frac.len() > 0 {
+                format!(" / {}", unit_frac)
+            } else {
+                unit_frac
+            };
+            let reduced = match self.describe_unit(&bottom) {
+                (false, v) => v,
+                (true, v) => format!("1 / {}", v)
+            };
+            format!("{number}{unit_top}{unit_frac} ({reduced})",
+                    number=number, unit_top=unit_top,
+                    unit_frac=unit_frac, reduced=reduced)
+        };
+
         match *expr {
             Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom), self.eval_unit_name(&**bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
@@ -372,92 +487,53 @@ impl Context {
                         _ => return Err(format!("Conversion of non-numbers is not defined"))
                     };
                     if top.1 != bottom.1 {
-                        use std::io::Write;
-
-                        let mut buf = vec![];
-                        let width = 12;
-                        let mut topu = top.clone();
-                        topu.0 = Mpq::one();
-                        let mut bottomu = bottom.clone();
-                        bottomu.0 = Mpq::one();
-                        let left = topu.show(self);
-                        let right = bottomu.show(self);
-                        if self.short_output {
-                            writeln!(buf, "Conformance error [ {left} || {right} ]",
-                                     left=left, right=right).unwrap();
-                        } else {
-                            writeln!(buf, concat!("Conformance error\n",
-                                                  "{:>width$}: {left}\n",
-                                                  "{:>width$}: {right}"),
-                                     "Left side", "Right side", left=left, right=right, width=width).unwrap();
-                        }
-                        let diff = (&topu / &bottomu).unwrap();
-                        let (recip, desc) = self.describe_unit(&diff.invert());
-                        let word = match recip {
-                            false => "multiply",
-                            true => "divide"
-                        };
-                        writeln!(buf, "{:>width$}: {word} left side by {}", "Suggestion",
-                                 desc.trim(), width=width, word=word).unwrap();
-                        let (recip, desc) = self.describe_unit(&diff);
-                        let word = match recip {
-                            false => "multiply",
-                            true => "divide"
-                        };
-                        writeln!(buf, "{:>width$}  {word} right side by {}", "",
-                                 desc.trim(), width=width, word=word).unwrap();
-
-                        Err(String::from_utf8(buf).unwrap())
+                        Err(conformance_err(&top, &bottom))
                     } else {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
                             None => return Err(format!("Division by zero: {} / {}",
                                                        top.show(self), bottom.show(self)))
                         };
-                        let number = raw.show_number_part();
-                        let mut unit_top = vec![];
-                        let mut unit_frac = vec![];
-                        for (name, exp) in bottom_name.into_iter() {
-                            if exp < 0 {
-                                unit_frac.push((name, -exp));
-                            } else {
-                                unit_top.push((name, exp));
-                            }
-                        }
-                        let unit_top = unit_top.into_iter().fold(String::new(), |mut acc, (name, exp)| {
-                            acc.push(' ');
-                            acc.push_str(&*name);
-                            if exp != 1 {
-                                acc.push_str(&*format!("^{}", exp));
-                            }
-                            acc
-                        });
-                        let unit_frac = unit_frac.into_iter().fold(String::new(), |mut acc, (name, exp)| {
-                            if acc.len() > 0 {
-                                acc.push(' ');
-                            }
-                            acc.push_str(&*name);
-                            if exp != 1 {
-                                acc.push_str(&*format!("^{}", exp));
-                            }
-                            acc
-                        });
-                        let unit_frac = if unit_frac.len() > 0 {
-                            format!(" / {}", unit_frac)
-                        } else {
-                            unit_frac
-                        };
-                        let reduced = match self.describe_unit(&bottom) {
-                            (false, v) => v,
-                            (true, v) => format!("1 / {}", v)
-                        };
-                        Ok(format!("{number}{unit_top}{unit_frac} ({reduced})",
-                                   number=number, unit_top=unit_top,
-                                   unit_frac=unit_frac, reduced=reduced))
+                        Ok(show(&raw, &bottom, bottom_name))
                     }
                 },
+                (Ok(ref top), Err(ref e), _) => match **bottom {
+                    Expr::DegC => {
+                        let top = match *top {
+                            Value::Number(ref num) => num,
+                            _ => return Err(format!("Expected number"))
+                        };
+                        let bottom = self.lookup("kelvin").expect("Unit kelvin missing");
+                        if top.1 != bottom.1 {
+                            Err(conformance_err(&top, &bottom))
+                        } else {
+                            let res = (top - &self.lookup("zerocelsius")
+                                       .expect("Unit zerocelsius missing")).unwrap();
+                            let mut name = BTreeMap::new();
+                            name.insert("°C".to_owned(), 1);
+                            Ok(show(&res, &bottom, name))
+                        }
+                    },
+                    Expr::DegF => {
+                        let top = match *top {
+                            Value::Number(ref num) => num,
+                            _ => return Err(format!("Expected number"))
+                        };
+                        let bottom = self.lookup("kelvin").expect("Unit kelvin missing");
+                        if top.1 != bottom.1 {
+                            Err(conformance_err(&top, &bottom))
+                        } else {
+                            let res = (top - &self.lookup("zerofahrenheit")
+                                       .expect("Unit zerofahrenheit missing")).unwrap();
+                            let res = (&res / &self.lookup("Rankine").expect("Unit Rankine missing")).unwrap();
+                            let mut name = BTreeMap::new();
+                            name.insert("°F".to_owned(), 1);
+                            Ok(show(&res, &bottom, name))
+                        }
+                    },
+                    _ => Err(e.clone())
+                },
                 (Err(e), _, _) => Err(e),
-                (_, Err(e), _) => Err(e),
                 (_, _, Err(e)) => Err(e),
             },
             _ => {
