@@ -12,9 +12,22 @@ fn main() {
     use glob::glob;
     use std::thread;
 
-    fn run(config: &str) {
+    #[cfg(feature = "sandbox")]
+    fn eval(line: &str) -> String {
+        one_line_sandbox(line)
+    }
+
+    #[cfg(not(feature = "sandbox"))]
+    fn eval(line: &str) -> String {
         let mut ctx = load().unwrap();
         ctx.short_output = true;
+        match one_line(&mut ctx, line) {
+            Ok(v) => v,
+            Err(e) => e
+        }
+    }
+
+    fn run(config: &str) {
         let server = IrcServer::new(config).unwrap();
         server.identify().unwrap();
         let nick = server.config().nickname.clone().unwrap();
@@ -29,11 +42,8 @@ fn main() {
                         &*chan
                     };
                     let line = message_str[prefix.len()..].trim();
-                    let reply = match one_line(&mut ctx, line) {
-                        Ok(v) => v,
-                        Err(e) => e
-                    };
                     let mut i = 0;
+                    let reply = eval(line);
                     for line in reply.lines() {
                         if line.trim().len() > 0 {
                             server.send(Command::NOTICE(reply_to.to_owned(), line.to_owned())).unwrap();

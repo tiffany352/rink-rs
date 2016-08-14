@@ -30,23 +30,6 @@ fn main() {
     use std::env::args;
     use std::io::{Read, Write};
     use url::form_urlencoded;
-    use std::sync::mpsc;
-    use std::sync::Mutex;
-    use std::thread;
-
-    let (tx, rx) = mpsc::channel::<(String, mpsc::Sender<String>)>();
-    thread::spawn(move || {
-        let mut ctx = rink::load().unwrap();
-
-        while let Ok((req, tx)) = rx.recv() {
-            let reply = match rink::one_line(&mut ctx, &*req) {
-                Ok(v) => v,
-                Err(v) => v
-            };
-            tx.send(reply).unwrap();
-        }
-    });
-    let tx = Mutex::new(tx);
 
     let req = move |mut req: Request, mut res: Response| {
         match req.method {
@@ -82,9 +65,7 @@ fn main() {
                 } else {
                     buf
                 };
-                let (tx2, rx2) = mpsc::channel();
-                tx.lock().unwrap().send((input, tx2)).unwrap();
-                let reply = rx2.recv().unwrap();
+                let reply = rink::one_line_sandbox(&*input);
                 write!(&mut res.start().unwrap(), "{}", reply).unwrap();
             },
             _ => *res.status_mut() = StatusCode::MethodNotAllowed

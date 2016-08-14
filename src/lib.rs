@@ -30,6 +30,10 @@ extern crate gmp;
 extern crate chrono;
 #[cfg(feature = "chrono-humanize")]
 extern crate chrono_humanize;
+#[cfg(feature = "sandbox")]
+extern crate libc;
+#[cfg(feature = "sandbox")]
+extern crate ipc_channel;
 
 pub mod unit_defs;
 pub mod eval;
@@ -115,6 +119,78 @@ pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
     let mut iter = unit_defs::TokenIterator::new(line.trim()).peekable();
     let expr = unit_defs::parse_expr(&mut iter);
     ctx.eval_outer(&expr)
+}
+
+#[cfg(feature = "sandbox")]
+pub fn one_line_sandbox(line: &str) -> String {
+    use libc;
+    use std::io::Error;
+    use ipc_channel::ipc::{IpcOneShotServer, IpcSender};
+
+    pub unsafe fn fork<F: FnOnce()>(child_func: F) -> libc::pid_t {
+        match libc::fork() {
+            -1 => panic!("Fork failed: {}", Error::last_os_error()),
+            0 => { child_func(); unreachable!() },
+            pid => pid,
+        }
+    }
+
+    let (server, server_name) = IpcOneShotServer::new().unwrap();
+
+    let child = || {
+        let tx = IpcSender::connect(server_name).unwrap();
+
+        tx.send("".to_owned()).unwrap();
+
+        unsafe {
+            libc::close(2);
+
+            let limit = libc::rlimit {
+                // 50 megabytes
+                rlim_cur: 50_000_000,
+                rlim_max: 50_000_000,
+            };
+            libc::setrlimit(libc::RLIMIT_AS, &limit);
+            let limit = libc::rlimit {
+                // 15 seconds
+                rlim_cur: 15,
+                rlim_max: 15
+            };
+            libc::setrlimit(libc::RLIMIT_CPU, &limit);
+        }
+
+        let mut ctx = load().unwrap();
+        ctx.short_output = true;
+        let reply = match one_line(&mut ctx, line) {
+            Ok(v) => v,
+            Err(e) => e
+        };
+        tx.send(reply).unwrap();
+
+        ::std::process::exit(0)
+    };
+
+    let pid = unsafe { fork(child) };
+
+    let (rx, _) = server.accept().unwrap();
+
+    let status = unsafe {
+        let mut status = 0;
+        libc::waitpid(pid, &mut status, 0);
+        status
+    };
+
+    let res = match rx.try_recv() {
+        Ok(res) => res,
+        Err(_) if unsafe { libc::WIFSIGNALED(status) && libc::WTERMSIG(status) == libc::SIGXCPU } =>
+            format!("Calculation timed out"),
+        // :(
+        Err(ref e) if format!("{}", e) == "IoError: Connection reset by peer (os error 104)" =>
+            format!("Calculation ran out of memory"),
+        Err(e) => format!("{}", e)
+    };
+
+    res
 }
 
 fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
