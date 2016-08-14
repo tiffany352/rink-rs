@@ -146,9 +146,9 @@ pub fn one_line_sandbox(line: &str) -> String {
             libc::close(2);
 
             let limit = libc::rlimit {
-                // 50 megabytes
-                rlim_cur: 50_000_000,
-                rlim_max: 50_000_000,
+                // 100 megabytes
+                rlim_cur: 100_000_000,
+                rlim_max: 100_000_000,
             };
             libc::setrlimit(libc::RLIMIT_AS, &limit);
             let limit = libc::rlimit {
