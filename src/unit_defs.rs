@@ -210,7 +210,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             },
             '<' => {
                 let mut string = "<IMAGINARY_UNIT>>".chars();
-                while self.0.next() == string.next() {}
+                while self.0.peek().is_some() && self.0.next() == string.next() {}
                 if string.next() == None {
                     Token::ImaginaryUnit
                 } else {
