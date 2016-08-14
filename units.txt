@@ -1264,7 +1264,14 @@ degreerankine :=       degrankine       // is at absolute zero.
 degR :=                degrankine
 Rankine :=             degreesrankine
 
+reaumur_absolute := 10/8 kelvin
+romer_absolute := 40/21 kelvin
+delisle_absolute := -2/3 kelvin
+newton_absolute := 100/33 kelvin
+
 zerofahrenheit := zerocelsius - 32 degR
+zerodelisle := 373.15 kelvin
+zeroromer := zerocelsius - 7.5 romer_absolute
 
 //degreaumur :=          10/8 kelvin // The Reaumur scale was used in Europe and
                                  // particularly in France.  It is defined

@@ -33,6 +33,10 @@ pub enum Token {
     ImaginaryUnit,
     DegC,
     DegF,
+    DegRe,
+    DegRo,
+    DegDe,
+    DegN,
     Error(String),
 }
 
@@ -251,6 +255,10 @@ impl<'a> Iterator for TokenIterator<'a> {
                 match &*buf {
                     "degC" | "°C" | "celsius" => Token::DegC,
                     "degF" | "°F" | "fahrenheit" => Token::DegF,
+                    "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => Token::DegRe,
+                    "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::DegRo,
+                    "degDe" | "°De" | "delisle" => Token::DegDe,
+                    "degN" | "°N" | "degnewton" => Token::DegN,
                     _ => Token::Ident(buf)
                 }
             }
@@ -265,6 +273,10 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 pub enum SuffixOp {
     Celsius,
     Fahrenheit,
+    Reaumur,
+    Romer,
+    Delisle,
+    Newton,
 }
 
 #[derive(Debug, Clone)]
@@ -285,6 +297,10 @@ pub enum Expr {
     Suffix(SuffixOp, Box<Expr>),
     DegC,
     DegF,
+    DegRe,
+    DegRo,
+    DegDe,
+    DegN,
     Error(String),
 }
 
@@ -361,8 +377,9 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match iter.peek().cloned().unwrap() {
-        Token::DegC | Token::DegF | Token::Equals | Token::Plus | Token::Minus | Token::DashArrow |
-        Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof => break,
+        Token::DegC | Token::DegF | Token::DegRe | Token::DegRo | Token::DegDe | Token::DegN |
+        Token::Equals | Token::Plus | Token::Minus | Token::DashArrow | Token::TriplePipe |
+        Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof => break,
         Token::Slash => {
             iter.next();
             let right = parse_pow(iter);
@@ -395,6 +412,22 @@ fn parse_suffix(mut iter: &mut Iter) -> Expr {
         Token::DegF => {
             iter.next();
             Expr::Suffix(SuffixOp::Fahrenheit, Box::new(left))
+        },
+        Token::DegRe => {
+            iter.next();
+            Expr::Suffix(SuffixOp::Reaumur, Box::new(left))
+        },
+        Token::DegRo => {
+            iter.next();
+            Expr::Suffix(SuffixOp::Romer, Box::new(left))
+        },
+        Token::DegDe => {
+            iter.next();
+            Expr::Suffix(SuffixOp::Delisle, Box::new(left))
+        },
+        Token::DegN => {
+            iter.next();
+            Expr::Suffix(SuffixOp::Newton, Box::new(left))
         },
         _ => left
     }
@@ -437,6 +470,10 @@ pub fn parse_expr(mut iter: &mut Iter) -> Expr {
             let right = match iter.peek().cloned().unwrap() {
                 Token::DegC => Expr::DegC,
                 Token::DegF => Expr::DegF,
+                Token::DegRe => Expr::DegRe,
+                Token::DegRo => Expr::DegRo,
+                Token::DegDe => Expr::DegDe,
+                Token::DegN => Expr::DegN,
                 _ => parse_eq(iter)
             };
             Expr::Convert(Box::new(left), Box::new(right))
