@@ -245,6 +245,10 @@ impl Number {
 
         String::from_utf8(out).unwrap()
     }
+
+    pub fn complexity_score(&self) -> i64 {
+        self.1.iter().map(|(_, p)| 1 + p.abs()).fold(0, |a,x| a+x)
+    }
 }
 
 impl Show for Number {

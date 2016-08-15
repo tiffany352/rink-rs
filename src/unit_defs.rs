@@ -301,6 +301,7 @@ pub enum Expr {
     Equals(Box<Expr>, Box<Expr>),
     Suffix(SuffixOp, Box<Expr>),
     Call(String, Vec<Expr>),
+    Derivatives(Box<Expr>),
     DegC,
     DegF,
     DegRe,
@@ -500,6 +501,13 @@ fn parse_eq(mut iter: &mut Iter) -> Expr {
 }
 
 pub fn parse_expr(mut iter: &mut Iter) -> Expr {
+    match iter.peek().cloned() {
+        Some(Token::Ident(ref s)) if s == "derivatives" => {
+            iter.next();
+            return Expr::Derivatives(Box::new(parse_eq(iter)))
+        },
+        _ => ()
+    }
     let left = parse_eq(iter);
     match iter.peek().cloned().unwrap() {
         Token::DashArrow => {

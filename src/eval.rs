@@ -177,6 +177,40 @@ impl Context {
         })
     }
 
+    pub fn derivatives(&self, value: &Number, aliases: &BTreeMap<Unit, Rc<String>>)
+                       -> BTreeMap<usize, Vec<Rc<String>>> {
+        if value.1.len() == 0 {
+            let mut map = BTreeMap::new();
+            map.insert(0, vec![]);
+            return map;
+        }
+        let mut candidates: BTreeMap<usize, Vec<Rc<String>>> = BTreeMap::new();
+        let value_score = value.complexity_score();
+        for (unit, name) in aliases.iter().rev() {
+            use gmp::mpq::Mpq;
+
+            let res = (value / &Number(Mpq::one(), unit.clone())).unwrap();
+            //if res.1.len() >= value.1.len() {
+            let score = res.complexity_score();
+            // we are not making the unit any simpler
+            if score >= value_score {
+                continue
+            }
+            let res = self.derivatives(&res, aliases);
+            for (score, mut vec) in res {
+                vec.push(name.clone());
+                // more complicated than decomposition to base units
+                /*if score + 1 > value.1.len() {
+                    continue
+                }*/
+                candidates.insert(score + 1, vec);
+            }
+            candidates = candidates.into_iter().take(10).collect();
+        }
+        assert!(candidates.len() <= 10);
+        candidates
+    }
+
     /// Describes a value's unit, gives true if the unit is reciprocal
     /// (e.g. you should prefix "1.0 / " or replace "multiply" with
     /// "divide" when rendering it).
@@ -323,6 +357,7 @@ impl Context {
                 })
             }),
             Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
+            Expr::Derivatives(_) => Err(format!("Derivatives must be top-level expressions")),
             Expr::Equals(_, ref right) => self.eval(right),
             Expr::Call(ref name, ref args) => {
                 let args = try!(args.iter().map(|x| self.eval(x)).collect::<Result<Vec<_>, _>>());
@@ -414,6 +449,7 @@ impl Context {
                 Err(format!("Temperature conversions must not be compound units")),
             Expr::Date(_) => Err(format!("Dates are not allowed in the right hand side of conversions")),
             Expr::Convert(_, _) => Err(format!("Conversions are not allowed in the right hand of conversions")),
+            Expr::Derivatives(_) => Err(format!("Derivatives are not allowed in the right hand of conversions")),
             Expr::Error(ref e) => Err(e.clone()),
         }
     }
@@ -557,6 +593,28 @@ impl Context {
                 },
                 (Err(e), _, _) => Err(e),
                 (_, _, Err(e)) => Err(e),
+            },
+            Expr::Derivatives(ref expr) => {
+                let val = try!(self.eval(expr));
+                let val = match val {
+                    Value::Number(val) => val,
+                    _ => return Err(format!("Cannot find derivatives of <{}>", val.show(self))),
+                };
+                let aliases = self.aliases.iter()
+                    .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
+                    .collect::<BTreeMap<_, _>>();
+                let derivs = self.derivatives(&val, &aliases);
+                let derivs = derivs.into_iter().map(|(_score, names)| {
+                    let first = names.first().cloned();
+                    names.into_iter().skip(1).fold(
+                        first.map(|x| (**x).to_owned()).unwrap_or(String::new()),
+                        |a, x| format!("{} {}", a, x))
+                }).collect::<Vec<_>>();
+                let first = derivs.first().cloned();
+                let derivs = derivs.into_iter().skip(1).fold(
+                    first.unwrap_or(String::new()),
+                    |a, x| format!("{};  {}", a, x));
+                Ok(format!("Possible derivatives: {}", derivs))
             },
             _ => {
                 let val = try!(self.eval(expr));
