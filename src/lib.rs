@@ -135,28 +135,36 @@ pub fn one_line_sandbox(line: &str) -> String {
         }
     }
 
+    println!("Executing query: {}", line);
+
     let (server, server_name) = IpcOneShotServer::new().unwrap();
 
     let child = || {
+        println!("Child connecting..");
         let tx = IpcSender::connect(server_name).unwrap();
+        println!("Child connected");
 
         tx.send("".to_owned()).unwrap();
 
         unsafe {
-            libc::close(2);
-
             let limit = libc::rlimit {
                 // 100 megabytes
                 rlim_cur: 100_000_000,
                 rlim_max: 100_000_000,
             };
-            libc::setrlimit(libc::RLIMIT_AS, &limit);
+            let res = libc::setrlimit(libc::RLIMIT_AS, &limit);
+            if res == -1 {
+                panic!("Setrlimit RLIMIT_AS failed: {}", Error::last_os_error())
+            }
             let limit = libc::rlimit {
                 // 15 seconds
                 rlim_cur: 15,
                 rlim_max: 15
             };
-            libc::setrlimit(libc::RLIMIT_CPU, &limit);
+            let res = libc::setrlimit(libc::RLIMIT_CPU, &limit);
+            if res == -1 {
+                panic!("Setrlimit RLIMIT_AS failed: {}", Error::last_os_error())
+            }
         }
 
         let mut ctx = load().unwrap();
@@ -166,17 +174,31 @@ pub fn one_line_sandbox(line: &str) -> String {
             Err(e) => e
         };
         tx.send(reply).unwrap();
+        println!("Wrote reply");
 
         ::std::process::exit(0)
     };
 
     let pid = unsafe { fork(child) };
 
+    println!("Child started");
+
     let (rx, _) = server.accept().unwrap();
+
+    println!("Child accepted");
 
     let status = unsafe {
         let mut status = 0;
-        libc::waitpid(pid, &mut status, 0);
+        let res = libc::waitpid(pid, &mut status, 0);
+        if res == -1 {
+            panic!("Waitpid failed: {}", Error::last_os_error())
+        }
+        if libc::WIFEXITED(status) {
+            println!("Child exited normally with status {}", libc::WEXITSTATUS(status));
+        }
+        if libc::WIFSIGNALED(status) {
+            println!("Child was killed by signal {}", libc::WTERMSIG(status));
+        }
         status
     };
 
@@ -189,6 +211,8 @@ pub fn one_line_sandbox(line: &str) -> String {
             format!("Calculation ran out of memory"),
         Err(e) => format!("{}", e)
     };
+
+    println!("Calculation result: {:?}", res);
 
     res
 }
