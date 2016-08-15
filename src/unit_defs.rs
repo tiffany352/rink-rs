@@ -30,6 +30,7 @@ pub enum Token {
     Asterisk,
     DashArrow,
     Hash,
+    Comma,
     ImaginaryUnit,
     DegC,
     DegF,
@@ -75,6 +76,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 _ => Token::Minus
             },
             '*' => Token::Asterisk,
+            ',' => Token::Comma,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
@@ -298,6 +300,7 @@ pub enum Expr {
     Convert(Box<Expr>, Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
     Suffix(SuffixOp, Box<Expr>),
+    Call(String, Vec<Expr>),
     DegC,
     DegF,
     DegRe,
@@ -333,8 +336,39 @@ pub struct Defs {
     pub aliases: Vec<(Expr, String)>,
 }
 
+fn is_func(name: &str) -> bool {
+    match name {
+        "sqrt" => true,
+        _ => false
+    }
+}
+
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
+        Token::Ident(ref name) if is_func(name) => {
+            match iter.peek().cloned().unwrap() {
+                Token::LPar => {
+                    iter.next();
+                    let mut args = vec![];
+                    loop {
+                        if let Some(&Token::RPar) = iter.peek() {
+                            iter.next();
+                            break;
+                        }
+                        args.push(parse_expr(iter));
+                        match iter.peek().cloned().unwrap() {
+                            Token::Comma => {
+                                iter.next();
+                            },
+                            Token::RPar => (),
+                            x => return Expr::Error(format!("Expected , or ), got {:?}", x))
+                        }
+                    }
+                    Expr::Call(name.clone(), args)
+                },
+                _ => Expr::Call(name.clone(), vec![parse_pow(iter)]),
+            }
+        },
         Token::Ident(name) => Expr::Unit(name),
         Token::Quote(name) => Expr::Quote(name),
         Token::Number(num, frac, exp) => Expr::Const(num, frac, exp),
@@ -381,8 +415,8 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match iter.peek().cloned().unwrap() {
         Token::DegC | Token::DegF | Token::DegRe | Token::DegRo | Token::DegDe | Token::DegN |
-        Token::Equals | Token::Plus | Token::Minus | Token::DashArrow | Token::TriplePipe |
-        Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof => break,
+        Token::Comma | Token::Equals | Token::Plus | Token::Minus | Token::DashArrow |
+        Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof => break,
         Token::Slash => {
             iter.next();
             let right = parse_pow(iter);

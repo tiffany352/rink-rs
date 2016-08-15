@@ -324,6 +324,23 @@ impl Context {
             }),
             Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
             Expr::Equals(_, ref right) => self.eval(right),
+            Expr::Call(ref name, ref args) => {
+                let args = try!(args.iter().map(|x| self.eval(x)).collect::<Result<Vec<_>, _>>());
+                match &**name {
+                    "sqrt" => {
+                        if args.len() != 1 {
+                            return Err(format!("Argument number mismatch for sqrt: expected 1, got {}", args.len()))
+                        }
+                        match args[0] {
+                            Value::Number(ref num) =>
+                                num.root(2).map(Value::Number).ok_or(format!(
+                                    "Expected squared units, got <{}>", num.show(self))),
+                            ref x => Err(format!("Expected number, got <{}>", x.show(self)))
+                        }
+                    },
+                    _ => Err(format!("Function not found: {}", name))
+                }
+            },
             Expr::Error(ref e) => Err(e.clone()),
         }
     }
@@ -340,6 +357,7 @@ impl Context {
                 },
                 ref x => Err(format!("Expected identifier, got {:?}", x))
             },
+            Expr::Call(_, _) => Err(format!("Calls are not allowed in the right hand side of conversions")),
             Expr::Unit(ref name) | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(name.clone(), 1);
