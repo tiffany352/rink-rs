@@ -66,6 +66,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             '(' => Token::LPar,
             ')' => Token::RPar,
             '+' => Token::Plus,
+            '%' => Token::Ident("percent".to_owned()),
             '-' => match self.0.peek().cloned().unwrap() {
                 '>' => {
                     self.0.next();
@@ -259,6 +260,8 @@ impl<'a> Iterator for TokenIterator<'a> {
                     "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::DegRo,
                     "degDe" | "°De" | "delisle" => Token::DegDe,
                     "degN" | "°N" | "degnewton" => Token::DegN,
+                    "per" => Token::Slash,
+                    "to" => Token::DashArrow,
                     _ => Token::Ident(buf)
                 }
             }
