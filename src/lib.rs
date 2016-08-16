@@ -39,7 +39,7 @@ pub mod unit_defs;
 pub mod eval;
 pub mod number;
 pub mod date;
-pub mod derivatives;
+pub mod factorize;
 
 pub use number::Number;
 pub use eval::{Context, Value};

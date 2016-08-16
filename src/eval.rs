@@ -7,7 +7,7 @@ use date;
 use unit_defs::DatePattern;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
-use derivatives::{derivatives, Deriv};
+use factorize::{factorize, Factors};
 
 #[derive(Clone)]
 pub enum Value {
@@ -324,7 +324,7 @@ impl Context {
                 })
             }),
             Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
-            Expr::Derivatives(_) => Err(format!("Derivatives must be top-level expressions")),
+            Expr::Factorize(_) => Err(format!("Derivatives must be top-level expressions")),
             Expr::Equals(_, ref right) => self.eval(right),
             Expr::Call(ref name, ref args) => {
                 let args = try!(args.iter().map(|x| self.eval(x)).collect::<Result<Vec<_>, _>>());
@@ -416,7 +416,7 @@ impl Context {
                 Err(format!("Temperature conversions must not be compound units")),
             Expr::Date(_) => Err(format!("Dates are not allowed in the right hand side of conversions")),
             Expr::Convert(_, _) => Err(format!("Conversions are not allowed in the right hand of conversions")),
-            Expr::Derivatives(_) => Err(format!("Derivatives are not allowed in the right hand of conversions")),
+            Expr::Factorize(_) => Err(format!("Derivatives are not allowed in the right hand of conversions")),
             Expr::Error(ref e) => Err(e.clone()),
         }
     }
@@ -561,7 +561,7 @@ impl Context {
                 (Err(e), _, _) => Err(e),
                 (_, _, Err(e)) => Err(e),
             },
-            Expr::Derivatives(ref expr) => {
+            Expr::Factorize(ref expr) => {
                 let val = try!(self.eval(expr));
                 let val = match val {
                     Value::Number(val) => val,
@@ -570,18 +570,21 @@ impl Context {
                 let aliases = self.aliases.iter()
                     .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
                     .collect::<BTreeMap<_, _>>();
-                let derivs = derivatives(self, &val, &aliases);
-                let derivs = derivs.into_iter().map(|Deriv(_score, names)| {
+                let results = factorize(self, &val, &aliases);
+                let mut results = results.into_sorted_vec();
+                results.dedup();
+                let results = results.into_iter().map(|Factors(_score, names)| {
                     let first = names.first().cloned();
                     names.into_iter().skip(1).fold(
                         first.map(|x| (**x).to_owned()).unwrap_or(String::new()),
                         |a, x| format!("{} {}", a, x))
                 }).collect::<Vec<_>>();
-                let first = derivs.first().cloned();
-                let derivs = derivs.into_iter().skip(1).fold(
+                let first = results.first().cloned();
+                let len = results.len();
+                let results = results.into_iter().skip(1).fold(
                     first.unwrap_or(String::new()),
                     |a, x| format!("{};  {}", a, x));
-                Ok(format!("Possible derivatives: {}", derivs))
+                Ok(format!("Factorizations: {}{}", results, if len < 10 {""} else {";  ..."}))
             },
             _ => {
                 let val = try!(self.eval(expr));
