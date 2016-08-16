@@ -574,6 +574,15 @@ impl Context {
                 let mut results = results.into_sorted_vec();
                 results.dedup();
                 let results = results.into_iter().map(|Factors(_score, names)| {
+                    let mut next = BTreeMap::<Rc<String>, usize>::new();
+                    for name in names.into_iter() {
+                        *next.entry(name).or_insert(0) += 1;
+                    }
+                    let names = next.into_iter().map(|(a, b)| if b > 1 {
+                        Rc::new(format!("{}^{}", a, b))
+                    } else {
+                        a
+                    }).collect::<Vec<_>>();
                     let first = names.first().cloned();
                     names.into_iter().skip(1).fold(
                         first.map(|x| (**x).to_owned()).unwrap_or(String::new()),
