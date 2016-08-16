@@ -7,6 +7,7 @@ use date;
 use unit_defs::DatePattern;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
+use derivatives::{derivatives, Deriv};
 
 #[derive(Clone)]
 pub enum Value {
@@ -175,40 +176,6 @@ impl Context {
             }
             None
         })
-    }
-
-    pub fn derivatives(&self, value: &Number, aliases: &BTreeMap<Unit, Rc<String>>)
-                       -> BTreeMap<usize, Vec<Rc<String>>> {
-        if value.1.len() == 0 {
-            let mut map = BTreeMap::new();
-            map.insert(0, vec![]);
-            return map;
-        }
-        let mut candidates: BTreeMap<usize, Vec<Rc<String>>> = BTreeMap::new();
-        let value_score = value.complexity_score();
-        for (unit, name) in aliases.iter().rev() {
-            use gmp::mpq::Mpq;
-
-            let res = (value / &Number(Mpq::one(), unit.clone())).unwrap();
-            //if res.1.len() >= value.1.len() {
-            let score = res.complexity_score();
-            // we are not making the unit any simpler
-            if score >= value_score {
-                continue
-            }
-            let res = self.derivatives(&res, aliases);
-            for (score, mut vec) in res {
-                vec.push(name.clone());
-                // more complicated than decomposition to base units
-                /*if score + 1 > value.1.len() {
-                    continue
-                }*/
-                candidates.insert(score + 1, vec);
-            }
-            candidates = candidates.into_iter().take(10).collect();
-        }
-        assert!(candidates.len() <= 10);
-        candidates
     }
 
     /// Describes a value's unit, gives true if the unit is reciprocal
@@ -603,8 +570,8 @@ impl Context {
                 let aliases = self.aliases.iter()
                     .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
                     .collect::<BTreeMap<_, _>>();
-                let derivs = self.derivatives(&val, &aliases);
-                let derivs = derivs.into_iter().map(|(_score, names)| {
+                let derivs = derivatives(self, &val, &aliases);
+                let derivs = derivs.into_iter().map(|Deriv(_score, names)| {
                     let first = names.first().cloned();
                     names.into_iter().skip(1).fold(
                         first.map(|x| (**x).to_owned()).unwrap_or(String::new()),
