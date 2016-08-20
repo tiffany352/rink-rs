@@ -40,6 +40,8 @@ pub mod eval;
 pub mod number;
 pub mod date;
 pub mod factorize;
+pub mod gnu_units;
+pub mod ast;
 
 pub use number::Number;
 pub use eval::{Context, Value};

@@ -4,7 +4,7 @@ use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
 use number::{Number, Unit};
 use date;
-use unit_defs::DatePattern;
+use ast::{DatePattern, Expr, SuffixOp, Def, Defs};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
@@ -250,9 +250,7 @@ impl Context {
 
     /// Evaluates an expression to compute its value, *excluding* `->`
     /// conversions.
-    pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
-        use unit_defs::{Expr, SuffixOp};
-
+    pub fn eval(&self, expr: &Expr) -> Result<Value, String> {
         macro_rules! operator {
             ($left:ident $op:ident $opname:tt $right:ident) => {{
                 let left = try!(self.eval(&**$left));
@@ -351,9 +349,7 @@ impl Context {
         }
     }
 
-    pub fn eval_unit_name(&self, expr: &::unit_defs::Expr) -> Result<BTreeMap<String, isize>, String> {
-        use unit_defs::Expr;
-
+    pub fn eval_unit_name(&self, expr: &Expr) -> Result<BTreeMap<String, isize>, String> {
         match *expr {
             Expr::Equals(ref left, ref _right) => match **left {
                 Expr::Unit(ref name) => {
@@ -426,9 +422,7 @@ impl Context {
     }
 
     /// Evaluates an expression, include `->` conversions.
-    pub fn eval_outer(&self, expr: &::unit_defs::Expr) -> Result<String, String> {
-        use unit_defs::Expr;
-
+    pub fn eval_outer(&self, expr: &Expr) -> Result<String, String> {
         let conformance_err = |top: &Number, bottom: &Number| -> String {
             use std::io::Write;
 
@@ -608,9 +602,7 @@ impl Context {
 
     /// Takes a parsed units.txt from `unit_defs::parse()`. Prints if
     /// there are errors in the file.
-    pub fn new(defs: ::unit_defs::Defs) -> Context {
-        use unit_defs::Def;
-
+    pub fn new(defs: Defs) -> Context {
         let mut ctx = Context {
             dimensions: Vec::new(),
             units: HashMap::new(),

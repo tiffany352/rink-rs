@@ -5,40 +5,19 @@ use ast::*;
 
 #[derive(Debug, Clone)]
 pub enum Token {
+    Eof,
     Newline,
-    Comment(usize),
     Ident(String),
     Number(String, Option<String>, Option<String>),
-    Quote(String),
-    Slash,
-    Colon,
-    ColonDash,
-    DColonDash,
-    TriplePipe,
-    ColonEq,
-    EqBangEq,
-    Equals,
-    Carot,
-    Eof,
-    LBrack,
-    RBrack,
-    LBrace,
-    RBrace,
     LPar,
     RPar,
+    Bang,
+    Slash,
+    Pipe,
+    Caret,
     Plus,
-    Minus,
+    Dash,
     Asterisk,
-    DashArrow,
-    Hash,
-    Comma,
-    ImaginaryUnit,
-    DegC,
-    DegF,
-    DegRe,
-    DegRo,
-    DegDe,
-    DegN,
     Error(String),
 }
 
@@ -48,6 +27,15 @@ pub struct TokenIterator<'a>(Peekable<Chars<'a>>);
 impl<'a> TokenIterator<'a> {
     pub fn new(input: &'a str) -> TokenIterator<'a> {
         TokenIterator(input.chars().peekable())
+    }
+}
+
+fn is_ident(c: char) -> bool {
+    match c {
+        //c if c.is_alphabetic() => true,
+        //'_' | '$' | '-' | '\'' | '"' | '%' | ',' => true,
+        ' ' | '\t' | '\n' | '(' | ')' | '/' | '|' | '^' | '+' | '*' | '\\' | '#' => false,
+        _ => true
     }
 }
 
@@ -61,47 +49,28 @@ impl<'a> Iterator for TokenIterator<'a> {
         let res = match self.0.next().unwrap() {
             ' ' | '\t' => return self.next(),
             '\n' => Token::Newline,
-            '[' => Token::LBrack,
-            ']' => Token::RBrack,
-            '{' => Token::LBrace,
-            '}' => Token::RBrace,
+            '!' => Token::Bang,
             '(' => Token::LPar,
             ')' => Token::RPar,
+            '/' => Token::Slash,
+            '|' => Token::Pipe,
+            '^' => Token::Caret,
+            '-' => Token::Dash,
             '+' => Token::Plus,
-            '%' => Token::Ident("percent".to_owned()),
-            '-' => match self.0.peek().cloned().unwrap() {
-                '>' => {
-                    self.0.next();
-                    Token::DashArrow
-                },
-                _ => Token::Minus
-            },
             '*' => Token::Asterisk,
-            ',' => Token::Comma,
-            '/' => match self.0.peek() {
-                Some(&'/') => loop {
-                    match self.0.next() {
-                        None | Some('\n') => return Some(Token::Comment(1)),
+            '\\' => match self.0.next() {
+                Some('\n') => self.next().unwrap(),
+                Some(x) => Token::Error(format!("Invalid escape: \\{}", x)),
+                None => Token::Error(format!("Unexpected EOF")),
+            },
+            '#' => {
+                while let Some(c) = self.0.next() {
+                    match c {
+                        '\n' => break,
                         _ => ()
                     }
-                },
-                Some(&'*') => {
-                    let mut lines = 0;
-                    loop {
-                        if let Some(&'\n') = self.0.peek() {
-                            lines += 1;
-                        }
-                        if let Some('*') = self.0.next() {
-                            if let Some(&'/') = self.0.peek() {
-                                return Some(Token::Comment(lines))
-                            }
-                        }
-                        if self.0.peek() == None {
-                            return Some(Token::Error(format!("Expected `*/`, got EOF")))
-                        }
-                    }
-                },
-                _ => Token::Slash
+                }
+                Token::Newline
             },
             x @ '0'...'9' | x @ '.' => {
                 use std::ascii::AsciiExt;
@@ -142,9 +111,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 if let Some('e') = self.0.peek().cloned().map(|x| x.to_ascii_lowercase()) {
                     let mut buf = String::new();
                     self.0.next();
-                    if let Some('e') = self.0.peek().cloned().map(|x| x.to_ascii_lowercase()) {
-                        self.0.next();
-                    }
                     if let Some(c) = self.0.peek().cloned() {
                         match c {
                             '-' => {
@@ -168,106 +134,21 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Number(integer, frac, exp)
             },
-            ':' => match self.0.peek().cloned() {
-                Some(':') => { self.0.next(); match self.0.next() {
-                    Some('-') => Token::DColonDash,
-                    x => Token::Error(format!("Unexpected {:?}", x)),
-                }},
-                Some('-') => {self.0.next(); Token::ColonDash},
-                Some('=') => {self.0.next(); Token::ColonEq},
-                _ => Token::Colon,
-            },
-            '|' => if let Some('|') = self.0.next() {
-                if let Some('|') = self.0.next() {
-                    Token::TriplePipe
-                } else {
-                    Token::Error(format!("Unknown symbol"))
-                }
-            } else {
-                Token::Error(format!("Unknown symbol"))
-            },
-            '=' => if let Some('!') = self.0.peek().cloned() {
-                self.0.next();
-                if let Some('=') = self.0.next() {
-                    Token::EqBangEq
-                } else {
-                    Token::Error(format!("Unknown symbol"))
-                }
-            } else {
-                Token::Equals
-            },
-            '^' => Token::Carot,
-            '\\' => match self.0.next() {
-                Some('u') => {
-                    let mut buf = String::new();
-                    while let Some(c) = self.0.peek().cloned() {
-                        if c.is_digit(16) {
-                            buf.push(self.0.next().unwrap());
-                        } else {
-                            break;
-                        }
-                    }
-                    let v = u32::from_str_radix(&*buf, 16).unwrap();
-                    if let Some(c) = ::std::char::from_u32(v) {
-                        let mut buf = String::new();
-                        buf.push(c);
-                        Token::Ident(buf)
-                    } else {
-                        Token::Error(format!("Invalid unicode scalar: {:x}", v))
-                    }
-                },
-                _ => Token::Error(format!("Unexpected \\"))
-            },
-            '<' => {
-                let mut string = "<IMAGINARY_UNIT>>".chars();
-                while self.0.peek().is_some() && self.0.next() == string.next() {}
-                if string.next() == None {
-                    Token::ImaginaryUnit
-                } else {
-                    Token::Error(format!("Unexpected <"))
-                }
-            },
-            '\'' => {
-                let mut buf = String::new();
-                loop {
-                    match self.0.next() {
-                        None | Some('\n') => return Some(Token::Error(format!("Unexpected newline or EOF"))),
-                        Some('\\') => match self.0.next() {
-                            Some('\'') => buf.push('\''),
-                            Some('n') => buf.push('\n'),
-                            Some('t') => buf.push('\t'),
-                            Some(c) => return Some(Token::Error(format!("Invalid escape sequence \\{}", c))),
-                            None => return Some(Token::Error(format!("Unexpected EOF"))),
-                        },
-                        Some('\'') => break,
-                        Some(c) => buf.push(c),
-                    }
-                }
-                Token::Quote(buf)
-            },
-            '#' => Token::Hash,
-            x => {
+            x if is_ident(x) => {
                 let mut buf = String::new();
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
-                    if c.is_alphanumeric() || c == '_' {
+                    if is_ident(c) || c.is_numeric() {
                         buf.push(self.0.next().unwrap());
                     } else {
                         break;
                     }
                 }
                 match &*buf {
-                    "degC" | "°C" | "celsius" => Token::DegC,
-                    "degF" | "°F" | "fahrenheit" => Token::DegF,
-                    "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => Token::DegRe,
-                    "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::DegRo,
-                    "degDe" | "°De" | "delisle" => Token::DegDe,
-                    "degN" | "°N" | "degnewton" => Token::DegN,
-                    "per" => Token::Slash,
-                    "to" => Token::DashArrow,
                     _ => Token::Ident(buf)
                 }
-            }
+            },
+            x => Token::Error(format!("Unknown character: '{}'", x))
         };
         Some(res)
     }
@@ -275,41 +156,9 @@ impl<'a> Iterator for TokenIterator<'a> {
 
 pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
-fn is_func(name: &str) -> bool {
-    match name {
-        "sqrt" => true,
-        _ => false
-    }
-}
-
-fn parse_term(mut iter: &mut Iter) -> Expr {
+/*fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
-        Token::Ident(ref name) if is_func(name) => {
-            match iter.peek().cloned().unwrap() {
-                Token::LPar => {
-                    iter.next();
-                    let mut args = vec![];
-                    loop {
-                        if let Some(&Token::RPar) = iter.peek() {
-                            iter.next();
-                            break;
-                        }
-                        args.push(parse_expr(iter));
-                        match iter.peek().cloned().unwrap() {
-                            Token::Comma => {
-                                iter.next();
-                            },
-                            Token::RPar => (),
-                            x => return Expr::Error(format!("Expected , or ), got {:?}", x))
-                        }
-                    }
-                    Expr::Call(name.clone(), args)
-                },
-                _ => Expr::Call(name.clone(), vec![parse_pow(iter)]),
-            }
-        },
         Token::Ident(name) => Expr::Unit(name),
-        Token::Quote(name) => Expr::Quote(name),
         Token::Number(num, frac, exp) => Expr::Const(num, frac, exp),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
@@ -591,7 +440,7 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
         aliases: aliases,
     }
 }
-
+*/
 pub fn tokens(mut iter: &mut Iter) -> Vec<Token> {
     let mut out = vec![];
     loop {
