@@ -90,19 +90,19 @@ pub fn load() -> Result<Context, String> {
     use std::io::Read;
     use std::fs::File;
 
-    let f = File::open("units.txt");
+    let f = File::open("definitions.units");
     let mut f = match f {
         Ok(f) => f,
         Err(_) => {
             let mut path = try!(config_dir());
-            path.push("rink/units.txt");
+            path.push("rink/definitions.units");
             let f = File::open(&path);
             match f {
                 Ok(f) => f,
                 Err(e) => return Err(format!(
-                    concat!("Failed to open units.txt: {}\nIf you installed using `cargo install`, ",
-                            "then you need to obtain units.txt separately. Here is the URL, ",
-                            "download it and put it in {:?}.\n\n{}\n\n"),
+                    "Failed to open definitions.units: {}\nIf you installed using \
+                     `cargo install`, then you need to obtain units.txt separately. Here is the \
+                     URL, download it and put it in {:?}.\n\n{}\n\n",
                     e, &path, UNITS_TXT_URL))
             }
         }
@@ -111,8 +111,10 @@ pub fn load() -> Result<Context, String> {
     let mut buf = vec![];
     f.read_to_end(&mut buf).unwrap();
     let string = String::from_utf8_lossy(&*buf);
-    let mut iter = unit_defs::TokenIterator::new(&*string).peekable();
-    let res = unit_defs::parse(&mut iter);
+    //let mut iter = unit_defs::TokenIterator::new(&*string).peekable();
+    //let res = unit_defs::parse(&mut iter);
+    let mut iter = gnu_units::TokenIterator::new(&*string).peekable();
+    let res = gnu_units::parse(&mut iter);
 
     Ok(eval::Context::new(res))
 }
