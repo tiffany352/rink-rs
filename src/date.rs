@@ -201,6 +201,17 @@ pub fn to_duration(num: &Number) -> Result<Duration, String> {
     Ok(Duration::seconds(num.unwrap()))
 }
 
+pub fn from_duration(duration: &Duration) -> Result<Number, String> {
+    use gmp::mpq::Mpq;
+    use gmp::mpz::Mpz;
+    use std::rc::Rc;
+
+    let ns = try!(duration.num_nanoseconds()
+                  .ok_or(format!("Implementation error: Duration is out of range")));
+    let div = Mpz::from(1_000_000_000);
+    Ok(Number::new_unit(Mpq::ratio(&Mpz::from(ns), &div), Rc::new("s".to_owned())))
+}
+
 pub fn now() -> DateTime<FixedOffset> {
     UTC::now().with_timezone(&FixedOffset::east(0))
 }

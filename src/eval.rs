@@ -97,7 +97,10 @@ impl<'a,'b> Sub<&'b Value> for &'a Value {
                 left.checked_sub(try!(date::to_duration(right)))
                 .ok_or(format!("Implementation error: value is out of range representable by datetime"))
                 .map(Value::DateTime),
-            (_, _) => Err(format!("Operation is not defined"))
+            (&Value::DateTime(ref left), &Value::DateTime(ref right)) =>
+                date::from_duration(&(*left - *right))
+                .map(Value::Number),
+            //(_, _) => Err(format!("Operation is not defined"))
         }
     }
 }
