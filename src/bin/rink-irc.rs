@@ -35,13 +35,18 @@ fn main() {
         prefix.push(':');
         for message in server.iter() {
             if let Ok(Message { command: Command::PRIVMSG(ref chan, ref message_str), ..}) = message {
-                if message_str.starts_with(&*prefix) {
+                let prefixed = message_str.starts_with(&*prefix);
+                if prefixed || &*chan == &*nick {
                     let reply_to = if &*chan == &*nick {
                         message.as_ref().unwrap().source_nickname().unwrap()
                     } else {
                         &*chan
                     };
-                    let line = message_str[prefix.len()..].trim();
+                    let line = if prefixed {
+                        message_str[prefix.len()..].trim()
+                    } else {
+                        &message_str[..]
+                    };
                     let mut i = 0;
                     let reply = eval(line);
                     for line in reply.lines() {
