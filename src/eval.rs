@@ -392,7 +392,7 @@ impl Context {
                 let res: f64 = res.0.into();
                 Ok(try!(self.eval_unit_name(left)).into_iter()
                    .filter_map(|(k, v)| {
-                       let v = v + res as isize;
+                       let v = v * res as isize;
                        if v != 0 {
                            Some((k, v))
                        } else {
