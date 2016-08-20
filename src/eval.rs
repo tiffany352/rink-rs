@@ -280,6 +280,7 @@ impl Context {
         }
 
         match *expr {
+            Expr::Unit(ref name) if name == "now" => Ok(Value::DateTime(date::now())),
             Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)).map(Value::Number),
             Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Rc::new(name.clone())))),
             Expr::Const(ref num, ref frac, ref exp) =>

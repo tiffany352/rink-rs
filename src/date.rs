@@ -200,3 +200,7 @@ pub fn to_duration(num: &Number) -> Result<Duration, String> {
     let num: Option<i64> = (&(&num.0.get_num() / &num.0.get_den())).into();
     Ok(Duration::seconds(num.unwrap()))
 }
+
+pub fn now() -> DateTime<FixedOffset> {
+    UTC::now().with_timezone(&FixedOffset::east(0))
+}
