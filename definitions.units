@@ -1256,7 +1256,35 @@ IACS                    copperconductivity      #   a 1 mm^2 cross section
 copperdensity           8.89 g/cm^3             # The "ounce" measures the     
 ouncecopper             oz / ft^2 copperdensity #   thickness of copper used   
 ozcu                    ouncecopper             #   in circuitboard fabrication
-                                                
+
+#
+# Radiometric units
+#
+
+radiant_energy                    J       # Basic unit of radiation
+radiant_energy_density          ? J/m^3
+radiant_flux                      W
+spectral_flux_frequency           W/Hz
+spectral_flux_wavelength        ? W/m
+radiant_intensity               ? W/sr
+spectral_intensity_frequency    ? W sr^-1 Hz^-1
+spectral_intensity_wavelength   ? W sr^-1 m^-1
+radiance                        ? W sr^-1 m^-2
+spectral_radiance_frequency     ? W sr^-1 m^-2 Hz^-1
+spectral_radiance_wavelength    ? W sr^-1 m^-3
+spectral_irradiance_frequency   ? W m^-2 Hz^-1
+spectral_irradiance_wavelength  ? W/m^3
+radiosity                       ? W/m^2
+spectral_radiosity_frequency    ? W m^-2 Hz^-1
+spectral_radiosity_wavelength     W m^-3
+radiant_exitance                  W/m^2
+spectral_exitance_frequency       W m^-2 Hz^-1
+spectral_exitance_wavelength      W/m^3
+radiant_exposure                ? J/m^2
+spectral_exposure_frequency     ? J m^-2 Hz^-1
+spectral_exposure_wavelength      J/m^3
+
+
 #
 # Photometric units
 #
