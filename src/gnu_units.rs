@@ -241,7 +241,7 @@ pub fn parse_expr(mut iter: &mut Iter) -> Expr {
 }
 
 fn is_uppercase(name: &str) -> bool {
-    name.find(|c| match c {
+    name.len() > 1 && name.find(|c| match c {
         'A'...'Z' | '_' => false,
         _ => true
     }).is_none()
@@ -266,7 +266,7 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     // alias
                     let mut copy = iter.clone();
                     let expr = parse_expr(&mut copy);
-                    aliases.push((expr, name.clone()));
+                    aliases.push((expr, name.to_lowercase()));
                 }
 
                 if name.ends_with("-") {
@@ -274,7 +274,11 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     let expr = parse_expr(iter);
                     let mut name = name;
                     name.pop();
-                    map.push((name, Rc::new(Def::SPrefix(expr))));
+                    if name.len() > 1 {
+                        map.push((name, Rc::new(Def::SPrefix(expr))));
+                    } else {
+                        map.push((name, Rc::new(Def::Prefix(expr))));
+                    }
                 } else {
                     // unit
                     if let Some(&Token::Bang) = iter.peek() {

@@ -16,6 +16,7 @@ pub enum Value {
 }
 
 /// The evaluation context that contains unit definitions.
+#[derive(Debug)]
 pub struct Context {
     pub dimensions: Vec<Rc<String>>,
     pub units: HashMap<String, Number>,
@@ -603,6 +604,8 @@ impl Context {
     /// Takes a parsed units.txt from `unit_defs::parse()`. Prints if
     /// there are errors in the file.
     pub fn new(defs: Defs) -> Context {
+        use std::collections::HashSet;
+
         let mut ctx = Context {
             dimensions: Vec::new(),
             units: HashMap::new(),
@@ -614,7 +617,147 @@ impl Context {
 
         ctx.prefixes.sort_by(|a, b| a.0.cmp(&b.0));
 
-        for (name, def) in defs.defs {
+        struct Resolver {
+            interned: HashSet<Rc<String>>,
+            prefixes: BTreeMap<Rc<String>, Rc<Def>>,
+            input: HashMap<Rc<String>, Rc<Def>>,
+            sorted: Vec<Rc<String>>,
+            unmarked: HashSet<Rc<String>>,
+            temp_marks: HashSet<Rc<String>>,
+        }
+
+        impl Resolver {
+            fn intern(&mut self, name: &String) -> Rc<String> {
+                if let Some(v) = self.interned.get(name).cloned() {
+                    v
+                } else {
+                    let v = Rc::new(name.to_owned());
+                    self.interned.insert(v.clone());
+                    v
+                }
+            }
+
+            fn lookup(&mut self, name: &Rc<String>) -> Option<()> {
+                if self.input.get(&name.to_owned()).is_some() {
+                    self.visit(name);
+                    return Some(())
+                }
+                if name.ends_with("s") {
+                    let v = Rc::new(name[0..name.len()-1].to_owned());
+                    if let Some(()) = self.lookup(&v) {
+                        return Some(())
+                    }
+                }
+                let mut found = vec![];
+                for pre in &self.prefixes {
+                    if (*name).starts_with(&**pre.0) {
+                        found.push(pre.0.clone());
+                    }
+                }
+                for pre in found {
+                    if let Some(()) = self.lookup(&Rc::new(name[pre.len()..].to_owned())) {
+                        self.visit(&pre);
+                        return Some(())
+                    }
+                }
+                None
+            }
+
+            fn eval(&mut self, expr: &Expr) {
+                match *expr {
+                    Expr::Unit(ref name) => {
+                        let name = self.intern(name);
+                        self.lookup(&name);
+                    },
+                    Expr::Frac(ref left, ref right) |
+                    Expr::Pow(ref left, ref right) |
+                    Expr::Add(ref left, ref right) |
+                    Expr::Sub(ref left, ref right) => {
+                        self.eval(left);
+                        self.eval(right);
+                    },
+                    Expr::Neg(ref expr) | Expr::Plus(ref expr) | Expr::Suffix(_, ref expr) =>
+                        self.eval(expr),
+                    Expr::Mul(ref exprs) | Expr::Call(_, ref exprs) => for expr in exprs {
+                        self.eval(expr);
+                    },
+                    _ => ()
+                }
+            }
+
+            fn visit(&mut self, name: &Rc<String>) {
+                if self.temp_marks.get(name).is_some() {
+                    println!("Unit {} has a dependency cycle", name);
+                    return;
+                }
+                if self.unmarked.get(name).is_some() {
+                    self.temp_marks.insert(name.clone());
+                    if let Some(v) = self.input.get(name).cloned() {
+                        match *v {
+                            Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) =>
+                                self.eval(e),
+                            _ => (),
+                        }
+                    }
+                    if name.starts_with("prefix:") {
+                        let name = &name["prefix:".len()..].to_owned();
+                        if let Some(v) = self.prefixes.get(name).cloned() {
+                            match *v {
+                                Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) =>
+                                    self.eval(e),
+                                _ => (),
+                            }
+                        }
+                    }
+                    self.unmarked.remove(name);
+                    self.temp_marks.remove(name);
+                    self.sorted.push(name.clone());
+                }
+            }
+        }
+
+        let mut resolver = Resolver {
+            interned: HashSet::new(),
+            prefixes: BTreeMap::new(),
+            input: HashMap::new(),
+            sorted: vec![],
+            unmarked: HashSet::new(),
+            temp_marks: HashSet::new(),
+        };
+        for (name, def) in defs.defs.into_iter() {
+            let name = resolver.intern(&name);
+            match *def {
+                Def::Prefix(_) | Def::SPrefix(_) => {
+                    resolver.prefixes.insert(name.clone(), def.clone());
+                    let name = resolver.intern(&format!("prefix:{}", name));
+                    resolver.unmarked.insert(name);
+                },
+                _ => {
+                    resolver.input.insert(name.clone(), def);
+                    resolver.unmarked.insert(name);
+                }
+            }
+        }
+
+        while let Some(name) = resolver.unmarked.iter().next().cloned() {
+            resolver.visit(&name)
+        }
+        let sorted = resolver.sorted;
+        //println!("{:#?}", sorted);
+        let mut input = resolver.input;
+        let mut prefixes = resolver.prefixes;
+        let udefs = sorted.into_iter().map(move |mut name| {
+            let res = if name.starts_with("prefix:") {
+                name = Rc::new(name["prefix:".len()..].to_owned());
+                prefixes.remove(&name).unwrap()
+            } else {
+                input.remove(&name).unwrap()
+            };
+            (name, res)
+        });
+
+        for (name, def) in udefs {
+            let name = (*name).clone();
             match *def {
                 Def::Dimension(ref dname) => {
                     let dname = Rc::new(dname.clone());
@@ -659,6 +802,8 @@ impl Context {
                 Err(e) => println!("Alias {}: {}", name, e)
             }
         }
+
+        println!("{:#?}", ctx);
 
         ctx
     }
