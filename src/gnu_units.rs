@@ -18,6 +18,7 @@ pub enum Token {
     Plus,
     Dash,
     Asterisk,
+    Question,
     Error(String),
 }
 
@@ -58,6 +59,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             '-' => Token::Dash,
             '+' => Token::Plus,
             '*' => Token::Asterisk,
+            '?' => Token::Question,
             '\\' => match self.0.next() {
                 Some('\n') => self.next().unwrap(),
                 Some(x) => Token::Error(format!("Invalid escape: \\{}", x)),
@@ -244,16 +246,8 @@ pub fn parse_expr(mut iter: &mut Iter) -> Expr {
     parse_add(iter)
 }
 
-fn is_uppercase(name: &str) -> bool {
-    name.len() > 1 && name.find(|c| match c {
-        'A'...'Z' | '_' => false,
-        _ => true
-    }).is_none()
-}
-
 pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
-    let mut aliases = vec![];
     let mut line = 1;
     loop {
         match iter.next().unwrap() {
@@ -266,13 +260,6 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                 }
             },
             Token::Ident(name) => {
-                if is_uppercase(&*name) {
-                    // alias
-                    let mut copy = iter.clone();
-                    let expr = parse_expr(&mut copy);
-                    aliases.push((expr, name.to_lowercase()));
-                }
-
                 if name.ends_with("-") {
                     // prefix
                     let expr = parse_expr(iter);
@@ -297,6 +284,11 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                         } else {
                             map.push((name.clone(), Rc::new(Def::Dimension(name))));
                         }
+                    } else if let Some(&Token::Question) = iter.peek() {
+                        // quantity
+                        iter.next();
+                        let expr = parse_expr(iter);
+                        map.push((name, Rc::new(Def::Quantity(expr))));
                     } else {
                         // derived
                         let expr = parse_expr(iter);
@@ -309,7 +301,6 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
     }
     Defs {
         defs: map,
-        aliases: aliases,
     }
 }
 

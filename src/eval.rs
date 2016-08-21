@@ -160,26 +160,27 @@ impl Context {
                 return Some(Number::one_unit(k.to_owned()))
             }
         }
-        self.units.get(name).cloned().or_else(|| {
-            if name.ends_with("s") {
-                if let Some(v) = self.lookup(&name[0..name.len()-1]) {
-                    return Some(v)
+        if let Some(v) = self.units.get(name).cloned() {
+            return Some(v)
+        }
+        for (unit, alias) in &self.aliases {
+            if name == alias {
+                return Some(Number(Number::one().0, unit.clone()))
+            }
+        }
+        if name.ends_with("s") {
+            if let Some(v) = self.lookup(&name[0..name.len()-1]) {
+                return Some(v)
+            }
+        }
+        for &(ref pre, ref value) in &self.prefixes {
+            if name.starts_with(pre) {
+                if let Some(v) = self.lookup(&name[pre.len()..]) {
+                    return Some((&v * &value).unwrap())
                 }
             }
-            for &(ref pre, ref value) in &self.prefixes {
-                if name.starts_with(pre) {
-                    if let Some(v) = self.lookup(&name[pre.len()..]) {
-                        return Some((&v * &value).unwrap())
-                    }
-                }
-            }
-            for (unit, alias) in &self.aliases {
-                if name == alias {
-                    return Some(Number(Number::one().0, unit.clone()))
-                }
-            }
-            None
-        })
+        }
+        None
     }
 
     /// Describes a value's unit, gives true if the unit is reciprocal
@@ -621,6 +622,7 @@ impl Context {
         enum Name {
             Unit(Rc<String>),
             Prefix(Rc<String>),
+            Quantity(Rc<String>),
         }
 
         struct Resolver {
@@ -649,6 +651,11 @@ impl Context {
                     return Some(())
                 }
                 let unit = Name::Prefix(name.clone());
+                if self.input.get(&unit).is_some() {
+                    self.visit(&unit);
+                    return Some(())
+                }
+                let unit = Name::Quantity(name.clone());
                 if self.input.get(&unit).is_some() {
                     self.visit(&unit);
                     return Some(())
@@ -710,7 +717,8 @@ impl Context {
                     self.temp_marks.insert(name.clone());
                     if let Some(v) = self.input.get(name).cloned() {
                         match *v {
-                            Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) =>
+                            Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) |
+                            Def::Quantity(ref e) =>
                                 self.eval(e),
                             _ => (),
                         }
@@ -733,6 +741,7 @@ impl Context {
             let name = resolver.intern(&name);
             let unit = match *def {
                 Def::Prefix(_) | Def::SPrefix(_) => Name::Prefix(name),
+                Def::Quantity(_) => Name::Quantity(name),
                 _ => Name::Unit(name)
             };
             resolver.input.insert(unit.clone(), def);
@@ -754,6 +763,7 @@ impl Context {
             let name = match name {
                 Name::Unit(name) => (*name).clone(),
                 Name::Prefix(name) => (*name).clone(),
+                Name::Quantity(name) => (*name).clone(),
             };
             match *def {
                 Def::Dimension(ref dname) => {
@@ -785,19 +795,17 @@ impl Context {
                     Ok(_) => println!("Prefix {} is not a number", name),
                     Err(e) => println!("Prefix {} is malformed: {}", name, e)
                 },
+                Def::Quantity(ref expr) => match ctx.eval(expr) {
+                    Ok(Value::Number(v)) => {
+                        println!("Added {}", name);
+                        ctx.aliases.insert(v.1, name.clone());
+                    },
+                    Ok(_) => println!("Quantity {} is not a number", name),
+                    Err(e) => println!("Quantity {} is malformed: {}", name, e)
+                },
                 Def::DatePattern(ref pat) => ctx.datepatterns.push(pat.clone()),
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
-        }
-
-        for (expr, name) in defs.aliases {
-            match ctx.eval(&expr) {
-                Ok(Value::Number(v)) => {
-                    ctx.aliases.insert(v.1, name);
-                },
-                Ok(_) => println!("Alias {} is not a number", name),
-                Err(e) => println!("Alias {}: {}", name, e)
-            }
         }
 
         ctx

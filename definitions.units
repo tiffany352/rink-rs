@@ -476,30 +476,30 @@ Hz                      hertz
 # "You want:" prompt to tell the user the dimension of the unit.
 #
 
-LENGTH                  meter
-AREA                    LENGTH^2
-VOLUME                  LENGTH^3
-MASS                    kilogram
-CURRENT                 ampere
-AMOUNT                  mole
-ANGLE                   radian
-SOLID_ANGLE             steradian
-MONEY                   US$
-FORCE                   newton
-PRESSURE                FORCE / AREA
-STRESS                  FORCE / AREA
-CHARGE                  coulomb
-CAPACITANCE             farad
-RESISTANCE              ohm
-CONDUCTANCE             siemens
-INDUCTANCE              henry
-FREQUENCY               hertz
-VELOCITY                LENGTH / TIME
-ACCELERATION            VELOCITY / TIME
-DENSITY                 MASS / VOLUME
-LINEAR_DENSITY          MASS / LENGTH
-VISCOSITY               FORCE TIME / AREA
-KINEMATIC_VISCOSITY     VISCOSITY / DENSITY
+length                  ? meter
+area                    ? length^2
+volume                  ? length^3
+mass                    ? kilogram
+current                 ? ampere
+amount                  ? mole
+angle                   ? radian
+solid_angle             ? steradian
+money                   ? US$
+force                   ? newton
+pressure                ? force / area
+stress                  ? force / area
+charge                  ? coulomb
+capacitance             ? farad
+resistance              ? ohm
+conductance             ? siemens
+inductance              ? henry
+frequency               ? hertz
+velocity                ? length / time
+acceleration            ? velocity / time
+density                 ? mass / volume
+linear_density          ? mass / length
+viscosity               ? force time / area
+kinematic_viscosity     ? viscosity / density
 
 
 #
@@ -737,8 +737,8 @@ fine                    1|1000    # Measure of gold purity
 # with "temp".
 #
 
-TEMPERATURE             kelvin
-TEMPERATURE_DIFFERENCE  kelvin
+temperature             ? kelvin
+temperature_difference  kelvin
 
 # In 1741 Anders Celsius introduced a temperature scale with water boiling at
 # 0 degrees and freezing at 100 degrees at standard pressure. After his death
@@ -1260,11 +1260,10 @@ ozcu                    ouncecopper             #   in circuitboard fabrication
 # Photometric units
 #
 
-LUMINOUS_INTENSITY      candela
-LUMINOUS_FLUX           lumen
-LUMINOUS_ENERGY         talbot
-ILLUMINANCE             lux
-EXITANCE                lux
+luminous_intensity      ? candela
+luminous_flux           ? lumen
+luminous_energy         ? talbot
+illuminance             ? lux
 
 candle                  1.02 candela  # Standard unit for luminous intensity
 hefnerunit              0.9 candle    #   in use before candela
@@ -1300,7 +1299,7 @@ skot                    1e-3 apostilb # measurements relating to dark adapted
                                       # eyes.
 # Luminance measures
 
-LUMINANCE               nit
+luminance               ? nit
 
 nit                     cd/m^2        # Luminance: the intensity per projected
 stilb                   cd / cm^2     # area of an extended luminous source.
@@ -1579,7 +1578,7 @@ C_illum         C_apex1961
 # and a description of how to compute the correction to mean time.
 #
 
-TIME                    second
+time                    ? second
 
 anomalisticyear         365.2596 days       # The time between successive
                                             #   perihelion passages of the
@@ -2895,8 +2894,7 @@ count                  /pound        # For measuring the size of shrimp
 # Other units of work, energy, power, etc
 #
 
-ENERGY                  joule
-WORK                    joule
+energy                  ? joule
 
 # Calories: energy to raise a gram of water one degree celsius
 
@@ -3085,7 +3083,7 @@ uranium_natural         0.7% uranium_pure        # Natural uranium: 0.7% U-235
 celsiusheatunit         cal lb K / gram K
 chu                     celsiusheatunit
 
-POWER                   watt
+power                   ? watt
 
 # "Apparent" average power in an AC circuit, the product of rms voltage
 # and rms current, equal to the true power in watts when voltage and
@@ -3119,24 +3117,24 @@ chevalvapeur            metrichorsepower
 # cross sectional area, t is the time, and L is the length (thickness).
 # Thermal conductivity is a material property.
 
-THERMAL_CONDUCTIVITY    POWER / AREA (TEMPERATURE_DIFFERENCE/LENGTH)
-THERMAL_RESISTIVITY     1/THERMAL_CONDUCTIVITY
+thermal_conductivity    ? power / area (temperature_difference/length)
+thermal_resistivity     ? 1/thermal_conductivity
 
 # Thermal conductance is the rate at which heat flows across a given
 # object, so the area and thickness have been fixed.  It depends on
 # the size of the object and is hence not a material property.
 
-THERMAL_CONDUCTANCE     POWER / TEMPERATURE_DIFFERENCE
-THERMAL_RESISTANCE      1/THERMAL_CONDUCTANCE
+thermal_conductance     ? power / temperature_difference
+thermal_resistance      ? 1/thermal_conductance
 
 # Thermal admittance is the rate of heat flow per area across an
 # object whose thickness has been fixed.  Its reciprocal, thermal
 # insulation, is used to for measuring the heat transfer per area
 # of sheets of insulation or cloth that are of specified thickness.
 
-THERMAL_ADMITTANCE      THERMAL_CONDUCTIVITY / LENGTH
-THERMAL_INSULANCE       THERMAL_RESISTIVITY LENGTH
-THERMAL_INSULATION      THERMAL_RESISTIVITY LENGTH
+thermal_admittance      ? thermal_conductivity / length
+thermal_insulance       ? thermal_resistivity length
+thermal_insulation      ? thermal_resistivity length
 
 Rvalue                  degR ft^2 hr / btu
 Uvalue                  1/Rvalue
@@ -3202,7 +3200,7 @@ tog                     0.1 K m^2 / W   # Also used for clothing.
 
 # Misc other measures
 
-ENTROPY                 ENERGY / TEMPERATURE
+entropy                 ? energy / temperature
 clausius                1e3 cal/K       # A unit of physical entropy
 langley                 thermcalorie/cm^2    # Used in radiation theory
 poncelet                100 kg force m / s
@@ -3563,7 +3561,7 @@ grobe_sabon             84 didotpoint
 # to measure information and as a physical quantity.
 #
 
-INFORMATION             bit
+information             ? bit
 
 #nat                     (1/ln(2)) bits       # Entropy measured base e
 #hartley                 log2(10) bits        # Entropy of a uniformly
@@ -3678,7 +3676,7 @@ semitone                octave^(1|12)
 #
 
 wholenote               !
-MUSICAL_NOTE_LENGTH     wholenote
+musical_note_length     ? wholenote
 halfnote                1|2 wholenote
 quarternote             1|4 wholenote
 eighthnote              1|8 wholenote
@@ -3965,7 +3963,7 @@ lbcut               poundcut
 # Gas and Liquid flow units
 #
 
-FLUID_FLOW              VOLUME / TIME
+#FLUID_FLOW              VOLUME / TIME
 
 # Some obvious volumetric gas flow units (cu is short for cubic)
 
@@ -4025,7 +4023,7 @@ sverdrup                1e6 m^3 / sec   # Used to express flow of ocean
 # of gas molecules per unit time, and hence to the mass flow if the
 # molecular mass is known.
 
-GAS_FLOW                PRESSURE FLUID_FLOW
+#GAS_FLOW                PRESSURE FLUID_FLOW
 
 sccm                    atm cc/min     # 's' is for "standard" to indicate
 sccs                    atm cc/sec     # flow at standard pressure
@@ -4751,7 +4749,7 @@ Ci                      curie        # emitted by the amount of radon that is
                                      # in equilibrium with 1 gram of radium.
 rutherford              1e6 Bq       #
 
-RADIATION_DOSE          gray
+radiation_dose          ? gray
 gray                    J/kg         # Absorbed dose of radiation
 Gy                      gray         #
 rad                     1e-2 Gy      # From Radiation Absorbed Dose

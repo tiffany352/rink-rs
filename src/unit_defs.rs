@@ -523,12 +523,11 @@ fn parse_datepattern(mut iter: &mut Iter) -> Vec<DatePattern> {
 
 pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
-    let mut aliases = vec![];
     let mut line = 1;
     loop {
         let mut copy = iter.clone();
         if let Some(a) = parse_alias(&mut copy) {
-            aliases.push(a);
+            map.push((a.1, Rc::new(Def::Quantity(a.0))));
             *iter = copy;
             continue
         }
@@ -588,7 +587,6 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
     }
     Defs {
         defs: map,
-        aliases: aliases,
     }
 }
 

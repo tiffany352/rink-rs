@@ -64,6 +64,7 @@ pub enum Def {
     Prefix(Expr),
     SPrefix(Expr),
     Unit(Expr),
+    Quantity(Expr),
     DatePattern(Vec<DatePattern>),
     Error(String),
 }
@@ -71,5 +72,4 @@ pub enum Def {
 #[derive(Debug)]
 pub struct Defs {
     pub defs: Vec<(String, Rc<Def>)>,
-    pub aliases: Vec<(Expr, String)>,
 }

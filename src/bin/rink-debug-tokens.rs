@@ -37,6 +37,7 @@ fn main() {
             Token::Plus => print!("+"),
             Token::Dash => print!("-"),
             Token::Asterisk => print!("*"),
+            Token::Question => print!("?"),
             Token::Error(e) => print!("<error: {}>", e),
         }
     }
