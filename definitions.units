@@ -782,10 +782,10 @@ degR                    degrankine
 tempR                   degrankine
 temprankine             degrankine
 
-reaumur_absolute        10/8 kelvin
-romer_absolute          40/21 kelvin
-delisle_absolute        -2/3 kelvin
-newton_absolute         100/33 kelvin
+reaumur_absolute        10|8 kelvin
+romer_absolute          40|21 kelvin
+delisle_absolute        -2|3 kelvin
+newton_absolute         100|33 kelvin
 
 zerocelsius             273.15 K
 zerofahrenheit          zerocelsius - 32 degR

@@ -196,17 +196,8 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop { match iter.peek().cloned().unwrap() {
-        Token::Plus | Token::Dash | Token::RPar | Token::Newline | Token::Eof => break,
-        Token::Slash => {
-            iter.next();
-            let right = parse_pow(iter);
-            let left = if terms.len() == 1 {
-                terms.pop().unwrap()
-            } else {
-                Expr::Mul(terms)
-            };
-            terms = vec![Expr::Frac(Box::new(left), Box::new(right))]
-        },
+        Token::Slash | Token::Plus | Token::Dash | Token::RPar | Token::Newline | Token::Eof =>
+            break,
         Token::Asterisk => {
             iter.next();
         },
@@ -219,8 +210,21 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
     }
 }
 
+fn parse_div(mut iter: &mut Iter) -> Expr {
+    let mut left = parse_mul(iter);
+    loop { match *iter.peek().unwrap() {
+        Token::Slash => {
+            iter.next();
+            let right = parse_mul(iter);
+            left = Expr::Frac(Box::new(left), Box::new(right));
+        },
+        _ => break
+    }}
+    left
+}
+
 fn parse_add(mut iter: &mut Iter) -> Expr {
-    let left = parse_mul(iter);
+    let left = parse_div(iter);
     match *iter.peek().unwrap() {
         Token::Plus => {
             iter.next();
