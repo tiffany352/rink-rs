@@ -769,9 +769,6 @@ impl Context {
                 Def::Dimension(ref dname) => {
                     let dname = Rc::new(dname.clone());
                     ctx.dimensions.push(dname.clone());
-                    let mut map = Unit::new();
-                    map.insert(dname, 1);
-                    ctx.aliases.insert(map, name.clone());
                 },
                 Def::Unit(ref expr) => match ctx.eval(expr) {
                     Ok(Value::Number(v)) => {
@@ -797,7 +794,10 @@ impl Context {
                 },
                 Def::Quantity(ref expr) => match ctx.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        ctx.aliases.insert(v.1, name.clone());
+                        let res = ctx.aliases.insert(v.1, name.clone());
+                        if let Some(old) = res {
+                            println!("Warning: Conflicting quantities {} and {}", name, old);
+                        }
                     },
                     Ok(_) => println!("Quantity {} is not a number", name),
                     Err(e) => println!("Quantity {} is malformed: {}", name, e)

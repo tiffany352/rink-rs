@@ -487,8 +487,8 @@ angle                   ? radian
 solid_angle             ? steradian
 money                   ? US$
 force                   ? newton
-pressure                ? force / area
-stress                  ? force / area
+pressure                ? pascal
+stress                    pascal
 charge                  ? coulomb
 capacitance             ? farad
 resistance              ? ohm
@@ -1262,7 +1262,7 @@ ozcu                    ouncecopper             #   in circuitboard fabrication
 #
 
 radiant_energy                    J       # Basic unit of radiation
-radiant_energy_density          ? J/m^3
+radiant_energy_density            J/m^3
 radiant_flux                      W
 spectral_flux_frequency           W/Hz
 spectral_flux_wavelength        ? W/m
@@ -1275,12 +1275,12 @@ spectral_radiance_wavelength    ? W sr^-1 m^-3
 spectral_irradiance_frequency   ? W m^-2 Hz^-1
 spectral_irradiance_wavelength  ? W/m^3
 radiosity                       ? W/m^2
-spectral_radiosity_frequency    ? W m^-2 Hz^-1
+spectral_radiosity_frequency      W m^-2 Hz^-1
 spectral_radiosity_wavelength     W m^-3
 radiant_exitance                  W/m^2
 spectral_exitance_frequency       W m^-2 Hz^-1
 spectral_exitance_wavelength      W/m^3
-radiant_exposure                ? J/m^2
+radiant_exposure                  J/m^2
 spectral_exposure_frequency     ? J m^-2 Hz^-1
 spectral_exposure_wavelength      J/m^3
 
@@ -3162,7 +3162,7 @@ thermal_resistance      ? 1/thermal_conductance
 # of sheets of insulation or cloth that are of specified thickness.
 
 thermal_admittance      ? thermal_conductivity / length
-thermal_insulance       ? thermal_resistivity length
+thermal_insulance         thermal_resistivity length
 thermal_insulation      ? thermal_resistivity length
 
 Rvalue                  degR ft^2 hr / btu
