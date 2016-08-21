@@ -797,7 +797,6 @@ impl Context {
                 },
                 Def::Quantity(ref expr) => match ctx.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        println!("Added {}", name);
                         ctx.aliases.insert(v.1, name.clone());
                     },
                     Ok(_) => println!("Quantity {} is not a number", name),

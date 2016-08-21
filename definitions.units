@@ -476,6 +476,7 @@ Hz                      hertz
 # "You want:" prompt to tell the user the dimension of the unit.
 #
 
+dimensionless           ? 1
 length                  ? meter
 area                    ? length^2
 volume                  ? length^3

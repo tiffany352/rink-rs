@@ -278,9 +278,7 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                         if let Some(Token::Ident(ref _n)) = iter.peek().cloned() {
                             iter.next();
                             // dimensionless primitive unit
-                            // not sure what to do with these
-                            map.push((name.clone(), Rc::new(Def::Unit(Expr::Const(
-                                "1".to_owned(), None, None)))));
+                            map.push((name.clone(), Rc::new(Def::Dimension(name))));
                         } else {
                             map.push((name.clone(), Rc::new(Def::Dimension(name))));
                         }
