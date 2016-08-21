@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use eval::Show;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
+use std::fmt;
 
 /// Number type
 pub type Num = Mpq;
@@ -248,6 +249,12 @@ impl Number {
 
     pub fn complexity_score(&self) -> i64 {
         self.1.iter().map(|(_, p)| 1 + p.abs()).fold(0, |a,x| a+x)
+    }
+}
+
+impl fmt::Debug for Number {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}", self.show_number_part())
     }
 }
 
