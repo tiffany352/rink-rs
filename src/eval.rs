@@ -309,7 +309,7 @@ impl Context {
             Expr::Suffix(SuffixOp::Celsius, ref left) =>
                 temperature!(left, "C", "zerocelsius", "kelvin"),
             Expr::Suffix(SuffixOp::Fahrenheit, ref left) =>
-                temperature!(left, "F", "zerofahrenheit", "Rankine"),
+                temperature!(left, "F", "zerofahrenheit", "degrankine"),
             Expr::Suffix(SuffixOp::Reaumur, ref left) =>
                 temperature!(left, "Ré", "zerocelsius", "reaumur_absolute"),
             Expr::Suffix(SuffixOp::Romer, ref left) =>
@@ -549,7 +549,7 @@ impl Context {
 
                     match **bottom {
                         Expr::DegC => temperature!("C", "zerocelsius", "kelvin"),
-                        Expr::DegF => temperature!("F", "zerofahrenheit", "Rankine"),
+                        Expr::DegF => temperature!("F", "zerofahrenheit", "degrankine"),
                         Expr::DegRe => temperature!("Ré", "zerocelsius", "reaumur_absolute"),
                         Expr::DegRo => temperature!("Rø", "zeroromer", "romer_absolute"),
                         Expr::DegDe => temperature!("De", "zerodelisle", "delisle_absolute"),
@@ -617,13 +617,18 @@ impl Context {
 
         ctx.prefixes.sort_by(|a, b| a.0.cmp(&b.0));
 
+        #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
+        enum Name {
+            Unit(Rc<String>),
+            Prefix(Rc<String>),
+        }
+
         struct Resolver {
             interned: HashSet<Rc<String>>,
-            prefixes: BTreeMap<Rc<String>, Rc<Def>>,
-            input: HashMap<Rc<String>, Rc<Def>>,
-            sorted: Vec<Rc<String>>,
-            unmarked: HashSet<Rc<String>>,
-            temp_marks: HashSet<Rc<String>>,
+            input: HashMap<Name, Rc<Def>>,
+            sorted: Vec<Name>,
+            unmarked: HashSet<Name>,
+            temp_marks: HashSet<Name>,
         }
 
         impl Resolver {
@@ -638,8 +643,14 @@ impl Context {
             }
 
             fn lookup(&mut self, name: &Rc<String>) -> Option<()> {
-                if self.input.get(&name.to_owned()).is_some() {
-                    self.visit(name);
+                let unit = Name::Unit(name.clone());
+                if self.input.get(&unit).is_some() {
+                    self.visit(&unit);
+                    return Some(())
+                }
+                let unit = Name::Prefix(name.clone());
+                if self.input.get(&unit).is_some() {
+                    self.visit(&unit);
                     return Some(())
                 }
                 if name.ends_with("s") {
@@ -649,14 +660,17 @@ impl Context {
                     }
                 }
                 let mut found = vec![];
-                for pre in &self.prefixes {
-                    if (*name).starts_with(&**pre.0) {
-                        found.push(pre.0.clone());
+                for (pre, _) in &self.input {
+                    if let &Name::Prefix(ref pre) = pre {
+                        if (*name).starts_with(&**pre) {
+                            found.push(pre.clone());
+                        }
                     }
                 }
                 for pre in found {
                     if let Some(()) = self.lookup(&Rc::new(name[pre.len()..].to_owned())) {
-                        self.visit(&pre);
+                        let unit = Name::Prefix(pre);
+                        self.visit(&unit);
                         return Some(())
                     }
                 }
@@ -667,7 +681,9 @@ impl Context {
                 match *expr {
                     Expr::Unit(ref name) => {
                         let name = self.intern(name);
-                        self.lookup(&name);
+                        if self.lookup(&name).is_none() {
+                            println!("Lookup failed: {}", name);
+                        }
                     },
                     Expr::Frac(ref left, ref right) |
                     Expr::Pow(ref left, ref right) |
@@ -685,9 +701,9 @@ impl Context {
                 }
             }
 
-            fn visit(&mut self, name: &Rc<String>) {
+            fn visit(&mut self, name: &Name) {
                 if self.temp_marks.get(name).is_some() {
-                    println!("Unit {} has a dependency cycle", name);
+                    println!("Unit {:?} has a dependency cycle", name);
                     return;
                 }
                 if self.unmarked.get(name).is_some() {
@@ -699,16 +715,6 @@ impl Context {
                             _ => (),
                         }
                     }
-                    if name.starts_with("prefix:") {
-                        let name = &name["prefix:".len()..].to_owned();
-                        if let Some(v) = self.prefixes.get(name).cloned() {
-                            match *v {
-                                Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) =>
-                                    self.eval(e),
-                                _ => (),
-                            }
-                        }
-                    }
                     self.unmarked.remove(name);
                     self.temp_marks.remove(name);
                     self.sorted.push(name.clone());
@@ -718,7 +724,6 @@ impl Context {
 
         let mut resolver = Resolver {
             interned: HashSet::new(),
-            prefixes: BTreeMap::new(),
             input: HashMap::new(),
             sorted: vec![],
             unmarked: HashSet::new(),
@@ -726,17 +731,12 @@ impl Context {
         };
         for (name, def) in defs.defs.into_iter() {
             let name = resolver.intern(&name);
-            match *def {
-                Def::Prefix(_) | Def::SPrefix(_) => {
-                    resolver.prefixes.insert(name.clone(), def.clone());
-                    let name = resolver.intern(&format!("prefix:{}", name));
-                    resolver.unmarked.insert(name);
-                },
-                _ => {
-                    resolver.input.insert(name.clone(), def);
-                    resolver.unmarked.insert(name);
-                }
-            }
+            let unit = match *def {
+                Def::Prefix(_) | Def::SPrefix(_) => Name::Prefix(name),
+                _ => Name::Unit(name)
+            };
+            resolver.input.insert(unit.clone(), def);
+            resolver.unmarked.insert(unit);
         }
 
         while let Some(name) = resolver.unmarked.iter().next().cloned() {
@@ -745,19 +745,16 @@ impl Context {
         let sorted = resolver.sorted;
         //println!("{:#?}", sorted);
         let mut input = resolver.input;
-        let mut prefixes = resolver.prefixes;
-        let udefs = sorted.into_iter().map(move |mut name| {
-            let res = if name.starts_with("prefix:") {
-                name = Rc::new(name["prefix:".len()..].to_owned());
-                prefixes.remove(&name).unwrap()
-            } else {
-                input.remove(&name).unwrap()
-            };
+        let udefs = sorted.into_iter().map(move |name| {
+            let res = input.remove(&name).unwrap();
             (name, res)
         });
 
         for (name, def) in udefs {
-            let name = (*name).clone();
+            let name = match name {
+                Name::Unit(name) => (*name).clone(),
+                Name::Prefix(name) => (*name).clone(),
+            };
             match *def {
                 Def::Dimension(ref dname) => {
                     let dname = Rc::new(dname.clone());
@@ -802,8 +799,6 @@ impl Context {
                 Err(e) => println!("Alias {}: {}", name, e)
             }
         }
-
-        println!("{:#?}", ctx);
 
         ctx
     }

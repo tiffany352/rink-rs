@@ -676,7 +676,7 @@ seclongitude            circle (seconds/day) # Astronomers measure longitude
 
 #circlearea(r)   units=[m;m^2] range=[0,) pi r^2 ; sqrt(circlearea/pi)
 #spherevolume(r) units=[m;m^3] range=[0,) 4|3 pi r^3 ; \
-                                         cuberoot(spherevolume/4|3 pi)
+#                                         cuberoot(spherevolume/4|3 pi)
 #spherevol()     spherevolume
 #square(x)       range=[0,)          x^2 ; sqrt(square)
 
@@ -775,12 +775,22 @@ TEMPERATURE_DIFFERENCE  kelvin
 #degF                    5|9 degC
 
 
-degreesrankine          degF              # The Rankine scale has the
+degreesrankine          5|9 K             # The Rankine scale has the
 degrankine              degreesrankine    # Fahrenheit degree, but its zero
-degreerankine           degF              # is at absolute zero.
+degreerankine           degreesrankine    # is at absolute zero.
 degR                    degrankine
 tempR                   degrankine
 temprankine             degrankine
+
+reaumur_absolute        10/8 kelvin
+romer_absolute          40/21 kelvin
+delisle_absolute        -2/3 kelvin
+newton_absolute         100/33 kelvin
+
+zerocelsius             273.15 K
+zerofahrenheit          zerocelsius - 32 degR
+zerodelisle             373.15 kelvin
+zeroromer               zerocelsius - 7.5 romer_absolute
 
 #tempreaumur(x)    units=[1;K] domain=[-218.52,) range=[0,) \
 #                  x degreaumur+stdtemp ; (tempreaumur+(-stdtemp))/degreaumur
@@ -945,7 +955,7 @@ wc                      water            # water column
 mach                    331.46 m/s       # speed of sound in dry air at STP
 standardtemp            273.15 K         # standard temperature
 stdtemp                 standardtemp
-normaltemp              tempF(70)        # for gas density, from NIST
+normaltemp              529.67 degR      # for gas density, from NIST
 normtemp                normaltemp       # Handbook 44
 
 # Weight of mercury and water at different temperatures using the standard
@@ -1075,8 +1085,8 @@ lightyear               c julianyear # The 365.25 day year is specified in
 ly                      lightyear    # NIST publication 811
 lightsecond             c s
 lightminute             c min
-parsec                  au / tan(arcsec)    # Unit of length equal to distance
-pc                      parsec              #   from the sun to a point having
+#parsec                  au / tan(arcsec)    # Unit of length equal to distance
+#pc                      parsec              #   from the sun to a point having
                                             #   heliocentric parallax of 1
                                             #   arcsec (derived from parallax
                                             #   second).  A distant object with
@@ -1373,8 +1383,8 @@ iso100                  s100
 
 # Reflected-light meter calibration constant with ISO 100 speed
 
-k1250                   12.5 (cd/m2) / lx s   # For Canon, Nikon, and Sekonic
-k1400                   14   (cd/m2) / lx s   # For Kenko (Minolta) and Pentax
+k1250                   12.5 (cd/m^2) / lx s   # For Canon, Nikon, and Sekonic
+k1400                   14   (cd/m^2) / lx s   # For Kenko (Minolta) and Pentax
 
 # Incident-light meter calibration constant with ISO 100 film
 
@@ -1428,8 +1438,8 @@ c250                    250 lx / lx s         # flat-disc receptor
                                 # ASA PH2.12-1961, and ANSI PH2.7-1986
 #N_apex         0.3162 lx s     # value in ANSI PH2.7-1973
 N_exif          1|3.125 lx s    # value in Exif 2.3 (2010), making Sv(5) = 100
-K_apex1961      11.4 (cd/m2) / lx s    # value in ASA PH2.12-1961
-K_apex1971      12.5 (cd/m2) / lx s    # value in ANSI PH3.49-1971; more common
+K_apex1961      11.4 (cd/m^2) / lx s    # value in ASA PH2.12-1961
+K_apex1971      12.5 (cd/m^2) / lx s    # value in ANSI PH3.49-1971; more common
 C_apex1961      224 lx / lx s   # value in PH2.12-1961 (20.83 for I in 
                                 #   footcandles; flat sensor?)
 C_apex1971      322 lx / lx s   # mean value in PH3.49-1971 (30 +/- 5 for I in
@@ -1895,6 +1905,7 @@ int                     3937|1200 ft/m   # Convert US Survey measures to
 int-                    int              #   international measures
 
 inch                    2.54 cm
+inches                  inch
 in                      inch
 foot                    12 inch
 feet                    foot
@@ -2878,7 +2889,7 @@ RU                     U             #   than its U measurement indicates to
                                      #   called the Electronic Industries
                                      #   Alliance (EIA) and the rack standard
                                      #   is specified in EIA RS-310-D.
-count                  per pound     # For measuring the size of shrimp
+count                  /pound        # For measuring the size of shrimp
 
 #
 # Other units of work, energy, power, etc
@@ -2906,11 +2917,11 @@ thermie              1e6 cal_fifteen # Heat required to raise the
 
 # btu definitions: energy to raise a pound of water 1 degF
 
-btu                     cal lb degF / gram K # international table BTU
+btu                     cal lb degR / gram K # international table BTU
 britishthermalunit      btu
 btu_IT                  btu
-btu_th                  cal_th lb degF / gram K
-btu_mean                cal_mean lb degF / gram K
+btu_th                  cal_th lb degR / gram K
+btu_mean                cal_mean lb degR / gram K
 quad                    quadrillion btu
 
 ECtherm                 1.05506e8 J    # Exact definition, close to 1e5 btu
@@ -3035,8 +3046,8 @@ toncoal                 7e9 cal_IT     # Energy in metric ton coal from [18].
                                        # of coal used in the 1950's
 barreloil               5.8 Mbtu       # Conventional value for barrel of crude
                                        # oil [E2].  Actual range is 5.6 - 6.3.
-naturalgas_HHV          1027 btu/ft3   # Energy content of natural gas.  HHV
-naturalgas_LHV          930 btu/ft3    # is for Higher Heating Value and
+naturalgas_HHV          1027 btu/ft^3  # Energy content of natural gas.  HHV
+naturalgas_LHV          930 btu/ft^3   # is for Higher Heating Value and
 naturalgas              naturalgas_HHV # includes energy from condensation
                                        # combustion products.  LHV is for Lower
                                        # Heating Value and excludes these.
@@ -3071,7 +3082,7 @@ uranium_natural         0.7% uranium_pure        # Natural uranium: 0.7% U-235
 
 # Celsius heat unit: energy to raise a pound of water 1 degC
 
-celsiusheatunit         cal lb degC / gram K
+celsiusheatunit         cal lb K / gram K
 chu                     celsiusheatunit
 
 POWER                   watt
@@ -3127,17 +3138,17 @@ THERMAL_ADMITTANCE      THERMAL_CONDUCTIVITY / LENGTH
 THERMAL_INSULANCE       THERMAL_RESISTIVITY LENGTH
 THERMAL_INSULATION      THERMAL_RESISTIVITY LENGTH
 
-Rvalue                  degF ft^2 hr / btu
+Rvalue                  degR ft^2 hr / btu
 Uvalue                  1/Rvalue
 europeanUvalue          watt / m^2 K
-RSI                     degC m^2 / W
-clo                     0.155 degC m^2 / W # Supposed to be the insulance
+RSI                     K m^2 / W
+clo                     0.155 K m^2 / W # Supposed to be the insulance
                                            # required to keep a resting person
                                            # comfortable indoors.  The value
                                            # given is from NIST and the CRC,
                                            # but [5] gives a slightly different
                                            # value of 0.875 ft^2 degF hr / btu.
-tog                     0.1 degC m^2 / W   # Also used for clothing.
+tog                     0.1 K m^2 / W   # Also used for clothing.
 
 
 # The bel was defined by engineers of Bell Laboratories to describe the
@@ -3554,11 +3565,11 @@ grobe_sabon             84 didotpoint
 
 INFORMATION             bit
 
-nat                     (1/ln(2)) bits       # Entropy measured base e
-hartley                 log2(10) bits        # Entropy of a uniformly
-ban                     hartley              #   distributed random variable
+#nat                     (1/ln(2)) bits       # Entropy measured base e
+#hartley                 log2(10) bits        # Entropy of a uniformly
+#ban                     hartley              #   distributed random variable
                                              #   over 10 symbols.
-dit                     hartley              # from Decimal digIT
+#dit                     hartley              # from Decimal digIT
 
 #
 # Computer
@@ -3781,70 +3792,70 @@ megalerg                megaerg    # 'L' added to make it pronounceable [18].
 unitedstatesdollar      US$
 usdollar                US$
 $                       dollar
-mark                    germanymark
-bolivar                 venezuelabolivar
-venezuelanbolivarfuerte venezuelabolivar
-bolivarfuerte           bolivar        # The currency was revalued by
-oldbolivar              1|1000 bolivar # a factor of 1000.
-peseta                  spainpeseta
-rand                    southafricarand
-escudo                  portugalescudo
-guilder                 netherlandsguilder
-hollandguilder          netherlandsguilder
-peso                    mexicopeso
-yen                     japanyen
-lira                    italylira
-rupee                   indiarupee
-drachma                 greecedrachma
-franc                   francefranc
-markka                  finlandmarkka
-britainpound            unitedkingdompound
-greatbritainpound       unitedkingdompound
-unitedkingdompound      ukpound
-poundsterling           britainpound
-yuan                    chinayuan
+# mark                    germanymark
+# bolivar                 venezuelabolivar
+# venezuelanbolivarfuerte venezuelabolivar
+# bolivarfuerte           bolivar        # The currency was revalued by
+# oldbolivar              1|1000 bolivar # a factor of 1000.
+# peseta                  spainpeseta
+# rand                    southafricarand
+# escudo                  portugalescudo
+# guilder                 netherlandsguilder
+# hollandguilder          netherlandsguilder
+# peso                    mexicopeso
+# yen                     japanyen
+# lira                    italylira
+# rupee                   indiarupee
+# drachma                 greecedrachma
+# franc                   francefranc
+# markka                  finlandmarkka
+# britainpound            unitedkingdompound
+# greatbritainpound       unitedkingdompound
+# unitedkingdompound      ukpound
+# poundsterling           britainpound
+# yuan                    chinayuan
 
 # Some European currencies have permanent fixed exchange rates with
 # the Euro.  These rates were taken from the EC's web site:
 # http://ec.europa.eu/economy_finance/euro/adoption/conversion/index_en.htm
 
-austriaschilling        1|13.7603 euro
-belgiumfranc            1|40.3399 euro
-estoniakroon            1|15.6466 euro # Equal to 1|8 germanymark
-finlandmarkka           1|5.94573 euro
-francefranc             1|6.55957 euro
-germanymark             1|1.95583 euro
-greecedrachma           1|340.75 euro
-irelandpunt             1|0.787564 euro
-italylira               1|1936.27 euro
-luxembourgfranc         1|40.3399 euro
-netherlandsguilder      1|2.20371 euro
-portugalescudo          1|200.482 euro
-spainpeseta             1|166.386 euro
-cypruspound             1|0.585274 euro
-maltalira               1|0.429300 euro
-sloveniatolar           1|239.640 euro
-slovakiakoruna          1|30.1260 euro
+# austriaschilling        1|13.7603 euro
+# belgiumfranc            1|40.3399 euro
+# estoniakroon            1|15.6466 euro # Equal to 1|8 germanymark
+# finlandmarkka           1|5.94573 euro
+# francefranc             1|6.55957 euro
+# germanymark             1|1.95583 euro
+# greecedrachma           1|340.75 euro
+# irelandpunt             1|0.787564 euro
+# italylira               1|1936.27 euro
+# luxembourgfranc         1|40.3399 euro
+# netherlandsguilder      1|2.20371 euro
+# portugalescudo          1|200.482 euro
+# spainpeseta             1|166.386 euro
+# cypruspound             1|0.585274 euro
+# maltalira               1|0.429300 euro
+# sloveniatolar           1|239.640 euro
+# slovakiakoruna          1|30.1260 euro
 
-UKP                     GBP        # Not an ISO code, but looks like one, and
-                                   # sometimes used on usenet.
-VEB                     1|1000 VEF # old venezuelan bolivar
+# UKP                     GBP        # Not an ISO code, but looks like one, and
+#                                    # sometimes used on usenet.
+# VEB                     1|1000 VEF # old venezuelan bolivar
 
-!include currency.units
+# !include currency.units
 
 # Money on the gold standard, used in the late 19th century and early
 # 20th century.
 
-olddollargold           23.22 grains goldprice  # Used until 1934
-newdollargold           96|7 grains goldprice   # After Jan 31, 1934
-dollargold              newdollargold
-poundgold               113 grains goldprice
-goldounce               goldprice troyounce
-silverounce             silverprice troyounce
-platinumounce		platinumprice troyounce
-XAU                     goldounce
-XPT                     platinumounce
-XAG                     silverounce
+# olddollargold           23.22 grains goldprice  # Used until 1934
+# newdollargold           96|7 grains goldprice   # After Jan 31, 1934
+# dollargold              newdollargold
+# poundgold               113 grains goldprice
+# goldounce               goldprice troyounce
+# silverounce             silverprice troyounce
+# platinumounce		platinumprice troyounce
+# XAU                     goldounce
+# XPT                     platinumounce
+# XAG                     silverounce
 
 # Nominal masses of US coins.  Note that dimes, quarters and half dollars
 # have weight proportional to value.  Before 1965 it was $40 / kg.
@@ -3858,43 +3869,43 @@ USdollarmass            8.1 grams
 
 # British currency
 
-quid                    britainpound        # Slang names
-fiver                   5 quid
-tenner                  10 quid
-monkey                  500 quid
-brgrand                 1000 quid
-bob                     shilling
+# quid                    britainpound        # Slang names
+# fiver                   5 quid
+# tenner                  10 quid
+# monkey                  500 quid
+# brgrand                 1000 quid
+# bob                     shilling
 
-shilling                1|20 britainpound   # Before decimalisation, there
-oldpence                1|12 shilling       # were 20 shillings to a pound,
-farthing                1|4 oldpence        # each of twelve old pence
-guinea                  21 shilling         # Still used in horse racing
-crown                   5 shilling
-florin                  2 shilling
-groat                   4 oldpence
-tanner                  6 oldpence
-brpenny                 0.01 britainpound
-pence                   brpenny
-tuppence                2 pence
-tuppenny                tuppence
-ha'penny                halfbrpenny
-hapenny                 ha'penny
-oldpenny                oldpence
-oldtuppence             2 oldpence
-oldtuppenny             oldtuppence
-threepence              3 oldpence    # threepence never refers to new money
-threepenny              threepence
-oldthreepence           threepence
-oldthreepenny           threepence
-oldhalfpenny            halfoldpenny
-oldha'penny             oldhalfpenny
-oldhapenny              oldha'penny
-brpony                  25 britainpound
+# shilling                1|20 britainpound   # Before decimalisation, there
+# oldpence                1|12 shilling       # were 20 shillings to a pound,
+# farthing                1|4 oldpence        # each of twelve old pence
+# guinea                  21 shilling         # Still used in horse racing
+# crown                   5 shilling
+# florin                  2 shilling
+# groat                   4 oldpence
+# tanner                  6 oldpence
+# brpenny                 0.01 britainpound
+# pence                   brpenny
+# tuppence                2 pence
+# tuppenny                tuppence
+# ha'penny                halfbrpenny
+# hapenny                 ha'penny
+# oldpenny                oldpence
+# oldtuppence             2 oldpence
+# oldtuppenny             oldtuppence
+# threepence              3 oldpence    # threepence never refers to new money
+# threepenny              threepence
+# oldthreepence           threepence
+# oldthreepenny           threepence
+# oldhalfpenny            halfoldpenny
+# oldha'penny             oldhalfpenny
+# oldhapenny              oldha'penny
+# brpony                  25 britainpound
 
 # Canadian currency
 
-loony                   1 canadadollar    # This coin depicts a loon
-toony                   2 canadadollar
+# loony                   1 canadadollar    # This coin depicts a loon
+# toony                   2 canadadollar
 
 #
 # Units used for measuring volume of wood
@@ -4042,16 +4053,16 @@ lapserate	6.5 K/km	# US Std Atm (1976)
 # air molecular weight, including constituent mol wt, given
 # in Table 3, p. 3
 
-#air_1976	78.084   %    28.0134 \
-#	      + 20.9476  %    31.9988 \
-#	      + 9340     ppm  39.948 \
-#	      +  314     ppm  44.00995 \
-#	      +   18.18  ppm  20.183 \
-#	      +    5.24  ppm   4.0026 \
-#	      +    2     ppm  16.04303 \
-#	      +    1.14  ppm  83.80 \
-#	      +    0.55  ppm   2.01594 \
-#	      +    0.087 ppm 131.30
+air_1976    78.084   %    28.0134 \
+          + 20.9476  %    31.9988 \
+          + 9340     ppm  39.948 \
+          +  314     ppm  44.00995 \
+          +   18.18  ppm  20.183 \
+          +    5.24  ppm   4.0026 \
+          +    2     ppm  16.04303 \
+          +    1.14  ppm  83.80 \
+          +    0.55  ppm   2.01594 \
+          +    0.087 ppm 131.30
 
 # universal gas constant
 R_1976		8.31432e3 N m/(kmol K)
@@ -4931,7 +4942,7 @@ people                  1
 person                  people
 death                   people
 capita                  people
-percapita               per capita
+percapita               /capita
 
 # TGM dozen based unit system listed on the "dozenal" forum
 # http://www.dozenalsociety.org.uk/apps/tgm.htm.  These units are
@@ -5700,28 +5711,28 @@ firkin                  usfirkin
 hogshead                ushogshead
 !endvar
 
-!var UNITS_ENGLISH GB
-hundredweight           brhundredweight
-ton                     brton
-scruple                 brscruple
-fluidounce              brfluidounce
-gallon                  brgallon
-bushel                  brbushel
-quarter                 brquarter
-chaldron                brchaldron
-cup                     brcup
-teacup                  brteacup
-tablespoon              brtablespoon
-teaspoon                brteaspoon
-dollar                  US$
-cent                    $ 0.01
-penny                   brpenny
-minim                   minimnote
-pony                    brpony
-grand                   brgrand
-firkin                  brfirkin
-hogshead                brhogshead
-!endvar
+# !var UNITS_ENGLISH GB
+# hundredweight           brhundredweight
+# ton                     brton
+# scruple                 brscruple
+# fluidounce              brfluidounce
+# gallon                  brgallon
+# bushel                  brbushel
+# quarter                 brquarter
+# chaldron                brchaldron
+# cup                     brcup
+# teacup                  brteacup
+# tablespoon              brtablespoon
+# teaspoon                brteaspoon
+# dollar                  US$
+# cent                    $ 0.01
+# penny                   brpenny
+# minim                   minimnote
+# pony                    brpony
+# grand                   brgrand
+# firkin                  brfirkin
+# hogshead                brhogshead
+# !endvar
 
 !varnot UNITS_ENGLISH GB US
 !message Unknown value for environment variable UNITS_ENGLISH.  Should be GB or US.
@@ -5747,7 +5758,7 @@ hogshead                brhogshead
 # U+2150-               1|7  For some reason these characters are getting
 # U+2151-               1|9  flagged as invalid UTF8.
 # U+2152-               1|10
-ℯ                       exp(1)      # U+212F, base of natural log
+ℯ                       2.71828182845904523536 #exp(1)      # U+212F, base of natural log
 
 µ-                      micro       # micro sign U+00B5
 μ-                      micro       # small mu U+03BC
@@ -5755,23 +5766,23 @@ hogshead                brhogshead
 Å                       angstrom    # angstrom symbol U+212B
 Å                       angstrom    # A with ring U+00C5
 röntgen                 roentgen
-°C                      degC
-°F                      degF
+#°C                      degC
+#°F                      degF
 °K                      K           # °K is incorrect notation
 °R                      degR
 °                       degree
-℃                       degC
-℉                       degF
+#℃                       degC
+#℉                       degF
 K                       K          # Kelvin symbol, U+212A
 ℓ                       liter      # unofficial abbreviation used in some places
-¢                       cent
-£                       britainpound
-¥                       japanyen
-€                       euro
-₩                       southkoreawon
-₪                       israelnewshekel
-₤                       lira
-₨                       rupee
+#¢                       cent
+#£                       britainpound
+#¥                       japanyen
+#€                       euro
+#₩                       southkoreawon
+#₪                       israelnewshekel
+#₤                       lira
+#₨                       rupee
 
 Ω                       ohm       # Ohm symbol U+2126
 Ω                       ohm       # Greek capital omega U+03A9
@@ -5870,7 +5881,7 @@ röntgen                 roentgen
 ㏄                      cc
 ㏅                      cd
 ㏆                      C/kg
-㏈()                    dB
+#㏈()                    dB
 ㏉                      Gy
 ㏊                      ha
 # ㏋  HP??
@@ -5885,7 +5896,7 @@ röntgen                 roentgen
 ㏔                      mb
 ㏕                      mil
 ㏖                      mol
-㏗()                    pH
+#㏗()                    pH
 ㏙                      ppm
 #   ㏚     PR???
 ㏛                      sr
