@@ -51,7 +51,7 @@ use std::convert::From;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 
-const UNITS_TXT_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/units.txt";
+const DATA_FILE_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
 
 #[cfg(target_os = "linux")]
 fn config_dir() -> Result<PathBuf, String> {
@@ -85,7 +85,7 @@ fn config_dir() -> Result<PathBuf, String> {
         .map(|mut x: PathBuf| { x.push("Library/Application Support"); x})
 }
 
-/// Creates a context by searching standard directories for units.txt.
+/// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
     use std::io::Read;
     use std::fs::File;
@@ -101,9 +101,9 @@ pub fn load() -> Result<Context, String> {
                 Ok(f) => f,
                 Err(e) => return Err(format!(
                     "Failed to open definitions.units: {}\nIf you installed using \
-                     `cargo install`, then you need to obtain units.txt separately. Here is the \
-                     URL, download it and put it in {:?}.\n\n{}\n\n",
-                    e, &path, UNITS_TXT_URL))
+                     `cargo install`, then you need to obtain definitions.units separately. Here \
+                     is the URL, download it and put it in {:?}.\n\n{}\n\n",
+                    e, &path, DATA_FILE_URL))
             }
         }
     };

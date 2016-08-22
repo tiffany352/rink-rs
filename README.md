@@ -14,10 +14,10 @@ Select features:
 `cargo install rink`
 
 You must then download
-[units.txt](https://raw.githubusercontent.com/tiffany352/rink-rs/master/units.txt)
-and install it in `~/.config/rink/units.txt` (Linux),
-`%APPDATA%\rink\units.txt` (Windows), or `~/Library/Application
-Support/rink/units.txt` (MacOS).
+[definitions.units](https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units)
+and install it in `~/.config/rink/definitions.units` (Linux),
+`%APPDATA%\rink\definitions.units` (Windows), or `~/Library/Application
+Support/rink/definitions.units` (MacOS).
 
 ## Examples
 
@@ -29,26 +29,20 @@ approx. 0.1140795 W (power)
 ```
 > W -> J
 Conformance error
-   Left side: 1 m^2 kg / s^3 (power)
-  Right side: 1 m^2 kg / s^2 (energy)
+   Left side: 1 watt (power)
+  Right side: 1 joule (energy)
   Suggestion: multiply left side by time
               multiply right side by frequency
 ```
 
 ```
-> oil tonne -> kWh
-11630 kWh (energy)
+> gallon gasoline -> kWh
+approx. 36.63388 kWh (energy)
 ```
 
 ```
 > googol^100
 1.0e10000 (dimensionless)
-```
-
-The number of atoms in 12kg of lead:
-```
-> 12 kg / lead avogadro
-approx. 3.487726e25 (dimensionless)
 ```
 
 ## Library Usage
@@ -75,10 +69,8 @@ Source code licensed under either of
 
 at your option.
 
-The data file `units.txt` is from `frink` and is assumed to be
-licensed under the `GNU GPL v3` because it is based on the data file from
-`GNU Units(1)`, however the `frink` author has not acknowledged this
-and the copyright header from the file has been removed.
+The data file `definitions.units` is from GNU units(1) and is licensed
+under the GNU General Public License, version 3.
 
 ### Contribution
 

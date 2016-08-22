@@ -614,8 +614,8 @@ impl Context {
         }
     }
 
-    /// Takes a parsed units.txt from `unit_defs::parse()`. Prints if
-    /// there are errors in the file.
+    /// Takes a parsed definitions.units from
+    /// `gnu_units::parse()`. Prints if there are errors in the file.
     pub fn new(defs: Defs) -> Context {
         use std::collections::HashSet;
 
