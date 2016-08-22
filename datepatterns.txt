@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# ISO 8601 formats
+fullyear-monthnum-day['T'hour24:min:sec[offset]]
+fullyear-monthnum-day[ hour24:min:sec[offset]]
+fullyear-'W'isoweek
+fullyear-ordinal
+--monthnum-day
+
+# Dates like "Janaury 1, 1970"
+monthname day[[','] fullyear]
+
+# ctime dates
+weekday monthname day[ hour24:min:sec] fullyear
+
+# Astronomical dates like "1970 January 1"
+fullyear monthname day[ hour24:min:sec]
+
+# Today dates
+hour24:min:sec [offset]

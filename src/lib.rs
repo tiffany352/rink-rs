@@ -94,6 +94,8 @@ static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.un
 #[cfg(not(feature = "gpl"))]
 static DEFAULT_FILE: Option<&'static str> = None;
 
+static DATES_FILE: &'static str = include_str!("../datepatterns.txt");
+
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
     use std::io::Read;
@@ -101,7 +103,7 @@ pub fn load() -> Result<Context, String> {
     use std::path::Path;
 
     let mut path = try!(config_dir());
-    path.push("rink/definitions.units");
+    path.push("rink/");
     let load = |name| {
         File::open(name)
         .and_then(|mut f| {
@@ -110,9 +112,9 @@ pub fn load() -> Result<Context, String> {
             Ok(String::from_utf8_lossy(&*buf).into_owned())
         })
     };
-    let string =
-        load(Path::new("definitions.units"))
-        .or_else(|_| load(path.as_ref()))
+    let units =
+        load(Path::new("definitions.units").to_path_buf())
+        .or_else(|_| load(path.join("definitions.units")))
         .or_else(|_| DEFAULT_FILE.map(|x| x.to_owned()).ok_or(format!(
             "Did not exist in search path and binary is not compiled with `gpl` feature")))
         .map_err(|e| format!(
@@ -123,12 +125,20 @@ pub fn load() -> Result<Context, String> {
              {}\n\
              \n",
             e, &path, DATA_FILE_URL));
-    let string = try!(string);
+    let units = try!(units);
+    let dates =
+        load(Path::new("datepatterns.txt").to_path_buf())
+        .or_else(|_| load(path.join("datepatterns.txt")))
+        .unwrap_or_else(|_| DATES_FILE.to_owned());
 
-    let mut iter = gnu_units::TokenIterator::new(&*string).peekable();
-    let res = gnu_units::parse(&mut iter);
+    let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
+    let units = gnu_units::parse(&mut iter);
+    let dates = date::parse_datefile(&*dates);
 
-    Ok(eval::Context::new(res))
+    let mut ctx = eval::Context::new();
+    ctx.load(units);
+    ctx.load_dates(dates);
+    Ok(ctx)
 }
 
 /// Evaluates a single line within a context.

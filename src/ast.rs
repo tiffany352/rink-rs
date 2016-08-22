@@ -18,7 +18,7 @@ pub enum SuffixOp {
 #[derive(Debug, Clone)]
 pub enum DateToken {
     Literal(String),
-    Number(String, Option<String>, Option<String>),
+    Number(String, Option<String>),
     Colon,
     Dash,
     Space,
@@ -60,7 +60,7 @@ pub enum DatePattern {
     Optional(Vec<DatePattern>),
     Dash,
     Colon,
-    Error(String),
+    Space,
 }
 
 #[derive(Debug)]
@@ -70,7 +70,6 @@ pub enum Def {
     SPrefix(Expr),
     Unit(Expr),
     Quantity(Expr),
-    DatePattern(Vec<DatePattern>),
     Error(String),
 }
 
@@ -202,5 +201,49 @@ impl fmt::Display for Expr {
         }
 
         recurse(self, fmt, Prec::Convert)
+    }
+}
+
+impl fmt::Display for DatePattern {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DatePattern::Literal(ref l) => write!(fmt, "'{}'", l),
+            DatePattern::Match(ref n) => write!(fmt, "{}", n),
+            DatePattern::Optional(ref pats) => {
+                try!(write!(fmt, "["));
+                for p in pats {
+                    try!(p.fmt(fmt));
+                }
+                write!(fmt, "]")
+            },
+            DatePattern::Dash => write!(fmt, "-"),
+            DatePattern::Colon => write!(fmt, ":"),
+            DatePattern::Space => write!(fmt, " "),
+        }
+    }
+}
+
+pub fn show_datepattern(pat: &[DatePattern]) -> String {
+    use std::io::Write;
+
+    let mut buf = vec![];
+    for p in pat {
+        write!(buf, "{}", p).unwrap();
+    }
+    String::from_utf8(buf).unwrap()
+}
+
+impl fmt::Display for DateToken {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DateToken::Literal(ref l) => write!(fmt, "{}", l),
+            DateToken::Number(ref i, None) => write!(fmt, "{}", i),
+            DateToken::Number(ref i, Some(ref f)) => write!(fmt, "{}.{}", i, f),
+            DateToken::Colon => write!(fmt, ":"),
+            DateToken::Dash => write!(fmt, "-"),
+            DateToken::Space => write!(fmt, " "),
+            DateToken::Plus => write!(fmt, "+"),
+            DateToken::Error(ref e) => write!(fmt, "<{}>", e),
+        }
     }
 }

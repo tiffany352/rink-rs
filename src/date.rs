@@ -2,12 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use ast::{DatePattern, DateToken};
+use ast::{DatePattern, DateToken, show_datepattern};
 use chrono::format::Parsed;
-use std::iter::Peekable;
-use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration};
+use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration, Date};
 use eval::Context;
 use number::Number;
+use std::iter::Peekable;
 
 pub fn parse_date<I>(
     out: &mut Parsed,
@@ -15,28 +15,40 @@ pub fn parse_date<I>(
     pat: &[DatePattern]
 ) -> Result<(), String>
     where I: Iterator<Item=DateToken>+Clone {
+    use std::borrow::Borrow;
 
     let tok = date.peek().cloned();
+
+    fn ts<T>(x: Option<T>) -> String where T:Borrow<DateToken> {
+        match x {
+            Some(ref x) => x.borrow().to_string(),
+            None => "eof".to_owned()
+        }
+    }
 
     macro_rules! numeric_match {
         ($name:expr, $digits:expr, $field:ident) => {
             match tok {
-                Some(DateToken::Number(ref s, None, None)) if $digits == 0 || s.len() == $digits => {
+                Some(DateToken::Number(ref s, None)) if $digits == 0 || s.len() == $digits => {
                     let value = i32::from_str_radix(&**s, 10).unwrap();
                     out.$field = Some(value as _);
                     Ok(())
                 },
-                x => Err(format!("Expected {}-digit {}, got {:?}", $digits, $name, x))
+                Some(DateToken::Number(ref s, None)) => Err(format!(
+                    "Expected {}-digit {}, got {} digits", $digits, $name, s.len())),
+                x => Err(format!(
+                    "Expected {}-digit {}, got {}",
+                    $digits, $name, ts(x)))
             }
         }
     }
 
     let res = match pat.first() {
-        None if tok.is_some() => Err(format!("Expected EOF, got {:?}", tok.unwrap())),
+        None if tok.is_some() => Err(format!("Expected eof, got {}", tok.unwrap())),
         None => return Ok(()),
         Some(&DatePattern::Literal(ref l)) => match tok {
             Some(DateToken::Literal(ref s)) if s == l => Ok(()),
-            x => Err(format!("Expected `{}`, got {:?}", l, x)),
+            x => Err(format!("Expected `{}`, got {}", l, ts(x))),
         },
         Some(&DatePattern::Match(ref what)) => match &**what {
             "fullyear"  => numeric_match!("fullyear",  4, year),
@@ -51,51 +63,51 @@ pub fn parse_date<I>(
             "isoweek"   => numeric_match!("isoweek",   2, isoweek),
             "unix"      => numeric_match!("unix",      0, timestamp),
             "hour24" => match tok {
-                Some(DateToken::Number(ref s, None, None)) if s.len() == 2 => {
+                Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
                     let value = u32::from_str_radix(&**s, 10).unwrap();
                     out.hour_div_12 = Some(value / 12);
                     out.hour_mod_12 = Some(value % 12);
                     Ok(())
                 },
-                x => Err(format!("Expected 2-digit hour24, got {:?}", x))
+                x => Err(format!("Expected 2-digit hour24, got {}", ts(x)))
             },
             "sec" => match tok {
-                Some(DateToken::Number(ref s, None, None)) if s.len() == 2 => {
+                Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
                     let value = u32::from_str_radix(&**s, 10).unwrap();
                     out.second = Some(value);
                     Ok(())
                 },
-                Some(DateToken::Number(ref s, Some(ref f), None)) if s.len() == 2 => {
+                Some(DateToken::Number(ref s, Some(ref f))) if s.len() == 2 => {
                     let secs = u32::from_str_radix(&**s, 10).unwrap();
                     let nsecs = u32::from_str_radix(&**f, 10).unwrap() * 10u32.pow(9 - f.len() as u32);
                     out.second = Some(secs);
                     out.nanosecond = Some(nsecs);
                     Ok(())
                 },
-                x => Err(format!("Expected 2-digit sec, got {:?}", x))
+                x => Err(format!("Expected 2-digit sec, got {}", ts(x)))
             },
             "offset" => {
                 macro_rules! take {
                     ($($pat: pat)|+) => {
                         match date.peek().cloned() {
                             $(Some($pat))|+ => date.next().unwrap(),
-                            x => return Err(format!("Expected {}, got {:?}", stringify!($($pat)|+), x))
+                            x => return Err(format!("Expected {}, got {}", stringify!($($pat)|+), ts(x)))
                         }
                     };
                     ($pat:pat, $var:ident) => {
                         match date.peek().cloned() {
                             Some($pat) => {date.next(); $var},
-                            x => return Err(format!("Expected {}, got {:?}", stringify!($pat), x))
+                            x => return Err(format!("Expected {}, got {}", stringify!($pat), ts(x)))
                         }
                     }
                 }
                 let s = match take!(DateToken::Plus | DateToken::Dash) {
                     DateToken::Plus => 1, DateToken::Dash => -1, _ => panic!()
                 };
-                let h = take!(DateToken::Number(s, None, None), s);
+                let h = take!(DateToken::Number(s, None), s);
                 let h = i32::from_str_radix(&*h, 10).unwrap();
                 take!(DateToken::Colon);
-                let m = take!(DateToken::Number(s, None, None), s);
+                let m = take!(DateToken::Number(s, None), s);
                 let m = i32::from_str_radix(&*m, 10).unwrap();
                 out.offset = Some(s * (h*3600 + m*60));
                 Ok(())
@@ -120,7 +132,7 @@ pub fn parse_date<I>(
                     out.month = Some(res);
                     Ok(())
                 },
-                x => Err(format!("Expected month name, got {:?}", x))
+                x => Err(format!("Expected month name, got {}", ts(x)))
             },
             "weekday" => match tok {
                 Some(DateToken::Literal(ref s)) => {
@@ -137,7 +149,7 @@ pub fn parse_date<I>(
                     out.weekday = Some(res);
                     Ok(())
                 },
-                x => Err(format!("Expected weekday, got {:?}", x))
+                x => Err(format!("Expected weekday, got {}", ts(x)))
             },
             x => Err(format!("Unknown match pattern `{}`", x))
         },
@@ -151,13 +163,13 @@ pub fn parse_date<I>(
         }
         Some(&DatePattern::Dash) => match tok {
             Some(DateToken::Dash) => Ok(()),
-            x => Err(format!("Expected `-`, got {:?}", x))
+            x => Err(format!("Expected `-`, got {}", ts(x)))
         },
         Some(&DatePattern::Colon) => match tok {
             Some(DateToken::Colon) => Ok(()),
-            x => Err(format!("Expected `:`, got {:?}", x))
+            x => Err(format!("Expected `:`, got {}", ts(x)))
         },
-        Some(&DatePattern::Error(ref err)) => Err(err.clone())
+        Some(&DatePattern::Space) => Ok(()),
     };
     date.next();
     match res {
@@ -167,10 +179,14 @@ pub fn parse_date<I>(
 }
 
 pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime<FixedOffset>, String> {
+    let mut best = None;
     for pat in &context.datepatterns {
         let attempt = || {
             let mut parsed = Parsed::new();
-            try!(parse_date(&mut parsed, &mut date.iter().cloned().peekable(), &pat[..]));
+            let mut iter = date.iter().cloned().peekable();
+            let res = parse_date(&mut parsed, &mut iter, &pat[..]);
+            let count = iter.count();
+            try!(res.map_err(|e| (e, count)));
             let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
             let time = parsed.to_naive_time();
             let date = parsed.to_naive_date();
@@ -179,15 +195,30 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime<Fixe
                     Ok(DateTime::<FixedOffset>::from_utc(date.and_time(time), offset)),
                 (Ok(time), Err(_)) =>
                     Ok(UTC::now().with_timezone(&offset).date().and_time(time).unwrap()),
-                _ => Err(format!("Failed to construct a useful datetime"))
+                (Err(_), Ok(date)) =>
+                    Ok(Date::<FixedOffset>::from_utc(date, offset).and_hms(0, 0, 0)),
+                _ => Err((format!("Failed to construct a useful datetime"), count))
             }
         };
         match attempt() {
             Ok(datetime) => return Ok(datetime),
-            Err(_) => ()
+            Err((e, c)) => {
+                let better = if let Some((count, _, _)) = best {
+                    c < count
+                } else {
+                    true
+                };
+                if better {
+                    best = Some((c, pat, e.clone()));
+                }
+            },
         }
     }
-    Err(format!("Invalid date literal"))
+    if let Some((_, pat, err)) = best {
+        Err(format!("Most likely pattern `{}` failed: {}", show_datepattern(pat), err))
+    } else {
+        Err(format!("Invalid date literal"))
+    }
 }
 
 pub fn to_duration(num: &Number) -> Result<Duration, String> {
@@ -218,4 +249,79 @@ pub fn from_duration(duration: &Duration) -> Result<Number, String> {
 
 pub fn now() -> DateTime<FixedOffset> {
     UTC::now().with_timezone(&FixedOffset::east(0))
+}
+
+pub fn parse_datepattern<I>(mut iter: &mut Peekable<I>)
+                            -> Result<Vec<DatePattern>, String> where I: Iterator<Item=char> {
+    let mut out = vec![];
+    while iter.peek().is_some() {
+        let res = match iter.peek().cloned().unwrap() {
+            '-' => DatePattern::Dash,
+            ':' => DatePattern::Colon,
+            '[' => {
+                iter.next();
+                let res = DatePattern::Optional(try!(parse_datepattern(iter)));
+                if iter.peek().cloned() != Some(']') {
+                    return Err(format!("Expected ]"))
+                } else {
+                    res
+                }
+            },
+            ']' => break,
+            '\'' => {
+                iter.next();
+                let mut buf = String::new();
+                while let Some(c) = iter.peek().cloned() {
+                    if c == '\'' {
+                        break;
+                    } else {
+                        iter.next();
+                        buf.push(c);
+                    }
+                }
+                DatePattern::Literal(buf)
+            },
+            x if x.is_whitespace() => {
+                while iter.peek().map(|c| c.is_whitespace()).unwrap_or(false) {
+                    iter.next();
+                }
+                out.push(DatePattern::Space);
+                continue
+            },
+            x if x.is_alphabetic() => {
+                let mut buf = String::new();
+                while let Some(c) = iter.peek().cloned() {
+                    if c.is_alphanumeric() {
+                        iter.next();
+                        buf.push(c);
+                    } else {
+                        break;
+                    }
+                }
+                out.push(DatePattern::Match(buf));
+                continue
+            },
+            x => return Err(format!("Unrecognized character {}", x))
+        };
+        out.push(res);
+        iter.next();
+    }
+    Ok(out)
+}
+
+pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
+    let mut defs = vec![];
+    for (num, line) in file.lines().enumerate() {
+        let line = line.split('#').next().unwrap();
+        let line = line.trim();
+        if line.len() == 0 {
+            continue
+        }
+        let res = parse_datepattern(&mut line.chars().peekable());
+        match res {
+            Ok(res) => defs.push(res),
+            Err(e) => println!("Line {}: {}: {}", num, e, line),
+        }
+    }
+    defs
 }

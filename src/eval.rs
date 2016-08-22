@@ -624,12 +624,9 @@ impl Context {
         }
     }
 
-    /// Takes a parsed definitions.units from
-    /// `gnu_units::parse()`. Prints if there are errors in the file.
-    pub fn new(defs: Defs) -> Context {
-        use std::collections::HashSet;
-
-        let mut ctx = Context {
+    /// Creates a new, empty context
+    pub fn new() -> Context {
+        Context {
             dimensions: Vec::new(),
             units: HashMap::new(),
             aliases: HashMap::new(),
@@ -638,9 +635,17 @@ impl Context {
             definitions: HashMap::new(),
             datepatterns: Vec::new(),
             short_output: false,
-        };
+        }
+    }
 
-        ctx.prefixes.sort_by(|a, b| a.0.cmp(&b.0));
+    pub fn load_dates(&mut self, mut dates: Vec<Vec<DatePattern>>) {
+        self.datepatterns.append(&mut dates)
+    }
+
+    /// Takes a parsed definitions.units from
+    /// `gnu_units::parse()`. Prints if there are errors in the file.
+    pub fn load(&mut self, defs: Defs) {
+        use std::collections::HashSet;
 
         #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
         enum Name {
@@ -806,39 +811,39 @@ impl Context {
             match *def {
                 Def::Dimension(ref dname) => {
                     let dname = Rc::new(dname.clone());
-                    ctx.dimensions.push(dname.clone());
+                    self.dimensions.push(dname.clone());
                 },
-                Def::Unit(ref expr) => match ctx.eval(expr) {
+                Def::Unit(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
                         if v.0 == Mpq::one() && reverse.contains(&*name) {
-                            ctx.reverse.insert(v.1.clone(), name.clone());
+                            self.reverse.insert(v.1.clone(), name.clone());
                         }
-                        ctx.definitions.insert(name.clone(), expr.clone());
-                        ctx.units.insert(name.clone(), v);
+                        self.definitions.insert(name.clone(), expr.clone());
+                        self.units.insert(name.clone(), v);
                     },
                     Ok(_) => println!("Unit {} is not a number", name),
                     Err(e) => println!("Unit {} is malformed: {}", name, e)
                 },
-                Def::Prefix(ref expr) => match ctx.eval(expr) {
+                Def::Prefix(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        ctx.prefixes.push((name.clone(), v));
+                        self.prefixes.push((name.clone(), v));
                     },
                     Ok(_) => println!("Prefix {} is not a number", name),
                     Err(e) => println!("Prefix {} is malformed: {}", name, e)
                 },
-                Def::SPrefix(ref expr) => match ctx.eval(expr) {
+                Def::SPrefix(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        ctx.prefixes.push((name.clone(), v.clone()));
-                        ctx.units.insert(name.clone(), v);
+                        self.prefixes.push((name.clone(), v.clone()));
+                        self.units.insert(name.clone(), v);
                     },
                     Ok(_) => println!("Prefix {} is not a number", name),
                     Err(e) => println!("Prefix {} is malformed: {}", name, e)
                 },
-                Def::Quantity(ref expr) => match ctx.eval(expr) {
+                Def::Quantity(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        let res = ctx.aliases.insert(v.1, name.clone());
-                        if !ctx.definitions.contains_key(&name) {
-                            ctx.definitions.insert(name.clone(), expr.clone());
+                        let res = self.aliases.insert(v.1, name.clone());
+                        if !self.definitions.contains_key(&name) {
+                            self.definitions.insert(name.clone(), expr.clone());
                         }
                         if let Some(old) = res {
                             println!("Warning: Conflicting quantities {} and {}", name, old);
@@ -847,11 +852,8 @@ impl Context {
                     Ok(_) => println!("Quantity {} is not a number", name),
                     Err(e) => println!("Quantity {} is malformed: {}", name, e)
                 },
-                Def::DatePattern(ref pat) => ctx.datepatterns.push(pat.clone()),
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
         }
-
-        ctx
     }
 }

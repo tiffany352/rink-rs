@@ -34,7 +34,7 @@ pub enum Token {
     Minus,
     Asterisk,
     DashArrow,
-    Hash,
+    Date(Vec<DateToken>),
     Comma,
     ImaginaryUnit,
     DegC,
@@ -249,7 +249,73 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Quote(buf)
             },
-            '#' => Token::Hash,
+            '#' => {
+                let mut toks = vec![];
+                while self.0.peek().is_some() {
+                    let res = match self.0.next().unwrap() {
+                        '#' => break,
+                        ':' => DateToken::Colon,
+                        '-' => DateToken::Dash,
+                        '+' => DateToken::Plus,
+                        x if x.is_whitespace() => {
+                            while self.0.peek().map(|c| c.is_whitespace()).unwrap_or(false) {
+                                self.0.next();
+                            }
+                            DateToken::Space
+                        },
+                        x if x.is_alphabetic() => {
+                            let mut buf = String::new();
+                            buf.push(x);
+                            while let Some(c) = self.0.peek().cloned() {
+                                if c.is_alphabetic() {
+                                    self.0.next();
+                                    buf.push(c);
+                                } else {
+                                    break;
+                                }
+                            }
+                            DateToken::Literal(buf)
+                        },
+                        x if x.is_digit(10) => {
+                            let mut integer = String::new();
+                            integer.push(x);
+                            while let Some(c) = self.0.peek().cloned() {
+                                if c.is_digit(10) {
+                                    self.0.next();
+                                    integer.push(c);
+                                } else {
+                                    break;
+                                }
+                            }
+                            let frac = if let Some('.') = self.0.peek().cloned() {
+                                let mut frac = String::new();
+                                self.0.next();
+                                while let Some(c) = self.0.peek().cloned() {
+                                    if x.is_digit(10) {
+                                        self.0.next();
+                                        frac.push(c);
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                Some(frac)
+                            } else {
+                                None
+                            };
+                            DateToken::Number(integer, frac)
+                        },
+                        x => DateToken::Error(format!("Unexpected character '{}'", x))
+                    };
+                    toks.push(res);
+                }
+                if let Some(&DateToken::Space) = toks.first() {
+                    toks.remove(0);
+                }
+                if let Some(&DateToken::Space) = toks.last() {
+                    toks.pop();
+                }
+                Token::Date(toks)
+            },
             x => {
                 let mut buf = String::new();
                 buf.push(x);
@@ -326,19 +392,7 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                 x => Expr::Error(format!("Expected ), got {:?}", x))
             }
         },
-        Token::Hash => {
-            let mut out = vec![];
-            loop {
-                match iter.next().unwrap() {
-                    Token::Hash => break,
-                    Token::Eof | Token::Comment(_) | Token::Newline =>
-                        return Expr::Error(format!("Unterminated date literal")),
-                    x => out.push(x),
-                }
-            }
-            unimplemented!()
-            //Expr::Date(out)
-        },
+        Token::Date(toks) => Expr::Date(toks),
         x => Expr::Error(format!("Expected term, got {:?}", x))
     }
 }
@@ -500,31 +554,6 @@ fn parse_alias(mut iter: &mut Iter) -> Option<(Expr, String)> {
     Some((expr, name))
 }
 
-fn parse_datepattern(mut iter: &mut Iter) -> Vec<DatePattern> {
-    let mut out = vec![];
-    loop {
-        match iter.peek().cloned().unwrap() {
-            Token::Newline | Token::Comment(_) | Token::Eof | Token::RBrack => break,
-            Token::Ident(name) => out.push(DatePattern::Match(name)),
-            Token::Quote(name) => out.push(DatePattern::Literal(name)),
-            Token::Minus => out.push(DatePattern::Dash),
-            Token::Colon => out.push(DatePattern::Colon),
-            Token::LBrack => {
-                iter.next();
-                let res = DatePattern::Optional(parse_datepattern(iter));
-                let res = match iter.next().unwrap() {
-                    Token::RBrack => res,
-                    x => DatePattern::Error(format!("Expected ], got {:?}", x))
-                };
-                out.push(res)
-            },
-            x => out.push(DatePattern::Error(format!("Unexpected token {:?} in date pattern", x)))
-        }
-        iter.next();
-    }
-    out
-}
-
 pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
     let mut line = 1;
@@ -539,8 +568,6 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
             Token::Newline => line += 1,
             Token::Comment(lines) => line += lines,
             Token::Eof => break,
-            Token::Ident(ref name) if name == "datepattern" =>
-                map.push((name.clone(), Rc::new(Def::DatePattern(parse_datepattern(iter))))),
             Token::Ident(name) => {
                 let def = match iter.next().unwrap() {
                     Token::ColonDash => {
