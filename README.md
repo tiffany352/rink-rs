@@ -13,12 +13,6 @@ Select features:
 
 `cargo install rink`
 
-You must then download
-[definitions.units](https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units)
-and install it in `~/.config/rink/definitions.units` (Linux),
-`%APPDATA%\rink\definitions.units` (Windows), or `~/Library/Application
-Support/rink/definitions.units` (MacOS).
-
 ## Examples
 
 ```

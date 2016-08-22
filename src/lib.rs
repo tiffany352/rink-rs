@@ -89,34 +89,42 @@ fn config_dir() -> Result<PathBuf, String> {
         .map(|mut x: PathBuf| { x.push("Library/Application Support"); x})
 }
 
+#[cfg(feature = "gpl")]
+static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.units"));
+#[cfg(not(feature = "gpl"))]
+static DEFAULT_FILE: Option<&'static str> = None;
+
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
     use std::io::Read;
     use std::fs::File;
+    use std::path::Path;
 
-    let f = File::open("definitions.units");
-    let mut f = match f {
-        Ok(f) => f,
-        Err(_) => {
-            let mut path = try!(config_dir());
-            path.push("rink/definitions.units");
-            let f = File::open(&path);
-            match f {
-                Ok(f) => f,
-                Err(e) => return Err(format!(
-                    "Failed to open definitions.units: {}\nIf you installed using \
-                     `cargo install`, then you need to obtain definitions.units separately. Here \
-                     is the URL, download it and put it in {:?}.\n\n{}\n\n",
-                    e, &path, DATA_FILE_URL))
-            }
-        }
+    let mut path = try!(config_dir());
+    path.push("rink/definitions.units");
+    let load = |name| {
+        File::open(name)
+        .and_then(|mut f| {
+            let mut buf = vec![];
+            try!(f.read_to_end(&mut buf));
+            Ok(String::from_utf8_lossy(&*buf).into_owned())
+        })
     };
+    let string =
+        load(Path::new("definitions.units"))
+        .or_else(|_| load(path.as_ref()))
+        .or_else(|_| DEFAULT_FILE.map(|x| x.to_owned()).ok_or(format!(
+            "Did not exist in search path and binary is not compiled with `gpl` feature")))
+        .map_err(|e| format!(
+            "Failed to open definitions.units: {}\n\
+             If you installed with `gpl` disabled, then you need to obtain definitions.units \
+             separately. Here is the URL, download it and put it in {:?}.\n\
+             \n\
+             {}\n\
+             \n",
+            e, &path, DATA_FILE_URL));
+    let string = try!(string);
 
-    let mut buf = vec![];
-    f.read_to_end(&mut buf).unwrap();
-    let string = String::from_utf8_lossy(&*buf);
-    //let mut iter = unit_defs::TokenIterator::new(&*string).peekable();
-    //let res = unit_defs::parse(&mut iter);
     let mut iter = gnu_units::TokenIterator::new(&*string).peekable();
     let res = gnu_units::parse(&mut iter);
 

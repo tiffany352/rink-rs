@@ -10,10 +10,11 @@ license = "MPL-2.0"
 keywords = ["unit", "math", "conversion", "cli", "tool"]
 
 [features]
-default = ["rustyline", "chrono-humanize"]
+default = ["rustyline", "chrono-humanize", "gpl"]
 ircbot = ["irc", "glob"]
 web = ["hyper", "url", "sandbox"]
 sandbox = ["libc", "ipc-channel"]
+gpl = []
 
 [dependencies]
 rust-gmp = "0.3.2"
