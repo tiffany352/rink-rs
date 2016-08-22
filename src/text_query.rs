@@ -522,3 +522,26 @@ pub fn parse_expr(mut iter: &mut Iter) -> Expr {
         _ => left
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn add_assoc() {
+        let res = parse_expr(&mut TokenIterator::new("a + b - c + d - e").peekable());
+        assert_eq!(res.to_string(), "(((a + b) - c) + d) - e");
+    }
+
+    #[test]
+    fn mul_assoc() {
+        let res = parse_expr(&mut TokenIterator::new("a b * c / d / e f g").peekable());
+        assert_eq!(res.to_string(), "((a b c / d) / e) f g");
+    }
+
+    #[test]
+    fn suffix_prec() {
+        let res = parse_expr(&mut TokenIterator::new("a b °C + x y °F").peekable());
+        assert_eq!(res.to_string(), "a b °C + x y °F");
+    }
+}
