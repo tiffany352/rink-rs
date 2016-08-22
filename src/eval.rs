@@ -21,6 +21,7 @@ pub struct Context {
     pub dimensions: Vec<Rc<String>>,
     pub units: HashMap<String, Number>,
     pub aliases: HashMap<Unit, String>,
+    pub reverse: HashMap<Unit, String>,
     pub prefixes: Vec<(String, Number)>,
     pub datepatterns: Vec<Vec<DatePattern>>,
     pub short_output: bool,
@@ -570,7 +571,7 @@ impl Context {
                 let aliases = self.aliases.iter()
                     .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
                     .collect::<BTreeMap<_, _>>();
-                let results = factorize(self, &val, &aliases);
+                let results = factorize(&val, &aliases);
                 let mut results = results.into_sorted_vec();
                 results.dedup();
                 let results = results.into_iter().map(|Factors(_score, names)| {
@@ -611,6 +612,7 @@ impl Context {
             dimensions: Vec::new(),
             units: HashMap::new(),
             aliases: HashMap::new(),
+            reverse: HashMap::new(),
             prefixes: Vec::new(),
             datepatterns: Vec::new(),
             short_output: false,
@@ -759,6 +761,20 @@ impl Context {
             (name, res)
         });
 
+        let mut reverse = HashSet::new();
+        reverse.insert("newton");
+        reverse.insert("pascal");
+        reverse.insert("joule");
+        reverse.insert("watt");
+        reverse.insert("coulomb");
+        reverse.insert("volt");
+        reverse.insert("ohm");
+        reverse.insert("siemens");
+        reverse.insert("farad");
+        reverse.insert("weber");
+        reverse.insert("henry");
+        reverse.insert("tesla");
+
         for (name, def) in udefs {
             let name = match name {
                 Name::Unit(name) => (*name).clone(),
@@ -772,6 +788,9 @@ impl Context {
                 },
                 Def::Unit(ref expr) => match ctx.eval(expr) {
                     Ok(Value::Number(v)) => {
+                        if v.0 == Mpq::one() && reverse.contains(&*name) {
+                            ctx.reverse.insert(v.1.clone(), name.clone());
+                        }
                         ctx.units.insert(name.clone(), v);
                     },
                     Ok(_) => println!("Unit {} is not a number", name),

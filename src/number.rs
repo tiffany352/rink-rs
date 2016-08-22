@@ -247,30 +247,15 @@ impl Number {
         String::from_utf8(out).unwrap()
     }
 
-    pub fn complexity_score(&self) -> i64 {
-        self.1.iter().map(|(_, p)| 1 + p.abs()).fold(0, |a,x| a+x)
-    }
-}
-
-impl fmt::Debug for Number {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", self.show_number_part())
-    }
-}
-
-impl Show for Number {
-    fn show(&self, context: &::eval::Context) -> String {
+    fn unit_to_string(unit: &Unit) -> String {
         use std::io::Write;
 
         let mut out = vec![];
         let mut frac = vec![];
-        let mut value = self.clone();
-        value.0.canonicalize();
 
-        write!(out, "{}", self.show_number_part()).unwrap();
-        for (dim, &exp) in &value.1 {
+        for (dim, &exp) in unit {
             if exp < 0 {
-                frac.push((dim.clone(), exp));
+                frac.push((dim, exp));
             } else {
                 write!(out, " {}", dim).unwrap();
                 if exp != 1 {
@@ -288,6 +273,45 @@ impl Show for Number {
                 }
             }
         }
+
+        out.remove(0);
+        String::from_utf8(out).unwrap()
+    }
+
+    pub fn unit_name(&self, context: &::eval::Context) -> String {
+        let raw = Number::unit_to_string(&self.1);
+
+        let pretty = ::factorize::fast_decompose(self, &context.reverse);
+
+        if self.1 != pretty {
+            let pretty = Number::unit_to_string(&pretty);
+            format!("{} = {}", pretty, raw)
+        } else {
+            raw
+        }
+    }
+
+    pub fn complexity_score(&self) -> i64 {
+        self.1.iter().map(|(_, p)| 1 + p.abs()).fold(0, |a,x| a+x)
+    }
+}
+
+impl fmt::Debug for Number {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}", self.show_number_part())
+    }
+}
+
+impl Show for Number {
+    fn show(&self, context: &::eval::Context) -> String {
+        use std::io::Write;
+
+        let mut out = vec![];
+        let mut value = self.clone();
+        value.0.canonicalize();
+
+        write!(out, "{} {}", self.show_number_part(), self.unit_name(context)).unwrap();
+
         let alias = context.aliases.get(&value.1).cloned().or_else(|| {
             if value.1.len() == 1 {
                 let e = value.1.iter().next().unwrap();
