@@ -468,20 +468,20 @@ fn parse_suffix(mut iter: &mut Iter) -> Expr {
 }
 
 fn parse_add(mut iter: &mut Iter) -> Expr {
-    let left = parse_suffix(iter);
-    match *iter.peek().unwrap() {
+    let mut left = parse_suffix(iter);
+    loop { match *iter.peek().unwrap() {
         Token::Plus => {
             iter.next();
             let right = parse_suffix(iter);
-            Expr::Add(Box::new(left), Box::new(right))
+            left = Expr::Add(Box::new(left), Box::new(right))
         },
         Token::Minus => {
             iter.next();
             let right = parse_suffix(iter);
-            Expr::Sub(Box::new(left), Box::new(right))
+            left = Expr::Sub(Box::new(left), Box::new(right))
         },
-        _ => left
-    }
+        _ => return left
+    }}
 }
 
 fn parse_eq(mut iter: &mut Iter) -> Expr {
