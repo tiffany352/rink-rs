@@ -520,7 +520,7 @@ impl Context {
                 };
                 let base = Number::unit_to_string(&res.1);
                 let base = if base.len() > 0 {
-                    format!("= {}", base)
+                    format!(" = {}", base)
                 } else {
                     format!("")
                 };
