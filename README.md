@@ -62,22 +62,17 @@ extern crate rink;
 
 ## License
 
-Source code licensed under either of
+Rink source code is licensed under the Mozilla Public License, version
+2. See [LICENSE-MPL](./LICENSE-MPL) for details.
 
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-The data file `definitions.units` is from GNU units(1) and is licensed
-under the GNU General Public License, version 3.
+The data file `definitions.units` is licensed under the GNU General
+Public License, version 3. See [LICENSE-GPL](./LICENSE-GPL) for details.
 
 ### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally
-submitted for inclusion in the work by you, as defined in the Apache-2.0
-license, shall be dual licensed as above, without any additional terms or
-conditions.
+submitted for inclusion in the work will grant the rights lined out in
+the MPL, including larger works with secondary licenses.
 
 ## Changelog
 

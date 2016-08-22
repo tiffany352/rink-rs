@@ -6,7 +6,7 @@ description = "Unit conversion tool and library, similar to frink"
 homepage = "https://github.com/tiffany352/rink-rs"
 repository = "https://github.com/tiffany352/rink-rs"
 readme = "README.md"
-license = "MIT OR Apache-2.0"
+license = "MPL-2.0"
 keywords = ["unit", "math", "conversion", "cli", "tool"]
 
 [features]
