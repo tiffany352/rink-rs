@@ -1,6 +1,7 @@
 use std::str::Chars;
 use std::iter::Peekable;
 use std::rc::Rc;
+use ast::*;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -274,69 +275,6 @@ impl<'a> Iterator for TokenIterator<'a> {
 
 pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
-#[derive(Debug, Clone)]
-pub enum SuffixOp {
-    Celsius,
-    Fahrenheit,
-    Reaumur,
-    Romer,
-    Delisle,
-    Newton,
-}
-
-#[derive(Debug, Clone)]
-pub enum Expr {
-    Unit(String),
-    Quote(String),
-    Const(String, Option<String>, Option<String>),
-    Date(Vec<Token>),
-    Frac(Box<Expr>, Box<Expr>),
-    Mul(Vec<Expr>),
-    Pow(Box<Expr>, Box<Expr>),
-    Add(Box<Expr>, Box<Expr>),
-    Sub(Box<Expr>, Box<Expr>),
-    Neg(Box<Expr>),
-    Plus(Box<Expr>),
-    Convert(Box<Expr>, Box<Expr>),
-    Equals(Box<Expr>, Box<Expr>),
-    Suffix(SuffixOp, Box<Expr>),
-    Call(String, Vec<Expr>),
-    Factorize(Box<Expr>),
-    DegC,
-    DegF,
-    DegRe,
-    DegRo,
-    DegDe,
-    DegN,
-    Error(String),
-}
-
-#[derive(Debug, Clone)]
-pub enum DatePattern {
-    Literal(String),
-    Match(String),
-    Optional(Vec<DatePattern>),
-    Dash,
-    Colon,
-    Error(String),
-}
-
-#[derive(Debug)]
-pub enum Def {
-    Dimension(String),
-    Prefix(Expr),
-    SPrefix(Expr),
-    Unit(Expr),
-    DatePattern(Vec<DatePattern>),
-    Error(String),
-}
-
-#[derive(Debug)]
-pub struct Defs {
-    pub defs: Vec<(String, Rc<Def>)>,
-    pub aliases: Vec<(Expr, String)>,
-}
-
 fn is_func(name: &str) -> bool {
     match name {
         "sqrt" => true,
@@ -394,7 +332,8 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                     x => out.push(x),
                 }
             }
-            Expr::Date(out)
+            unimplemented!()
+            //Expr::Date(out)
         },
         x => Expr::Error(format!("Expected term, got {:?}", x))
     }
@@ -584,12 +523,11 @@ fn parse_datepattern(mut iter: &mut Iter) -> Vec<DatePattern> {
 
 pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
-    let mut aliases = vec![];
     let mut line = 1;
     loop {
         let mut copy = iter.clone();
         if let Some(a) = parse_alias(&mut copy) {
-            aliases.push(a);
+            map.push((a.1, Rc::new(Def::Quantity(a.0))));
             *iter = copy;
             continue
         }
@@ -649,7 +587,6 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
     }
     Defs {
         defs: map,
-        aliases: aliases,
     }
 }
 

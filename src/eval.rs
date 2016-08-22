@@ -4,7 +4,7 @@ use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
 use number::{Number, Unit};
 use date;
-use unit_defs::DatePattern;
+use ast::{DatePattern, Expr, SuffixOp, Def, Defs};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
@@ -16,11 +16,14 @@ pub enum Value {
 }
 
 /// The evaluation context that contains unit definitions.
+#[derive(Debug)]
 pub struct Context {
     pub dimensions: Vec<Rc<String>>,
     pub units: HashMap<String, Number>,
     pub aliases: HashMap<Unit, String>,
+    pub reverse: HashMap<Unit, String>,
     pub prefixes: Vec<(String, Number)>,
+    pub definitions: HashMap<String, Expr>,
     pub datepatterns: Vec<Vec<DatePattern>>,
     pub short_output: bool,
 }
@@ -159,26 +162,27 @@ impl Context {
                 return Some(Number::one_unit(k.to_owned()))
             }
         }
-        self.units.get(name).cloned().or_else(|| {
-            if name.ends_with("s") {
-                if let Some(v) = self.lookup(&name[0..name.len()-1]) {
-                    return Some(v)
+        if let Some(v) = self.units.get(name).cloned() {
+            return Some(v)
+        }
+        for (unit, alias) in &self.aliases {
+            if name == alias {
+                return Some(Number(Number::one().0, unit.clone()))
+            }
+        }
+        if name.ends_with("s") {
+            if let Some(v) = self.lookup(&name[0..name.len()-1]) {
+                return Some(v)
+            }
+        }
+        for &(ref pre, ref value) in &self.prefixes {
+            if name.starts_with(pre) {
+                if let Some(v) = self.lookup(&name[pre.len()..]) {
+                    return Some((&v * &value).unwrap())
                 }
             }
-            for &(ref pre, ref value) in &self.prefixes {
-                if name.starts_with(pre) {
-                    if let Some(v) = self.lookup(&name[pre.len()..]) {
-                        return Some((&v * &value).unwrap())
-                    }
-                }
-            }
-            for (unit, alias) in &self.aliases {
-                if name == alias {
-                    return Some(Number(Number::one().0, unit.clone()))
-                }
-            }
-            None
-        })
+        }
+        None
     }
 
     /// Describes a value's unit, gives true if the unit is reciprocal
@@ -250,9 +254,7 @@ impl Context {
 
     /// Evaluates an expression to compute its value, *excluding* `->`
     /// conversions.
-    pub fn eval(&self, expr: &::unit_defs::Expr) -> Result<Value, String> {
-        use unit_defs::{Expr, SuffixOp};
-
+    pub fn eval(&self, expr: &Expr) -> Result<Value, String> {
         macro_rules! operator {
             ($left:ident $op:ident $opname:tt $right:ident) => {{
                 let left = try!(self.eval(&**$left));
@@ -310,7 +312,7 @@ impl Context {
             Expr::Suffix(SuffixOp::Celsius, ref left) =>
                 temperature!(left, "C", "zerocelsius", "kelvin"),
             Expr::Suffix(SuffixOp::Fahrenheit, ref left) =>
-                temperature!(left, "F", "zerofahrenheit", "Rankine"),
+                temperature!(left, "F", "zerofahrenheit", "degrankine"),
             Expr::Suffix(SuffixOp::Reaumur, ref left) =>
                 temperature!(left, "Ré", "zerocelsius", "reaumur_absolute"),
             Expr::Suffix(SuffixOp::Romer, ref left) =>
@@ -351,9 +353,7 @@ impl Context {
         }
     }
 
-    pub fn eval_unit_name(&self, expr: &::unit_defs::Expr) -> Result<BTreeMap<String, isize>, String> {
-        use unit_defs::Expr;
-
+    pub fn eval_unit_name(&self, expr: &Expr) -> Result<BTreeMap<String, isize>, String> {
         match *expr {
             Expr::Equals(ref left, ref _right) => match **left {
                 Expr::Unit(ref name) => {
@@ -426,9 +426,7 @@ impl Context {
     }
 
     /// Evaluates an expression, include `->` conversions.
-    pub fn eval_outer(&self, expr: &::unit_defs::Expr) -> Result<String, String> {
-        use unit_defs::Expr;
-
+    pub fn eval_outer(&self, expr: &Expr) -> Result<String, String> {
         let conformance_err = |top: &Number, bottom: &Number| -> String {
             use std::io::Write;
 
@@ -512,6 +510,22 @@ impl Context {
         };
 
         match *expr {
+            Expr::Unit(ref name) if self.definitions.contains_key(name) => {
+                let ref def = self.definitions[name];
+                let res = self.lookup(name).unwrap();
+                let alias = if let Some(name) = self.aliases.get(&res.1) {
+                    format!(" ({})", name)
+                } else {
+                    format!("")
+                };
+                let base = Number::unit_to_string(&res.1);
+                let base = if base.len() > 0 {
+                    format!("= {}", base)
+                } else {
+                    format!("")
+                };
+                Ok(format!("Definition: {} = {}{}{}", name, def, base, alias))
+            },
             Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom), self.eval_unit_name(&**bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
                     let (top, bottom) = match (top, bottom) {
@@ -554,7 +568,7 @@ impl Context {
 
                     match **bottom {
                         Expr::DegC => temperature!("C", "zerocelsius", "kelvin"),
-                        Expr::DegF => temperature!("F", "zerofahrenheit", "Rankine"),
+                        Expr::DegF => temperature!("F", "zerofahrenheit", "degrankine"),
                         Expr::DegRe => temperature!("Ré", "zerocelsius", "reaumur_absolute"),
                         Expr::DegRo => temperature!("Rø", "zeroromer", "romer_absolute"),
                         Expr::DegDe => temperature!("De", "zerodelisle", "delisle_absolute"),
@@ -574,7 +588,7 @@ impl Context {
                 let aliases = self.aliases.iter()
                     .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
                     .collect::<BTreeMap<_, _>>();
-                let results = factorize(self, &val, &aliases);
+                let results = factorize(&val, &aliases);
                 let mut results = results.into_sorted_vec();
                 results.dedup();
                 let results = results.into_iter().map(|Factors(_score, names)| {
@@ -606,33 +620,196 @@ impl Context {
         }
     }
 
-    /// Takes a parsed units.txt from `unit_defs::parse()`. Prints if
-    /// there are errors in the file.
-    pub fn new(defs: ::unit_defs::Defs) -> Context {
-        use unit_defs::Def;
+    /// Takes a parsed definitions.units from
+    /// `gnu_units::parse()`. Prints if there are errors in the file.
+    pub fn new(defs: Defs) -> Context {
+        use std::collections::HashSet;
 
         let mut ctx = Context {
             dimensions: Vec::new(),
             units: HashMap::new(),
             aliases: HashMap::new(),
+            reverse: HashMap::new(),
             prefixes: Vec::new(),
+            definitions: HashMap::new(),
             datepatterns: Vec::new(),
             short_output: false,
         };
 
         ctx.prefixes.sort_by(|a, b| a.0.cmp(&b.0));
 
-        for (name, def) in defs.defs {
+        #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
+        enum Name {
+            Unit(Rc<String>),
+            Prefix(Rc<String>),
+            Quantity(Rc<String>),
+        }
+
+        struct Resolver {
+            interned: HashSet<Rc<String>>,
+            input: HashMap<Name, Rc<Def>>,
+            sorted: Vec<Name>,
+            unmarked: HashSet<Name>,
+            temp_marks: HashSet<Name>,
+        }
+
+        impl Resolver {
+            fn intern(&mut self, name: &String) -> Rc<String> {
+                if let Some(v) = self.interned.get(name).cloned() {
+                    v
+                } else {
+                    let v = Rc::new(name.to_owned());
+                    self.interned.insert(v.clone());
+                    v
+                }
+            }
+
+            fn lookup(&mut self, name: &Rc<String>) -> Option<()> {
+                let unit = Name::Unit(name.clone());
+                if self.input.get(&unit).is_some() {
+                    self.visit(&unit);
+                    return Some(())
+                }
+                let unit = Name::Prefix(name.clone());
+                if self.input.get(&unit).is_some() {
+                    self.visit(&unit);
+                    return Some(())
+                }
+                let unit = Name::Quantity(name.clone());
+                if self.input.get(&unit).is_some() {
+                    self.visit(&unit);
+                    return Some(())
+                }
+                if name.ends_with("s") {
+                    let v = Rc::new(name[0..name.len()-1].to_owned());
+                    if let Some(()) = self.lookup(&v) {
+                        return Some(())
+                    }
+                }
+                let mut found = vec![];
+                for (pre, _) in &self.input {
+                    if let &Name::Prefix(ref pre) = pre {
+                        if (*name).starts_with(&**pre) {
+                            found.push(pre.clone());
+                        }
+                    }
+                }
+                for pre in found {
+                    if let Some(()) = self.lookup(&Rc::new(name[pre.len()..].to_owned())) {
+                        let unit = Name::Prefix(pre);
+                        self.visit(&unit);
+                        return Some(())
+                    }
+                }
+                None
+            }
+
+            fn eval(&mut self, expr: &Expr) {
+                match *expr {
+                    Expr::Unit(ref name) => {
+                        let name = self.intern(name);
+                        if self.lookup(&name).is_none() {
+                            println!("Lookup failed: {}", name);
+                        }
+                    },
+                    Expr::Frac(ref left, ref right) |
+                    Expr::Pow(ref left, ref right) |
+                    Expr::Add(ref left, ref right) |
+                    Expr::Sub(ref left, ref right) => {
+                        self.eval(left);
+                        self.eval(right);
+                    },
+                    Expr::Neg(ref expr) | Expr::Plus(ref expr) | Expr::Suffix(_, ref expr) =>
+                        self.eval(expr),
+                    Expr::Mul(ref exprs) | Expr::Call(_, ref exprs) => for expr in exprs {
+                        self.eval(expr);
+                    },
+                    _ => ()
+                }
+            }
+
+            fn visit(&mut self, name: &Name) {
+                if self.temp_marks.get(name).is_some() {
+                    println!("Unit {:?} has a dependency cycle", name);
+                    return;
+                }
+                if self.unmarked.get(name).is_some() {
+                    self.temp_marks.insert(name.clone());
+                    if let Some(v) = self.input.get(name).cloned() {
+                        match *v {
+                            Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) |
+                            Def::Quantity(ref e) =>
+                                self.eval(e),
+                            _ => (),
+                        }
+                    }
+                    self.unmarked.remove(name);
+                    self.temp_marks.remove(name);
+                    self.sorted.push(name.clone());
+                }
+            }
+        }
+
+        let mut resolver = Resolver {
+            interned: HashSet::new(),
+            input: HashMap::new(),
+            sorted: vec![],
+            unmarked: HashSet::new(),
+            temp_marks: HashSet::new(),
+        };
+        for (name, def) in defs.defs.into_iter() {
+            let name = resolver.intern(&name);
+            let unit = match *def {
+                Def::Prefix(_) | Def::SPrefix(_) => Name::Prefix(name),
+                Def::Quantity(_) => Name::Quantity(name),
+                _ => Name::Unit(name)
+            };
+            resolver.input.insert(unit.clone(), def);
+            resolver.unmarked.insert(unit);
+        }
+
+        while let Some(name) = resolver.unmarked.iter().next().cloned() {
+            resolver.visit(&name)
+        }
+        let sorted = resolver.sorted;
+        //println!("{:#?}", sorted);
+        let mut input = resolver.input;
+        let udefs = sorted.into_iter().map(move |name| {
+            let res = input.remove(&name).unwrap();
+            (name, res)
+        });
+
+        let mut reverse = HashSet::new();
+        reverse.insert("newton");
+        reverse.insert("pascal");
+        reverse.insert("joule");
+        reverse.insert("watt");
+        reverse.insert("coulomb");
+        reverse.insert("volt");
+        reverse.insert("ohm");
+        reverse.insert("siemens");
+        reverse.insert("farad");
+        reverse.insert("weber");
+        reverse.insert("henry");
+        reverse.insert("tesla");
+
+        for (name, def) in udefs {
+            let name = match name {
+                Name::Unit(name) => (*name).clone(),
+                Name::Prefix(name) => (*name).clone(),
+                Name::Quantity(name) => (*name).clone(),
+            };
             match *def {
                 Def::Dimension(ref dname) => {
                     let dname = Rc::new(dname.clone());
                     ctx.dimensions.push(dname.clone());
-                    let mut map = Unit::new();
-                    map.insert(dname, 1);
-                    ctx.aliases.insert(map, name.clone());
                 },
                 Def::Unit(ref expr) => match ctx.eval(expr) {
                     Ok(Value::Number(v)) => {
+                        if v.0 == Mpq::one() && reverse.contains(&*name) {
+                            ctx.reverse.insert(v.1.clone(), name.clone());
+                        }
+                        ctx.definitions.insert(name.clone(), expr.clone());
                         ctx.units.insert(name.clone(), v);
                     },
                     Ok(_) => println!("Unit {} is not a number", name),
@@ -653,19 +830,22 @@ impl Context {
                     Ok(_) => println!("Prefix {} is not a number", name),
                     Err(e) => println!("Prefix {} is malformed: {}", name, e)
                 },
+                Def::Quantity(ref expr) => match ctx.eval(expr) {
+                    Ok(Value::Number(v)) => {
+                        let res = ctx.aliases.insert(v.1, name.clone());
+                        if !ctx.definitions.contains_key(&name) {
+                            ctx.definitions.insert(name.clone(), expr.clone());
+                        }
+                        if let Some(old) = res {
+                            println!("Warning: Conflicting quantities {} and {}", name, old);
+                        }
+                    },
+                    Ok(_) => println!("Quantity {} is not a number", name),
+                    Err(e) => println!("Quantity {} is malformed: {}", name, e)
+                },
                 Def::DatePattern(ref pat) => ctx.datepatterns.push(pat.clone()),
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
-        }
-
-        for (expr, name) in defs.aliases {
-            match ctx.eval(&expr) {
-                Ok(Value::Number(v)) => {
-                    ctx.aliases.insert(v.1, name);
-                },
-                Ok(_) => println!("Alias {} is not a number", name),
-                Err(e) => println!("Alias {}: {}", name, e)
-            }
         }
 
         ctx

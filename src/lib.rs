@@ -40,6 +40,8 @@ pub mod eval;
 pub mod number;
 pub mod date;
 pub mod factorize;
+pub mod gnu_units;
+pub mod ast;
 
 pub use number::Number;
 pub use eval::{Context, Value};
@@ -49,7 +51,7 @@ use std::convert::From;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 
-const UNITS_TXT_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/units.txt";
+const DATA_FILE_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
 
 #[cfg(target_os = "linux")]
 fn config_dir() -> Result<PathBuf, String> {
@@ -83,25 +85,25 @@ fn config_dir() -> Result<PathBuf, String> {
         .map(|mut x: PathBuf| { x.push("Library/Application Support"); x})
 }
 
-/// Creates a context by searching standard directories for units.txt.
+/// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
     use std::io::Read;
     use std::fs::File;
 
-    let f = File::open("units.txt");
+    let f = File::open("definitions.units");
     let mut f = match f {
         Ok(f) => f,
         Err(_) => {
             let mut path = try!(config_dir());
-            path.push("rink/units.txt");
+            path.push("rink/definitions.units");
             let f = File::open(&path);
             match f {
                 Ok(f) => f,
                 Err(e) => return Err(format!(
-                    concat!("Failed to open units.txt: {}\nIf you installed using `cargo install`, ",
-                            "then you need to obtain units.txt separately. Here is the URL, ",
-                            "download it and put it in {:?}.\n\n{}\n\n"),
-                    e, &path, UNITS_TXT_URL))
+                    "Failed to open definitions.units: {}\nIf you installed using \
+                     `cargo install`, then you need to obtain definitions.units separately. Here \
+                     is the URL, download it and put it in {:?}.\n\n{}\n\n",
+                    e, &path, DATA_FILE_URL))
             }
         }
     };
@@ -109,8 +111,10 @@ pub fn load() -> Result<Context, String> {
     let mut buf = vec![];
     f.read_to_end(&mut buf).unwrap();
     let string = String::from_utf8_lossy(&*buf);
-    let mut iter = unit_defs::TokenIterator::new(&*string).peekable();
-    let res = unit_defs::parse(&mut iter);
+    //let mut iter = unit_defs::TokenIterator::new(&*string).peekable();
+    //let res = unit_defs::parse(&mut iter);
+    let mut iter = gnu_units::TokenIterator::new(&*string).peekable();
+    let res = gnu_units::parse(&mut iter);
 
     Ok(eval::Context::new(res))
 }
