@@ -2,6 +2,19 @@ use cf::BigInt;
 use cf::Cf;
 use gmp::mpq::Mpq;
 
+/// Represents the equation
+///
+///       axy + bx + cy + d
+/// z  =  ----------------- ,
+///       cxy + fx + gy + h
+///
+/// and the 2x2x2 matrix
+///
+/// b   d
+///  f   h
+///
+/// a   c
+///  e   g .
 #[derive(Clone)]
 pub struct Arith<X, Y> {
     a: BigInt,
@@ -71,71 +84,134 @@ impl<X, Y> Arith<X, Y>
             x, y)
     }
 
+    /// perform a step of euclid and output a number
     fn egest(&mut self, q: &BigInt) {
-        use std::mem::swap;
+        // b   d
+        //  f   h
+        //
+        // a   c
+        //  e   g
 
-        swap(&mut self.a, &mut self.e);
-        swap(&mut self.b, &mut self.f);
-        swap(&mut self.c, &mut self.g);
-        swap(&mut self.d, &mut self.h);
-        self.e = &self.e - &(q * &self.a);
-        self.f = &self.f - &(q * &self.b);
-        self.g = &self.g - &(q * &self.c);
-        self.h = &self.h - &(q * &self.d);
+        // to
+
+        // f      h
+        //  b-fq   d-hq
+        //
+        // e      g
+        //  a-eq   c-gq
+
+        let a = self.a.clone();
+        let b = self.b.clone();
+        let c = self.c.clone();
+        let d = self.d.clone();
+        let e = self.e.clone();
+        let f = self.f.clone();
+        let g = self.g.clone();
+        let h = self.h.clone();
+
+        self.e = &a - &(&e * q);
+        self.f = &b - &(&f * q);
+        self.g = &c - &(&g * q);
+        self.h = &d - &(&h * q);
+
+        self.a = e;
+        self.b = f;
+        self.c = g;
+        self.d = h;
         println!("egested {}", q);
     }
 
+    /// input a term p from x
     fn ingest_x(&mut self) {
         let p = self.x.next();
         if let Some(p) = p {
             let a = self.a.clone();
             let b = self.b.clone();
+            let c = self.c.clone();
+            let d = self.d.clone();
             let e = self.e.clone();
             let f = self.f.clone();
+            let g = self.g.clone();
+            let h = self.h.clone();
 
-            self.a = &(&a * &p) + &self.c;
-            self.b = &(&b * &p) + &self.d;
-            self.c = a;
+            // b   d
+            //  f   h
+            //
+            // a   c
+            //  e   g
+
+            // to
+
+            // d+bp  b
+            //  h+fp  f
+            //
+            // c+ap  a
+            //  g+ep  e
+
+            self.a = &c + &(&a * &p);
+            self.b = &d + &(&b * &p);
+            self.e = &g + &(&e * &p);
+            self.f = &h + &(&f * &p);
+
             self.d = b;
-
-            self.e = &(&e * &p) + &self.g;
-            self.f = &(&f * &p) + &self.h;
-            self.g = e;
             self.h = f;
-            //println!("ingested {} from x", p);
+            self.c = a;
+            self.g = e;
+
+            println!("ingested {} from x", p);
         } else {
             self.c = self.a.clone();
             self.d = self.b.clone();
             self.g = self.e.clone();
             self.h = self.f.clone();
-            //println!("ingested ∞ from x");
+            println!("ingested ∞ from x");
         }
     }
 
+    /// input a term q from y
     fn ingest_y(&mut self) {
         let p = self.x.next();
         if let Some(p) = p {
             let a = self.a.clone();
+            let b = self.b.clone();
             let c = self.c.clone();
+            let d = self.d.clone();
             let e = self.e.clone();
+            let f = self.f.clone();
             let g = self.g.clone();
+            let h = self.h.clone();
 
-            self.a = &(&a * &p) + &self.b;
+            // b   d
+            //  f   h
+            //
+            // a   c
+            //  e   g
+
+            // to
+
+            // a     c
+            //  e     g
+            //
+            // b+ap  d+cp
+            //  f+ep  h+gp
+
+            self.a = &b + &(&a * &p);
+            self.c = &d + &(&c * &p);
+            self.e = &f + &(&e * &p);
+            self.g = &h + &(&g * &p);
+
             self.b = a;
-            self.c = &(&c * &p) + &self.d;
             self.d = c;
-
-            self.e = &(&e * &p) + &self.f;
             self.f = e;
-            self.g = &(&g * &p) + &self.h;
             self.h = g;
-            //println!("ingested {} from y", p);
+
+            println!("ingested {} from y", p);
         } else {
             self.b = self.a.clone();
             self.d = self.c.clone();
             self.f = self.e.clone();
             self.h = self.g.clone();
-            //println!("ingested ∞ from y");
+            println!("ingested ∞ from y");
         }
     }
 }
@@ -178,41 +254,33 @@ impl<X, Y> Iterator for Arith<X, Y>
 
     fn next(&mut self) -> Option<BigInt> {
         for _ in 0..30 {
-            //println!("{} {} {} {} / {} {} {} {}",
-            //         self.a, self.b, self.c, self.d,
-            //         self.e, self.f, self.g, self.h);
+            println!("{} {} {} {} / {} {} {} {}",
+                     self.a, self.b, self.c, self.d,
+                     self.e, self.f, self.g, self.h);
             if self.e.is_zero() && self.f.is_zero() && self.g.is_zero() && self.h.is_zero() {
                 return None
             }
-            let b11 = bound(&self.a, &self.e);
-            let b01 = bound(&self.c, &self.g);
-            let b10 = bound(&self.b, &self.f);
-            let b00 = bound(&self.d, &self.h);
+            let ae = bound(&self.a, &self.e);
+            let cg = bound(&self.c, &self.g);
+            let bf = bound(&self.b, &self.f);
+            //let dh = bound(&self.d, &self.h);
             let i11 = ibound(&self.a, &self.e);
             let i01 = ibound(&self.c, &self.g);
             let i10 = ibound(&self.b, &self.f);
             let i00 = ibound(&self.d, &self.h);
 
-            //println!("egest? {:?} == {:?} == {:?} == {:?}", i11, i10, i01, i00);
+            println!("egest? {:?} == {:?} == {:?} == {:?}", i11, i10, i01, i00);
             if i11 == i10 && i10 == i01 && i01 == i00 {
                 self.egest(i11.as_ref().unwrap());
                 return Some(i11.unwrap())
             } else {
-                use std::cmp::max;
+                // if one of these ratios is zero, then we must ingest from either x or y:
 
-                let xd1 = diff(b11.as_ref(), b01.as_ref());
-                let xd2 = diff(b10.as_ref(), b00.as_ref());
-                let xw = max(&xd1, &xd2);
-                let yd1 = diff(b11.as_ref(), b10.as_ref());
-                let yd2 = diff(b01.as_ref(), b00.as_ref());
-                let yw = max(&yd1, &yd2);
+                //  y   xy
+                //
+                // xy    x
 
-                //println!("bounds: {:?} {:?} {:?} {:?}", b00, b01, b10, b11);
-                //println!("x diffs: {:?} {:?}", xd1, xd2);
-                //println!("y diffs: {:?} {:?}", yd1, yd2);
-                //println!("xw = {:?} yw = {:?}", xw, yw);
-
-                if bgt(xw.as_ref(), yw.as_ref()) {
+                if bgt(diff(bf.as_ref(), ae.as_ref()).as_ref(), diff(cg.as_ref(), ae.as_ref()).as_ref()) {
                     self.ingest_x();
                 } else {
                     self.ingest_y();
@@ -226,11 +294,23 @@ impl<X, Y> Iterator for Arith<X, Y>
 impl<X, Y> Cf for Arith<X, Y> where X: Cf, Y: Cf {}
 
 #[test]
-fn test_arith() {
+fn test_add_int() {
     use cf::Rational;
 
-    let a = Rational::new(BigInt::from(1), BigInt::from(1));
-    let b = Rational::new(BigInt::from(1), BigInt::from(1));
+    let a = Rational::new(BigInt::from(3), BigInt::from(1));
+    let b = Rational::new(BigInt::from(2), BigInt::from(1));
+    let r = Arith::adder(a, b);
+    let approx = r.approximate().collect::<Vec<_>>();
+    println!("{:?}", approx);
+    panic!();
+}
+
+#[test]
+fn test_add_rat() {
+    use cf::Rational;
+
+    let a = Rational::new(BigInt::from(3), BigInt::from(7));
+    let b = Rational::new(BigInt::from(2), BigInt::from(7));
     let r = Arith::adder(a, b);
     let approx = r.approximate().collect::<Vec<_>>();
     println!("{:?}", approx);
