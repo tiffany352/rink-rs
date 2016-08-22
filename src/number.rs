@@ -274,7 +274,9 @@ impl Number {
             }
         }
 
-        out.remove(0);
+        if out.len() > 0 {
+            out.remove(0);
+        }
         String::from_utf8(out).unwrap()
     }
 
@@ -303,7 +305,11 @@ impl Show for Number {
         let mut value = self.clone();
         value.0.canonicalize();
 
-        write!(out, "{} {}", self.show_number_part(), self.unit_name(context)).unwrap();
+        write!(out, "{}", self.show_number_part()).unwrap();
+        let unit = self.unit_name(context);
+        if unit.len() > 0 {
+            write!(out, " {}", unit).unwrap();
+        }
 
         let alias = context.aliases.get(&value.1).cloned().or_else(|| {
             if value.1.len() == 1 {

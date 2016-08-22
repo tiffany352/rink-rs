@@ -518,7 +518,13 @@ impl Context {
                 } else {
                     format!("")
                 };
-                Ok(format!("Definition: {} = {} = {}{}", name, def, Number::unit_to_string(&res.1), alias))
+                let base = Number::unit_to_string(&res.1);
+                let base = if base.len() > 0 {
+                    format!("= {}", base)
+                } else {
+                    format!("")
+                };
+                Ok(format!("Definition: {} = {}{}{}", name, def, base, alias))
             },
             Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom), self.eval_unit_name(&**bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
