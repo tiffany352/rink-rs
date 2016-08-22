@@ -247,7 +247,7 @@ impl Number {
         String::from_utf8(out).unwrap()
     }
 
-    fn unit_to_string(unit: &Unit) -> String {
+    pub fn unit_to_string(unit: &Unit) -> String {
         use std::io::Write;
 
         let mut out = vec![];
@@ -279,16 +279,9 @@ impl Number {
     }
 
     pub fn unit_name(&self, context: &::eval::Context) -> String {
-        let raw = Number::unit_to_string(&self.1);
-
         let pretty = ::factorize::fast_decompose(self, &context.reverse);
-
-        if self.1 != pretty {
-            let pretty = Number::unit_to_string(&pretty);
-            format!("{} = {}", pretty, raw)
-        } else {
-            raw
-        }
+        let pretty = Number::unit_to_string(&pretty);
+        pretty
     }
 
     pub fn complexity_score(&self) -> i64 {

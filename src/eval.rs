@@ -23,6 +23,7 @@ pub struct Context {
     pub aliases: HashMap<Unit, String>,
     pub reverse: HashMap<Unit, String>,
     pub prefixes: Vec<(String, Number)>,
+    pub definitions: HashMap<String, Expr>,
     pub datepatterns: Vec<Vec<DatePattern>>,
     pub short_output: bool,
 }
@@ -509,6 +510,16 @@ impl Context {
         };
 
         match *expr {
+            Expr::Unit(ref name) if self.definitions.contains_key(name) => {
+                let ref def = self.definitions[name];
+                let res = self.lookup(name).unwrap();
+                let alias = if let Some(name) = self.aliases.get(&res.1) {
+                    format!(" ({})", name)
+                } else {
+                    format!("")
+                };
+                Ok(format!("Definition: {} = {} = {}{}", name, def, Number::unit_to_string(&res.1), alias))
+            },
             Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom), self.eval_unit_name(&**bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
                     let (top, bottom) = match (top, bottom) {
@@ -614,6 +625,7 @@ impl Context {
             aliases: HashMap::new(),
             reverse: HashMap::new(),
             prefixes: Vec::new(),
+            definitions: HashMap::new(),
             datepatterns: Vec::new(),
             short_output: false,
         };
@@ -791,6 +803,7 @@ impl Context {
                         if v.0 == Mpq::one() && reverse.contains(&*name) {
                             ctx.reverse.insert(v.1.clone(), name.clone());
                         }
+                        ctx.definitions.insert(name.clone(), expr.clone());
                         ctx.units.insert(name.clone(), v);
                     },
                     Ok(_) => println!("Unit {} is not a number", name),
@@ -814,6 +827,9 @@ impl Context {
                 Def::Quantity(ref expr) => match ctx.eval(expr) {
                     Ok(Value::Number(v)) => {
                         let res = ctx.aliases.insert(v.1, name.clone());
+                        if !ctx.definitions.contains_key(&name) {
+                            ctx.definitions.insert(name.clone(), expr.clone());
+                        }
                         if let Some(old) = res {
                             println!("Warning: Conflicting quantities {} and {}", name, old);
                         }
