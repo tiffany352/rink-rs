@@ -77,11 +77,11 @@ fn assert_bounds<I>(iterations: usize, mut iter: I) -> Interval where I: Iterato
     let first = iter.next().unwrap();
     iter.take(iterations).enumerate().fold(first, |a, (i, n)| {
         assert!(n.0 >= a.0, "lower bound loosened at iteration {}: new = {:?}, old = {:?}",
-                i, n.0, a.0);
+                i+1, n.0, a.0);
         assert!(n.1 <= a.1, "upper bound loosened at iteration {}: new = {:?}, old = {:?}",
-                i, n.1, a.1);
+                i+1, n.1, a.1);
         assert!(n.0 > a.0 || n.1 < a.1, "failed to make progress in iteration {}: new = old = {:?}",
-                i, a);
+                i+1, a);
         n
     })
 }
@@ -97,15 +97,19 @@ pub struct Add<A,B> {
     b: B,
     last_a: Interval,
     last_b: Interval,
+    value: Option<Interval>,
     done_a: bool,
     done_b: bool,
 }
 
 impl<A,B> Add<A,B> where A:Cut, B:Cut {
     pub fn new(mut a: A, mut b: B) -> Add<A,B> {
+        let init_a = a.next().unwrap();
+        let init_b = b.next().unwrap();
         Add {
-            last_a: a.next().unwrap(),
-            last_b: b.next().unwrap(),
+            value: Some(Interval(&init_a.0 + &init_b.0, &init_a.1 + &init_b.1)),
+            last_a: init_a,
+            last_b: init_b,
             a: a, b: b,
             done_a: false, done_b: false,
         }
@@ -121,18 +125,24 @@ impl<A,B> Iterator for Add<A,B> where A:Cut, B:Cut {
                 self.last_b = b;
             } else {
                 self.done_b = true;
+                return self.next()
             }
-        } else if !self.done_a {
+        }
+        if !self.done_a {
             if let Some(a) = self.a.next() {
                 self.last_a = a;
             } else {
                 self.done_a = true;
+                return self.next()
             }
-        } else {
-            return None
         }
-        Some(Interval(&self.last_a.0 + &self.last_b.0,
-                      &self.last_a.1 + &self.last_b.1))
+        let res = self.value.take();
+        if self.done_a && self.done_b {
+            return res
+        }
+        self.value = Some(Interval(&self.last_a.0 + &self.last_b.0,
+                                   &self.last_a.1 + &self.last_b.1));
+        res
     }
 }
 
@@ -169,7 +179,15 @@ fn test_sub_e() {
     let e1 = E::new();
     let e2 = E::new();
     let add = Add::new(e1, Neg::new(e2));
-    assert_eq!(assert_bounds(10, add), Interval::ints(-1,840, 1,2520));
+    assert_eq!(assert_bounds(10, add), Interval::ints(-1,3991680, 1,19958400));
+}
+
+#[test]
+fn test_add_e() {
+    let e = E::new();
+    let four = Interval::ints(4,1, 4,1).cut();
+    let add = Add::new(e, four);
+    assert_eq!(assert_bounds(10, add), Interval::ints(33521539,4989600, 89390771,13305600));
 }
 
 pub struct Root<N> {
