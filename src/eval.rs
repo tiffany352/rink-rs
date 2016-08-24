@@ -549,7 +549,64 @@ impl Context {
                 (_, Err(e), _) => Err(e),
                 (_, _, Err(e)) => Err(e),
             },
-            Query::Convert(ref _top, Conversion::List(ref _list)) => unimplemented!(),
+            Query::Convert(ref top, Conversion::List(ref list)) => {
+                let top = try!(self.eval(top));
+                let top = match top {
+                    Value::Number(num) => num,
+                    _ => return Err(format!("Cannot convert <{}> to {:?}",
+                                            top.show(self), list))
+                };
+                let units = try!(list.iter().map(|x| {
+                    match self.lookup(x) {
+                        Some(x) => Ok(x),
+                        None => Err(format!("Unit {} does not exist", x))
+                    }
+                }).collect::<Result<Vec<Number>, _>>());
+                {
+                    let first = try!(units.first().ok_or(format!("Expected non-empty unit list")));
+                    try!(units.iter().skip(1).map(|x| {
+                        if first.1 != x.1 {
+                            Err(format!("Units in unit list must conform: <{}> ; <{}>",
+                                        first.show(self), x.show(self)))
+                        } else {
+                            Ok(())
+                        }
+                    }).collect::<Result<Vec<()>, _>>());
+                    if top.1 != first.1 {
+                        return Err(conformance_err(&top, &first))
+                    }
+                }
+                let mut value = top.0;
+                let mut out = vec![];
+                let len = units.len();
+                for (i, unit) in units.into_iter().enumerate() {
+                    // value -= unit * floor(value/unit)
+                    use gmp::mpz::Mpz;
+
+                    let res = &value / &unit.0;
+                    let div = &res.get_num() / res.get_den();
+                    let rem = &value - &(&unit.0 * &Mpq::ratio(&div, &Mpz::one()));
+                    value = rem;
+                    if i == len-1 {
+                        out.push(res);
+                    } else {
+                        out.push(Mpq::ratio(&div, &Mpz::one()));
+                    }
+                }
+                let mut buf = vec![];
+                for (name, value) in list.into_iter().zip(out.into_iter()) {
+                    use std::io::Write;
+                    use number;
+
+                    write!(buf, "{} {}, ", number::to_string(&value).1, name).unwrap();
+                }
+                buf.pop(); buf.pop();
+                if let Some(res) = self.aliases.get(&top.1) {
+                    use std::io::Write;
+                    write!(buf, " ({})", res).unwrap();
+                }
+                Ok(String::from_utf8(buf).unwrap())
+            },
             Query::Convert(ref top, ref which @ Conversion::DegC) |
             Query::Convert(ref top, ref which @ Conversion::DegF) |
             Query::Convert(ref top, ref which @ Conversion::DegN) |

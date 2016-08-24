@@ -14,6 +14,7 @@ pub enum Token {
     Number(String, Option<String>, Option<String>),
     Quote(String),
     Slash,
+    Semicolon,
     Colon,
     ColonDash,
     DColonDash,
@@ -71,6 +72,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             '(' => Token::LPar,
             ')' => Token::RPar,
             '+' => Token::Plus,
+            ';' => Token::Semicolon,
             '%' => Token::Ident("percent".to_owned()),
             '-' => match self.0.peek().cloned().unwrap() {
                 '>' => {
@@ -500,6 +502,23 @@ pub fn parse_expr(iter: &mut Iter) -> Expr {
     parse_eq(iter)
 }
 
+pub fn parse_unitlist(mut iter: &mut Iter) -> Option<Vec<String>> {
+    let mut expecting_term = true;
+    let mut res = vec![];
+    loop { match iter.next().unwrap() {
+        Token::Ident(ref ident) if expecting_term => {
+            res.push(ident.clone());
+            expecting_term = false;
+        },
+        Token::Comma | Token::Semicolon if !expecting_term => {
+            expecting_term = true;
+        },
+        Token::Eof | Token::Newline | Token::Comment(_) if !expecting_term => break,
+        _ => return None
+    }}
+    Some(res)
+}
+
 pub fn parse_query(mut iter: &mut Iter) -> Query {
     match iter.peek().cloned() {
         Some(Token::Ident(ref s)) if s == "factorize" => {
@@ -512,6 +531,11 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
     match iter.peek().cloned().unwrap() {
         Token::DashArrow => {
             iter.next();
+            let mut copy = iter.clone();
+            if let Some(res) = parse_unitlist(&mut copy) {
+                *iter = copy;
+                return Query::Convert(left, Conversion::List(res))
+            }
             let right = match iter.peek().cloned().unwrap() {
                 Token::DegC => Conversion::DegC,
                 Token::DegF => Conversion::DegF,
