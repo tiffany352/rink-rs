@@ -197,7 +197,14 @@ impl Context {
 
         let mut buf = vec![];
         let mut recip = false;
+        let square = Number(Mpq::one(), value.1.clone()).root(2);
+        let inverse = (&Number::one() / &Number(Mpq::one(), value.1.clone())).unwrap();
         if let Some(name) = self.aliases.get(&value.1) {
+            write!(buf, "{}", name).unwrap();
+        } else if let Some(name) = square.and_then(|square| self.aliases.get(&square.1)) {
+            write!(buf, "{}^2", name).unwrap();
+        } else if let Some(name) = self.aliases.get(&inverse.1) {
+            recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
             let mut frac = vec![];
@@ -451,21 +458,27 @@ impl Context {
                                       "{:>width$}: {right}"),
                          "Left side", "Right side", left=left, right=right, width=width).unwrap();
             }
-            let diff = (&topu / &bottomu).unwrap();
-            let (recip, desc) = self.describe_unit(&diff.invert());
-            let word = match recip {
-                false => "multiply",
-                true => "divide"
-            };
-            writeln!(buf, "{:>width$}: {word} left side by {}", "Suggestion",
-                     desc.trim(), width=width, word=word).unwrap();
-            let (recip, desc) = self.describe_unit(&diff);
-            let word = match recip {
-                false => "multiply",
-                true => "divide"
-            };
-            writeln!(buf, "{:>width$}  {word} right side by {}", "",
-                     desc.trim(), width=width, word=word).unwrap();
+            let diff = (&topu * &bottomu).unwrap();
+            if diff.1.len() == 0 {
+                writeln!(buf, "{:>width$}: Reciprocal conversion, invert one side",
+                         "Suggestions", width=width).unwrap();
+            } else {
+                let diff = (&topu / &bottomu).unwrap();
+                let (recip, desc) = self.describe_unit(&diff.invert());
+                let word = match recip {
+                    false => "multiply",
+                    true => "divide"
+                };
+                writeln!(buf, "{:>width$}: {word} left side by {}", "Suggestions",
+                         desc.trim(), width=width, word=word).unwrap();
+                let (recip, desc) = self.describe_unit(&diff);
+                let word = match recip {
+                    false => "multiply",
+                    true => "divide"
+                };
+                writeln!(buf, "{:>width$}  {word} right side by {}", "",
+                         desc.trim(), width=width, word=word).unwrap();
+            }
 
             String::from_utf8(buf).unwrap()
         };
@@ -532,15 +545,15 @@ impl Context {
                         (Value::Number(top), Value::Number(bottom)) => (top, bottom),
                         _ => return Err(format!("Conversion of non-numbers is not defined"))
                     };
-                    if top.1 != bottom.1 {
-                        Err(conformance_err(&top, &bottom))
-                    } else {
+                    if top.1 == bottom.1 {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
                             None => return Err(format!("Division by zero: {} / {}",
                                                        top.show(self), bottom.show(self)))
                         };
                         Ok(show(&raw, &bottom, bottom_name))
+                    } else {
+                        Err(conformance_err(&top, &bottom))
                     }
                 },
                 (Ok(ref top), Err(ref e), _) => {
