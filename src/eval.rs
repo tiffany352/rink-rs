@@ -189,6 +189,39 @@ impl Context {
         None
     }
 
+    /// Given a unit name, try to return a canonical name (expanding aliases and such)
+    pub fn canonicalize(&self, name: &str) -> Option<String> {
+        for k in &self.dimensions {
+            if name == &***k {
+                return Some((**k).clone())
+            }
+        }
+        if let Some(v) = self.definitions.get(name) {
+            if let Expr::Unit(ref name) = *v {
+                if let Some(r) = self.canonicalize(&*name) {
+                    return Some(r)
+                } else {
+                    return Some(name.clone())
+                }
+            }
+            // we cannot canonicalize it further
+            return None
+        }
+        if name.ends_with("s") {
+            if let Some(v) = self.canonicalize(&name[0..name.len()-1]) {
+                return Some(v)
+            }
+        }
+        for &(ref pre, _) in &self.prefixes {
+            if name.starts_with(pre) {
+                if let Some(v) = self.canonicalize(&name[pre.len()..]) {
+                    return Some(format!("{}{}", pre, v))
+                }
+            }
+        }
+        None
+    }
+
     /// Describes a value's unit, gives true if the unit is reciprocal
     /// (e.g. you should prefix "1.0 / " or replace "multiply" with
     /// "divide" when rendering it).
@@ -369,7 +402,7 @@ impl Context {
             Expr::Call(_, _) => Err(format!("Calls are not allowed in the right hand side of conversions")),
             Expr::Unit(ref name) | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
-                map.insert(name.clone(), 1);
+                map.insert(self.canonicalize(&**name).unwrap_or_else(|| name.clone()), 1);
                 Ok(map)
             },
             Expr::Const(ref x, None, None) if x == "1" || x == "-1" => Ok(BTreeMap::new()),
@@ -598,7 +631,8 @@ impl Context {
                     use std::io::Write;
                     use number;
 
-                    write!(buf, "{} {}, ", number::to_string(&value).1, name).unwrap();
+                    write!(buf, "{} {}, ", number::to_string(&value).1,
+                           self.canonicalize(name).unwrap_or_else(|| name.clone())).unwrap();
                 }
                 buf.pop(); buf.pop();
                 if let Some(res) = self.aliases.get(&top.1) {
