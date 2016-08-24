@@ -525,6 +525,15 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
             iter.next();
             return Query::Factorize(parse_eq(iter))
         },
+        Some(Token::Ident(ref s)) if s == "units" => {
+            iter.next();
+            if let Some(Token::Ident(ref s)) = iter.peek().cloned() {
+                if s == "for" || s == "of" {
+                    iter.next();
+                }
+            }
+            return Query::UnitsFor(parse_eq(iter))
+        },
         _ => ()
     }
     let left = parse_eq(iter);

@@ -714,6 +714,34 @@ impl Context {
                     |a, x| format!("{};  {}", a, x));
                 Ok(format!("Factorizations: {}{}", results, if len < 10 {""} else {";  ..."}))
             },
+            Query::UnitsFor(ref expr) => {
+                let val = try!(self.eval(expr));
+                let val = match val {
+                    Value::Number(val) => val,
+                    _ => return Err(format!("Cannot find units for <{}>", val.show(self))),
+                };
+                let mut out = vec![];
+                for (name, unit) in self.units.iter() {
+                    if let Some(&Expr::Unit(_)) = self.definitions.get(name) {
+                        continue
+                    }
+                    if val.1 == unit.1 {
+                        out.push(name);
+                    }
+                }
+                let raw = Number::unit_to_string(&val.1);
+                let alias = self.aliases.get(&val.1);
+                let alias = if let Some(alias) = alias {
+                    format!(" ({})", alias)
+                } else {
+                    format!("")
+                };
+                out.sort();
+                let units = out.iter().skip(1).fold(
+                    out.first().cloned().cloned().unwrap_or(String::new()),
+                    |a, x| format!("{}, {}", a, x));
+                Ok(format!("Units for {}{}: {}", raw, alias, units))
+            },
             Query::Expr(ref expr) => {
                 let val = try!(self.eval(expr));
                 Ok(val.show(self))

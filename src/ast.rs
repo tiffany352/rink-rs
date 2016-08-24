@@ -62,6 +62,7 @@ pub enum Query {
     Expr(Expr),
     Convert(Expr, Conversion),
     Factorize(Expr),
+    UnitsFor(Expr),
     Error(String),
 }
 
