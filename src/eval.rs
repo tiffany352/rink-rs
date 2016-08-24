@@ -515,20 +515,16 @@ impl Context {
 
         match *expr {
             Expr::Unit(ref name) if self.definitions.contains_key(name) => {
+                let mut name = name;
+                while let Some(&Expr::Unit(ref unit)) = self.definitions.get(name) {
+                    if self.definitions.get(unit).is_none() {
+                        break
+                    }
+                    name = unit;
+                }
                 let ref def = self.definitions[name];
                 let res = self.lookup(name).unwrap();
-                let alias = if let Some(name) = self.aliases.get(&res.1) {
-                    format!(" ({})", name)
-                } else {
-                    format!("")
-                };
-                let base = Number::unit_to_string(&res.1);
-                let base = if base.len() > 0 {
-                    format!(" = {}", base)
-                } else {
-                    format!("")
-                };
-                Ok(format!("Definition: {} = {}{}{}", name, def, base, alias))
+                Ok(format!("Definition: {} = {} = {}", name, def, res.show(self)))
             },
             Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom), self.eval_unit_name(&**bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
