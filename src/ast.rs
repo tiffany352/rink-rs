@@ -39,17 +39,29 @@ pub enum Expr {
     Sub(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
     Plus(Box<Expr>),
-    Convert(Box<Expr>, Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
     Suffix(SuffixOp, Box<Expr>),
     Call(String, Vec<Expr>),
-    Factorize(Box<Expr>),
+    Error(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum Conversion {
+    Expr(Expr),
     DegC,
     DegF,
     DegRe,
     DegRo,
     DegDe,
     DegN,
+    List(Vec<String>),
+}
+
+#[derive(Debug, Clone)]
+pub enum Query {
+    Expr(Expr),
+    Convert(Expr, Conversion),
+    Factorize(Expr),
     Error(String),
 }
 
@@ -95,7 +107,7 @@ impl fmt::Display for Expr {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         #[derive(PartialOrd, Ord, PartialEq, Eq)]
         enum Prec {
-            Term, Plus, Pow, Mul, Div, Add, Equals, Convert
+            Term, Plus, Pow, Mul, Div, Add, Equals
         }
 
         fn recurse(expr: &Expr, fmt: &mut fmt::Formatter, prec: Prec) -> fmt::Result {
@@ -146,11 +158,11 @@ impl fmt::Display for Expr {
                 Expr::Call(ref name, ref args) => {
                     try!(write!(fmt, "{}(", name));
                     if let Some(first) = args.first() {
-                        try!(recurse(first, fmt, Prec::Convert));
+                        try!(recurse(first, fmt, Prec::Equals));
                     }
                     for arg in args.iter().skip(1) {
                         try!(write!(fmt, ", "));
-                        try!(recurse(arg, fmt, Prec::Convert));
+                        try!(recurse(arg, fmt, Prec::Equals));
                     }
                     write!(fmt, ")")
                 },
@@ -166,7 +178,6 @@ impl fmt::Display for Expr {
                     try!(write!(fmt, "-"));
                     recurse(expr, fmt, Prec::Plus)
                 },
-                Expr::Convert(ref left, ref right) => binop!(left, right, Prec::Convert, Prec::Equals, " -> "),
                 Expr::Equals(ref left, ref right) => binop!(left, right, Prec::Equals, Prec::Add, " = "),
                 Expr::Suffix(ref op, ref expr) => {
                     if prec < Prec::Mul {
@@ -179,28 +190,11 @@ impl fmt::Display for Expr {
                     }
                     Ok(())
                 },
-                Expr::Factorize(ref op) => {
-                    if prec < Prec::Convert {
-                        try!(write!(fmt, "("));
-                    }
-                    try!(write!(fmt, "factorize "));
-                    try!(recurse(op, fmt, Prec::Convert));
-                    if prec < Prec::Convert {
-                        try!(write!(fmt, ")"));
-                    }
-                    Ok(())
-                }
-                Expr::DegC => write!(fmt, "°C"),
-                Expr::DegF => write!(fmt, "°F"),
-                Expr::DegRe => write!(fmt, "°Ré"),
-                Expr::DegRo => write!(fmt, "°Rø"),
-                Expr::DegDe => write!(fmt, "°De"),
-                Expr::DegN => write!(fmt, "°N"),
                 Expr::Error(ref err) => write!(fmt, "<error: {}>", err)
             }
         }
 
-        recurse(self, fmt, Prec::Convert)
+        recurse(self, fmt, Prec::Equals)
     }
 }
 

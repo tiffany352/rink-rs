@@ -8,7 +8,7 @@ use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
 use number::{Number, Unit};
 use date;
-use ast::{DatePattern, Expr, SuffixOp, Def, Defs};
+use ast::{DatePattern, Expr, SuffixOp, Def, Defs, Query, Conversion};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
@@ -308,12 +308,6 @@ impl Context {
             Expr::Date(ref date) => date::try_decode(date, self).map(Value::DateTime),
             Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| -&v),
             Expr::Plus(ref expr) => self.eval(&**expr),
-            Expr::DegC => Err(format!("°C is an operator")),
-            Expr::DegF => Err(format!("°F is an operator")),
-            Expr::DegRe => Err(format!("°Ré is an operator")),
-            Expr::DegRo => Err(format!("°Rø is an operator")),
-            Expr::DegDe => Err(format!("°De is an operator")),
-            Expr::DegN => Err(format!("°N is an operator")),
 
             Expr::Frac(ref left, ref right) => operator!(left div / right),
             Expr::Add(ref left, ref right)  => operator!(left add + right),
@@ -340,8 +334,6 @@ impl Context {
                     Ok((&a * &b).unwrap())
                 })
             }),
-            Expr::Convert(_, _) => Err(format!("Conversions (->) must be top-level expressions")),
-            Expr::Factorize(_) => Err(format!("Derivatives must be top-level expressions")),
             Expr::Equals(_, ref right) => self.eval(right),
             Expr::Call(ref name, ref args) => {
                 let args = try!(args.iter().map(|x| self.eval(x)).collect::<Result<Vec<_>, _>>());
@@ -426,18 +418,15 @@ impl Context {
             },
             Expr::Neg(ref v) => self.eval_unit_name(v),
             Expr::Plus(ref v) => self.eval_unit_name(v),
-            Expr::Suffix(_, _) | Expr::DegC | Expr::DegF | Expr::DegRe | Expr::DegRo |
-            Expr::DegDe | Expr::DegN =>
+            Expr::Suffix(_, _) =>
                 Err(format!("Temperature conversions must not be compound units")),
             Expr::Date(_) => Err(format!("Dates are not allowed in the right hand side of conversions")),
-            Expr::Convert(_, _) => Err(format!("Conversions are not allowed in the right hand of conversions")),
-            Expr::Factorize(_) => Err(format!("Derivatives are not allowed in the right hand of conversions")),
             Expr::Error(ref e) => Err(e.clone()),
         }
     }
 
     /// Evaluates an expression, include `->` conversions.
-    pub fn eval_outer(&self, expr: &Expr) -> Result<String, String> {
+    pub fn eval_outer(&self, expr: &Query) -> Result<String, String> {
         let conformance_err = |top: &Number, bottom: &Number| -> String {
             use std::io::Write;
 
@@ -527,7 +516,7 @@ impl Context {
         };
 
         match *expr {
-            Expr::Unit(ref name) if self.definitions.contains_key(name) => {
+            Query::Expr(Expr::Unit(ref name)) if self.definitions.contains_key(name) => {
                 let mut name = name;
                 while let Some(&Expr::Unit(ref unit)) = self.definitions.get(name) {
                     if self.definitions.get(unit).is_none() {
@@ -539,7 +528,7 @@ impl Context {
                 let res = self.lookup(name).unwrap();
                 Ok(format!("Definition: {} = {} = {}", name, def, res.show(self)))
             },
-            Expr::Convert(ref top, ref bottom) => match (self.eval(&**top), self.eval(&**bottom), self.eval_unit_name(&**bottom)) {
+            Query::Convert(ref top, Conversion::Expr(ref bottom)) => match (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
                     let (top, bottom) = match (top, bottom) {
                         (Value::Number(top), Value::Number(bottom)) => (top, bottom),
@@ -556,43 +545,51 @@ impl Context {
                         Err(conformance_err(&top, &bottom))
                     }
                 },
-                (Ok(ref top), Err(ref e), _) => {
-                    macro_rules! temperature {
-                        ($name:expr, $base:expr, $scale:expr) => {{
-                            let top = match *top {
-                                Value::Number(ref num) => num,
-                                _ => return Err(format!("Cannot convert <{}> to °{}",
-                                                        top.show(self), $name))
-                            };
-                            let bottom = self.lookup($scale)
-                                .expect(&*format!("Unit {} missing", $scale));
-                            if top.1 != bottom.1 {
-                                Err(conformance_err(&top, &bottom))
-                            } else {
-                                let res = (top - &self.lookup($base)
-                                           .expect(&*format!("Constant {} missing", $base))).unwrap();
-                                let res = (&res / &bottom).unwrap();
-                                let mut name = BTreeMap::new();
-                                name.insert(format!("°{}", $name), 1);
-                                Ok(show(&res, &bottom, name))
-                            }
-                        }}
-                    }
-
-                    match **bottom {
-                        Expr::DegC => temperature!("C", "zerocelsius", "kelvin"),
-                        Expr::DegF => temperature!("F", "zerofahrenheit", "degrankine"),
-                        Expr::DegRe => temperature!("Ré", "zerocelsius", "reaumur_absolute"),
-                        Expr::DegRo => temperature!("Rø", "zeroromer", "romer_absolute"),
-                        Expr::DegDe => temperature!("De", "zerodelisle", "delisle_absolute"),
-                        Expr::DegN => temperature!("N", "zerocelsius", "newton_absolute"),
-                        _ => Err(e.clone())
-                    }
-                },
                 (Err(e), _, _) => Err(e),
+                (_, Err(e), _) => Err(e),
                 (_, _, Err(e)) => Err(e),
             },
-            Expr::Factorize(ref expr) => {
+            Query::Convert(ref _top, Conversion::List(ref _list)) => unimplemented!(),
+            Query::Convert(ref top, ref which @ Conversion::DegC) |
+            Query::Convert(ref top, ref which @ Conversion::DegF) |
+            Query::Convert(ref top, ref which @ Conversion::DegN) |
+            Query::Convert(ref top, ref which @ Conversion::DegRe) |
+            Query::Convert(ref top, ref which @ Conversion::DegRo) |
+            Query::Convert(ref top, ref which @ Conversion::DegDe) => {
+                let top = try!(self.eval(top));
+                macro_rules! temperature {
+                    ($name:expr, $base:expr, $scale:expr) => {{
+                        let top = match top {
+                            Value::Number(ref num) => num,
+                            _ => return Err(format!("Cannot convert <{}> to °{}",
+                                                    top.show(self), $name))
+                        };
+                        let bottom = self.lookup($scale)
+                            .expect(&*format!("Unit {} missing", $scale));
+                        if top.1 != bottom.1 {
+                            Err(conformance_err(&top, &bottom))
+                        } else {
+                            let res = (top - &self.lookup($base)
+                                       .expect(&*format!("Constant {} missing", $base))).unwrap();
+                            let res = (&res / &bottom).unwrap();
+                            let mut name = BTreeMap::new();
+                            name.insert(format!("°{}", $name), 1);
+                            Ok(show(&res, &bottom, name))
+                        }
+                    }}
+                }
+
+                match *which {
+                    Conversion::DegC => temperature!("C", "zerocelsius", "kelvin"),
+                    Conversion::DegF => temperature!("F", "zerofahrenheit", "degrankine"),
+                    Conversion::DegRe => temperature!("Ré", "zerocelsius", "reaumur_absolute"),
+                    Conversion::DegRo => temperature!("Rø", "zeroromer", "romer_absolute"),
+                    Conversion::DegDe => temperature!("De", "zerodelisle", "delisle_absolute"),
+                    Conversion::DegN => temperature!("N", "zerocelsius", "newton_absolute"),
+                    _ => panic!()
+                }
+            },
+            Query::Factorize(ref expr) => {
                 let val = try!(self.eval(expr));
                 let val = match val {
                     Value::Number(val) => val,
@@ -626,10 +623,11 @@ impl Context {
                     |a, x| format!("{};  {}", a, x));
                 Ok(format!("Factorizations: {}{}", results, if len < 10 {""} else {";  ..."}))
             },
-            _ => {
+            Query::Expr(ref expr) => {
                 let val = try!(self.eval(expr));
                 Ok(val.show(self))
             },
+            Query::Error(ref e) => Err(e.clone()),
         }
     }
 

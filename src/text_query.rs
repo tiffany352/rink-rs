@@ -496,11 +496,15 @@ fn parse_eq(mut iter: &mut Iter) -> Expr {
     }
 }
 
-pub fn parse_expr(mut iter: &mut Iter) -> Expr {
+pub fn parse_expr(iter: &mut Iter) -> Expr {
+    parse_eq(iter)
+}
+
+pub fn parse_query(mut iter: &mut Iter) -> Query {
     match iter.peek().cloned() {
         Some(Token::Ident(ref s)) if s == "factorize" => {
             iter.next();
-            return Expr::Factorize(Box::new(parse_eq(iter)))
+            return Query::Factorize(parse_eq(iter))
         },
         _ => ()
     }
@@ -509,17 +513,17 @@ pub fn parse_expr(mut iter: &mut Iter) -> Expr {
         Token::DashArrow => {
             iter.next();
             let right = match iter.peek().cloned().unwrap() {
-                Token::DegC => Expr::DegC,
-                Token::DegF => Expr::DegF,
-                Token::DegRe => Expr::DegRe,
-                Token::DegRo => Expr::DegRo,
-                Token::DegDe => Expr::DegDe,
-                Token::DegN => Expr::DegN,
-                _ => parse_eq(iter)
+                Token::DegC => Conversion::DegC,
+                Token::DegF => Conversion::DegF,
+                Token::DegRe => Conversion::DegRe,
+                Token::DegRo => Conversion::DegRo,
+                Token::DegDe => Conversion::DegDe,
+                Token::DegN => Conversion::DegN,
+                _ => Conversion::Expr(parse_eq(iter))
             };
-            Expr::Convert(Box::new(left), Box::new(right))
+            Query::Convert(left, right)
         },
-        _ => left
+        _ => Query::Expr(left)
     }
 }
 
