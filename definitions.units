@@ -169,6 +169,7 @@ mole      mol    #   elementary entities as there are atoms in 0.012 kg of
 
 K         !      # 1|273.16 of the thermodynamic temperature of the triple
 kelvin    K      #   point of water
+k         K      # common but incorrect shorthand
 
 #
 # The radian and steradian are defined as dimensionless primitive units.
@@ -608,6 +609,7 @@ minute                  60 s
 min                     minute
 hour                    60 min
 hr                      hour
+h                       hour
 day                     24 hr
 d                       day
 da                      day
@@ -866,9 +868,11 @@ light                   c
 mu0                     4 pi 1e-7 H/m    # permeability of vacuum (exact)
 epsilon0                1/mu0 c^2        # permittivity of vacuum (exact)
 energy                  c^2              # convert mass to energy
-e                     1.6021766208e-19 C # electron charge
-h                   4.135667662e-15 eV s # Planck constant
-hbar                    h / 2 pi
+electroncharge        1.6021766208e-19 C # electron charge
+#e                      electroncharge   # makes room for exp(1)
+planck_constant     4.135667662e-15 eV s # Planck constant
+#h                       planck_constant # too commonly, users meant hours, not planck
+hbar                    planck_constant / 2 pi
 spin                    hbar
 G               6.67408e-11 N m^2 / kg^2 # Newtonian gravitational constant
                                          #    This is the NIST 2006 value.
@@ -889,17 +893,17 @@ amu_phys                1.65981e-27 kg   # 1|16 of the mass of a neutral
 dalton                  u                # Maybe this should be amu_chem?
 avogadro                grams/amu mol    # size of a mole
 N_A                     avogadro
-gasconstant             k N_A            # molar gas constant
+gasconstant             boltzmann N_A    # molar gas constant
 R                       gasconstant
 boltzmann             1.38064852e-23 J/K # Boltzmann constant
-k                       boltzmann
+#k                       boltzmann
 kboltzmann              boltzmann
 molarvolume         mol R stdtemp / atm  # Volume occupied by one mole of an
                                          #   ideal gas at STP.
 loschmidt     avogadro mol / molarvolume # Molecules per cubic meter of an
                                          #   ideal gas at STP.  Loschmidt did
                                          #   work similar to Avogadro.
-stefanboltzmann pi^2 k^4 / 60 hbar^3 c^2 # The power per area radiated by a
+stefanboltzmann pi^2 boltzmann^4 / 60 hbar^3 c^2 # The power per area radiated by a
 sigma                   stefanboltzmann  #   blackbody at temperature T is
                                          #   given by sigma T^4.
 wiendisplacement        2.8977729e-3 m K # Wien's Displacement Law gives the
@@ -1014,7 +1018,7 @@ l_P                     plancklength
 
 # Particle radius
 
-electronradius    (1/4 pi epsilon0) e^2 / electronmass c^2   # Classical
+electronradius    (1/4 pi epsilon0) electroncharge^2 / electronmass c^2   # Classical
 deuteronchargeradius    2.1413e-15 m
 protonchargeradius      0.8751e-15 m
 
@@ -1044,18 +1048,18 @@ m_h                     helionmass
 # particle wavelengths: the compton wavelength of a particle is
 # defined as h / m c where m is the mass of the particle.
 
-electronwavelength      h / m_e c
+electronwavelength      planck_constant / m_e c
 lambda_C                electronwavelength
-protonwavelength        h / m_p c
+protonwavelength        planck_constant / m_p c
 lambda_C,p              protonwavelength
-neutronwavelength       h / m_n c
+neutronwavelength       planck_constant / m_n c
 lambda_C,n              neutronwavelength
 
 # Magnetic moments
 
-bohrmagneton            e hbar / 2 electronmass
+bohrmagneton            electroncharge hbar / 2 electronmass
 mu_B                    bohrmagneton
-nuclearmagneton         e hbar /  2 protonmass
+nuclearmagneton         electroncharge hbar /  2 protonmass
 mu_N                    nuclearmagneton
 mu_mu                  -4.49044826e-26 J/T   # Muon magnetic moment
 mu_p                    1.4106067873e-26 J/T # Proton magnetic moment
@@ -1080,7 +1084,7 @@ tor                     Pa         # Torricelli, should not be confused.  The
 inHg                    inch Hg    # torr is very close to the mm Hg. 
 inH2O                   inch water
 mmH2O                   mm water
-eV                      e V      # Energy acquired by a particle with charge e
+eV                      electroncharge V # Energy acquired by a particle with charge e
 electronvolt            eV       #   when it is accelerated through 1 V
 lightyear               c julianyear # The 365.25 day year is specified in
 ly                      lightyear    # NIST publication 811
@@ -1095,16 +1099,16 @@ lightminute             c min
                                             #   (arcsec/theta) parsecs from the
                                             #   sun (using the approximation
                                             #   that tan(theta) = theta).
-rydberg                 h c Rinfinity       # Rydberg energy
+rydberg                 planck_constant c Rinfinity # Rydberg energy
 crith                   0.089885 gram       # The crith is the mass of one
                                             #   liter of hydrogen at standard
                                             #   temperature and pressure.
 amagatvolume            molarvolume
 amagat                  mol/amagatvolume    # Used to measure gas densities
-lorentz                 bohrmagneton / h c  # Used to measure the extent
+lorentz                 bohrmagneton / planck_constant c # Used to measure the extent
                                             #   that the frequency of light
                                             #   is shifted by a magnetic field.
-cminv                   h c / cm            # Unit of energy used in infrared
+cminv                   planck_constant c / cm # Unit of energy used in infrared
 invcm                   cminv               #   spectroscopy.
 wavenumber              cminv
 kcal_mol                kcal_th / mol N_A   # kcal/mol is used as a unit of
@@ -1228,7 +1232,7 @@ intohm                  1.000495 ohm  # Defined as the resistance of a
                                       #   long and maintained at 0 degC.
 daniell                 1.042 V       # Meant to be electromotive force of a
                                       #   Daniell cell, but in error by .04 V
-faraday                 N_A e mol     # Charge that must flow to deposit or
+faraday                 N_A electroncharge mol # Charge that must flow to deposit or
 faraday_phys            96521.9 C     #   liberate one gram equivalent of any
 faraday_chem            96495.7 C     #   element.  (The chemical and physical
                                       #   values are off slightly from what is
@@ -1871,14 +1875,14 @@ moongravity             1.62 m/s^2
 # Fundamental units
 
 atomicmass              electronmass
-atomiccharge            e
+atomiccharge            electroncharge
 atomicaction            hbar
 
 # derived units (Warning: accuracy is lost from deriving them this way)
 
 atomiclength            bohrradius
-atomictime              hbar^3/coulombconst^2 atomicmass e^4 # Period of first
-                                                             # bohr orbit
+atomictime              hbar^3/coulombconst^2 atomicmass electroncharge^4 # Period of first
+                                                                          # bohr orbit
 atomicvelocity          atomiclength / atomictime
 atomicenergy            hbar / atomictime
 hartree                 atomicenergy
@@ -4727,6 +4731,7 @@ sizeZring               68.75 mm
 mph                     mile/hr
 mpg                     mile/gal
 kph                     km/hr
+kmh                     km/hr
 fL                      footlambert
 fpm                     ft/min
 fps                     ft/s
@@ -5786,6 +5791,7 @@ hogshead                ushogshead
 # U+2151-               1|9  flagged as invalid UTF8.
 # U+2152-               1|10
 ℯ                       2.71828182845904523536 #exp(1)      # U+212F, base of natural log
+e                       ℯ
 
 µ-                      micro       # micro sign U+00B5
 μ-                      micro       # small mu U+03BC
@@ -5818,7 +5824,7 @@ röntgen                 roentgen
 ℈                       scruple
 ℥                       ounce
 ℔                       lb
-ℎ                       h
+ℎ                       planck_constant
 ℏ                       hbar
 ‰                       1|1000
 ‱                       1|10000
