@@ -326,8 +326,8 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 }
                 match &*buf {
-                    "degC" | "°C" | "celsius" => Token::DegC,
-                    "degF" | "°F" | "fahrenheit" => Token::DegF,
+                    "degC" | "°C" | "celsius" | "℃" => Token::DegC,
+                    "degF" | "°F" | "fahrenheit" | "℉" => Token::DegF,
                     "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => Token::DegRe,
                     "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::DegRo,
                     "degDe" | "°De" | "delisle" => Token::DegDe,
