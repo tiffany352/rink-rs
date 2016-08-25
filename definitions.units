@@ -502,6 +502,10 @@ density                 ? mass / volume
 linear_density          ? mass / length
 viscosity               ? force time / area
 kinematic_viscosity     ? viscosity / density
+magnetic_flux           ? weber
+magnetic_flux_density   ? tesla
+electrical_potential    ? volt
+electric_field          ? newton / coulomb
 
 
 #
