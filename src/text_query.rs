@@ -23,7 +23,7 @@ pub enum Token {
     ColonEq,
     EqBangEq,
     Equals,
-    Carot,
+    Caret,
     Eof,
     LBrack,
     RBrack,
@@ -194,7 +194,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             } else {
                 Token::Equals
             },
-            '^' => Token::Carot,
+            '^' => Token::Caret,
             '\\' => match self.0.next() {
                 Some('u') => {
                     let mut buf = String::new();
@@ -394,7 +394,7 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
 fn parse_pow(mut iter: &mut Iter) -> Expr {
     let left = parse_term(iter);
     match *iter.peek().unwrap() {
-        Token::Carot => {
+        Token::Caret => {
             iter.next();
             let right = parse_pow(iter);
             Expr::Pow(Box::new(left), Box::new(right))
