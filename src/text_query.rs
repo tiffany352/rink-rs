@@ -14,6 +14,7 @@ pub enum Token {
     Number(String, Option<String>, Option<String>),
     Quote(String),
     Slash,
+    Pipe,
     Semicolon,
     Colon,
     ColonDash,
@@ -83,6 +84,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             },
             '*' => Token::Asterisk,
             ',' => Token::Comma,
+            '|' => Token::Pipe,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
@@ -181,15 +183,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 Some('-') => {self.0.next(); Token::ColonDash},
                 Some('=') => {self.0.next(); Token::ColonEq},
                 _ => Token::Colon,
-            },
-            '|' => if let Some('|') = self.0.next() {
-                if let Some('|') = self.0.next() {
-                    Token::TriplePipe
-                } else {
-                    Token::Error(format!("Unknown symbol"))
-                }
-            } else {
-                Token::Error(format!("Unknown symbol"))
             },
             '=' => if let Some('!') = self.0.peek().cloned() {
                 self.0.next();
@@ -410,26 +403,29 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_mul(mut iter: &mut Iter) -> Expr {
-    let mut terms = vec![parse_pow(iter)];
-    loop { match iter.peek().cloned().unwrap() {
-        Token::DegC | Token::DegF | Token::DegRe | Token::DegRo | Token::DegDe | Token::DegN |
-        Token::Comma | Token::Equals | Token::Plus | Token::Minus | Token::DashArrow |
-        Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof => break,
-        Token::Slash => {
+fn parse_frac(mut iter: &mut Iter) -> Expr {
+    let left = parse_pow(iter);
+    match *iter.peek().unwrap() {
+        Token::Pipe => {
             iter.next();
             let right = parse_pow(iter);
-            let left = if terms.len() == 1 {
-                terms.pop().unwrap()
-            } else {
-                Expr::Mul(terms)
-            };
-            terms = vec![Expr::Frac(Box::new(left), Box::new(right))]
+            Expr::Frac(Box::new(left), Box::new(right))
         },
+        _ => left
+    }
+}
+
+fn parse_mul(mut iter: &mut Iter) -> Expr {
+    let mut terms = vec![parse_frac(iter)];
+    loop { match iter.peek().cloned().unwrap() {
+        Token::DegC | Token::DegF | Token::DegRe | Token::DegRo | Token::DegDe |
+        Token::DegN | Token::Slash | Token::Comma | Token::Equals |
+        Token::Plus | Token::Minus | Token::DashArrow | Token::TriplePipe |
+        Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof => break,
         Token::Asterisk => {
             iter.next();
         },
-        _ => terms.push(parse_pow(iter))
+        _ => terms.push(parse_frac(iter))
     }}
     if terms.len() == 1 {
         terms.pop().unwrap()
@@ -468,24 +464,37 @@ fn parse_suffix(mut iter: &mut Iter) -> Expr {
         _ => left
     };
     match iter.peek().cloned().unwrap() {
-        Token::Comma | Token::Equals | Token::Plus | Token::Minus | Token::DashArrow |
-        Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof =>
+        Token::Slash | Token::Comma | Token::Equals | Token::Plus |
+        Token::Minus | Token::DashArrow | Token::TriplePipe | Token::RPar |
+        Token::Newline | Token::Comment(_) | Token::Eof =>
             return res,
         _ => Expr::Mul(vec![res, parse_mul(iter)])
     }
 }
 
-fn parse_add(mut iter: &mut Iter) -> Expr {
+fn parse_div(mut iter: &mut Iter) -> Expr {
     let mut left = parse_suffix(iter);
+    loop { match *iter.peek().unwrap() {
+        Token::Slash => {
+            iter.next();
+            let right = parse_mul(iter);
+            left = Expr::Frac(Box::new(left), Box::new(right));
+        },
+        _ => return left
+    }}
+}
+
+fn parse_add(mut iter: &mut Iter) -> Expr {
+    let mut left = parse_div(iter);
     loop { match *iter.peek().unwrap() {
         Token::Plus => {
             iter.next();
-            let right = parse_suffix(iter);
+            let right = parse_div(iter);
             left = Expr::Add(Box::new(left), Box::new(right))
         },
         Token::Minus => {
             iter.next();
-            let right = parse_suffix(iter);
+            let right = parse_div(iter);
             left = Expr::Sub(Box::new(left), Box::new(right))
         },
         _ => return left
@@ -579,7 +588,9 @@ mod test {
     #[test]
     fn mul_assoc() {
         let res = parse_expr(&mut TokenIterator::new("a b * c / d / e f g").peekable());
-        assert_eq!(res.to_string(), "((a b c / d) / e) f g");
+        assert_eq!(res.to_string(), "(a b c / d) / e f g");
+        let res = parse_expr(&mut TokenIterator::new("a|b c / g e|f").peekable());
+        assert_eq!(res.to_string(), "(a / b) c / g (e / f)");
     }
 
     #[test]
