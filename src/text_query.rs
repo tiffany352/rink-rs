@@ -100,8 +100,8 @@ impl<'a> Iterator for TokenIterator<'a> {
             } else {
                 Token::Asterisk
             },
-            '-' => match self.0.peek().cloned().unwrap() {
-                '>' => {
+            '-' => match self.0.peek().cloned() {
+                Some('>') => {
                     self.0.next();
                     Token::DashArrow
                 },
@@ -565,6 +565,12 @@ mod test {
     fn add_assoc() {
         assert_eq!(parse("a + b - c + d - e"),
                    "(((a + b) - c) + d) - e");
+    }
+
+    #[test]
+    fn sub_crash_regression() {
+        assert_eq!(parse("-"),
+                   "-<error: Expected term, got eof>");
     }
 
     #[test]
