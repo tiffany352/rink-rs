@@ -16,19 +16,9 @@ pub enum Token {
     Slash,
     Pipe,
     Semicolon,
-    Colon,
-    ColonDash,
-    DColonDash,
-    TriplePipe,
-    ColonEq,
-    EqBangEq,
     Equals,
     Caret,
     Eof,
-    LBrack,
-    RBrack,
-    LBrace,
-    RBrace,
     LPar,
     RPar,
     Plus,
@@ -37,7 +27,6 @@ pub enum Token {
     DashArrow,
     Date(Vec<DateToken>),
     Comma,
-    ImaginaryUnit,
     DegC,
     DegF,
     DegRe,
@@ -66,15 +55,21 @@ impl<'a> Iterator for TokenIterator<'a> {
         let res = match self.0.next().unwrap() {
             ' ' | '\t' => return self.next(),
             '\n' => Token::Newline,
-            '[' => Token::LBrack,
-            ']' => Token::RBrack,
-            '{' => Token::LBrace,
-            '}' => Token::RBrace,
             '(' => Token::LPar,
             ')' => Token::RPar,
             '+' => Token::Plus,
             ';' => Token::Semicolon,
             '%' => Token::Ident("percent".to_owned()),
+            '=' => Token::Equals,
+            '^' => Token::Caret,
+            ',' => Token::Comma,
+            '|' => Token::Pipe,
+            '*' => if self.0.peek().cloned() == Some('*') {
+                self.0.next();
+                Token::Caret
+            } else {
+                Token::Asterisk
+            },
             '-' => match self.0.peek().cloned().unwrap() {
                 '>' => {
                     self.0.next();
@@ -82,9 +77,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 },
                 _ => Token::Minus
             },
-            '*' => Token::Asterisk,
-            ',' => Token::Comma,
-            '|' => Token::Pipe,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
@@ -175,26 +167,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Number(integer, frac, exp)
             },
-            ':' => match self.0.peek().cloned() {
-                Some(':') => { self.0.next(); match self.0.next() {
-                    Some('-') => Token::DColonDash,
-                    x => Token::Error(format!("Unexpected {:?}", x)),
-                }},
-                Some('-') => {self.0.next(); Token::ColonDash},
-                Some('=') => {self.0.next(); Token::ColonEq},
-                _ => Token::Colon,
-            },
-            '=' => if let Some('!') = self.0.peek().cloned() {
-                self.0.next();
-                if let Some('=') = self.0.next() {
-                    Token::EqBangEq
-                } else {
-                    Token::Error(format!("Unknown symbol"))
-                }
-            } else {
-                Token::Equals
-            },
-            '^' => Token::Caret,
             '\\' => match self.0.next() {
                 Some('u') => {
                     let mut buf = String::new();
@@ -215,15 +187,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 },
                 _ => Token::Error(format!("Unexpected \\"))
-            },
-            '<' => {
-                let mut string = "<IMAGINARY_UNIT>>".chars();
-                while self.0.peek().is_some() && self.0.next() == string.next() {}
-                if string.next() == None {
-                    Token::ImaginaryUnit
-                } else {
-                    Token::Error(format!("Unexpected <"))
-                }
             },
             '\'' => {
                 let mut buf = String::new();
@@ -377,8 +340,6 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         Token::Number(num, frac, exp) => Expr::Const(num, frac, exp),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
-        // NYI: Imaginary numbers
-        Token::ImaginaryUnit => Expr::Const("0".to_owned(), None, None),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
@@ -420,7 +381,7 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
     loop { match iter.peek().cloned().unwrap() {
         Token::Slash | Token::Comma | Token::Equals |
         Token::Plus | Token::Minus | Token::DashArrow |
-        Token::TriplePipe | Token::RPar | Token::Newline |
+        Token::RPar | Token::Newline |
         Token::Comment(_) | Token::Eof => break,
         Token::DegC => {
             iter.next();
