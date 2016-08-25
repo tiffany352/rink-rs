@@ -418,10 +418,34 @@ fn parse_frac(mut iter: &mut Iter) -> Expr {
 fn parse_mul(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_frac(iter)];
     loop { match iter.peek().cloned().unwrap() {
-        Token::DegC | Token::DegF | Token::DegRe | Token::DegRo | Token::DegDe |
-        Token::DegN | Token::Slash | Token::Comma | Token::Equals |
-        Token::Plus | Token::Minus | Token::DashArrow | Token::TriplePipe |
-        Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof => break,
+        Token::Slash | Token::Comma | Token::Equals |
+        Token::Plus | Token::Minus | Token::DashArrow |
+        Token::TriplePipe | Token::RPar | Token::Newline |
+        Token::Comment(_) | Token::Eof => break,
+        Token::DegC => {
+            iter.next();
+            terms = vec![Expr::Suffix(SuffixOp::Celsius, Box::new(Expr::Mul(terms)))]
+        },
+        Token::DegF => {
+            iter.next();
+            terms = vec![Expr::Suffix(SuffixOp::Fahrenheit, Box::new(Expr::Mul(terms)))]
+        },
+        Token::DegRe => {
+            iter.next();
+            terms = vec![Expr::Suffix(SuffixOp::Reaumur, Box::new(Expr::Mul(terms)))]
+        },
+        Token::DegRo => {
+            iter.next();
+            terms = vec![Expr::Suffix(SuffixOp::Romer, Box::new(Expr::Mul(terms)))]
+        },
+        Token::DegDe => {
+            iter.next();
+            terms = vec![Expr::Suffix(SuffixOp::Delisle, Box::new(Expr::Mul(terms)))]
+        },
+        Token::DegN => {
+            iter.next();
+            terms = vec![Expr::Suffix(SuffixOp::Newton, Box::new(Expr::Mul(terms)))]
+        },
         Token::Asterisk => {
             iter.next();
         },
@@ -434,46 +458,8 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_suffix(mut iter: &mut Iter) -> Expr {
-    let left = parse_mul(iter);
-    let res = match iter.peek().cloned().unwrap() {
-        Token::DegC => {
-            iter.next();
-            Expr::Suffix(SuffixOp::Celsius, Box::new(left))
-        },
-        Token::DegF => {
-            iter.next();
-            Expr::Suffix(SuffixOp::Fahrenheit, Box::new(left))
-        },
-        Token::DegRe => {
-            iter.next();
-            Expr::Suffix(SuffixOp::Reaumur, Box::new(left))
-        },
-        Token::DegRo => {
-            iter.next();
-            Expr::Suffix(SuffixOp::Romer, Box::new(left))
-        },
-        Token::DegDe => {
-            iter.next();
-            Expr::Suffix(SuffixOp::Delisle, Box::new(left))
-        },
-        Token::DegN => {
-            iter.next();
-            Expr::Suffix(SuffixOp::Newton, Box::new(left))
-        },
-        _ => left
-    };
-    match iter.peek().cloned().unwrap() {
-        Token::Slash | Token::Comma | Token::Equals | Token::Plus |
-        Token::Minus | Token::DashArrow | Token::TriplePipe | Token::RPar |
-        Token::Newline | Token::Comment(_) | Token::Eof =>
-            return res,
-        _ => Expr::Mul(vec![res, parse_mul(iter)])
-    }
-}
-
 fn parse_div(mut iter: &mut Iter) -> Expr {
-    let mut left = parse_suffix(iter);
+    let mut left = parse_mul(iter);
     loop { match *iter.peek().unwrap() {
         Token::Slash => {
             iter.next();
@@ -605,5 +591,7 @@ mod test {
                    "(a b °C) c");
         assert_eq!(parse("a °C / x"),
                    "a °C / x");
+        assert_eq!(parse("a °C * x"),
+                   "(a °C) x");
     }
 }
