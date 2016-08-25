@@ -523,7 +523,7 @@ funal                   sthene
 pieze                   sthene / m^2
 quintal                 100 kg
 bar                     1e5 Pa     # About 1 atm
-b                       bar
+#b                       bar
 vac                     millibar
 micron                  micrometer # One millionth of a meter
 bicron                  picometer  # One brbillionth of a meter
@@ -3610,12 +3610,16 @@ information             ? bit
 # Computer
 #
 
+b                       bit
 bps                     bit/sec              # Sometimes the term "baud" is
                                              #   incorrectly used to refer to
                                              #   bits per second.  Baud refers
                                              #   to symbols per second.  Modern
                                              #   modems transmit several bits
                                              #   per symbol.
+Kbps                    kbps                 # Irregular prefixes
+mbps                    Mbps
+gbps                    Gbps
 byte                    8 bit                # Not all machines had 8 bit
 B                       byte                 #   bytes, but these days most of
                                              #   them do.  But beware: for
@@ -3623,6 +3627,7 @@ B                       byte                 #   bytes, but these days most of
                                              #   few extra bits are used so
                                              #   there are actually 10 bits per
                                              #   byte.
+KB                      kB                   # Irregular prefix
 octet                   8 bits               # The octet is always 8 bits
 nybble                  4 bits               # Half of a byte. Sometimes
                                              #   equal to different lengths
