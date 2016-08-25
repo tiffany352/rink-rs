@@ -440,7 +440,7 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
 
 fn parse_suffix(mut iter: &mut Iter) -> Expr {
     let left = parse_mul(iter);
-    match iter.peek().cloned().unwrap() {
+    let res = match iter.peek().cloned().unwrap() {
         Token::DegC => {
             iter.next();
             Expr::Suffix(SuffixOp::Celsius, Box::new(left))
@@ -466,6 +466,12 @@ fn parse_suffix(mut iter: &mut Iter) -> Expr {
             Expr::Suffix(SuffixOp::Newton, Box::new(left))
         },
         _ => left
+    };
+    match iter.peek().cloned().unwrap() {
+        Token::Comma | Token::Equals | Token::Plus | Token::Minus | Token::DashArrow |
+        Token::TriplePipe | Token::RPar | Token::Newline | Token::Comment(_) | Token::Eof =>
+            return res,
+        _ => Expr::Mul(vec![res, parse_mul(iter)])
     }
 }
 
