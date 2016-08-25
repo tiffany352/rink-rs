@@ -559,7 +559,23 @@ impl Context {
                 }
                 let ref def = self.definitions[name];
                 let res = self.lookup(name).unwrap();
-                Ok(format!("Definition: {} = {} = {}", name, def, res.show(self)))
+                let raw = res.show_number_part();
+                let unit = res.unit_name(self);
+                let base_units = Number::unit_to_string(&res.1);
+                let base_units = if unit == base_units { None } else { Some(base_units) };
+                let alias = self.aliases.get(&res.1);
+                let unit = if unit.len() > 0 {
+                    format!(" {}", unit)
+                } else {
+                    unit
+                };
+                let parens = match (alias, base_units) {
+                    (Some(alias), Some(base)) => format!(" ({}; {})", alias, base),
+                    (Some(alias), None) => format!(" ({})", alias),
+                    (None, Some(base)) => format!(" ({})", base),
+                    (None, None) => format!(""),
+                };
+                Ok(format!("Definition: {} = {} = {}{}{}", name, def, raw, unit, parens))
             },
             Query::Convert(ref top, Conversion::Expr(ref bottom)) => match (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
