@@ -579,23 +579,31 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
 mod test {
     use super::*;
 
+    fn parse(input: &str) -> String {
+        parse_expr(&mut TokenIterator::new(input).peekable()).to_string()
+    }
+
     #[test]
     fn add_assoc() {
-        let res = parse_expr(&mut TokenIterator::new("a + b - c + d - e").peekable());
-        assert_eq!(res.to_string(), "(((a + b) - c) + d) - e");
+        assert_eq!(parse("a + b - c + d - e"),
+                   "(((a + b) - c) + d) - e");
     }
 
     #[test]
     fn mul_assoc() {
-        let res = parse_expr(&mut TokenIterator::new("a b * c / d / e f g").peekable());
-        assert_eq!(res.to_string(), "(a b c / d) / e f g");
-        let res = parse_expr(&mut TokenIterator::new("a|b c / g e|f").peekable());
-        assert_eq!(res.to_string(), "(a / b) c / g (e / f)");
+        assert_eq!(parse("a b * c / d / e f g"),
+                   "(a b c / d) / e f g");
+        assert_eq!(parse("a|b c / g e|f"),
+                   "(a / b) c / g (e / f)");
     }
 
     #[test]
     fn suffix_prec() {
-        let res = parse_expr(&mut TokenIterator::new("a b °C + x y °F").peekable());
-        assert_eq!(res.to_string(), "a b °C + x y °F");
+        assert_eq!(parse("a b °C + x y °F"),
+                   "a b °C + x y °F");
+        assert_eq!(parse("a b °C c"),
+                   "(a b °C) c");
+        assert_eq!(parse("a °C / x"),
+                   "a °C / x");
     }
 }
