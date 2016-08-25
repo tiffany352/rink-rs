@@ -36,6 +36,36 @@ pub enum Token {
     Error(String),
 }
 
+fn describe(token: &Token) -> String {
+    match *token {
+        Token::Newline | Token::Comment(_) => "\\n".to_owned(),
+        Token::Ident(_) => "ident".to_owned(),
+        Token::Number(_, _, _) => "number".to_owned(),
+        Token::Quote(_) => "quote".to_owned(),
+        Token::Slash => "`/`".to_owned(),
+        Token::Pipe => "`|`".to_owned(),
+        Token::Semicolon => "`;`".to_owned(),
+        Token::Equals => "`=`".to_owned(),
+        Token::Caret => "`^`".to_owned(),
+        Token::Eof => "eof".to_owned(),
+        Token::LPar => "`(`".to_owned(),
+        Token::RPar => "`)`".to_owned(),
+        Token::Plus => "`+`".to_owned(),
+        Token::Minus => "`-`".to_owned(),
+        Token::Asterisk => "`*`".to_owned(),
+        Token::DashArrow => "`->`".to_owned(),
+        Token::Date(_) => "date literal".to_owned(),
+        Token::Comma => "`,`".to_owned(),
+        Token::DegC => "`°C`".to_owned(),
+        Token::DegF => "`°F`".to_owned(),
+        Token::DegRe => "`°Ré`".to_owned(),
+        Token::DegRo => "`°Rø`".to_owned(),
+        Token::DegDe => "`°De`".to_owned(),
+        Token::DegN => "`°N`".to_owned(),
+        Token::Error(ref e) => format!("<{}>", e)
+    }
+}
+
 #[derive(Clone)]
 pub struct TokenIterator<'a>(Peekable<Chars<'a>>);
 
@@ -327,7 +357,8 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                                 iter.next();
                             },
                             Token::RPar => (),
-                            x => return Expr::Error(format!("Expected , or ), got {:?}", x))
+                            x => return Expr::Error(format!("Expected `,` or `)`, got {}",
+                                                            describe(&x)))
                         }
                     }
                     Expr::Call(name.clone(), args)
@@ -344,11 +375,11 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
                 Token::RPar => res,
-                x => Expr::Error(format!("Expected ), got {:?}", x))
+                x => Expr::Error(format!("Expected `)`, got {}", describe(&x)))
             }
         },
         Token::Date(toks) => Expr::Date(toks),
-        x => Expr::Error(format!("Expected term, got {:?}", x))
+        x => Expr::Error(format!("Expected term, got {}", describe(&x)))
     }
 }
 
