@@ -20,4 +20,5 @@ fn test_queries() {
     test("watt", "Definition: watt = J / s = 1 watt (power; kg m^2 / s^3)");
     test("5 inch", "0.127 m (length)");
     test("5 inch -> cm", "12.7 cm (length)");
+    test("2 degC 2 -> degC", "277.15 °C (temperature)");
 }
