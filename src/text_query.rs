@@ -163,9 +163,11 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if buf.len() > 0 {
-                        frac = Some(buf)
+                    if buf.len() == 0 {
+                        return Some(Token::Error(
+                            "Malformed number literal: No digits after decimal point".to_owned()))
                     }
+                    frac = Some(buf)
                 }
                 // exponent
                 if let Some('e') = self.0.peek().cloned().map(|x| x.to_ascii_lowercase()) {
@@ -191,9 +193,11 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if buf.len() > 0 {
-                        exp = Some(buf)
+                    if buf.len() == 0 {
+                        return Some(Token::Error(
+                            "Malformed number literal: No digits after exponent".to_owned()))
                     }
+                    exp = Some(buf)
                 }
                 Token::Number(integer, frac, exp)
             },
@@ -591,5 +595,13 @@ mod test {
                    "a °C / x");
         assert_eq!(parse("a °C * x"),
                    "(a °C) x");
+    }
+
+    #[test]
+    fn number_lex() {
+        assert_eq!(parse("1e"),
+                   "<error: Expected term, got <Malformed number literal: No digits after exponent>>");
+        assert_eq!(parse("1."),
+                   "<error: Expected term, got <Malformed number literal: No digits after decimal point>>");
     }
 }
