@@ -174,16 +174,16 @@ impl Context {
                 return Some(Number(Number::one().0, unit.clone()))
             }
         }
-        if name.ends_with("s") {
-            if let Some(v) = self.lookup(&name[0..name.len()-1]) {
-                return Some(v)
-            }
-        }
         for &(ref pre, ref value) in &self.prefixes {
             if name.starts_with(pre) {
                 if let Some(v) = self.lookup(&name[pre.len()..]) {
                     return Some((&v * &value).unwrap())
                 }
+            }
+        }
+        if name.ends_with("s") {
+            if let Some(v) = self.lookup(&name[0..name.len()-1]) {
+                return Some(v)
             }
         }
         None
@@ -207,11 +207,6 @@ impl Context {
             // we cannot canonicalize it further
             return None
         }
-        if name.ends_with("s") {
-            if let Some(v) = self.canonicalize(&name[0..name.len()-1]) {
-                return Some(v)
-            }
-        }
         for &(ref pre, ref val) in &self.prefixes {
             if name.starts_with(pre) {
                 if let Some(v) = self.canonicalize(&name[pre.len()..]) {
@@ -223,6 +218,11 @@ impl Context {
                     }
                     return Some(format!("{}{}", pre, v))
                 }
+            }
+        }
+        if name.ends_with("s") {
+            if let Some(v) = self.canonicalize(&name[0..name.len()-1]) {
+                return Some(v)
             }
         }
         None
@@ -837,12 +837,6 @@ impl Context {
                     self.visit(&unit);
                     return Some(())
                 }
-                if name.ends_with("s") {
-                    let v = Rc::new(name[0..name.len()-1].to_owned());
-                    if let Some(()) = self.lookup(&v) {
-                        return Some(())
-                    }
-                }
                 let mut found = vec![];
                 for (pre, _) in &self.input {
                     if let &Name::Prefix(ref pre) = pre {
@@ -855,6 +849,12 @@ impl Context {
                     if let Some(()) = self.lookup(&Rc::new(name[pre.len()..].to_owned())) {
                         let unit = Name::Prefix(pre);
                         self.visit(&unit);
+                        return Some(())
+                    }
+                }
+                if name.ends_with("s") {
+                    let v = Rc::new(name[0..name.len()-1].to_owned());
+                    if let Some(()) = self.lookup(&v) {
                         return Some(())
                     }
                 }
