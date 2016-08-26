@@ -45,7 +45,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rink = "0.2"
+rink = "0.3"
 ```
 
 and this to your crate root:
@@ -69,6 +69,33 @@ submitted for inclusion in the work will grant the rights lined out in
 the MPL, including larger works with secondary licenses.
 
 ## Changelog
+
+### 0.3.0
+- Use GNU units database instead of frink's
+- Relicense under MPL
+- Web interface
+- Multi-server IRC in bot
+- Date arithmetic
+- Exact fraction printing
+- Sandboxing
+- Add temperature scale suffixes
+- Factorize query
+- Function call syntax
+- Errors on division by zero
+- Errors on unimplemented imaginary roots
+- Inline unit definitions
+- Bot name prefix is optional in private message
+- Fix associativity of addition
+- Rename commonly confused units
+- Unit lists (hr;min;sec) in conversions
+- "Units for" query
+- Show unit definitions when they are the only term
+- Make / lower precedence than multiplication, add | which is higher
+  precedence
+- Unit tests
+- Output token symbols instead of internal names
+- Canonicalize output units
+- Try to find a matching derived unit for queries
 
 ### 0.2.0
 - Errors for division by zero
