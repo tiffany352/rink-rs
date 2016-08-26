@@ -25,7 +25,15 @@ impl cmp::Ord for Factors {
 
 pub fn fast_decompose(value: &Number, aliases: &BTreeMap<Unit, String>) -> Unit {
     let mut best = None;
-    for (unit, name) in aliases.iter() {
+    'outer: for (unit, name) in aliases.iter() {
+        // make sure we aren't doing something weird like introducing new base units
+        for (dim, pow) in unit {
+            let vpow = value.1.get(dim).cloned().unwrap_or(0);
+            let snum = (vpow - pow).signum();
+            if snum != 0 && snum != vpow.signum() {
+                continue 'outer
+            }
+        }
         let num = Number(Mpq::one(), unit.clone());
         for &i in [-1, 1, 2].into_iter() {
             let res = (value / &num.powi(i)).unwrap();

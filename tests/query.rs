@@ -37,5 +37,5 @@ fn test_temp() {
 
 #[test]
 fn test_determinism() {
-    test("pascal m", "1 A tesla (spectral_irradiance_frequency)");
+    test("weber / m", "1 m tesla");
 }
