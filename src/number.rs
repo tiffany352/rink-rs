@@ -9,17 +9,38 @@ use eval::Show;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
 use std::fmt;
+use std::borrow::Borrow;
 
 /// Number type
 pub type Num = Mpq;
-/// A simple alias to add semantic meaning for when we pass around dimension IDs.
-pub type Dim = Rc<String>;
 /// Alias for the primary representation of dimensionality.
 pub type Unit = BTreeMap<Dim, i64>;
+
+/// A newtype for a string dimension ID, so that we can implement traits for it.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Dim(pub Rc<String>);
 
 /// The basic representation of a number with a unit.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Number(pub Num, pub Unit);
+
+impl Borrow<str> for Dim {
+    fn borrow(&self) -> &str {
+        &**self.0
+    }
+}
+
+impl fmt::Display for Dim {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(fmt)
+    }
+}
+
+impl Dim {
+    pub fn new(dim: &str) -> Dim {
+        Dim(Rc::new(dim.to_owned()))
+    }
+}
 
 fn one() -> Mpq {
     Mpq::one()
@@ -320,7 +341,7 @@ impl Show for Number {
                 let e = value.1.iter().next().unwrap();
                 let ref n = *e.0;
                 if *e.1 == 1 {
-                    Some((**n).clone())
+                    Some((&*n.0).clone())
                 } else {
                     Some(format!("{}^{}", n, e.1))
                 }

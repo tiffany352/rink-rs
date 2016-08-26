@@ -2,11 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::collections::HashMap;
-use std::collections::BTreeMap;
+use std::collections::{HashMap, BTreeMap, BTreeSet};
 use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
-use number::{Number, Unit};
+use number::{Number, Unit, Dim};
 use date;
 use ast::{DatePattern, Expr, SuffixOp, Def, Defs, Query, Conversion};
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -22,10 +21,10 @@ pub enum Value {
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
 pub struct Context {
-    pub dimensions: Vec<Rc<String>>,
+    pub dimensions: BTreeSet<Dim>,
     pub units: HashMap<String, Number>,
     pub aliases: HashMap<Unit, String>,
-    pub reverse: HashMap<Unit, String>,
+    pub reverse: BTreeMap<Unit, String>,
     pub prefixes: Vec<(String, Number)>,
     pub definitions: HashMap<String, Expr>,
     pub datepatterns: Vec<Vec<DatePattern>>,
@@ -161,10 +160,8 @@ impl Context {
     /// Given a unit name, returns its value if it exists. Supports SI
     /// prefixes, plurals, bare dimensions like length, and aliases.
     pub fn lookup(&self, name: &str) -> Option<Number> {
-        for k in &self.dimensions {
-            if name == &***k {
-                return Some(Number::one_unit(k.to_owned()))
-            }
+        if let Some(k) = self.dimensions.get(name) {
+            return Some(Number::one_unit(k.to_owned()))
         }
         if let Some(v) = self.units.get(name).cloned() {
             return Some(v)
@@ -191,10 +188,8 @@ impl Context {
 
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
-        for k in &self.dimensions {
-            if name == &***k {
-                return Some((**k).clone())
-            }
+        if let Some(k) = self.dimensions.get(name) {
+            return Some((*k.0).clone())
         }
         if let Some(v) = self.definitions.get(name) {
             if let Expr::Unit(ref name) = *v {
@@ -337,7 +332,7 @@ impl Context {
         match *expr {
             Expr::Unit(ref name) if name == "now" => Ok(Value::DateTime(date::now())),
             Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)).map(Value::Number),
-            Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Rc::new(name.clone())))),
+            Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dim::new(&**name)))),
             Expr::Const(ref num, ref frac, ref exp) =>
                 Number::from_parts(
                     num,
@@ -775,10 +770,10 @@ impl Context {
     /// Creates a new, empty context
     pub fn new() -> Context {
         Context {
-            dimensions: Vec::new(),
+            dimensions: BTreeSet::new(),
             units: HashMap::new(),
             aliases: HashMap::new(),
-            reverse: HashMap::new(),
+            reverse: BTreeMap::new(),
             prefixes: Vec::new(),
             definitions: HashMap::new(),
             datepatterns: Vec::new(),
@@ -958,8 +953,7 @@ impl Context {
             };
             match *def {
                 Def::Dimension(ref dname) => {
-                    let dname = Rc::new(dname.clone());
-                    self.dimensions.push(dname.clone());
+                    self.dimensions.insert(Dim::new(&**dname));
                 },
                 Def::Unit(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {

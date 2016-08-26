@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::collections::{BTreeMap, BinaryHeap, HashMap};
+use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;
-use number::{Number, Unit};
+use number::{Number, Unit, Dim};
 use std::cmp;
 use gmp::mpq::Mpq;
 
@@ -23,7 +23,7 @@ impl cmp::Ord for Factors {
     }
 }
 
-pub fn fast_decompose(value: &Number, aliases: &HashMap<Unit, String>) -> Unit {
+pub fn fast_decompose(value: &Number, aliases: &BTreeMap<Unit, String>) -> Unit {
     let mut best = None;
     for (unit, name) in aliases.iter() {
         let num = Number(Mpq::one(), unit.clone());
@@ -39,7 +39,7 @@ pub fn fast_decompose(value: &Number, aliases: &HashMap<Unit, String>) -> Unit {
     if let Some((name, unit, pow, score)) = best {
         if score < value.complexity_score() {
             let mut res = (value / &Number(Mpq::one(), unit.clone()).powi(pow)).unwrap().1;
-            res.insert(Rc::new(name.clone()), pow as i64);
+            res.insert(Dim::new(&**name), pow as i64);
             return res
         }
     }
