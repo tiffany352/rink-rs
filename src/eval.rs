@@ -212,9 +212,15 @@ impl Context {
                 return Some(v)
             }
         }
-        for &(ref pre, _) in &self.prefixes {
+        for &(ref pre, ref val) in &self.prefixes {
             if name.starts_with(pre) {
                 if let Some(v) = self.canonicalize(&name[pre.len()..]) {
+                    let mut pre = pre;
+                    for &(ref other, ref otherval) in &self.prefixes {
+                        if other.len() > pre.len() && val == otherval {
+                            pre = other;
+                        }
+                    }
                     return Some(format!("{}{}", pre, v))
                 }
             }

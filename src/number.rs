@@ -18,7 +18,7 @@ pub type Dim = Rc<String>;
 pub type Unit = BTreeMap<Dim, i64>;
 
 /// The basic representation of a number with a unit.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Number(pub Num, pub Unit);
 
 fn one() -> Mpq {
