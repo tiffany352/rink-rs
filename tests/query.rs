@@ -11,7 +11,11 @@ fn test(input: &str, output: &str) {
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
         let res = ctx.eval_outer(&expr);
-        assert_eq!(res.as_ref().map(|x| x.as_ref()), Ok(output));
+        let res = match res {
+            Ok(v) => v,
+            Err(v) => v
+        };
+        assert_eq!(res, output);
     });
 }
 
@@ -38,4 +42,12 @@ fn test_temp() {
 #[test]
 fn test_determinism() {
     test("weber / m", "1 m tesla");
+}
+
+#[test]
+fn test_sqrt_errors() {
+    test("sqrt -1",
+         "Complex numbers are not implemented: sqrt <-1 (dimensionless)>");
+    test("sqrt(2m)",
+         "Result must have integer dimensions: sqrt <2 m (length)>");
 }

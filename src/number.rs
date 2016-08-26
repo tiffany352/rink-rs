@@ -211,16 +211,20 @@ impl Number {
 
     /// Computes the nth root of a value iff all of its units have
     /// powers divisible by n.
-    pub fn root(&self, exp: i32) -> Option<Number> {
+    pub fn root(&self, exp: i32) -> Result<Number, String> {
+        if self.0 < Mpq::zero() {
+            return Err(format!("Complex numbers are not implemented"))
+        }
         let mut res = Unit::new();
         for (dim, &power) in &self.1 {
             if power % exp as i64 != 0 {
-                return None
+                return Err(format!(
+                    "Result must have integer dimensions"))
             } else {
                 res.insert(dim.clone(), power / exp as i64);
             }
         }
-        Some(Number(root(&self.0, exp), res))
+        Ok(Number(root(&self.0, exp), res))
     }
 
     pub fn pow(&self, exp: &Number) -> Result<Number, String> {
@@ -239,10 +243,7 @@ impl Number {
             Ok(self.powi(exp.unwrap() as i32))
         } else if num == one {
             let exp: Option<i64> = (&den).into();
-            self.root(exp.unwrap() as i32).ok_or(format!(
-                "Unit roots must be in integer dimensions, i.e. you \
-                 can only take the nth root of a unit to the nth \
-                 power"))
+            self.root(exp.unwrap() as i32)
         } else {
             Err(format!("Exponent must be either an integer or the reciprocal of an integer"))
         }

@@ -231,7 +231,7 @@ impl Context {
 
         let mut buf = vec![];
         let mut recip = false;
-        let square = Number(Mpq::one(), value.1.clone()).root(2);
+        let square = Number(Mpq::one(), value.1.clone()).root(2).ok();
         let inverse = (&Number::one() / &Number(Mpq::one(), value.1.clone())).unwrap();
         if let Some(name) = self.aliases.get(&value.1) {
             write!(buf, "{}", name).unwrap();
@@ -378,8 +378,8 @@ impl Context {
                         }
                         match args[0] {
                             Value::Number(ref num) =>
-                                num.root(2).map(Value::Number).ok_or(format!(
-                                    "Expected squared units, got <{}>", num.show(self))),
+                                num.root(2).map(Value::Number).map_err(|e| format!(
+                                    "{}: sqrt <{}>", e, num.show(self))),
                             ref x => Err(format!("Expected number, got <{}>", x.show(self)))
                         }
                     },
