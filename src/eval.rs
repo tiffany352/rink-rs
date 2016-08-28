@@ -160,27 +160,42 @@ impl Context {
     /// Given a unit name, returns its value if it exists. Supports SI
     /// prefixes, plurals, bare dimensions like length, and aliases.
     pub fn lookup(&self, name: &str) -> Option<Number> {
-        if let Some(k) = self.dimensions.get(name) {
-            return Some(Number::one_unit(k.to_owned()))
-        }
-        if let Some(v) = self.units.get(name).cloned() {
-            return Some(v)
-        }
-        for (unit, alias) in &self.aliases {
-            if name == alias {
-                return Some(Number(Number::one().0, unit.clone()))
+        fn inner(ctx: &Context, name: &str) -> Option<Number> {
+            if let Some(k) = ctx.dimensions.get(name) {
+                return Some(Number::one_unit(k.to_owned()))
             }
+            if let Some(v) = ctx.units.get(name).cloned() {
+                return Some(v)
+            }
+            for (unit, alias) in &ctx.aliases {
+                if name == alias {
+                    return Some(Number(Number::one().0, unit.clone()))
+                }
+            }
+            None
+        }
+        if let Some(v) = inner(self, name) {
+            return Some(v)
         }
         for &(ref pre, ref value) in &self.prefixes {
             if name.starts_with(pre) {
-                if let Some(v) = self.lookup(&name[pre.len()..]) {
+                if let Some(v) = inner(self, &name[pre.len()..]) {
                     return Some((&v * &value).unwrap())
                 }
             }
         }
+        // after so that "ks" is kiloseconds
         if name.ends_with("s") {
-            if let Some(v) = self.lookup(&name[0..name.len()-1]) {
+            let name = &name[0..name.len()-1];
+            if let Some(v) = inner(self, name) {
                 return Some(v)
+            }
+            for &(ref pre, ref value) in &self.prefixes {
+                if name.starts_with(pre) {
+                    if let Some(v) = inner(self, &name[pre.len()..]) {
+                        return Some((&v * &value).unwrap())
+                    }
+                }
             }
         }
         None
@@ -188,23 +203,29 @@ impl Context {
 
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
-        if let Some(k) = self.dimensions.get(name) {
-            return Some((*k.0).clone())
-        }
-        if let Some(v) = self.definitions.get(name) {
-            if let Expr::Unit(ref name) = *v {
-                if let Some(r) = self.canonicalize(&*name) {
-                    return Some(r)
-                } else {
-                    return Some(name.clone())
-                }
+        fn inner(ctx: &Context, name: &str) -> Option<String> {
+            if let Some(k) = ctx.dimensions.get(name) {
+                return Some((*k.0).clone())
             }
-            // we cannot canonicalize it further
-            return None
+            if let Some(v) = ctx.definitions.get(name) {
+                if let Expr::Unit(ref name) = *v {
+                    if let Some(r) = ctx.canonicalize(&*name) {
+                        return Some(r)
+                    } else {
+                        return Some(name.clone())
+                    }
+                }
+                // we cannot canonicalize it further
+                return None
+            }
+            None
+        }
+        if let Some(v) = inner(self, name) {
+            return Some(v)
         }
         for &(ref pre, ref val) in &self.prefixes {
             if name.starts_with(pre) {
-                if let Some(v) = self.canonicalize(&name[pre.len()..]) {
+                if let Some(v) = inner(self, &name[pre.len()..]) {
                     let mut pre = pre;
                     for &(ref other, ref otherval) in &self.prefixes {
                         if other.len() > pre.len() && val == otherval {
@@ -216,8 +237,22 @@ impl Context {
             }
         }
         if name.ends_with("s") {
-            if let Some(v) = self.canonicalize(&name[0..name.len()-1]) {
+            let name = &name[0..name.len()-1];
+            if let Some(v) = inner(self, name) {
                 return Some(v)
+            }
+            for &(ref pre, ref val) in &self.prefixes {
+                if name.starts_with(pre) {
+                    if let Some(v) = inner(self, &name[pre.len()..]) {
+                        let mut pre = pre;
+                        for &(ref other, ref otherval) in &self.prefixes {
+                            if other.len() > pre.len() && val == otherval {
+                                pre = other;
+                            }
+                        }
+                        return Some(format!("{}{}", pre, v))
+                    }
+                }
             }
         }
         None
@@ -817,19 +852,26 @@ impl Context {
             }
 
             fn lookup(&mut self, name: &Rc<String>) -> Option<()> {
-                let unit = Name::Unit(name.clone());
-                if self.input.get(&unit).is_some() {
-                    self.visit(&unit);
-                    return Some(())
+                fn inner(ctx: &mut Resolver, name: &Rc<String>) -> Option<()> {
+                    let unit = Name::Unit(name.clone());
+                    if ctx.input.get(&unit).is_some() {
+                        ctx.visit(&unit);
+                        return Some(())
+                    }
+                    let unit = Name::Prefix(name.clone());
+                    if ctx.input.get(&unit).is_some() {
+                        ctx.visit(&unit);
+                        return Some(())
+                    }
+                    let unit = Name::Quantity(name.clone());
+                    if ctx.input.get(&unit).is_some() {
+                        ctx.visit(&unit);
+                        return Some(())
+                    }
+                    None
                 }
-                let unit = Name::Prefix(name.clone());
-                if self.input.get(&unit).is_some() {
-                    self.visit(&unit);
-                    return Some(())
-                }
-                let unit = Name::Quantity(name.clone());
-                if self.input.get(&unit).is_some() {
-                    self.visit(&unit);
+
+                if let Some(()) = inner(self, name) {
                     return Some(())
                 }
                 let mut found = vec![];
@@ -841,16 +883,31 @@ impl Context {
                     }
                 }
                 for pre in found {
-                    if let Some(()) = self.lookup(&Rc::new(name[pre.len()..].to_owned())) {
+                    if let Some(()) = inner(self, &Rc::new(name[pre.len()..].to_owned())) {
                         let unit = Name::Prefix(pre);
                         self.visit(&unit);
                         return Some(())
                     }
                 }
                 if name.ends_with("s") {
-                    let v = Rc::new(name[0..name.len()-1].to_owned());
-                    if let Some(()) = self.lookup(&v) {
+                    let name = &Rc::new(name[0..name.len()-1].to_owned());
+                    if let Some(()) = inner(self, name) {
                         return Some(())
+                    }
+                    let mut found = vec![];
+                    for (pre, _) in &self.input {
+                        if let &Name::Prefix(ref pre) = pre {
+                            if (*name).starts_with(&**pre) {
+                                found.push(pre.clone());
+                            }
+                        }
+                    }
+                    for pre in found {
+                        if let Some(()) = inner(self, &Rc::new(name[pre.len()..].to_owned())) {
+                            let unit = Name::Prefix(pre);
+                            self.visit(&unit);
+                            return Some(())
+                        }
                     }
                 }
                 None

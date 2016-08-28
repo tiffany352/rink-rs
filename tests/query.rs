@@ -57,3 +57,9 @@ fn test_number_regress() {
     test("953 mega",
          "9.53e8 (dimensionless)");
 }
+
+#[test]
+fn test_lookup() {
+    test("ks", "1000 s (time)");
+    test("pcs", "approx. 3.231314e16 m (length)");
+}
