@@ -1094,6 +1094,8 @@ lightyear               c julianyear # The 365.25 day year is specified in
 ly                      lightyear    # NIST publication 811
 lightsecond             c s
 lightminute             c min
+parsec                  32313140071200 km
+pc                      parsec
 #parsec                  au / tan(arcsec)    # Unit of length equal to distance
 #pc                      parsec              #   from the sun to a point having
                                             #   heliocentric parallax of 1
