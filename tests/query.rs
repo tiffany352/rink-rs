@@ -51,3 +51,9 @@ fn test_sqrt_errors() {
     test("sqrt(2m)",
          "Result must have integer dimensions: sqrt <2 m (length)>");
 }
+
+#[test]
+fn test_number_regress() {
+    test("953 mega",
+         "9.53e8 (dimensionless)");
+}

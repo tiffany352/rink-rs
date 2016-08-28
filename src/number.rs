@@ -102,7 +102,8 @@ pub fn to_string(rational: &Mpq) -> (bool, String) {
             n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, 6);
         if bail && use_sci {
             // scientific notation
-            buf = buf[zeros as usize + placed_decimal as usize + sign as usize..].to_owned();
+            let off = if n < intdigits { 0 } else { zeros };
+            buf = buf[off as usize + placed_decimal as usize + sign as usize..].to_owned();
             buf.insert(1, '.');
             if buf.len() == 2 {
                 buf.insert(2, '0');
