@@ -512,7 +512,7 @@ electric_field          ? newton / coulomb
 # units derived easily from SI units
 #
 
-gram                    millikg
+gram                    1|1000 kg
 gm                      gram
 g                       gram
 tonne                   1000 kg
