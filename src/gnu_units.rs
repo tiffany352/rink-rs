@@ -279,12 +279,12 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     if let Some(&Token::Bang) = iter.peek() {
                         // dimension
                         iter.next();
-                        if let Some(Token::Ident(ref _n)) = iter.peek().cloned() {
+                        if let Some(Token::Ident(ref long)) = iter.peek().cloned() {
                             iter.next();
-                            // dimensionless primitive unit
-                            map.push((name.clone(), Rc::new(Def::Dimension(name))));
+                            map.push((name.clone(), Rc::new(Def::Dimension)));
+                            map.push((long.clone(), Rc::new(Def::Canonicalization(name.clone()))));
                         } else {
-                            map.push((name.clone(), Rc::new(Def::Dimension(name))));
+                            map.push((name.clone(), Rc::new(Def::Dimension)));
                         }
                     } else if let Some(&Token::Question) = iter.peek() {
                         // quantity

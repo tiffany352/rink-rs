@@ -135,41 +135,39 @@
 # SI units
 #
 
-kg        !      # Mass of the international prototype
-kilogram  kg
+kg        !kilogram  # Mass of the international prototype
 
-s         !      # Duration of 9192631770 periods of the radiation
-second    s      #   corresponding to the transition between the two hyperfine
-                 #   levels of the ground state of the cesium-133 atom
+s         !second    # Duration of 9192631770 periods of the radiation
+                     #   corresponding to the transition between the two hyperfine
+                     #   levels of the ground state of the cesium-133 atom
 
-m         !      # Length of the path traveled by light in a vacuum
-meter     m      #   during 1|299792458 seconds.  Originally meant to be
-                 #   1e-7 of the length along a meridian from the equator
-                 #   to a pole.
+m         !meter     # Length of the path traveled by light in a vacuum
+                     #   during 1|299792458 seconds.  Originally meant to be
+                     #   1e-7 of the length along a meridian from the equator
+                     #   to a pole.
 
-A         !      # The current which produces a force of 2e-7 N/m between two
-ampere    A      #   infinitely long wires that are 1 meter apart
-amp       ampere
+A         !ampere    # The current which produces a force of 2e-7 N/m between two
+amp       A          #   infinitely long wires that are 1 meter apart
 
-cd        !      # Luminous intensity in a given direction of a source which
-candela   cd     #   emits monochromatic radiation at 540e12 Hz with radiant
-                 #   intensity 1|683 W/steradian.  (This differs from radiant
-                 #   intensity (W/sr) in that it is adjusted for human
-                 #   perceptual dependence on wavelength.  The frequency of
-                 #   540e12 Hz (yellow) is where human perception is most
-                 #   efficient.)
+cd        !candela   # Luminous intensity in a given direction of a source which
+                     #   emits monochromatic radiation at 540e12 Hz with radiant
+                     #   intensity 1|683 W/steradian.  (This differs from radiant
+                     #   intensity (W/sr) in that it is adjusted for human
+                     #   perceptual dependence on wavelength.  The frequency of
+                     #   540e12 Hz (yellow) is where human perception is most
+                     #   efficient.)
 
-mol       !      # The amount of substance of a system which contains as many
-mole      mol    #   elementary entities as there are atoms in 0.012 kg of
-                 #   carbon 12.  The elementary entities must be specified and
-                 #   may be atoms, molecules, ions, electrons, or other
-                 #   particles or groups of particles.  It is understood that
-                 #   unbound atoms of carbon 12, at rest and in the ground
-                 #   state, are referred to.
+mol       !mole      # The amount of substance of a system which contains as many
+                     #   elementary entities as there are atoms in 0.012 kg of
+                     #   carbon 12.  The elementary entities must be specified and
+                     #   may be atoms, molecules, ions, electrons, or other
+                     #   particles or groups of particles.  It is understood that
+                     #   unbound atoms of carbon 12, at rest and in the ground
+                     #   state, are referred to.
 
-K         !      # 1|273.16 of the thermodynamic temperature of the triple
-kelvin    K      #   point of water
-k         K      # common but incorrect shorthand
+K         !kelvin    # 1|273.16 of the thermodynamic temperature of the triple
+                     #   point of water
+k         K          # common but incorrect shorthand
 
 #
 # The radian and steradian are defined as dimensionless primitive units.
@@ -180,26 +178,26 @@ k         K      # common but incorrect shorthand
 # arguments to functions.
 #
 
-radian    !dimensionless   # The angle subtended at the center of a circle by
-                           #   an arc equal in length to the radius of the
-                           #   circle
-sr        !dimensionless   # Solid angle which cuts off an area of the surface
-steradian sr               #   of the sphere equal to that of a square with
-                           #   sides of length equal to the radius of the
-                           #   sphere
+radian    !          # The angle subtended at the center of a circle by
+                     #   an arc equal in length to the radius of the
+                     #   circle
+sr        !steradian # Solid angle which cuts off an area of the surface
+                     #   of the sphere equal to that of a square with
+                     #   sides of length equal to the radius of the
+                     #   sphere
 
 #
 # Some primitive non-SI units
 #
 
-US$       !      # The US dollar is chosen arbitrarily to be the primitive
-                 #   unit of money.
+US$       !usdollar  # The US dollar is chosen arbitrarily to be the primitive
+                     #   unit of money.
 
-bit       !      # Basic unit of information (entropy).  The entropy in bits
-                 #   of a random variable over a finite alphabet is defined
-                 #   to be the sum of -p(i)*log2(p(i)) over the alphabet where
-                 #   p(i) is the probability that the random variable takes
-                 #   on the value i.
+bit       !          # Basic unit of information (entropy).  The entropy in bits
+                     #   of a random variable over a finite alphabet is defined
+                     #   to be the sum of -p(i)*log2(p(i)) over the alphabet where
+                     #   p(i) is the probability that the random variable takes
+                     #   on the value i.
 
 ###########################################################################
 #                                                                         #

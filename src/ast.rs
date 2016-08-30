@@ -78,7 +78,8 @@ pub enum DatePattern {
 
 #[derive(Debug)]
 pub enum Def {
-    Dimension(String),
+    Dimension,
+    Canonicalization(String),
     Prefix(Expr),
     SPrefix(Expr),
     Unit(Expr),

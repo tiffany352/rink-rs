@@ -309,6 +309,9 @@ impl Number {
 
     pub fn unit_name(&self, context: &::eval::Context) -> String {
         let pretty = ::factorize::fast_decompose(self, &context.reverse);
+        let pretty = pretty.into_iter()
+            .map(|(k, p)| (context.canonicalizations.get(&*k.0).map(|x| Dim::new(x)).unwrap_or(k), p))
+            .collect::<BTreeMap<_, _>>();
         let pretty = Number::unit_to_string(&pretty);
         pretty
     }

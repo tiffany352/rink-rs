@@ -22,6 +22,7 @@ pub enum Value {
 #[derive(Debug)]
 pub struct Context {
     pub dimensions: BTreeSet<Dim>,
+    pub canonicalizations: BTreeMap<String, String>,
     pub units: HashMap<String, Number>,
     pub aliases: HashMap<Unit, String>,
     pub reverse: BTreeMap<Unit, String>,
@@ -204,6 +205,9 @@ impl Context {
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
         fn inner(ctx: &Context, name: &str) -> Option<String> {
+            if let Some(v) = ctx.canonicalizations.get(name) {
+                return Some(v.clone())
+            }
             if let Some(k) = ctx.dimensions.get(name) {
                 return Some((*k.0).clone())
             }
@@ -806,6 +810,7 @@ impl Context {
     pub fn new() -> Context {
         Context {
             dimensions: BTreeSet::new(),
+            canonicalizations: BTreeMap::new(),
             units: HashMap::new(),
             aliases: HashMap::new(),
             reverse: BTreeMap::new(),
@@ -949,6 +954,9 @@ impl Context {
                             Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) |
                             Def::Quantity(ref e) =>
                                 self.eval(e),
+                            Def::Canonicalization(ref e) => {
+                                self.lookup(&Rc::new(e.clone()));
+                            },
                             _ => (),
                         }
                     }
@@ -1009,8 +1017,17 @@ impl Context {
                 Name::Quantity(name) => (*name).clone(),
             };
             match *def {
-                Def::Dimension(ref dname) => {
-                    self.dimensions.insert(Dim::new(&**dname));
+                Def::Dimension => {
+                    self.dimensions.insert(Dim::new(&*name));
+                },
+                Def::Canonicalization(ref of) => {
+                    self.canonicalizations.insert(of.clone(), name.clone());
+                    match self.lookup(of) {
+                        Some(v) => {
+                            self.units.insert(name.clone(), v);
+                        },
+                        None => println!("Canonicalization {} is malformed: {} not found", name, of)
+                    }
                 },
                 Def::Unit(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
