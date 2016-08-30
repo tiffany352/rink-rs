@@ -3,42 +3,72 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 extern crate rink;
-#[cfg(feature = "rustyline")]
-extern crate rustyline;
+#[cfg(feature = "linefeed")]
+extern crate linefeed;
 
 use rink::*;
 
-#[cfg(feature = "rustyline")]
+#[cfg(feature = "linefeed")]
 fn main() {
-    use rustyline::error::ReadlineError;
-    use rustyline::Editor;
+    use linefeed::{Reader, Terminal, Completer, Completion};
     use std::rc::Rc;
     use std::cell::RefCell;
 
-    struct Completer(Rc<RefCell<Context>>);
+    struct RinkCompleter(Rc<RefCell<Context>>);
 
-    impl rustyline::completion::Completer for Completer {
-        fn complete(&self, line: &str, pos: usize) -> rustyline::Result<(usize, Vec<String>)> {
-            let name = line.rsplit(|x:char| !x.is_alphanumeric() && x != '_').next();
-            let name = match name {
-                Some(res) if res.len() > 0 => res,
-                _ => return Ok((pos, vec![]))
-            };
-            fn inner(ctx: &Context, name: &str) -> Vec<String> {
+    impl<Term: Terminal> Completer<Term> for RinkCompleter {
+        fn complete(&self, name: &str, _reader: &Reader<Term>, _start: usize, _end: usize)
+                    -> Option<Vec<Completion>> {
+            fn inner(ctx: &Context, name: &str) -> Vec<Completion> {
                 let mut out = vec![];
                 for k in &ctx.dimensions {
                     if (**k.0).starts_with(name) {
-                        out.push((*k.0).clone());
+                        out.push(Completion {
+                            completion: (*k.0).clone(),
+                            display: Some(format!("{} (base unit)", k.0)),
+                            suffix: None,
+                        });
                     }
                 }
                 for (ref k, _) in &ctx.units {
                     if k.starts_with(name) {
-                        out.push((*k).clone());
+                        let ref def = ctx.definitions.get(&**k);
+                        let def = match def {
+                            &Some(ref def) => format!("{} = ", def),
+                            &None => format!("")
+                        };
+                        let res = ctx.lookup(k).unwrap();
+                        let raw = res.show_number_part();
+                        let unit = res.unit_name(ctx);
+                        let base_units = Number::unit_to_string(&res.1);
+                        let base_units = if unit == base_units { None } else { Some(base_units) };
+                        let alias = ctx.aliases.get(&res.1);
+                        let unit = if unit.len() > 0 {
+                            format!(" {}", unit)
+                        } else {
+                            unit
+                        };
+                        let parens = match (alias, base_units) {
+                            (Some(alias), Some(base)) => format!(" ({}; {})", alias, base),
+                            (Some(alias), None) => format!(" ({})", alias),
+                            (None, Some(base)) => format!(" ({})", base),
+                            (None, None) => format!(""),
+                        };
+                        out.push(Completion {
+                            completion: (*k).clone(),
+                            display: Some(format!("{} ({}{}{}{})", k, def, raw, unit, parens)),
+                            suffix: None,
+                        });
                     }
                 }
-                for (_, ref k) in &ctx.aliases {
+                for (ref unit, ref k) in &ctx.aliases {
                     if k.starts_with(name) {
-                        out.push((*k).clone());
+                        out.push(Completion {
+                            completion: (*k).clone(),
+                            display: Some(format!("{} (quantity; {})",
+                                                  k, Number::unit_to_string(unit))),
+                            suffix: None,
+                        });
                     }
                 }
                 out
@@ -46,16 +76,24 @@ fn main() {
 
             let mut out = vec![];
             out.append(&mut inner(&*self.0.borrow(), name));
-            for &(ref k, _) in &self.0.borrow().prefixes {
+            for &(ref k, ref v) in &self.0.borrow().prefixes {
                 if name.starts_with(&**k) {
                     out.append(&mut inner(&*self.0.borrow(), &name[k.len()..])
-                               .into_iter().map(|x| format!("{}{}", k, x)).collect());
+                               .into_iter().map(|x| Completion {
+                                   completion: format!("{}{}", k, x.completion),
+                                   display: Some(format!("{} {}", k, x.display.unwrap())),
+                                   suffix: None,
+                               }).collect());
                 } else if k.starts_with(name) {
-                    out.insert(0, k.clone());
+                    out.insert(0, Completion {
+                        completion: k.clone(),
+                        display: Some(format!("{} ({:?} prefix)", k, v.0)),
+                        suffix: None,
+                    });
                 }
             }
 
-            Ok((pos - name.len(), out))
+            Some(out)
         }
     }
 
@@ -67,20 +105,32 @@ fn main() {
         }
     };
     let ctx = Rc::new(RefCell::new(ctx));
-    let completer = Completer(ctx.clone());
-    let mut rl = Editor::new();
-    rl.set_completer(Some(&completer));
+    let completer = RinkCompleter(ctx.clone());
+    let mut rl = Reader::new("rink").unwrap();
+    rl.set_prompt("> ");
+    rl.set_completer(Rc::new(completer));
     loop {
-        let readline = rl.readline("> ");
+        let readline = rl.read_line();
         match readline {
-            Ok(line) => {
-                rl.add_history_entry(&line);
+            Ok(Some(ref line)) if line == "quit" => {
+                println!("");
+                break
+            },
+            Ok(Some(ref line)) if line == "help" => {
+                println!("For information on how to use Rink, see the manual: \
+                          https://github.com/tiffany352/rink-rs/wiki/Rink-Manual");
+            },
+            Ok(Some(line)) => {
+                rl.add_history(line.clone());
                 match one_line(&mut *ctx.borrow_mut(), &*line) {
                     Ok(v) => println!("{}", v),
                     Err(e) => println!("{}", e)
                 };
             },
-            Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => break,
+            Ok(None) => {
+                println!("");
+                break
+            },
             Err(err) => {
                 println!("Readline: {:?}", err);
                 break
@@ -89,7 +139,7 @@ fn main() {
     }
 }
 
-#[cfg(not(feature = "rustyline"))]
+#[cfg(not(feature = "linefeed"))]
 fn main() {
     use std::io::{stdin, stdout, Write};
 
