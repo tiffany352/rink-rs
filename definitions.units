@@ -228,10 +228,10 @@ atto-                   1e-18    # Danish-Norwegian atten, "eighteen"
 zepto-                  1e-21    # Latin septem, "seven"
 yocto-                  1e-24    # Greek or Latin octo, "eight"
 
-quarter-                1|4
-semi-                   0.5
-demi-                   0.5
-hemi-                   0.5
+quarter--               1|4
+semi--                  0.5
+demi--                  0.5
+hemi--                  0.5
 half-                   0.5
 double-                 2
 triple-                 3
@@ -243,33 +243,33 @@ gibi-                   2^30     # powers of two, the International
 tebi-                   2^40     # Electrotechnical Commission aproved these
 pebi-                   2^50     # binary prefixes for use in 1998.  If you
 exbi-                   2^60     # want to refer to "megabytes" using the
-Ki-                     kibi     # binary definition, use these prefixes.
-Mi-                     mebi
-Gi-                     gibi
-Ti-                     tebi
-Pi-                     pebi
-Ei-                     exbi
+Ki--                    kibi     # binary definition, use these prefixes.
+Mi--                    mebi
+Gi--                    gibi
+Ti--                    tebi
+Pi--                    pebi
+Ei--                    exbi
 
-Y-                      yotta
-Z-                      zetta
-E-                      exa
-P-                      peta
-T-                      tera
-G-                      giga
-M-                      mega
-k-                      kilo
-h-                      hecto
-da-                     deka
-d-                      deci
-c-                      centi
-m-                      milli
-u-                      micro   # it should be a mu but u is easy to type
-n-                      nano
-p-                      pico
-f-                      femto
-a-                      atto
-z-                      zepto
-y-                      yocto
+Y--                     yotta
+Z--                     zetta
+E--                     exa
+P--                     peta
+T--                     tera
+G--                     giga
+M--                     mega
+k--                     kilo
+h--                     hecto
+da--                    deka
+d--                     deci
+c--                     centi
+m--                     milli
+u--                     micro   # it should be a mu but u is easy to type
+n--                     nano
+p--                     pico
+f--                     femto
+a--                     atto
+z--                     zepto
+y--                     yocto
 
 #
 # Names of some numbers

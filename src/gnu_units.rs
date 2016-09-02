@@ -269,10 +269,11 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     let expr = parse_expr(iter);
                     let mut name = name;
                     name.pop();
-                    if name.len() > 1 {
-                        map.push((name, Rc::new(Def::SPrefix(expr))));
-                    } else {
+                    if name.ends_with("-") {
+                        name.pop();
                         map.push((name, Rc::new(Def::Prefix(expr))));
+                    } else {
+                        map.push((name, Rc::new(Def::SPrefix(expr))));
                     }
                 } else {
                     // unit
