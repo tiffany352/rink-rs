@@ -26,12 +26,12 @@ fn test_definition() {
 
 #[test]
 fn test_eval() {
-    test("5 inch", "0.127 m (length)");
+    test("5 inch", "0.127 meter (length)");
 }
 
 #[test]
 fn test_convert() {
-    test("5 inch -> cm", "12.7 centim (length)");
+    test("5 inch -> cm", "12.7 centimeter (length)");
 }
 
 #[test]
@@ -41,7 +41,7 @@ fn test_temp() {
 
 #[test]
 fn test_determinism() {
-    test("weber / m", "1 m tesla");
+    test("weber / m", "1 meter tesla");
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn test_sqrt_errors() {
     test("sqrt -1",
          "Complex numbers are not implemented: sqrt <-1 (dimensionless)>");
     test("sqrt(2m)",
-         "Result must have integer dimensions: sqrt <2 m (length)>");
+         "Result must have integer dimensions: sqrt <2 meter (length)>");
 }
 
 #[test]
@@ -60,6 +60,6 @@ fn test_number_regress() {
 
 #[test]
 fn test_lookup() {
-    test("ks", "1000 s (time)");
-    test("pcs", "approx. 3.231314e16 m (length)");
+    test("ks", "1000 second (time)");
+    test("pcs", "approx. 3.231314e16 meter (length)");
 }
