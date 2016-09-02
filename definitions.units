@@ -506,8 +506,34 @@ viscosity               ? force time / area
 kinematic_viscosity     ? viscosity / density
 magnetic_flux           ? weber
 magnetic_flux_density   ? tesla
+magnetization           ? current / length
 electrical_potential    ? volt
 electric_field          ? newton / coulomb
+entropy                 ? energy / temperature
+thermal_resistance      ? temperature^2 / power
+thermal_inductance      ? energy temperature^2 / power^2
+permittivity            ? farad / meter
+permeability            ? henry / meter
+angular_momentum        ? length area / time
+area_density            ? mass / area
+catalytic_activity      ? amount / time
+chemical_potential      ? energy / amount
+molar_concentration     ? amount / volume
+current_density         ? current / area
+dynamic_viscosity       ? pressure time
+electric_charge_density ? charge / volume
+electric_displacement   ? charge / area
+impulse                 ? mass length / time
+heat_flux_density       ? power / area
+molar_entropy           ? entropy / amount
+moment_of_inertia       ? mass area
+reaction_rate           ? amount / volume time
+specific_heat_capacity  ? energy / mass temperature
+specific_volume         ? volume / mass
+spin                    ? mass area / time
+surface_tension         ? energy / area
+thermal_conductivity    ? power / length temperature
+fuel_efficiency         ? area^-1
 
 
 #
@@ -874,7 +900,7 @@ c                       2.99792458e8 m/s # speed of light in vacuum (exact)
 light                   c
 mu0                     4 pi 1e-7 H/m    # permeability of vacuum (exact)
 epsilon0                1/mu0 c^2        # permittivity of vacuum (exact)
-energy                  c^2              # convert mass to energy
+mass_energy             c^2              # convert mass to energy
 electroncharge        1.6021766208e-19 C # electron charge
 #e                      electroncharge   # makes room for exp(1)
 planck_constant     4.135667662e-15 eV s # Planck constant
@@ -1285,9 +1311,9 @@ spectral_intensity_wavelength   ? W sr^-1 m^-1
 radiance                        ? W sr^-1 m^-2
 spectral_radiance_frequency     ? W sr^-1 m^-2 Hz^-1
 spectral_radiance_wavelength    ? W sr^-1 m^-3
-spectral_irradiance_frequency   ? W m^-2 Hz^-1
+spectral_irradiance_frequency     W m^-2 Hz^-1
 spectral_irradiance_wavelength  ? W/m^3
-radiosity                       ? W/m^2
+radiosity                         W/m^2
 spectral_radiosity_frequency      W m^-2 Hz^-1
 spectral_radiosity_wavelength     W m^-3
 radiant_exitance                  W/m^2
