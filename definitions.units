@@ -496,6 +496,10 @@ inductance              ? henry
 frequency               ? hertz
 velocity                ? length / time
 acceleration            ? velocity / time
+jerk                    ? acceleration / time
+snap                    ? jerk / time
+crackle                 ? snap / time
+pop                     ? crackle / time
 density                 ? mass / volume
 linear_density          ? mass / length
 viscosity               ? force time / area
