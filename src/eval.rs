@@ -218,9 +218,10 @@ impl Context {
                     } else {
                         return Some(name.clone())
                     }
+                } else {
+                    // we cannot canonicalize it further
+                    return Some(name.to_owned())
                 }
-                // we cannot canonicalize it further
-                return None
             }
             None
         }
