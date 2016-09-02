@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::collections::{HashMap, BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet};
 use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
 use number::{Number, Unit, Dim};
@@ -23,11 +23,11 @@ pub enum Value {
 pub struct Context {
     pub dimensions: BTreeSet<Dim>,
     pub canonicalizations: BTreeMap<String, String>,
-    pub units: HashMap<String, Number>,
-    pub aliases: HashMap<Unit, String>,
+    pub units: BTreeMap<String, Number>,
+    pub aliases: BTreeMap<Unit, String>,
     pub reverse: BTreeMap<Unit, String>,
     pub prefixes: Vec<(String, Number)>,
-    pub definitions: HashMap<String, Expr>,
+    pub definitions: BTreeMap<String, Expr>,
     pub datepatterns: Vec<Vec<DatePattern>>,
     pub short_output: bool,
 }
@@ -812,11 +812,11 @@ impl Context {
         Context {
             dimensions: BTreeSet::new(),
             canonicalizations: BTreeMap::new(),
-            units: HashMap::new(),
-            aliases: HashMap::new(),
+            units: BTreeMap::new(),
+            aliases: BTreeMap::new(),
             reverse: BTreeMap::new(),
             prefixes: Vec::new(),
-            definitions: HashMap::new(),
+            definitions: BTreeMap::new(),
             datepatterns: Vec::new(),
             short_output: false,
         }
@@ -829,8 +829,6 @@ impl Context {
     /// Takes a parsed definitions.units from
     /// `gnu_units::parse()`. Prints if there are errors in the file.
     pub fn load(&mut self, defs: Defs) {
-        use std::collections::HashSet;
-
         #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
         enum Name {
             Unit(Rc<String>),
@@ -839,11 +837,11 @@ impl Context {
         }
 
         struct Resolver {
-            interned: HashSet<Rc<String>>,
-            input: HashMap<Name, Rc<Def>>,
+            interned: BTreeSet<Rc<String>>,
+            input: BTreeMap<Name, Rc<Def>>,
             sorted: Vec<Name>,
-            unmarked: HashSet<Name>,
-            temp_marks: HashSet<Name>,
+            unmarked: BTreeSet<Name>,
+            temp_marks: BTreeSet<Name>,
         }
 
         impl Resolver {
@@ -969,11 +967,11 @@ impl Context {
         }
 
         let mut resolver = Resolver {
-            interned: HashSet::new(),
-            input: HashMap::new(),
+            interned: BTreeSet::new(),
+            input: BTreeMap::new(),
             sorted: vec![],
-            unmarked: HashSet::new(),
-            temp_marks: HashSet::new(),
+            unmarked: BTreeSet::new(),
+            temp_marks: BTreeSet::new(),
         };
         for (name, def) in defs.defs.into_iter() {
             let name = resolver.intern(&name);
@@ -997,7 +995,7 @@ impl Context {
             (name, res)
         });
 
-        let mut reverse = HashSet::new();
+        let mut reverse = BTreeSet::new();
         reverse.insert("newton");
         reverse.insert("pascal");
         reverse.insert("joule");
