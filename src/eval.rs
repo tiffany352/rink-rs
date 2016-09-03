@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use gmp::mpq::Mpq;
 use chrono::{DateTime, FixedOffset};
-use number::{Number, Unit, Dim};
+use number::{Number, Unit, Dim, pow};
 use date;
 use ast::{DatePattern, Expr, SuffixOp, Def, Defs, Query, Conversion};
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -430,13 +430,13 @@ impl Context {
         }
     }
 
-    pub fn eval_unit_name(&self, expr: &Expr) -> Result<BTreeMap<String, isize>, String> {
+    pub fn eval_unit_name(&self, expr: &Expr) -> Result<(BTreeMap<String, isize>, Mpq), String> {
         match *expr {
             Expr::Equals(ref left, ref _right) => match **left {
                 Expr::Unit(ref name) => {
                     let mut map = BTreeMap::new();
                     map.insert(name.clone(), 1);
-                    Ok(map)
+                    Ok((map, Mpq::one()))
                 },
                 ref x => Err(format!("Expected identifier, got {:?}", x))
             },
@@ -444,21 +444,25 @@ impl Context {
             Expr::Unit(ref name) | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(self.canonicalize(&**name).unwrap_or_else(|| name.clone()), 1);
-                Ok(map)
+                Ok((map, Mpq::one()))
             },
-            Expr::Const(ref x, None, None) if x == "1" || x == "-1" => Ok(BTreeMap::new()),
-            Expr::Const(_, _, _) => Err(format!("Constants are not allowed in the right hand side of conversions")),
+            Expr::Const(ref i, ref f, ref e) =>
+                Ok((BTreeMap::new(), try!(Number::from_parts(
+                    i, f.as_ref().map(AsRef::as_ref), e.as_ref().map(AsRef::as_ref))).0)),
             Expr::Frac(ref left, ref right) => {
-                let left = try!(self.eval_unit_name(left));
-                let right = try!(self.eval_unit_name(right)).into_iter()
+                let (left, lv) = try!(self.eval_unit_name(left));
+                let (right, rv) = try!(self.eval_unit_name(right));
+                let right = right.into_iter()
                     .map(|(k,v)| (k, -v)).collect::<BTreeMap<_, _>>();
-                Ok(::btree_merge(&left, &right, |a,b| if a+b != 0 { Some(a + b) } else { None }))
+                Ok((::btree_merge(&left, &right, |a,b| if a+b != 0 { Some(a + b) } else { None }),
+                    &lv / &rv))
             },
             Expr::Mul(ref args) => {
                 args[1..].iter().fold(self.eval_unit_name(&args[0]), |acc, b| {
-                    let acc = try!(acc);
-                    let b = try!(self.eval_unit_name(b));
-                    Ok(::btree_merge(&acc, &b, |a,b| if a+b != 0 { Some(a+b) } else { None }))
+                    let (acc, av) = try!(acc);
+                    let (b, bv) = try!(self.eval_unit_name(b));
+                    Ok((::btree_merge(&acc, &b, |a,b| if a+b != 0 { Some(a+b) } else { None }),
+                        &av * &bv))
                 })
             },
             Expr::Pow(ref left, ref exp) => {
@@ -471,7 +475,8 @@ impl Context {
                     return Err(format!("Exponents must be dimensionless"))
                 }
                 let res: f64 = res.0.into();
-                Ok(try!(self.eval_unit_name(left)).into_iter()
+                let (left, lv) = try!(self.eval_unit_name(left));
+                Ok((left.into_iter()
                    .filter_map(|(k, v)| {
                        let v = v * res as isize;
                        if v != 0 {
@@ -480,7 +485,8 @@ impl Context {
                            None
                        }
                    })
-                   .collect::<BTreeMap<_, _>>())
+                    .collect::<BTreeMap<_, _>>(),
+                    pow(&lv, res as i32)))
             },
             Expr::Add(ref left, ref right) | Expr::Sub(ref left, ref right) => {
                 let left = try!(self.eval_unit_name(left));
@@ -546,10 +552,18 @@ impl Context {
             String::from_utf8(buf).unwrap()
         };
 
-        let show = |raw: &Number, bottom: &Number, bottom_name: BTreeMap<String, isize>| -> String {
+        let show = |raw: &Number, bottom: &Number, bottom_name: (BTreeMap<String, isize>, Mpq)| -> String {
+            use gmp::mpz::Mpz;
+            let (bottom_name, bottom_const) = bottom_name;
             let number = raw.show_number_part();
             let mut unit_top = vec![];
             let mut unit_frac = vec![];
+            if bottom_const.get_num() != Mpz::one() {
+                unit_top.push((format!("* {}", bottom_const.get_num()), 1));
+            }
+            if bottom_const.get_den() != Mpz::one() {
+                unit_frac.push((format!("{}", bottom_const.get_den()), 1));
+            }
             for (name, exp) in bottom_name.into_iter() {
                 if exp < 0 {
                     unit_frac.push((name, -exp));
@@ -722,7 +736,7 @@ impl Context {
                             let res = (&res / &bottom).unwrap();
                             let mut name = BTreeMap::new();
                             name.insert(format!("°{}", $name), 1);
-                            Ok(show(&res, &bottom, name))
+                            Ok(show(&res, &bottom, (name, Mpq::one())))
                         }
                     }}
                 }

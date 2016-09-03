@@ -50,7 +50,7 @@ fn zero() -> Mpq {
     Mpq::zero()
 }
 
-fn pow(left: &Mpq, exp: i32) -> Mpq {
+pub fn pow(left: &Mpq, exp: i32) -> Mpq {
     if exp < 0 {
         one() / pow(left, -exp)
     } else {
