@@ -42,15 +42,15 @@ fn main() {
                         let unit = res.unit_name(ctx);
                         let base_units = Number::unit_to_string(&res.1);
                         let base_units = if unit == base_units { None } else { Some(base_units) };
-                        let alias = ctx.aliases.get(&res.1);
+                        let quantity = ctx.quantities.get(&res.1);
                         let unit = if unit.len() > 0 {
                             format!(" {}", unit)
                         } else {
                             unit
                         };
-                        let parens = match (alias, base_units) {
-                            (Some(alias), Some(base)) => format!(" ({}; {})", alias, base),
-                            (Some(alias), None) => format!(" ({})", alias),
+                        let parens = match (quantity, base_units) {
+                            (Some(quantity), Some(base)) => format!(" ({}; {})", quantity, base),
+                            (Some(quantity), None) => format!(" ({})", quantity),
                             (None, Some(base)) => format!(" ({})", base),
                             (None, None) => format!(""),
                         };
@@ -61,7 +61,7 @@ fn main() {
                         });
                     }
                 }
-                for (ref unit, ref k) in &ctx.aliases {
+                for (ref unit, ref k) in &ctx.quantities {
                     if k.starts_with(name) {
                         out.push(Completion {
                             completion: (*k).clone(),

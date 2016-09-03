@@ -341,7 +341,7 @@ impl Show for Number {
             write!(out, " {}", unit).unwrap();
         }
 
-        let alias = context.aliases.get(&value.1).cloned().or_else(|| {
+        let quantity = context.quantities.get(&value.1).cloned().or_else(|| {
             if value.1.len() == 1 {
                 let e = value.1.iter().next().unwrap();
                 let ref n = *e.0;
@@ -354,8 +354,8 @@ impl Show for Number {
                 None
             }
         });
-        if let Some(alias) = alias {
-            write!(out, " ({})", alias).unwrap();
+        if let Some(quantity) = quantity {
+            write!(out, " ({})", quantity).unwrap();
         }
         String::from_utf8(out).unwrap()
     }

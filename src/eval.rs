@@ -24,7 +24,7 @@ pub struct Context {
     pub dimensions: BTreeSet<Dim>,
     pub canonicalizations: BTreeMap<String, String>,
     pub units: BTreeMap<String, Number>,
-    pub aliases: BTreeMap<Unit, String>,
+    pub quantities: BTreeMap<Unit, String>,
     pub reverse: BTreeMap<Unit, String>,
     pub prefixes: Vec<(String, Number)>,
     pub definitions: BTreeMap<String, Expr>,
@@ -159,7 +159,7 @@ impl Context {
     }
 
     /// Given a unit name, returns its value if it exists. Supports SI
-    /// prefixes, plurals, bare dimensions like length, and aliases.
+    /// prefixes, plurals, bare dimensions like length, and quantities.
     pub fn lookup(&self, name: &str) -> Option<Number> {
         fn inner(ctx: &Context, name: &str) -> Option<Number> {
             if let Some(k) = ctx.dimensions.get(name) {
@@ -168,8 +168,8 @@ impl Context {
             if let Some(v) = ctx.units.get(name).cloned() {
                 return Some(v)
             }
-            for (unit, alias) in &ctx.aliases {
-                if name == alias {
+            for (unit, quantity) in &ctx.quantities {
+                if name == quantity {
                     return Some(Number(Number::one().0, unit.clone()))
                 }
             }
@@ -273,11 +273,11 @@ impl Context {
         let mut recip = false;
         let square = Number(Mpq::one(), value.1.clone()).root(2).ok();
         let inverse = (&Number::one() / &Number(Mpq::one(), value.1.clone())).unwrap();
-        if let Some(name) = self.aliases.get(&value.1) {
+        if let Some(name) = self.quantities.get(&value.1) {
             write!(buf, "{}", name).unwrap();
-        } else if let Some(name) = square.and_then(|square| self.aliases.get(&square.1)) {
+        } else if let Some(name) = square.and_then(|square| self.quantities.get(&square.1)) {
             write!(buf, "{}^2", name).unwrap();
-        } else if let Some(name) = self.aliases.get(&inverse.1) {
+        } else if let Some(name) = self.quantities.get(&inverse.1) {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
@@ -290,12 +290,12 @@ impl Context {
                     found = true;
                     let mut map = Unit::new();
                     map.insert(dim.clone(), pow);
-                    if let Some(name) = self.aliases.get(&map) {
+                    if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         let mut map = Unit::new();
                         map.insert(dim.clone(), 1);
-                        if let Some(name) = self.aliases.get(&map) {
+                        if let Some(name) = self.quantities.get(&map) {
                             write!(buf, " {}", name).unwrap();
                         } else {
                             write!(buf, " '{}'", dim).unwrap();
@@ -315,12 +315,12 @@ impl Context {
                 for (dim, pow) in frac {
                     let mut map = Unit::new();
                     map.insert(dim.clone(), pow);
-                    if let Some(name) = self.aliases.get(&map) {
+                    if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         let mut map = Unit::new();
                         map.insert(dim.clone(), 1);
-                        if let Some(name) = self.aliases.get(&map) {
+                        if let Some(name) = self.quantities.get(&map) {
                             write!(buf, " {}", name).unwrap();
                         } else {
                             write!(buf, " '{}'", dim).unwrap();
@@ -604,15 +604,15 @@ impl Context {
                 let unit = res.unit_name(self);
                 let base_units = Number::unit_to_string(&res.1);
                 let base_units = if unit == base_units { None } else { Some(base_units) };
-                let alias = self.aliases.get(&res.1);
+                let quantity = self.quantities.get(&res.1);
                 let unit = if unit.len() > 0 {
                     format!(" {}", unit)
                 } else {
                     unit
                 };
-                let parens = match (alias, base_units) {
-                    (Some(alias), Some(base)) => format!(" ({}; {})", alias, base),
-                    (Some(alias), None) => format!(" ({})", alias),
+                let parens = match (quantity, base_units) {
+                    (Some(quantity), Some(base)) => format!(" ({}; {})", quantity, base),
+                    (Some(quantity), None) => format!(" ({})", quantity),
                     (None, Some(base)) => format!(" ({})", base),
                     (None, None) => format!(""),
                 };
@@ -692,7 +692,7 @@ impl Context {
                            self.canonicalize(name).unwrap_or_else(|| name.clone())).unwrap();
                 }
                 buf.pop(); buf.pop();
-                if let Some(res) = self.aliases.get(&top.1) {
+                if let Some(res) = self.quantities.get(&top.1) {
                     use std::io::Write;
                     write!(buf, " ({})", res).unwrap();
                 }
@@ -743,10 +743,10 @@ impl Context {
                     Value::Number(val) => val,
                     _ => return Err(format!("Cannot find derivatives of <{}>", val.show(self))),
                 };
-                let aliases = self.aliases.iter()
+                let quantities = self.quantities.iter()
                     .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
                     .collect::<BTreeMap<_, _>>();
-                let results = factorize(&val, &aliases);
+                let results = factorize(&val, &quantities);
                 let mut results = results.into_sorted_vec();
                 results.dedup();
                 let results = results.into_iter().map(|Factors(_score, names)| {
@@ -787,9 +787,9 @@ impl Context {
                     }
                 }
                 let raw = Number::unit_to_string(&val.1);
-                let alias = self.aliases.get(&val.1);
-                let alias = if let Some(alias) = alias {
-                    format!(" ({})", alias)
+                let quantity = self.quantities.get(&val.1);
+                let quantity = if let Some(quantity) = quantity {
+                    format!(" ({})", quantity)
                 } else {
                     format!("")
                 };
@@ -797,7 +797,7 @@ impl Context {
                 let units = out.iter().skip(1).fold(
                     out.first().cloned().cloned().unwrap_or(String::new()),
                     |a, x| format!("{}, {}", a, x));
-                Ok(format!("Units for {}{}: {}", raw, alias, units))
+                Ok(format!("Units for {}{}: {}", raw, quantity, units))
             },
             Query::Expr(ref expr) => {
                 let val = try!(self.eval(expr));
@@ -813,7 +813,7 @@ impl Context {
             dimensions: BTreeSet::new(),
             canonicalizations: BTreeMap::new(),
             units: BTreeMap::new(),
-            aliases: BTreeMap::new(),
+            quantities: BTreeMap::new(),
             reverse: BTreeMap::new(),
             prefixes: Vec::new(),
             definitions: BTreeMap::new(),
@@ -1056,7 +1056,7 @@ impl Context {
                 },
                 Def::Quantity(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        let res = self.aliases.insert(v.1, name.clone());
+                        let res = self.quantities.insert(v.1, name.clone());
                         if !self.definitions.contains_key(&name) {
                             self.definitions.insert(name.clone(), expr.clone());
                         }

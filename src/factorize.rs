@@ -23,9 +23,9 @@ impl cmp::Ord for Factors {
     }
 }
 
-pub fn fast_decompose(value: &Number, aliases: &BTreeMap<Unit, String>) -> Unit {
+pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Unit {
     let mut best = None;
-    'outer: for (unit, name) in aliases.iter() {
+    'outer: for (unit, name) in quantities.iter() {
         // make sure we aren't doing something weird like introducing new base units
         for (dim, pow) in unit {
             let vpow = value.1.get(dim).cloned().unwrap_or(0);
@@ -54,7 +54,7 @@ pub fn fast_decompose(value: &Number, aliases: &BTreeMap<Unit, String>) -> Unit 
     value.1.clone()
 }
 
-pub fn factorize(value: &Number, aliases: &BTreeMap<Unit, Rc<String>>)
+pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>)
                  -> BinaryHeap<Factors> {
     if value.1.len() == 0 {
         let mut map = BinaryHeap::new();
@@ -63,7 +63,7 @@ pub fn factorize(value: &Number, aliases: &BTreeMap<Unit, Rc<String>>)
     }
     let mut candidates: BinaryHeap<Factors> = BinaryHeap::new();
     let value_score = value.complexity_score();
-    for (unit, name) in aliases.iter().rev() {
+    for (unit, name) in quantities.iter().rev() {
         let res = (value / &Number(Mpq::one(), unit.clone())).unwrap();
         //if res.1.len() >= value.1.len() {
         let score = res.complexity_score();
@@ -71,7 +71,7 @@ pub fn factorize(value: &Number, aliases: &BTreeMap<Unit, Rc<String>>)
         if score >= value_score {
             continue
         }
-        let res = factorize(&res, aliases);
+        let res = factorize(&res, quantities);
         for Factors(score, mut vec) in res {
             vec.push(name.clone());
             vec.sort();
