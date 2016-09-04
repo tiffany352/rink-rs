@@ -343,6 +343,25 @@ fn is_func(name: &str) -> bool {
     }
 }
 
+fn is_attr(name: &str) -> Option<&'static str> {
+    match name {
+        "int" | "international" => Some("int"),
+        "UKSJJ" => Some("UKSJJ"),
+        "UKB" => Some("UKB"),
+        "UKC" => Some("UKC"),
+        "UKK" => Some("UKK"),
+        "imperial" | "british" | "UK" => Some("br"),
+        "survey" | "geodetic" | "US" => Some("survey"),
+        "irish" => Some("irish"),
+        "aust" | "australian" => Some("aust"),
+        "roman" => Some("roman"),
+        "egyptian" => Some("egyptian"),
+        "greek" => Some("greek"),
+        "olympic" => Some("olympic"),
+        _ => None,
+    }
+}
+
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(ref name) if is_func(name) => {
@@ -368,6 +387,17 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                     Expr::Call(name.clone(), args)
                 },
                 _ => Expr::Call(name.clone(), vec![parse_pow(iter)]),
+            }
+        },
+        Token::Ident(ref attr) if is_attr(attr).is_some() => {
+            match iter.peek().cloned().unwrap() {
+                Token::Ident(ref name) => {
+                    let attr = is_attr(attr).unwrap();
+                    iter.next();
+                    Expr::Unit(format!("{}{}", attr, name))
+                },
+                x => Expr::Error(format!("Attribute must be followed by ident, got {}",
+                                         describe(&x)))
             }
         },
         Token::Ident(name) => Expr::Unit(name),

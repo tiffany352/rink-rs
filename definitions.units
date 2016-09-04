@@ -1964,52 +1964,83 @@ thermalvolt             K          # thermal potential difference
 # NIST Handbook 44, 2011 ed., Appendix C.
 # Canadian Journal of Physics, 1959, 37:(1) 84, 10.1139/p59-014.
 
-US                      1200|3937 m/ft   # These four values will convert
-US-                     US               #   international measures to
-survey-                 US               #   US Survey measures
-geodetic-               US
-int                     3937|1200 ft/m   # Convert US Survey measures to
-int-                    int              #   international measures
+# Survey measures
 
-inch                    2.54 cm
-inches                  inch
-in                      inch
-foot                    12 inch
-feet                    foot
-ft                      foot
-yard                    3 ft
-yd                      yard
-mile                    5280 ft          # The mile was enlarged from 5000 ft
-                                         # to this number in order to make
+surveyfoot              1200|3937 m
+surveyfeet              surveyfoot
+surveyft                surveyfoot
+surveyinch              1|12 surveyfoot
+surveyinches            surveyinch
+surveyin                surveyinch
+surveyyard              3 surveyfoot
+surveyyd                surveyyard
+surveymile              5280 surveyfoot
+surveymi                surveymile
+
+# International measures
+
+intinch                 2.54 cm
+intinches               inch
+intin                   inch
+intfoot                 12 inch
+intfeet                 foot
+intft                   foot
+intyard                 3 ft
+intyd                   yard
+intmile                 5280 ft          # The mile was enlarged from 5000 ft
+intmi                   intmile          # to this number in order to make
                                          # it an even number of furlongs.
                                          # (The Roman mile is 5000 romanfeet.)
-line                    1|12 inch  # Also defined as '.1 in' or as '1e-8 Wb'
-rod                     5.5 yard
-perch                   rod
-furlong                 40 rod           # From "furrow long"
-statutemile             mile
-league                  3 mile           # Intended to be an an hour's walk
+intline                 1|12 inch  # Also defined as '.1 in' or as '1e-8 Wb'
+introd                  5.5 yard
+intperch                introd
+intpole                 introd
+intfurlong              40 introd        # From "furrow long"
+intstatutemile          intmile
+intleague               3 intmile
+
+# aliases for international units
+
+inch                    intinch
+inches                  intinch
+in                      intin
+foot                    intfoot
+feet                    intfoot
+ft                      intfoot
+yard                    intyard
+yd                      intyard
+mile                    intmile
+mi                      intmile
+line                    intline
+rod                     introd
+perch                   intperch
+furlong                 intfurlong
+league                  intleague
 
 # surveyor's measure
 
 surveyorschain          66 surveyft
 surveychain             surveyorschain
+gunterschain            surveyorschain
 surveyorspole           1|4 surveyorschain
 surveyorslink           1|100 surveyorschain
-chain                   66 ft
-link                    1|100 chain
-ch                      chain
-USacre                  10 surveychain^2
+surveyacre              10 surveychain^2
+surveyacrefoot          surveyacre surveyfoot
+
+intchain                66 intfoot
+intlink                 1|100 chain
 intacre                 10 chain^2       # Acre based on international ft
 intacrefoot             acre foot
-USacrefoot              USacre surveyfoot
+
+chain                   intchain
+link                    intlink
+ch                      intchain
 acrefoot                intacrefoot
 acre                    intacre
 section                 mile^2
 township                36 section
 homestead               160 acre # Area of land granted by the 1862 Homestead
                                  # Act of the United States Congress
-gunterschain            surveyorschain
 
 engineerschain          100 ft
 engineerslink           1|100 engineerschain
@@ -2040,12 +2071,12 @@ bronzeyard11            914.39980 mm
 mendenhallyard          surveyyard
 internationalyard       yard
 
-# nautical measure
+# international nautical measures
 
-fathom                  6 ft     # Originally defined as the distance from
+intfathom               6 ft     # Originally defined as the distance from
                                  #   fingertip to fingertip with arms fully
                                  #   extended.
-nauticalmile            1852 m   # Supposed to be one minute of latitude at
+intnauticalmile         1852 m   # Supposed to be one minute of latitude at
                                  # the equator.  That value is about 1855 m.
                                  # Early estimates of the earth's circumference
                                  # were a bit off.  The value of 1852 m was
@@ -2053,11 +2084,19 @@ nauticalmile            1852 m   # Supposed to be one minute of latitude at
                                  # The US did not accept this value until
                                  # 1954.  The UK switched in 1970.
 
-cable                   1|10 nauticalmile
-intcable                cable              # international cable
+fathom                  intfathom
+nauticalmile            intnauticalmile
+intcable                1|10 nauticalmile
+
+cable                   intcable              # international cable
 cablelength             cable
-UScable                 100 USfathom
-navycablelength         720 USft           # used for depth in water
+
+# survey nautical measures
+
+surveynauticalmile      6080.20 surveyfoot # Before 1954
+surveyfathom            6 surveyfoot
+surveycable             100 surveyfathom
+navycablelength         720 surveyft           # used for depth in water
 marineleague            3 nauticalmile
 geographicalmile        brnauticalmile
 knot                    nauticalmile / hr
@@ -2308,32 +2347,62 @@ marathon                26 miles + 385 yards
 # meter.  This happened after an international agreement in 1959 to align the
 # world's measurement systems.
 
-UK                      UKlength_SJJ
-UK-                     UK
-british-                UK
+# In 1922, Seers, Jolly and
+#   Johnson found the yard to be
+#   0.91439841 meters.
+#   Used starting in the 1930's.
+UKSJJyard               0.91439841 meter
+UKSJJfoot               1|3 UKSJJyard
+UKSJJinch               1|12 UKSJJfoot
+UKSJJmile               5280 UKSJJfoot
 
-UKlength_B            0.9143992 meter / yard  # Benoit found the yard to be
-                                              #   0.9143992 m at a weights and
-                                              #   measures conference around
-                                              #   1896.   Legally sanctioned
-                                              #   in 1898.
-UKlength_SJJ          0.91439841 meter / yard # In 1922, Seers, Jolly and
-                                              #   Johnson found the yard to be
-                                              #   0.91439841 meters.
-                                              #   Used starting in the 1930's.
-UKlength_K              meter / 39.37079 inch # In 1816 Kater found this ratio
-                                              #   for the meter and inch.  This
-                                              #   value was used as the legal
-                                              #   conversion ratio when the
-                                              #   metric system was legalized
-                                              #   for contract in 1864.
-UKlength_C            meter / 1.09362311 yard # In 1866 Clarke found the meter
-                                              #   to be 1.09362311 yards.  This
-                                              #   conversion was legalized
-                                              #   around 1878.
+bryard                  UKSJJyard
+brfoot                  UKSJJfoot
+brinch                  UKSJJinch
+brmile                  UKSJJmile
+
+UKyard                  UKSJJyard
+UKfoot                  UKSJJfoot
+UKinch                  UKSJJinch
+UKmile                  UKSJJmile
+UKft                    UKfoot
+
+# Benoit found the yard to be
+#   0.9143992 m at a weights and
+#   measures conference around
+#   1896.   Legally sanctioned
+#   in 1898.
+UKByard                 0.9143992 meter
+UKBfoot                 1|3 UKByard
+UKBinch                 1|12 UKBfoot
+UKBmile                 5280 UKBfoot
+
+# In 1866 Clarke found the meter
+#   to be 1.09362311 yards.  This
+#   conversion was legalized
+#   around 1878.
+UKCyard                 1|1.09362311 meter
+UKCfoot                 1|3 UKCyard
+UKCinch                 1|12 UKCfoot
+UKCmile                 5280 UKCfoot
+
+# In 1816 Kater found this ratio
+#   for the meter and inch.  This
+#   value was used as the legal
+#   conversion ratio when the
+#   metric system was legalized
+#   for contract in 1864.
+UKKinch                 1|39.37079 meter
+UKKfoot                 12 UKKinch
+UKKyard                 3 UKKfoot
+UKKmile                 5280 UKKfoot
+
 brnauticalmile          6080 ft               # Used until 1970 when the UK
 brknot                  brnauticalmile / hr   #   switched to the international
 brcable                 1|10 brnauticalmile   #   nautical mile.
+brstatutemile           5280 brfoot
+english_land_league     3 brmile
+brleague                english_land_league
 admiraltymile           brnauticalmile
 admiraltyknot           brknot
 admiraltycable          brcable
@@ -6020,4 +6089,3 @@ röntgen                 roentgen
 #                 a single channel occupied for one hour.
 #
 ############################################################################
-
