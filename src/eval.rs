@@ -337,6 +337,39 @@ impl Context {
         (recip, String::from_utf8(buf).unwrap())
     }
 
+    fn typo_dym<'a>(&'a self, what: &str) -> Option<&'a str> {
+        use strsim::jaro_winkler;
+
+        let mut best = None;
+        {
+            let mut try = |x: &'a str| {
+                let score = jaro_winkler(x, what);
+                let better = best.as_ref().map(|&(s, _v)| score > s).unwrap_or(true);
+                if better {
+                    best = Some((score, x));
+                }
+            };
+
+            for k in &self.dimensions {
+                try(&**k.0);
+            }
+            for (k, _v) in &self.units {
+                try(&**k);
+            }
+            for (_u, k) in &self.quantities {
+                try(&**k);
+            }
+        }
+        best.and_then(|(s, v)| if s > 0.8 { Some(v) } else { None })
+    }
+
+    fn unknown_unit_err(&self, name: &str) -> String {
+        match self.typo_dym(name) {
+            Some(x) => format!("Unknown unit {}, did you mean {}?", name, x),
+            None => format!("Unknown unit {}", name)
+        }
+    }
+
     /// Evaluates an expression to compute its value, *excluding* `->`
     /// conversions.
     pub fn eval(&self, expr: &Expr) -> Result<Value, String> {
@@ -371,7 +404,8 @@ impl Context {
 
         match *expr {
             Expr::Unit(ref name) if name == "now" => Ok(Value::DateTime(date::now())),
-            Expr::Unit(ref name) => self.lookup(name).ok_or(format!("Unknown unit {}", name)).map(Value::Number),
+            Expr::Unit(ref name) =>
+                self.lookup(name).ok_or_else(|| self.unknown_unit_err(name)).map(Value::Number),
             Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dim::new(&**name)))),
             Expr::Const(ref num, ref frac, ref exp) =>
                 Number::from_parts(
@@ -661,10 +695,7 @@ impl Context {
                                             top.show(self), list))
                 };
                 let units = try!(list.iter().map(|x| {
-                    match self.lookup(x) {
-                        Some(x) => Ok(x),
-                        None => Err(format!("Unit {} does not exist", x))
-                    }
+                    self.lookup(x).ok_or_else(|| self.unknown_unit_err(x))
                 }).collect::<Result<Vec<Number>, _>>());
                 {
                     let first = try!(units.first().ok_or(format!("Expected non-empty unit list")));
