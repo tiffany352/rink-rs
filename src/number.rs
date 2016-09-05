@@ -307,11 +307,16 @@ impl Number {
         String::from_utf8(out).unwrap()
     }
 
-    pub fn unit_name(&self, context: &::eval::Context) -> String {
+    pub fn pretty_unit(&self, context: &::eval::Context) -> Unit {
         let pretty = ::factorize::fast_decompose(self, &context.reverse);
         let pretty = pretty.into_iter()
             .map(|(k, p)| (context.canonicalizations.get(&*k.0).map(|x| Dim::new(x)).unwrap_or(k), p))
             .collect::<BTreeMap<_, _>>();
+        pretty
+    }
+
+    pub fn unit_name(&self, context: &::eval::Context) -> String {
+        let pretty = self.pretty_unit(context);
         let pretty = Number::unit_to_string(&pretty);
         pretty
     }
@@ -335,10 +340,60 @@ impl Show for Number {
         let mut value = self.clone();
         value.0.canonicalize();
 
-        write!(out, "{}", self.show_number_part()).unwrap();
-        let unit = self.unit_name(context);
-        if unit.len() > 0 {
-            write!(out, " {}", unit).unwrap();
+        let unit = self.pretty_unit(context);
+        let mut found = false;
+        if unit.len() == 1 {
+            use std::collections::HashSet;
+            let prefixes = [
+                "milli", "micro", "nano", "pico", "femto", "atto", "zepto", "yocto",
+                "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta"]
+                .iter().cloned().collect::<HashSet<&'static str>>();
+            let orig = unit.iter().next().unwrap();
+            // kg special case
+            let (val, orig) = if &**(orig.0).0 == "kg" || &**(orig.0).0 == "kilogram" {
+                (&self.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()),
+                 (Dim::new("gram"), orig.1))
+            } else {
+                (self.0.clone(), (orig.0.clone(), orig.1))
+            };
+            for &(ref p, ref v) in &context.prefixes {
+                if !prefixes.contains(&**p) {
+                    continue;
+                }
+                if val >= v.0 && val < &v.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()) {
+                    found = true;
+                    let res = &val / &v.0;
+                    let res = Number(res, unit.clone());
+                    let exp = if *orig.1 != 1 {
+                        format!("^{}", orig.1)
+                    } else {
+                        format!("")
+                    };
+                    // tonne special case
+                    let unit = if &**(orig.0).0 == "gram" && p == "mega" {
+                        format!("tonne")
+                    } else {
+                        format!("{}{}", p, orig.0)
+                    };
+                    write!(out, "{} {}{}", res.show_number_part(), unit, exp).unwrap();
+                    break;
+                }
+            }
+            if !found {
+                let res = Number(val, unit.clone());
+                let exp = if *orig.1 != 1 {
+                    format!("^{}", orig.1)
+                } else {
+                    format!("")
+                };
+                write!(out, "{} {}{}", res.show_number_part(), orig.0, exp).unwrap();
+            }
+        } else {
+            write!(out, "{}", self.show_number_part()).unwrap();
+            let unit = Number::unit_to_string(&unit);
+            if unit.len() > 0 {
+                write!(out, " {}", unit).unwrap();
+            }
         }
 
         let quantity = context.quantities.get(&value.1).cloned().or_else(|| {
