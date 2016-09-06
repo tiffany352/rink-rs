@@ -47,9 +47,11 @@ pub mod date;
 pub mod factorize;
 pub mod gnu_units;
 pub mod ast;
+pub mod value;
 
 pub use number::Number;
-pub use eval::{Context, Value};
+pub use eval::Context;
+pub use value::Value;
 
 use std::env;
 use std::convert::From;

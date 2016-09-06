@@ -5,7 +5,7 @@
 use gmp::mpq::Mpq;
 use gmp::mpz::Mpz;
 use std::collections::BTreeMap;
-use eval::Show;
+use value::Show;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
 use std::fmt;
