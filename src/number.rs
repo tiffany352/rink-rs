@@ -148,12 +148,33 @@ pub struct NumberParts {
     /// Present if the number can't be exactly concisely represented
     /// in decimal or scientific notation.
     pub approx_value: Option<String>,
+    /// Numerator factor by which the value is multiplied, if not one.
+    pub factor: Option<String>,
+    /// Divisor factor, if not one.
+    pub divfactor: Option<String>,
+    /// High-level unit decomposition, in format that can be manipulated.
+    pub raw_unit: Option<Unit>,
     /// Higher-level unit decomposition, if available.
     pub unit: Option<String>,
     /// The physical quantity associated with the unit, if available.
     pub quantity: Option<String>,
     /// The dimensionality of the unit.
-    pub dimensions: String,
+    pub dimensions: Option<String>,
+}
+
+impl Default for NumberParts {
+    fn default() -> Self {
+        NumberParts {
+            exact_value: None,
+            approx_value: None,
+            factor: None,
+            divfactor: None,
+            raw_unit: None,
+            unit: None,
+            quantity: None,
+            dimensions: None,
+        }
+    }
 }
 
 impl NumberParts {
@@ -194,14 +215,63 @@ impl NumberParts {
                     (Some(ex), Some(ap)) => write!(out, "{}, approx. {}", ex, ap).unwrap(),
                     (Some(ex), None) => write!(out, "{}", ex).unwrap(),
                     (None, Some(ap)) => write!(out, "approx. {}", ap).unwrap(),
-                    (None, None) => panic!("Number parts had neither exact nor approximate representation"),
+                    (None, None) => continue,
                 },
-                'u' => if let Some(unit) = self.unit.as_ref() {
+                'u' => if let Some(unit) = self.raw_unit.as_ref() {
                     if unit.len() == 0 { continue }
+                    let mut frac = vec![];
+                    let mut toks = vec![];
+
+                    if let Some(f) = self.factor.as_ref() {
+                        toks.push(format!("*"));
+                        toks.push(format!("{}", f));
+                    }
+                    for (dim, &exp) in unit {
+                        if exp < 0 {
+                            frac.push((dim, exp));
+                        } else {
+                            if exp == 1 {
+                                toks.push(format!("{}", dim))
+                            } else {
+                                toks.push(format!("{}^{}", dim, exp))
+                            }
+                        }
+                    }
+                    if frac.len() > 0 {
+                        toks.push(format!("/"));
+                        if let Some(d) = self.divfactor.as_ref() {
+                            toks.push(format!("{}", d));
+                        }
+                        for (dim, exp) in frac {
+                            let exp = -exp;
+                            if exp == 1 {
+                                toks.push(format!("{}", dim))
+                            } else {
+                                toks.push(format!("{}^{}", dim, exp))
+                            }
+                        }
+                    }
+                    write!(out, "{}", toks.join(" ")).unwrap();
+                } else if let Some(unit) = self.unit.as_ref() {
+                    if unit.len() == 0 { continue }
+                    if let Some(f) = self.factor.as_ref() {
+                        write!(out, "* {} ", f).unwrap();
+                    }
+                    if let Some(d) = self.divfactor.as_ref() {
+                        write!(out, "| {} ", d).unwrap();
+                    }
                     write!(out, "{}", unit).unwrap();
+                } else if let Some(dim) = self.dimensions.as_ref() {
+                    if dim.len() == 0 { continue }
+                    if let Some(f) = self.factor.as_ref() {
+                        write!(out, "* {} ", f).unwrap();
+                    }
+                    if let Some(d) = self.divfactor.as_ref() {
+                        write!(out, "| {} ", d).unwrap();
+                    }
+                    write!(out, "{}", dim).unwrap();
                 } else {
-                    if self.dimensions.len() == 0 { continue }
-                    write!(out, "{}", self.dimensions).unwrap();
+                    continue
                 },
                 'q' => if let Some(q) = self.quantity.as_ref() {
                     write!(out, "{}", q).unwrap();
@@ -213,22 +283,29 @@ impl NumberParts {
                 } else {
                     continue
                 },
-                'd' => if self.unit.is_none() {
-                    if self.dimensions.len() == 0 { continue }
-                    write!(out, "{}", self.dimensions).unwrap();
+                'd' => if let Some(dim) = self.dimensions.as_ref() {
+                    if self.unit.is_none() || dim.len() == 0 { continue }
+                    write!(out, "{}", dim).unwrap();
                 } else {
                     continue
                 },
-                'D' => if self.dimensions.len() > 0 {
-                    write!(out, "{}", self.dimensions).unwrap();
+                'D' => if let Some(dim) = self.dimensions.as_ref() {
+                    if dim.len() == 0 { continue }
+                    write!(out, "{}", dim).unwrap();
                 } else {
                     continue
                 },
-                'p' => match (self.quantity.as_ref(), self.unit.is_some() && self.dimensions.len() > 0) {
-                    (Some(q), true) => write!(out, "({}; {})", q, self.dimensions).unwrap(),
-                    (Some(q), false) => write!(out, "({})", q).unwrap(),
-                    (None, true) => write!(out, "({})", self.dimensions).unwrap(),
-                    (None, false) => continue
+                'p' => match (self.quantity.as_ref(), self.dimensions.as_ref().and_then(|x| {
+                    if self.unit.is_some() && x.len() > 0 {
+                        Some(x)
+                    } else {
+                        None
+                    }
+                })) {
+                    (Some(q), Some(d)) => write!(out, "({}; {})", q, d).unwrap(),
+                    (Some(q), None) => write!(out, "({})", q).unwrap(),
+                    (None, Some(d)) => write!(out, "({})", d).unwrap(),
+                    (None, None) => continue
                 },
                 ' ' if in_ws => continue,
                 ' ' if !in_ws => {
@@ -380,9 +457,8 @@ impl Number {
         NumberParts {
             exact_value: exact,
             approx_value: approx,
-            unit: None,
-            quantity: None,
-            dimensions: Number::unit_to_string(&self.1)
+            dimensions: Some(Number::unit_to_string(&self.1)),
+            ..Default::default()
         }
     }
 
@@ -452,8 +528,10 @@ impl Number {
             exact_value: exact,
             approx_value: approx,
             unit: if value.1 != self.1 { Some(Number::unit_to_string(&value.1)) } else { None },
+            raw_unit: if value.1 != self.1 { Some(value.1) } else { None },
             quantity: quantity,
-            dimensions: Number::unit_to_string(&self.1),
+            dimensions: Some(Number::unit_to_string(&self.1)),
+            ..Default::default()
         }
     }
 

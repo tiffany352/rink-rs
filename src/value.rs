@@ -8,7 +8,7 @@ use eval::Context;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use date;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Value {
     Number(Number),
     DateTime(DateTime<FixedOffset>),

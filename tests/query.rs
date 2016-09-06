@@ -16,8 +16,8 @@ fn test(input: &str, output: &str) {
     CONTEXT.with(|ctx| {
         let res = ctx.eval_outer(&expr);
         let res = match res {
-            Ok(v) => v,
-            Err(v) => v
+            Ok(v) => v.to_string(),
+            Err(v) => v.to_string()
         };
         assert_eq!(res, output);
     });
@@ -86,4 +86,38 @@ fn negative_now() {
 #[test]
 fn negative_conversion() {
     test("1 m -> -meter", "-1 * -1 meter (length)");
+}
+
+#[test]
+fn test_units_for() {
+    test("units for electrical_potential",
+         "Units for kg m^2 / A s^3 (electrical_potential): \
+          abvolt, daniell, intvolt, statvolt, volt");
+}
+
+#[test]
+fn test_factorize() {
+    test("factorize velocity",
+         "Factorizations: velocity;  area viscosity;  \
+          frequency length;  angular_momentum fuel_efficiency;  \
+          acceleration time;  length^2 viscosity;  jerk time^2");
+}
+
+#[test]
+fn test_conformance() {
+    test("W -> J",
+         "Conformance error: 1 watt (power) != 1 joule (energy)\n\
+          Suggestions: multiply left side by time, multiply left side by frequency");
+}
+
+#[test]
+fn test_dates() {
+    test("#jan 01, 1970#",
+         "1970-01-01 00:00:00 +00:00 (46 years ago)");
+}
+
+#[test]
+fn test_lists() {
+    test("pi hour -> hr;min;sec", "3 hour, 8 minute, 29.73355 second (time)");
+    test("meter -> ft;in;line", "3 intfoot, 3 intinch, 4.440944 intline (length)");
 }

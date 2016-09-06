@@ -48,6 +48,7 @@ pub mod factorize;
 pub mod gnu_units;
 pub mod ast;
 pub mod value;
+pub mod reply;
 
 pub use number::Number;
 pub use eval::Context;
@@ -148,7 +149,8 @@ pub fn load() -> Result<Context, String> {
 pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
     let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
-    ctx.eval_outer(&expr)
+    let res = ctx.eval_outer(&expr);
+    res.as_ref().map(ToString::to_string).map_err(ToString::to_string)
 }
 
 #[cfg(feature = "sandbox")]

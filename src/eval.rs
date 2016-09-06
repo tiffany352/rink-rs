@@ -4,12 +4,14 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use gmp::mpq::Mpq;
-use number::{Number, Unit, Dim, pow};
+use number::{Number, Unit, Dim, NumberParts, pow};
 use date;
 use ast::{DatePattern, Expr, SuffixOp, Def, Defs, Query, Conversion};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
 use value::{Value, Show};
+use reply::{DefReply, ConversionReply, FactorizeReply, UnitsForReply,
+            QueryReply, ConformanceError, QueryError, UnitListReply};
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
@@ -416,31 +418,16 @@ impl Context {
     }
 
     /// Evaluates an expression, include `->` conversions.
-    pub fn eval_outer(&self, expr: &Query) -> Result<String, String> {
-        let conformance_err = |top: &Number, bottom: &Number| -> String {
-            use std::io::Write;
-
-            let mut buf = vec![];
-            let width = 12;
+    pub fn eval_outer(&self, expr: &Query) -> Result<QueryReply, QueryError> {
+        let conformance_err = |top: &Number, bottom: &Number| -> ConformanceError {
             let mut topu = top.clone();
             topu.0 = Mpq::one();
             let mut bottomu = bottom.clone();
             bottomu.0 = Mpq::one();
-            let left = topu.show(self);
-            let right = bottomu.show(self);
-            if self.short_output {
-                writeln!(buf, "Conformance error [ {left} || {right} ]",
-                         left=left, right=right).unwrap();
-            } else {
-                writeln!(buf, concat!("Conformance error\n",
-                                      "{:>width$}: {left}\n",
-                                      "{:>width$}: {right}"),
-                         "Left side", "Right side", left=left, right=right, width=width).unwrap();
-            }
+            let mut suggestions = vec![];
             let diff = (&topu * &bottomu).unwrap();
             if diff.1.len() == 0 {
-                writeln!(buf, "{:>width$}: Reciprocal conversion, invert one side",
-                         "Suggestions", width=width).unwrap();
+                suggestions.push(format!("Reciprocal conversion, invert one side"));
             } else {
                 let diff = (&topu / &bottomu).unwrap();
                 let (recip, desc) = self.describe_unit(&diff.invert());
@@ -448,70 +435,47 @@ impl Context {
                     false => "multiply",
                     true => "divide"
                 };
-                writeln!(buf, "{:>width$}: {word} left side by {}", "Suggestions",
-                         desc.trim(), width=width, word=word).unwrap();
+                suggestions.push(format!("{word} left side by {}", desc.trim(), word=word));
                 let (recip, desc) = self.describe_unit(&diff);
                 let word = match recip {
                     false => "multiply",
                     true => "divide"
                 };
-                writeln!(buf, "{:>width$}  {word} right side by {}", "",
-                         desc.trim(), width=width, word=word).unwrap();
+                suggestions.push(format!("{word} left side by {}", desc.trim(), word=word));
             }
 
-            String::from_utf8(buf).unwrap()
+            ConformanceError {
+                left: top.to_parts(self),
+                right: bottom.to_parts(self),
+                suggestions: suggestions,
+            }
         };
 
-        let show = |raw: &Number, bottom: &Number, bottom_name: (BTreeMap<String, isize>, Mpq)| -> String {
+        let show = |raw: &Number, bottom: &Number, bottom_name: (BTreeMap<String, isize>, Mpq)| -> ConversionReply {
             use gmp::mpz::Mpz;
             let (bottom_name, bottom_const) = bottom_name;
             let parts = raw.to_parts(self);
-            let mut unit_top = vec![];
-            let mut unit_frac = vec![];
-            if bottom_const.get_num() != Mpz::one() {
-                unit_top.push((format!("* {}", bottom_const.get_num()), 1));
+            let bottom_name = bottom_name.into_iter().map(
+                |(a,b)| (Dim::new(&*a), b as i64)).collect();
+            ConversionReply {
+                value: NumberParts {
+                    exact_value: parts.exact_value,
+                    approx_value: parts.approx_value,
+                    factor: if bottom_const.get_num() != Mpz::one() {
+                        Some(format!("{}", bottom_const.get_num()))
+                    } else {
+                        None
+                    },
+                    divfactor: if bottom_const.get_den() != Mpz::one() {
+                        Some(format!("{}", bottom_const.get_den()))
+                    } else {
+                        None
+                    },
+                    unit: Some(Number::unit_to_string(&bottom_name)),
+                    raw_unit: Some(bottom_name),
+                    ..bottom.to_parts(self)
+                },
             }
-            if bottom_const.get_den() != Mpz::one() {
-                unit_frac.push((format!("{}", bottom_const.get_den()), 1));
-            }
-            for (name, exp) in bottom_name.into_iter() {
-                if exp < 0 {
-                    unit_frac.push((name, -exp));
-                } else {
-                    unit_top.push((name, exp));
-                }
-            }
-            let unit_top = unit_top.into_iter().fold(String::new(), |mut acc, (name, exp)| {
-                acc.push(' ');
-                acc.push_str(&*name);
-                if exp != 1 {
-                    acc.push_str(&*format!("^{}", exp));
-                }
-                acc
-            });
-            let unit_frac = unit_frac.into_iter().fold(String::new(), |mut acc, (name, exp)| {
-                if acc.len() > 0 {
-                    acc.push(' ');
-                }
-                acc.push_str(&*name);
-                if exp != 1 {
-                    acc.push_str(&*format!("^{}", exp));
-                }
-                acc
-            });
-            let unit_frac = if unit_frac.len() > 0 {
-                format!(" / {}", unit_frac)
-            } else {
-                unit_frac
-            };
-            let reduced = match self.describe_unit(&bottom) {
-                (false, v) => v,
-                (true, v) => format!("1 / {}", v)
-            };
-            let number = parts.format("n");
-            format!("{number}{unit_top}{unit_frac} ({reduced})",
-                    number=number, unit_top=unit_top,
-                    unit_frac=unit_frac, reduced=reduced)
         };
 
         match *expr {
@@ -525,36 +489,40 @@ impl Context {
                 }
                 let ref def = self.definitions[name];
                 let res = self.lookup(name).unwrap();
-                let parts = res.to_parts(self);
-                Ok(format!("Definition: {} = {} = {}", name, def, parts.format("n u p")))
+                Ok(QueryReply::Def(DefReply {
+                    canon_name: name.clone(),
+                    def: format!("{}", def),
+                    value: res.to_parts(self)
+                }))
             },
             Query::Convert(ref top, Conversion::Expr(ref bottom)) => match (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
                     let (top, bottom) = match (top, bottom) {
                         (Value::Number(top), Value::Number(bottom)) => (top, bottom),
-                        _ => return Err(format!("Conversion of non-numbers is not defined"))
+                        _ => return Err(QueryError::Generic(format!(
+                            "Conversion of non-numbers is not defined")))
                     };
                     if top.1 == bottom.1 {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
-                            None => return Err(format!("Division by zero: {} / {}",
-                                                       top.show(self), bottom.show(self)))
+                            None => return Err(QueryError::Generic(format!(
+                                "Division by zero: {} / {}", top.show(self), bottom.show(self))))
                         };
-                        Ok(show(&raw, &bottom, bottom_name))
+                        Ok(QueryReply::Conversion(show(&raw, &bottom, bottom_name)))
                     } else {
-                        Err(conformance_err(&top, &bottom))
+                        Err(QueryError::Conformance(conformance_err(&top, &bottom)))
                     }
                 },
-                (Err(e), _, _) => Err(e),
-                (_, Err(e), _) => Err(e),
-                (_, _, Err(e)) => Err(e),
+                (Err(e), _, _) => Err(QueryError::Generic(e)),
+                (_, Err(e), _) => Err(QueryError::Generic(e)),
+                (_, _, Err(e)) => Err(QueryError::Generic(e)),
             },
             Query::Convert(ref top, Conversion::List(ref list)) => {
                 let top = try!(self.eval(top));
                 let top = match top {
                     Value::Number(num) => num,
-                    _ => return Err(format!("Cannot convert <{}> to {:?}",
-                                            top.show(self), list))
+                    _ => return Err(QueryError::Generic(format!(
+                        "Cannot convert <{}> to {:?}", top.show(self), list)))
                 };
                 let units = try!(list.iter().map(|x| {
                     self.lookup(x).ok_or_else(|| self.unknown_unit_err(x))
@@ -570,7 +538,7 @@ impl Context {
                         }
                     }).collect::<Result<Vec<()>, _>>());
                     if top.1 != first.1 {
-                        return Err(conformance_err(&top, &first))
+                        return Err(QueryError::Conformance(conformance_err(&top, &first)))
                     }
                 }
                 let mut value = top.0;
@@ -590,20 +558,19 @@ impl Context {
                         out.push(Mpq::ratio(&div, &Mpz::one()));
                     }
                 }
-                let mut buf = vec![];
-                for (name, value) in list.into_iter().zip(out.into_iter()) {
-                    use std::io::Write;
-                    use number;
-
-                    write!(buf, "{} {}, ", number::to_string(&value).1,
-                           self.canonicalize(name).unwrap_or_else(|| name.clone())).unwrap();
-                }
-                buf.pop(); buf.pop();
-                if let Some(res) = self.quantities.get(&top.1) {
-                    use std::io::Write;
-                    write!(buf, " ({})", res).unwrap();
-                }
-                Ok(String::from_utf8(buf).unwrap())
+                Ok(QueryReply::UnitList(UnitListReply {
+                    rest: NumberParts {
+                        quantity: self.quantities.get(&top.1).cloned(),
+                        ..Default::default()
+                    },
+                    list: list.into_iter().zip(out.into_iter()).map(|(name, value)| {
+                        NumberParts {
+                            unit: Some(self.canonicalize(name).unwrap_or_else(|| name.clone())),
+                            exact_value: Some(::number::to_string(&value).1),
+                            ..Default::default()
+                        }
+                    }).collect(),
+                }))
             },
             Query::Convert(ref top, ref which @ Conversion::DegC) |
             Query::Convert(ref top, ref which @ Conversion::DegF) |
@@ -616,20 +583,20 @@ impl Context {
                     ($name:expr, $base:expr, $scale:expr) => {{
                         let top = match top {
                             Value::Number(ref num) => num,
-                            _ => return Err(format!("Cannot convert <{}> to °{}",
-                                                    top.show(self), $name))
+                            _ => return Err(QueryError::Generic(format!(
+                                "Cannot convert <{}> to °{}", top.show(self), $name)))
                         };
                         let bottom = self.lookup($scale)
                             .expect(&*format!("Unit {} missing", $scale));
                         if top.1 != bottom.1 {
-                            Err(conformance_err(&top, &bottom))
+                            Err(QueryError::Conformance(conformance_err(&top, &bottom)))
                         } else {
                             let res = (top - &self.lookup($base)
                                        .expect(&*format!("Constant {} missing", $base))).unwrap();
                             let res = (&res / &bottom).unwrap();
                             let mut name = BTreeMap::new();
                             name.insert(format!("°{}", $name), 1);
-                            Ok(show(&res, &bottom, (name, Mpq::one())))
+                            Ok(QueryReply::Conversion(show(&res, &bottom, (name, Mpq::one()))))
                         }
                     }}
                 }
@@ -648,7 +615,8 @@ impl Context {
                 let val = try!(self.eval(expr));
                 let val = match val {
                     Value::Number(val) => val,
-                    _ => return Err(format!("Cannot find derivatives of <{}>", val.show(self))),
+                    _ => return Err(QueryError::Generic(format!(
+                        "Cannot find derivatives of <{}>", val.show(self))),)
                 };
                 let quantities = self.quantities.iter()
                     .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
@@ -661,28 +629,18 @@ impl Context {
                     for name in names.into_iter() {
                         *next.entry(name).or_insert(0) += 1;
                     }
-                    let names = next.into_iter().map(|(a, b)| if b > 1 {
-                        Rc::new(format!("{}^{}", a, b))
-                    } else {
-                        a
-                    }).collect::<Vec<_>>();
-                    let first = names.first().cloned();
-                    names.into_iter().skip(1).fold(
-                        first.map(|x| (**x).to_owned()).unwrap_or(String::new()),
-                        |a, x| format!("{} {}", a, x))
+                    next
                 }).collect::<Vec<_>>();
-                let first = results.first().cloned();
-                let len = results.len();
-                let results = results.into_iter().skip(1).fold(
-                    first.unwrap_or(String::new()),
-                    |a, x| format!("{};  {}", a, x));
-                Ok(format!("Factorizations: {}{}", results, if len < 10 {""} else {";  ..."}))
+                Ok(QueryReply::Factorize(FactorizeReply {
+                    factorizations: results
+                }))
             },
             Query::UnitsFor(ref expr) => {
                 let val = try!(self.eval(expr));
                 let val = match val {
                     Value::Number(val) => val,
-                    _ => return Err(format!("Cannot find units for <{}>", val.show(self))),
+                    _ => return Err(QueryError::Generic(format!(
+                        "Cannot find units for <{}>", val.show(self)))),
                 };
                 let mut out = vec![];
                 for (name, unit) in self.units.iter() {
@@ -694,16 +652,24 @@ impl Context {
                     }
                 }
                 out.sort();
-                let units = out.iter().skip(1).fold(
-                    out.first().cloned().cloned().unwrap_or(String::new()),
-                    |a, x| format!("{}, {}", a, x));
-                Ok(format!("Units for {}: {}", val.to_parts(self).format("D w"), units))
+                let parts = val.to_parts(self);
+                Ok(QueryReply::UnitsFor(UnitsForReply {
+                    units: out.into_iter().cloned().collect(),
+                    of: NumberParts {
+                        dimensions: parts.dimensions,
+                        quantity: parts.quantity,
+                        ..Default::default()
+                    },
+                }))
             },
             Query::Expr(ref expr) => {
                 let val = try!(self.eval(expr));
-                Ok(val.show(self))
+                match val {
+                    Value::Number(n) => Ok(QueryReply::Number(n.to_parts(self))),
+                    Value::DateTime(d) => Ok(QueryReply::Date(d)),
+                }
             },
-            Query::Error(ref e) => Err(e.clone()),
+            Query::Error(ref e) => Err(QueryError::Generic(e.clone())),
         }
     }
 
