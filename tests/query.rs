@@ -68,3 +68,8 @@ fn test_lookup() {
 fn test_consts_in_conversion() {
     test("1/mpg -> L / 100km", "112903/480, approx. 235.2145 liter / 100 kilometer (area)");
 }
+
+#[test]
+fn negative_prefixes() {
+    test("-1ms", "-1 millisecond (time)");
+}

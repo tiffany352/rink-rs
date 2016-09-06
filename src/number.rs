@@ -408,7 +408,8 @@ impl Number {
                 if !prefixes.contains(&**p) {
                     continue;
                 }
-                if val >= v.0 && val < &v.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()) {
+                let abs = val.abs();
+                if abs >= v.0 && abs < &v.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()) {
                     let res = &val / &v.0;
                     // tonne special case
                     let unit = if &**(orig.0).0 == "gram" && p == "mega" {
