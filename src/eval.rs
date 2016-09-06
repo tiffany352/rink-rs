@@ -532,7 +532,7 @@ impl Context {
                 }
                 Ok(left)
             },
-            Expr::Neg(ref v) => self.eval_unit_name(v),
+            Expr::Neg(ref v) => self.eval_unit_name(v).map(|(u, v)| (u, -&v)),
             Expr::Plus(ref v) => self.eval_unit_name(v),
             Expr::Suffix(_, _) =>
                 Err(format!("Temperature conversions must not be compound units")),

@@ -78,3 +78,8 @@ fn negative_prefixes() {
 fn negative_now() {
     test("-#jan 01, 1970#", "Operation is not defined: - <1970-01-01 00:00:00 +00:00 (46 years ago)>");
 }
+
+#[test]
+fn negative_conversion() {
+    test("1 m -> -meter", "-1 * -1 meter (length)");
+}
