@@ -1034,6 +1034,10 @@ impl Context {
         reverse.insert("weber");
         reverse.insert("henry");
         reverse.insert("tesla");
+        reverse.insert("lumen");
+        reverse.insert("lux");
+        reverse.insert("gray");
+        reverse.insert("katal");
 
         for (name, def) in udefs {
             let name = match name {
