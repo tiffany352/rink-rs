@@ -73,3 +73,8 @@ fn test_consts_in_conversion() {
 fn negative_prefixes() {
     test("-1ms", "-1 millisecond (time)");
 }
+
+#[test]
+fn negative_now() {
+    test("-#jan 01, 1970#", "Operation is not defined: - <1970-01-01 00:00:00 +00:00 (46 years ago)>");
+}

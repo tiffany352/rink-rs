@@ -414,7 +414,9 @@ impl Context {
                     exp.as_ref().map(AsRef::as_ref))
                 .map(Value::Number),
             Expr::Date(ref date) => date::try_decode(date, self).map(Value::DateTime),
-            Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| -&v),
+            Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| (-&v).map_err(|e| {
+                format!("{}: - <{}>", e, v.show(self))
+            })),
             Expr::Plus(ref expr) => self.eval(&**expr),
 
             Expr::Frac(ref left, ref right) => operator!(left div / right),
