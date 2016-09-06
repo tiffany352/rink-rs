@@ -589,7 +589,7 @@ impl Context {
         let show = |raw: &Number, bottom: &Number, bottom_name: (BTreeMap<String, isize>, Mpq)| -> String {
             use gmp::mpz::Mpz;
             let (bottom_name, bottom_const) = bottom_name;
-            let number = raw.show_number_part();
+            let parts = raw.to_parts(self);
             let mut unit_top = vec![];
             let mut unit_frac = vec![];
             if bottom_const.get_num() != Mpz::one() {
@@ -632,6 +632,7 @@ impl Context {
                 (false, v) => v,
                 (true, v) => format!("1 / {}", v)
             };
+            let number = parts.format("n");
             format!("{number}{unit_top}{unit_frac} ({reduced})",
                     number=number, unit_top=unit_top,
                     unit_frac=unit_frac, reduced=reduced)
@@ -648,23 +649,8 @@ impl Context {
                 }
                 let ref def = self.definitions[name];
                 let res = self.lookup(name).unwrap();
-                let raw = res.show_number_part();
-                let unit = res.unit_name(self);
-                let base_units = Number::unit_to_string(&res.1);
-                let base_units = if unit == base_units { None } else { Some(base_units) };
-                let quantity = self.quantities.get(&res.1);
-                let unit = if unit.len() > 0 {
-                    format!(" {}", unit)
-                } else {
-                    unit
-                };
-                let parens = match (quantity, base_units) {
-                    (Some(quantity), Some(base)) => format!(" ({}; {})", quantity, base),
-                    (Some(quantity), None) => format!(" ({})", quantity),
-                    (None, Some(base)) => format!(" ({})", base),
-                    (None, None) => format!(""),
-                };
-                Ok(format!("Definition: {} = {} = {}{}{}", name, def, raw, unit, parens))
+                let parts = res.to_parts(self);
+                Ok(format!("Definition: {} = {} = {}", name, def, parts.format("n u p")))
             },
             Query::Convert(ref top, Conversion::Expr(ref bottom)) => match (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
@@ -831,18 +817,11 @@ impl Context {
                         out.push(name);
                     }
                 }
-                let raw = Number::unit_to_string(&val.1);
-                let quantity = self.quantities.get(&val.1);
-                let quantity = if let Some(quantity) = quantity {
-                    format!(" ({})", quantity)
-                } else {
-                    format!("")
-                };
                 out.sort();
                 let units = out.iter().skip(1).fold(
                     out.first().cloned().cloned().unwrap_or(String::new()),
                     |a, x| format!("{}, {}", a, x));
-                Ok(format!("Units for {}{}: {}", raw, quantity, units))
+                Ok(format!("Units for {}: {}", val.to_parts(self).format("D w"), units))
             },
             Query::Expr(ref expr) => {
                 let val = try!(self.eval(expr));

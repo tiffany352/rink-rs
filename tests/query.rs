@@ -26,7 +26,7 @@ fn test_definition() {
 
 #[test]
 fn test_eval() {
-    test("5 inch", "0.127 meter (length)");
+    test("5 inch", "127 millimeter (length)");
 }
 
 #[test]
@@ -60,6 +60,11 @@ fn test_number_regress() {
 
 #[test]
 fn test_lookup() {
-    test("ks", "1000 second (time)");
-    test("pcs", "approx. 3.231314e16 meter (length)");
+    test("ks", "1 kilosecond (time)");
+    test("pcs", "approx. 32.31314 petameter (length)");
+}
+
+#[test]
+fn test_consts_in_conversion() {
+    test("1/mpg -> L / 100km", "112903/480, approx. 235.2145 liter / 100 kilometer (area)");
 }

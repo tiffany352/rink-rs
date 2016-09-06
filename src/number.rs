@@ -138,6 +138,119 @@ pub fn to_string(rational: &Mpq) -> (bool, String) {
     }
 }
 
+/// Several stringified properties of a number which are useful for
+/// displaying it to a user.
+#[derive(Clone, Debug)]
+pub struct NumberParts {
+    /// Present if the number can be concisely represented exactly.
+    /// May be decimal, fraction, or scientific notation.
+    pub exact_value: Option<String>,
+    /// Present if the number can't be exactly concisely represented
+    /// in decimal or scientific notation.
+    pub approx_value: Option<String>,
+    /// Higher-level unit decomposition, if available.
+    pub unit: Option<String>,
+    /// The physical quantity associated with the unit, if available.
+    pub quantity: Option<String>,
+    /// The dimensionality of the unit.
+    pub dimensions: String,
+}
+
+impl NumberParts {
+    /// A DSL for formatting numbers.
+    ///
+    /// - `a`: Approximate numerical value, if exists.
+    /// - `e`: Exact numerical value, if exists.
+    /// - `n`: Exact and approximate values.
+    /// - `u`: Unit.
+    /// - `q`: Quantity, if exists.
+    /// - `w`: Quantity in parentheses, if exists.
+    /// - `d`: Dimensionality, if not same as unit.
+    /// - `D`: Dimensionality, always.
+    /// - `p`: Quantity and dimensionality in parentheses.
+    ///
+    /// Display impl is equivalent to `n u w`.
+    ///
+    /// Whitespace is compacted. Any unrecognized characters are passed through.
+    pub fn format(&self, pat: &str) -> String {
+        use std::io::Write;
+
+        let mut out = vec![];
+
+        let mut in_ws = true;
+        for c in pat.chars() {
+            match c {
+                'e' => if let Some(ex) = self.exact_value.as_ref() {
+                    write!(out, "{}", ex).unwrap();
+                } else {
+                    continue
+                },
+                'a' => if let Some(ap) = self.approx_value.as_ref() {
+                    write!(out, "{}", ap).unwrap();
+                } else {
+                    continue
+                },
+                'n' => match (self.exact_value.as_ref(), self.approx_value.as_ref()) {
+                    (Some(ex), Some(ap)) => write!(out, "{}, approx. {}", ex, ap).unwrap(),
+                    (Some(ex), None) => write!(out, "{}", ex).unwrap(),
+                    (None, Some(ap)) => write!(out, "approx. {}", ap).unwrap(),
+                    (None, None) => panic!("Number parts had neither exact nor approximate representation"),
+                },
+                'u' => if let Some(unit) = self.unit.as_ref() {
+                    if unit.len() == 0 { continue }
+                    write!(out, "{}", unit).unwrap();
+                } else {
+                    if self.dimensions.len() == 0 { continue }
+                    write!(out, "{}", self.dimensions).unwrap();
+                },
+                'q' => if let Some(q) = self.quantity.as_ref() {
+                    write!(out, "{}", q).unwrap();
+                } else {
+                    continue
+                },
+                'w' => if let Some(q) = self.quantity.as_ref() {
+                    write!(out, "({})", q).unwrap();
+                } else {
+                    continue
+                },
+                'd' => if self.unit.is_none() {
+                    if self.dimensions.len() == 0 { continue }
+                    write!(out, "{}", self.dimensions).unwrap();
+                } else {
+                    continue
+                },
+                'D' => if self.dimensions.len() > 0 {
+                    write!(out, "{}", self.dimensions).unwrap();
+                } else {
+                    continue
+                },
+                'p' => match (self.quantity.as_ref(), self.unit.is_some() && self.dimensions.len() > 0) {
+                    (Some(q), true) => write!(out, "({}; {})", q, self.dimensions).unwrap(),
+                    (Some(q), false) => write!(out, "({})", q).unwrap(),
+                    (None, true) => write!(out, "({})", self.dimensions).unwrap(),
+                    (None, false) => continue
+                },
+                ' ' if in_ws => continue,
+                ' ' if !in_ws => {
+                    in_ws = true;
+                    write!(out, " ").unwrap();
+                    continue
+                },
+                x => write!(out, "{}", x).unwrap()
+            }
+            in_ws = false;
+        }
+
+        ::std::str::from_utf8(&out[..]).unwrap().trim().to_owned()
+    }
+}
+
+impl fmt::Display for NumberParts {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}", self.format("n u w"))
+    }
+}
+
 impl Number {
     pub fn one() -> Number {
         Number(one(), Unit::new())
@@ -250,28 +363,97 @@ impl Number {
         }
     }
 
-    pub fn show_number_part(&self) -> String {
-        use std::io::Write;
-
-        let mut out = vec![];
-        let mut value = self.clone();
-        value.0.canonicalize();
-
-        let (exact, approx) = match to_string(&value.0) {
-            (true, v) => (v, None),
-            (false, v) => if value.0.get_den() > Mpz::from(1_000_000) || value.0.get_num() > Mpz::from(1_000_000_000u64) {
-                (format!("approx. {}", v), None)
+    fn numeric_value(&self) -> (Option<String>, Option<String>) {
+        match to_string(&self.0) {
+            (true, v) => (Some(v), None),
+            (false, v) => if {self.0.get_den() > Mpz::from(1_000_000) ||
+                              self.0.get_num() > Mpz::from(1_000_000_000u64)} {
+                (None, Some(v))
             } else {
-                (format!("{:?}", value.0), Some(v))
+                (Some(format!("{:?}", self.0)), Some(v))
             }
-        };
-
-        write!(out, "{}", exact).unwrap();
-        if let Some(approx) = approx {
-            write!(out, ", approx. {}", approx).unwrap();
         }
+    }
 
-        String::from_utf8(out).unwrap()
+    pub fn to_parts_simple(&self) -> NumberParts {
+        let (exact, approx) = self.numeric_value();
+        NumberParts {
+            exact_value: exact,
+            approx_value: approx,
+            unit: None,
+            quantity: None,
+            dimensions: Number::unit_to_string(&self.1)
+        }
+    }
+
+    /// Convert the units of the number from base units to display
+    /// units, and possibly apply SI prefixes.
+    pub fn prettify(&self, context: &::eval::Context) -> Number {
+        let unit = self.pretty_unit(context);
+        if unit.len() == 1 {
+            use std::collections::HashSet;
+            let prefixes = [
+                "milli", "micro", "nano", "pico", "femto", "atto", "zepto", "yocto",
+                "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta"]
+                .iter().cloned().collect::<HashSet<&'static str>>();
+            let orig = unit.iter().next().unwrap();
+            // kg special case
+            let (val, orig) = if &**(orig.0).0 == "kg" || &**(orig.0).0 == "kilogram" {
+                (&self.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()),
+                 (Dim::new("gram"), orig.1))
+            } else {
+                (self.0.clone(), (orig.0.clone(), orig.1))
+            };
+            for &(ref p, ref v) in &context.prefixes {
+                if !prefixes.contains(&**p) {
+                    continue;
+                }
+                if val >= v.0 && val < &v.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()) {
+                    let res = &val / &v.0;
+                    // tonne special case
+                    let unit = if &**(orig.0).0 == "gram" && p == "mega" {
+                        format!("tonne")
+                    } else {
+                        format!("{}{}", p, orig.0)
+                    };
+                    let mut map = BTreeMap::new();
+                    map.insert(Dim::new(&*unit), 1);
+                    return Number(res, map)
+                }
+            }
+            let mut map = BTreeMap::new();
+            map.insert(orig.0.clone(), orig.1.clone());
+            Number(val, map)
+        } else {
+            Number(self.0.clone(), unit)
+        }
+    }
+
+    pub fn to_parts(&self, context: &::eval::Context) -> NumberParts {
+        let value = self.prettify(context);
+        let (exact, approx) = value.numeric_value();
+
+        let quantity = context.quantities.get(&self.1).cloned().or_else(|| {
+            if self.1.len() == 1 {
+                let e = self.1.iter().next().unwrap();
+                let ref n = *e.0;
+                if *e.1 == 1 {
+                    Some((&*n.0).clone())
+                } else {
+                    Some(format!("{}^{}", n, e.1))
+                }
+            } else {
+                None
+            }
+        });
+
+        NumberParts {
+            exact_value: exact,
+            approx_value: approx,
+            unit: if value.1 != self.1 { Some(Number::unit_to_string(&value.1)) } else { None },
+            quantity: quantity,
+            dimensions: Number::unit_to_string(&self.1),
+        }
     }
 
     pub fn unit_to_string(unit: &Unit) -> String {
@@ -307,17 +489,11 @@ impl Number {
         String::from_utf8(out).unwrap()
     }
 
-    pub fn pretty_unit(&self, context: &::eval::Context) -> Unit {
+    fn pretty_unit(&self, context: &::eval::Context) -> Unit {
         let pretty = ::factorize::fast_decompose(self, &context.reverse);
         let pretty = pretty.into_iter()
             .map(|(k, p)| (context.canonicalizations.get(&*k.0).map(|x| Dim::new(x)).unwrap_or(k), p))
             .collect::<BTreeMap<_, _>>();
-        pretty
-    }
-
-    pub fn unit_name(&self, context: &::eval::Context) -> String {
-        let pretty = self.pretty_unit(context);
-        let pretty = Number::unit_to_string(&pretty);
         pretty
     }
 
@@ -328,91 +504,15 @@ impl Number {
 
 impl fmt::Debug for Number {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", self.show_number_part())
+        let parts = self.to_parts_simple();
+        write!(fmt, "{}", parts)
     }
 }
 
 impl Show for Number {
     fn show(&self, context: &::eval::Context) -> String {
-        use std::io::Write;
-
-        let mut out = vec![];
-        let mut value = self.clone();
-        value.0.canonicalize();
-
-        let unit = self.pretty_unit(context);
-        let mut found = false;
-        if unit.len() == 1 {
-            use std::collections::HashSet;
-            let prefixes = [
-                "milli", "micro", "nano", "pico", "femto", "atto", "zepto", "yocto",
-                "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta"]
-                .iter().cloned().collect::<HashSet<&'static str>>();
-            let orig = unit.iter().next().unwrap();
-            // kg special case
-            let (val, orig) = if &**(orig.0).0 == "kg" || &**(orig.0).0 == "kilogram" {
-                (&self.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()),
-                 (Dim::new("gram"), orig.1))
-            } else {
-                (self.0.clone(), (orig.0.clone(), orig.1))
-            };
-            for &(ref p, ref v) in &context.prefixes {
-                if !prefixes.contains(&**p) {
-                    continue;
-                }
-                if val >= v.0 && val < &v.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()) {
-                    found = true;
-                    let res = &val / &v.0;
-                    let res = Number(res, unit.clone());
-                    let exp = if *orig.1 != 1 {
-                        format!("^{}", orig.1)
-                    } else {
-                        format!("")
-                    };
-                    // tonne special case
-                    let unit = if &**(orig.0).0 == "gram" && p == "mega" {
-                        format!("tonne")
-                    } else {
-                        format!("{}{}", p, orig.0)
-                    };
-                    write!(out, "{} {}{}", res.show_number_part(), unit, exp).unwrap();
-                    break;
-                }
-            }
-            if !found {
-                let res = Number(val, unit.clone());
-                let exp = if *orig.1 != 1 {
-                    format!("^{}", orig.1)
-                } else {
-                    format!("")
-                };
-                write!(out, "{} {}{}", res.show_number_part(), orig.0, exp).unwrap();
-            }
-        } else {
-            write!(out, "{}", self.show_number_part()).unwrap();
-            let unit = Number::unit_to_string(&unit);
-            if unit.len() > 0 {
-                write!(out, " {}", unit).unwrap();
-            }
-        }
-
-        let quantity = context.quantities.get(&value.1).cloned().or_else(|| {
-            if value.1.len() == 1 {
-                let e = value.1.iter().next().unwrap();
-                let ref n = *e.0;
-                if *e.1 == 1 {
-                    Some((&*n.0).clone())
-                } else {
-                    Some(format!("{}^{}", n, e.1))
-                }
-            } else {
-                None
-            }
-        });
-        if let Some(quantity) = quantity {
-            write!(out, " ({})", quantity).unwrap();
-        }
-        String::from_utf8(out).unwrap()
+        let parts = self.to_parts(context);
+        format!("{}", parts)
     }
 }
 

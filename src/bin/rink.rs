@@ -38,25 +38,10 @@ fn main() {
                             &None => format!("")
                         };
                         let res = ctx.lookup(k).unwrap();
-                        let raw = res.show_number_part();
-                        let unit = res.unit_name(ctx);
-                        let base_units = Number::unit_to_string(&res.1);
-                        let base_units = if unit == base_units { None } else { Some(base_units) };
-                        let quantity = ctx.quantities.get(&res.1);
-                        let unit = if unit.len() > 0 {
-                            format!(" {}", unit)
-                        } else {
-                            unit
-                        };
-                        let parens = match (quantity, base_units) {
-                            (Some(quantity), Some(base)) => format!(" ({}; {})", quantity, base),
-                            (Some(quantity), None) => format!(" ({})", quantity),
-                            (None, Some(base)) => format!(" ({})", base),
-                            (None, None) => format!(""),
-                        };
+                        let parts = res.to_parts(ctx);
                         out.push(Completion {
                             completion: (*k).clone(),
-                            display: Some(format!("{} ({}{}{}{})", k, def, raw, unit, parens)),
+                            display: Some(format!("{} ({}{})", k, def, parts.format("n u p"))),
                             suffix: None,
                         });
                     }
