@@ -5313,26 +5313,104 @@ pfund                   500 g
 #
 # Some traditional Russian measures
 #
-# If you would like to help expand this section and understand
-# cyrillic transliteration, let me know.  These measures are meant to
-# reflect common usage, e.g. in translated literature.  
-#
 
-dessiatine              2400 sazhen^2    # Land measure
-dessjatine              dessiatine
+# length
 
-funt                    409.51718 grams  # similar to pound
-zolotnik                1|96 funt        # used for precious metal measure
-pood                    40 funt          # common in agricultural measure
+точка                   1|10 линия
+tochka                  точка
+линия                   1|10 дюим
+liniya                  линия
+дюим                    1 inch
+dyuim                   дюим
+вершок                  1.75 in
+vershok                 вершок
+пядь                    7 дюим
+piad                    пядь
+четверть                пядь
+chetvert                четверть
+фут                     1 foot
+fut                     фут
+аршин                   7|3 ft
+arshin                  аршин
+сажень                  7 ft
+sazhen                  сажень
+верста                  1500 аршин
+versta                  верста
+миля                    10500 аршин
+milia                   миля
 
-arshin                  (2 + 1|3) feet
-sazhen                  3 arshin         # analogous to fathom
-verst                   500 sazhen       # of similar use to mile
-versta                  verst
-borderverst             1000 sazhen
-russianmile             7 verst
+# area
 
+казенная_десятина       2400 сажень^2
+kazionnaya_desiatina    казенная_десятина
+official_desiatina      казенная_десятина
+владельческая_десятина  3200 сажень^2
+vladelcheskaya_desiatina владельческая_десятина
+proprietors_desiatina   владельческая_десятина
 
+# dry measures
+
+часть                   1|12 кружка
+chast                   часть
+кружка                  2|5 гарнец
+kruzhka                 кружка
+гарнец                  200 in^3
+garnets                 гарнец
+ведро                   4 гарнец
+vedro                   ведро
+четверик                2 ведро
+chetverik               четверик
+осьмина                 4 четверик
+osmina                  осьмина
+сухчетверть             2 осьмина
+drychetvert             четверть
+
+# liquid measures
+
+шкалик                  1|2 чарка
+shlalik                 шкалик
+косушка                 1|2 чарка
+kosushka                косушка
+чарка                   1|10 кружка
+charka                  чарка
+кружка                  1|10 ведро
+kruzhka                 кружка
+штоф                    1|10 ведро
+shtof                   штоф
+жидкчетверть            1|8 ведро
+fluidchetvert           четверть
+ведро                   750 in^3
+vedro                   ведро
+бочка                   40 ведро
+bochka                  бочка
+
+# common mass
+
+доля                    1|96 золотник
+dolia                   доля
+золотник                1|3 лот
+zolotnik                золотник
+лот                     1|13 фунт
+lot                     лот
+фунт                    0.903 lb
+funt                    фунт
+пуд                     40 фунт
+pood                    пуд
+берковец                10 пуд
+berkovets               берковец
+
+# apothecary mass
+
+гран                    7|5 доля
+gran                    гран
+скрупул                 20 гран
+scrupul                 скрупул
+драхма                  3 скрупул
+drachma                 драхма
+унция                   8 драхма
+uncia                   унция
+апфунт                  12 унция
+apfunt                  фунт
 
 
 #
