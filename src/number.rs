@@ -475,7 +475,7 @@ impl Number {
             let orig = unit.iter().next().unwrap();
             // kg special case
             let (val, orig) = if &**(orig.0).0 == "kg" || &**(orig.0).0 == "kilogram" {
-                (&self.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()),
+                (&self.0 * &pow(&Mpq::ratio(&Mpz::from(1000), &Mpz::one()), (*orig.1) as i32),
                  (Dim::new("gram"), orig.1))
             } else {
                 (self.0.clone(), (orig.0.clone(), orig.1))
@@ -485,8 +485,10 @@ impl Number {
                     continue;
                 }
                 let abs = val.abs();
-                if abs >= v.0 && abs < &v.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one()) {
-                    let res = &val / &v.0;
+                if { abs >= pow(&v.0, (*orig.1) as i32) &&
+                     abs < pow(&(&v.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one())),
+                               (*orig.1) as i32) } {
+                    let res = &val / &pow(&v.0, (*orig.1) as i32);
                     // tonne special case
                     let unit = if &**(orig.0).0 == "gram" && p == "mega" {
                         format!("tonne")
@@ -494,7 +496,7 @@ impl Number {
                         format!("{}{}", p, orig.0)
                     };
                     let mut map = BTreeMap::new();
-                    map.insert(Dim::new(&*unit), 1);
+                    map.insert(Dim::new(&*unit), *orig.1);
                     return Number(res, map)
                 }
             }
