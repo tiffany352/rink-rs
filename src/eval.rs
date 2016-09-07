@@ -441,7 +441,7 @@ impl Context {
                     false => "multiply",
                     true => "divide"
                 };
-                suggestions.push(format!("{word} left side by {}", desc.trim(), word=word));
+                suggestions.push(format!("{word} right side by {}", desc.trim(), word=word));
             }
 
             ConformanceError {

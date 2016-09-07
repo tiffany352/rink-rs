@@ -107,7 +107,7 @@ fn test_factorize() {
 fn test_conformance() {
     test("W -> J",
          "Conformance error: 1 watt (power) != 1 joule (energy)\n\
-          Suggestions: multiply left side by time, multiply left side by frequency");
+          Suggestions: multiply left side by time, multiply right side by frequency");
 }
 
 #[test]
