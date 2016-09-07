@@ -1,32 +1,49 @@
 # Rink
 
-A unit conversion tool in Rust. The name is a subset of `frink`,
-another unit conversion tool, to indicate that this tool implements a
-subset of frink's features.
+Rink is a unit-aware calculator. It can be used for physics and
+engineering calculations, as well as dimensionality analysis.
 
-Select features:
+Rink supports most systems of measurements including SI, CGS, natural,
+international customary, US customary, UK customary, as well as
+historical measurements.
+
+Unique features:
+
 - High-precision bignum rational arithmetic
 - Detailed error messages
-- IRC bot
+- Shows SI physical quantities
+- Finds applicable SI derived units automatically
+- Helps with dimensionality analysis, such as by offering unit
+  factorizations and finding units for quantities.
+- Open source
+- First-class support for non-absolute temperature scales
+
+## [Manual](https://github.com/tiffany352/rink-rs/wiki/Rink-Manual)
+
+Describes (hopefully) everything you need to know to use Rink's
+expression language.
+
+## [Web Interface](https://tiffnix.com/rink/)
+
+Rink is available via the web, so that you don't have to install it.
 
 ## Install
 
 `cargo install rink`
 
+Running `rink` will give you a CLI interface for you to enter queries.
+
 ## Examples
 
 ```
 > kWh/year -> W
-approx. 0.1140795 W (power)
+0.1140795 watt (power)
 ```
 
 ```
 > W -> J
-Conformance error
-   Left side: 1 watt (power)
-  Right side: 1 joule (energy)
-  Suggestion: multiply left side by time
-              multiply right side by frequency
+Conformance error: 1 watt (power) != 1 joule (energy)
+Suggestions: multiply left side by time, multiply right side by frequency
 ```
 
 ```
