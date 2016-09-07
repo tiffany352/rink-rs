@@ -510,7 +510,6 @@ magnetization           ? current / length
 electrical_potential    ? volt
 electric_field          ? newton / coulomb
 entropy                 ? energy / temperature
-thermal_resistance      ? temperature^2 / power
 thermal_inductance      ? energy temperature^2 / power^2
 permittivity            ? farad / meter
 permeability            ? henry / meter
@@ -532,7 +531,6 @@ specific_heat_capacity  ? energy / mass temperature
 specific_volume         ? volume / mass
 spin                    ? mass area / time
 surface_tension         ? energy / area
-thermal_conductivity    ? power / length temperature
 fuel_efficiency         ? area^-1
 
 
@@ -3337,7 +3335,6 @@ tog                     0.1 K m^2 / W   # Also used for clothing.
 
 # Misc other measures
 
-entropy                 ? energy / temperature
 clausius                1e3 cal/K       # A unit of physical entropy
 langley                 thermcalorie/cm^2    # Used in radiation theory
 poncelet                100 kg force m / s
@@ -3930,7 +3927,6 @@ megalerg                megaerg    # 'L' added to make it pronounceable [18].
 #
 
 unitedstatesdollar      US$
-usdollar                US$
 $                       dollar
 # mark                    germanymark
 # bolivar                 venezuelabolivar
@@ -4846,7 +4842,6 @@ fpm                     ft/min
 fps                     ft/s
 rpm                     rev/min
 rps                     rev/sec
-mi                      mile
 smi                     mile
 nmi                     nauticalmile
 mbh                     1e3 btu/hour
@@ -5350,15 +5345,15 @@ proprietors_desiatina   владельческая_десятина
 
 # dry measures
 
-часть                   1|12 кружка
+часть                   1|12 сухкружка
 chast                   часть
-кружка                  2|5 гарнец
-kruzhka                 кружка
+сухкружка               2|5 гарнец
+drykruzhka              сухкружка
 гарнец                  200 in^3
 garnets                 гарнец
-ведро                   4 гарнец
-vedro                   ведро
-четверик                2 ведро
+сухведро                4 гарнец
+dryvedro                сухведро
+четверик                2 сухведро
 chetverik               четверик
 осьмина                 4 четверик
 osmina                  осьмина
@@ -5371,17 +5366,17 @@ drychetvert             четверть
 shlalik                 шкалик
 косушка                 1|2 чарка
 kosushka                косушка
-чарка                   1|10 кружка
+чарка                   1|10 жидккружка
 charka                  чарка
-кружка                  1|10 ведро
-kruzhka                 кружка
-штоф                    1|10 ведро
+жидккружка              1|10 жидкведро
+fluidkruzhka            жидккружка
+штоф                    1|10 жидкведро
 shtof                   штоф
-жидкчетверть            1|8 ведро
-fluidchetvert           четверть
-ведро                   750 in^3
-vedro                   ведро
-бочка                   40 ведро
+жидкчетверть            1|8 жидкведро
+fluidchetvert           жидкчетверть
+жидкведро               750 in^3
+fuidvedro               жидкведро
+бочка                   40 жидкведро
 bochka                  бочка
 
 # common mass
@@ -5726,9 +5721,9 @@ quadrantal      amphora
 libra           5052 grain   # The Roman pound varied significantly
 librae          libra        # from 4210 grains to 5232 grains.  Most of
 romanpound      libra        # the standards were obtained from the weight
-uncia           1|12 libra   # of particular coins.  The one given here is
-unciae          uncia        # based on the Gold Aureus of Augustus which
-romanounce      uncia        # was in use from BC 27 to AD 296.
+romanuncia      1|12 libra   # of particular coins.  The one given here is
+unciae          romanuncia   # based on the Gold Aureus of Augustus which
+romanounce      romanuncia   # was in use from BC 27 to AD 296.
 deunx           11 uncia
 dextans         10 uncia
 dodrans         9 uncia

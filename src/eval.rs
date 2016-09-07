@@ -846,7 +846,14 @@ impl Context {
                 Def::Quantity(_) => Name::Quantity(name),
                 _ => Name::Unit(name)
             };
-            resolver.input.insert(unit.clone(), def);
+            if resolver.input.insert(unit.clone(), def).is_some() {
+                let (ty, name) = match unit {
+                    Name::Prefix(ref name) => ("prefixes", name),
+                    Name::Quantity(ref name) => ("quantities", name),
+                    Name::Unit(ref name) => ("units", name),
+                };
+                println!("warning: multiple {} named {}", ty, name);
+            }
             resolver.unmarked.insert(unit);
         }
 
