@@ -311,7 +311,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 let mut buf = String::new();
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
-                    if c.is_alphanumeric() || c == '_' {
+                    if c.is_alphanumeric() || c == '_' || c == '$' {
                         buf.push(self.0.next().unwrap());
                     } else {
                         break;
@@ -351,7 +351,7 @@ fn is_attr(name: &str) -> Option<&'static str> {
         "UKC" => Some("UKC"),
         "UKK" => Some("UKK"),
         "imperial" | "british" | "UK" => Some("br"),
-        "survey" | "geodetic" | "US" => Some("survey"),
+        "survey" | "geodetic" => Some("survey"),
         "irish" => Some("irish"),
         "aust" | "australian" => Some("aust"),
         "roman" => Some("roman"),
