@@ -87,6 +87,25 @@ the MPL, including larger works with secondary licenses.
 
 ## Changelog
 
+### 0.3.1
+- Automatically find SI prefixes
+- Limit to one prefix on units to prevent very unintuitive results
+- Switch to linefeed from rustyline
+- Tab completion
+- Fix a serious number printing bug
+- Significantly improve canonicalizations
+- Constants in right-hand side of conversions
+- New quantities
+- Fix parsec definition
+- Reintroduce jerk, snap, crackle, and pop
+- Added π, ¢, and ħ symbols
+- Better determinism by removing hashmaps
+- Typo suggestions
+- Simple unit namespacing allowing for things like "british foot"
+- Minor error message improvements
+- Refactors
+- Russian traditional measurements
+
 ### 0.3.0
 - Use GNU units database instead of frink's
 - Relicense under MPL
