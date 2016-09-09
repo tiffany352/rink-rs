@@ -502,7 +502,7 @@ crackle                 ? snap / time
 pop                     ? crackle / time
 density                 ? mass / volume
 linear_density          ? mass / length
-viscosity               ? force time / area
+viscosity               ? pressure time
 kinematic_viscosity     ? viscosity / density
 magnetic_flux           ? weber
 magnetic_flux_density   ? tesla
@@ -519,7 +519,6 @@ catalytic_activity      ? amount / time
 chemical_potential      ? energy / amount
 molar_concentration     ? amount / volume
 current_density         ? current / area
-dynamic_viscosity       ? pressure time
 electric_charge_density ? charge / volume
 electric_displacement   ? charge / area
 impulse                 ? mass length / time

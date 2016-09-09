@@ -98,9 +98,9 @@ fn test_units_for() {
 #[test]
 fn test_factorize() {
     test("factorize velocity",
-         "Factorizations: velocity;  area viscosity;  \
-          frequency length;  angular_momentum fuel_efficiency;  \
-          acceleration time;  length^2 viscosity;  jerk time^2");
+         "Factorizations: velocity;  acceleration time;  \
+          angular_momentum fuel_efficiency;  \
+          frequency length;  jerk time^2");
 }
 
 #[test]
