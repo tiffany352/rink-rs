@@ -127,3 +127,9 @@ fn test_volume_prefix() {
     test("mm^3", "1 millimeter^3 (volume)");
     test("1000000 m^2", "1 kilometer^2 (area)");
 }
+
+#[test]
+fn test_offset_conversion() {
+    test("#jan 01, 1970# -> -05:00",
+         "1969-12-31 19:00:00 -05:00 (46 years ago)");
+}

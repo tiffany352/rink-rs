@@ -25,6 +25,7 @@ pub enum Token {
     Minus,
     Asterisk,
     DashArrow,
+    Colon,
     Date(Vec<DateToken>),
     Comma,
     DegC,
@@ -54,6 +55,7 @@ fn describe(token: &Token) -> String {
         Token::Minus => "`-`".to_owned(),
         Token::Asterisk => "`*`".to_owned(),
         Token::DashArrow => "`->`".to_owned(),
+        Token::Colon => "`:`".to_owned(),
         Token::Date(_) => "date literal".to_owned(),
         Token::Comma => "`,`".to_owned(),
         Token::DegC => "`°C`".to_owned(),
@@ -94,6 +96,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             '^' => Token::Caret,
             ',' => Token::Comma,
             '|' => Token::Pipe,
+            ':' => Token::Colon,
             '*' => if self.0.peek().cloned() == Some('*') {
                 self.0.next();
                 Token::Caret
@@ -546,6 +549,29 @@ pub fn parse_unitlist(mut iter: &mut Iter) -> Option<Vec<String>> {
     Some(res)
 }
 
+pub fn parse_offset(mut iter: &mut Iter) -> Option<i64> {
+    use std::str::FromStr;
+
+    let sign = match iter.next().unwrap() {
+        Token::Plus => 1,
+        Token::Minus => -1,
+        _ => return None
+    };
+    let hour = match iter.next().unwrap() {
+        Token::Number(ref i, None, None) if i.len() == 2 => i.clone(),
+        _ => return None
+    };
+    let _col = match iter.next().unwrap() {
+        Token::Colon => (),
+        _ => return None
+    };
+    let min = match iter.next().unwrap() {
+        Token::Number(ref i, None, None) if i.len() == 2 => i.clone(),
+        _ => return None
+    };
+    Some(sign * (i64::from_str(&*hour).unwrap() * 3600 + i64::from_str(&*min).unwrap() * 60))
+}
+
 pub fn parse_query(mut iter: &mut Iter) -> Query {
     match iter.peek().cloned() {
         Some(Token::Ident(ref s)) if s == "factorize" => {
@@ -579,6 +605,14 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
                 Token::DegRo => Conversion::DegRo,
                 Token::DegDe => Conversion::DegDe,
                 Token::DegN => Conversion::DegN,
+                Token::Plus | Token::Minus => {
+                    let mut old = iter.clone();
+                    if let Some(off) = parse_offset(iter) {
+                        Conversion::Offset(off)
+                    } else {
+                        Conversion::Expr(parse_eq(&mut old))
+                    }
+                },
                 _ => Conversion::Expr(parse_eq(iter))
             };
             Query::Convert(left, right)

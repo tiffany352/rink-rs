@@ -572,6 +572,18 @@ impl Context {
                     }).collect(),
                 }))
             },
+            Query::Convert(ref top, Conversion::Offset(off)) => {
+                use chrono::FixedOffset;
+
+                let top = try!(self.eval(top));
+                let top = match top {
+                    Value::DateTime(date) => date,
+                    _ => return Err(QueryError::Generic(format!(
+                        "Cannot convert <{}> to timezone offset {:+}", top.show(self), off)))
+                };
+                let top = top.with_timezone(&FixedOffset::east(off as i32));
+                Ok(QueryReply::Date(top))
+            },
             Query::Convert(ref top, ref which @ Conversion::DegC) |
             Query::Convert(ref top, ref which @ Conversion::DegF) |
             Query::Convert(ref top, ref which @ Conversion::DegN) |

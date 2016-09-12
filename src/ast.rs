@@ -55,6 +55,7 @@ pub enum Conversion {
     DegDe,
     DegN,
     List(Vec<String>),
+    Offset(i64),
 }
 
 #[derive(Debug, Clone)]
