@@ -1,0 +1,283 @@
+EUR                     !euro
+money                 ? EUR
+
+# Symbols + names
+# EU
+€                       EUR
+
+# US
+$                       USD
+dollar                  USD
+usdollar                USD
+cent                    $ 0.01
+penny                   cent
+¢                       cent
+buck                    USD
+fin                     5 USD
+sawbuck                 10 USD
+usgrand                 1000 USD
+greenback               USD
+
+# Japan
+¥                       JPY
+yen                     JPY
+
+# Bulgaria
+лв                      BGN
+lev                     BGN
+
+# Czech Republic
+Kč                      CZK
+koruna                  CZK
+
+# Denmark
+denmarkkr               DKK
+denmarkkroner           DKK
+
+# UK
+£                       GBP
+britainpound            GBP
+pence                   1|100 GBP
+
+quid                    britainpound        # Slang names
+fiver                   5 quid
+tenner                  10 quid
+monkey                  500 quid
+brgrand                 1000 quid
+bob                     shilling
+
+shilling                1|20 britainpound   # Before decimalisation, there
+oldpence                1|12 shilling       # were 20 shillings to a pound,
+farthing                1|4 oldpence        # each of twelve old pence
+guinea                  21 shilling         # Still used in horse racing
+crown                   5 shilling
+florin                  2 shilling
+groat                   4 oldpence
+tanner                  6 oldpence
+brpenny                 0.01 britainpound
+tuppence                2 pence
+tuppenny                tuppence
+#ha'penny                halfbrpenny
+#hapenny                 ha'penny
+oldpenny                oldpence
+oldtuppence             2 oldpence
+oldtuppenny             oldtuppence
+threepence              3 oldpence    # threepence never refers to new money
+threepenny              threepence
+oldthreepence           threepence
+oldthreepenny           threepence
+#oldhalfpenny            halfoldpenny
+#oldha'penny             oldhalfpenny
+#oldhapenny              oldha'penny
+brpony                  25 britainpound
+
+# Hungary
+Ft                      HUF
+forint                  HUF
+
+# Poland
+zł                      PLN
+złoty                   PLN
+
+# Romania
+leu                     RON
+lei                     RON
+
+# Sweden
+krona                   SEK
+swedishkroner           SEK
+swedishkr               SEK
+
+# Switzerland
+franc                   CHF
+Fr                      CHF
+
+# Norway
+krone                   NOK
+øre                     1|100 NOK
+
+# Croatia
+kuna                    HRK
+lipa                    1|100 HRK
+
+# Russia
+₽                       RUB
+ruble                   RUB
+rouble                  RUB
+рубль                   RUB
+копеика                 1|100 RUB
+kopek                   копеика
+копеики                 копеика
+
+# Turkey
+₺                       TRY
+lira                    TRY
+kuruş                   1|100 TRY
+
+# Australia
+A$                      AUD
+aucent                  1|100 AUD
+audollar                AUD
+
+# Brazil
+real                    BRL
+R$                      BRL
+centavos                1|100 BRL
+brdollar                BRL
+
+# Canada
+C$                      CAD
+cacent                  1|100 CAD
+cadollar                CAD
+canadadollar            CAD
+
+loony                   1 canadadollar    # This coin depicts a loon
+toony                   2 canadadollar
+
+# PRC
+RMB                     CNY
+元                      CNY
+圆                      CNY
+yuan                    CNY
+CM¥                     CNY
+角                      1|10 yuan
+jiao                    角
+分                      1|10 角
+fen                     分
+
+# Hong Kong
+H$                      HKD
+hkdollar                HKD
+hkcent                  1|100 HKD
+
+# Indonesia
+rupiah                  IDR
+Rp                      IDR
+perak                   rupiah
+sen                     1|100 rupiah
+
+# Israel
+₪                       ILS
+shekel                  ILS
+שֶׁקֶל                     ILS
+agora                   1|100 shekel
+
+# India
+₹                       INR
+rupee                   INR
+paise                   1|100 INR
+
+# South Korea
+원                      KRW
+₩                       KRW
+won                     KRW
+jeon                    1|100 won
+
+# Mexico
+mex$                    MXN
+centavo                 1|100 MXN
+
+# Malaysia
+ringgit                 MYR
+RM                      MYR
+malaysiasen             1|100 ringgit
+
+# New Zealand
+NZ$                     NZD
+nzdollar                NZD
+kiwi                    NZD
+nzcent                  1|100 NZD
+
+# The Phillipines
+piso                    PHP
+₱                       PHP
+sentimo                 1|100 piso
+phcentavos              sentimo
+P$                      PHP
+
+# Singapore
+S$                      SGD
+sgcent                  1|100 SGD
+
+# Thailand
+บาท                     THB
+baht                    THB
+฿                       baht
+สตางค์                   1|100 บาท
+satang                  สตางค์
+
+# South Africa
+rand                    ZAR
+zacent                  1|100 ZAR
+
+# Aliases
+# mark                    germanymark
+# bolivar                 venezuelabolivar
+# VEF                     bolivar
+# venezuelanbolivarfuerte venezuelabolivar
+# bolivarfuerte           bolivar        # The currency was revalued by
+# oldbolivar              1|1000 bolivar # a factor of 1000.
+# VEB                     oldbolivar
+# peseta                  spainpeseta
+# rand                    southafricarand
+# escudo                  portugalescudo
+# guilder                 netherlandsguilder
+# hollandguilder          netherlandsguilder
+# peso                    mexicopeso
+# yen                     japanyen
+# lira                    italylira
+# rupee                   indiarupee
+# drachma                 greecedrachma
+# franc                   francefranc
+# markka                  finlandmarkka
+# britainpound            unitedkingdompound
+# greatbritainpound       unitedkingdompound
+# unitedkingdompound      ukpound
+# poundsterling           britainpound
+# yuan                    chinayuan
+
+# Some European currencies have permanent fixed exchange rates with
+# the Euro.  These rates were taken from the EC's web site:
+# http://ec.europa.eu/economy_finance/euro/adoption/conversion/index_en.htm
+
+austriaschilling        1|13.7603 euro
+belgiumfranc            1|40.3399 euro
+estoniakroon            1|15.6466 euro # Equal to 1|8 germanymark
+finlandmarkka           1|5.94573 euro
+francefranc             1|6.55957 euro
+germanymark             1|1.95583 euro
+greecedrachma           1|340.75 euro
+irelandpunt             1|0.787564 euro
+italylira               1|1936.27 euro
+luxembourgfranc         1|40.3399 euro
+netherlandsguilder      1|2.20371 euro
+portugalescudo          1|200.482 euro
+spainpeseta             1|166.386 euro
+cypruspound             1|0.585274 euro
+maltalira               1|0.429300 euro
+sloveniatolar           1|239.640 euro
+slovakiakoruna          1|30.1260 euro
+
+# Money on the gold standard, used in the late 19th century and early
+# 20th century.
+
+# olddollargold           23.22 grains goldprice  # Used until 1934
+# newdollargold           96|7 grains goldprice   # After Jan 31, 1934
+# dollargold              newdollargold
+# poundgold               113 grains goldprice
+# goldounce               goldprice troyounce
+# silverounce             silverprice troyounce
+# platinumounce		platinumprice troyounce
+# XAU                     goldounce
+# XPT                     platinumounce
+# XAG                     silverounce
+
+# Nominal masses of US coins.  Note that dimes, quarters and half dollars
+# have weight proportional to value.  Before 1965 it was $40 / kg.
+
+#USpennyweight           2.5 grams         # Since 1982, 48 grains before
+#USnickelweight          5 grams
+#USdimeweight            USD 0.10 / (20 USD / lb)   # Since 1965
+#USquarterweight         USD 0.25 / (20 USD / lb)   # Since 1965
+#UShalfdollarweight      USD 0.50 / (20 USD / lb)   # Since 1971
+#USdollarmass            8.1 grams

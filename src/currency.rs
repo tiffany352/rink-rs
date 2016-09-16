@@ -6,13 +6,52 @@ use hyper::status::StatusCode;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::fs::create_dir_all;
+use xml::EventReader;
+use xml::reader::XmlEvent;
+use ast::{Defs, Def, Expr};
+use std::rc::Rc;
 
 static URL: &'static str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 
-pub type Parsed = Vec<(String, f64)>;
-
-pub fn parse(_f: File) -> Parsed {
-    unimplemented!()
+pub fn parse(f: File) -> Result<Defs, String> {
+    let reader = EventReader::new(f);
+    let mut out = vec![];
+    for ev in reader {
+        match ev {
+            Ok(XmlEvent::StartElement {
+                ref name,
+                attributes: ref attrs,
+                ..
+            }) if name.local_name == "Cube" => {
+                let mut currency = None;
+                let mut rate = None;
+                for attr in attrs {
+                    match &*attr.name.local_name {
+                        "currency" =>
+                            currency = Some(&*attr.value),
+                        "rate" =>
+                            rate = Some(&*attr.value),
+                        _ => (),
+                    }
+                }
+                if let (Some(currency), Some(rate)) = (currency, rate) {
+                    let mut iter = rate.split(".");
+                    let integer = iter.next().unwrap().to_owned();
+                    let frac = iter.next().map(|x| x.to_owned());
+                    out.push((currency.to_owned(), Rc::new(Def::Unit(
+                        Expr::Mul(vec![
+                            Expr::Const(integer, frac, None),
+                            Expr::Unit("EUR".to_string())
+                        ])))));
+                }
+            },
+            Err(e) => return Err(format!("{}", e)),
+            _ => (),
+        }
+    }
+    Ok(Defs {
+        defs: out
+    })
 }
 
 fn path() -> Result<PathBuf, String> {
@@ -44,7 +83,7 @@ fn download() -> Result<(), String> {
     Ok(())
 }
 
-fn open() -> Result<Parsed, String> {
+fn open() -> Result<Defs, String> {
     fn ts<T:Display>(x: T) -> String {
         format!("{}", x)
     }
@@ -56,9 +95,9 @@ fn open() -> Result<Parsed, String> {
     if elapsed > Duration::from_secs(23*60*60) {
         return Err(format!("File is out of date"))
     }
-    Ok(parse(f))
+    parse(f)
 }
 
-pub fn load() -> Result<Parsed, String> {
+pub fn load() -> Result<Defs, String> {
     open().or_else(|_| download().and_then(|()| open()))
 }

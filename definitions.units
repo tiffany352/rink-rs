@@ -190,9 +190,6 @@ sr        !steradian # Solid angle which cuts off an area of the surface
 # Some primitive non-SI units
 #
 
-US$       !usdollar  # The US dollar is chosen arbitrarily to be the primitive
-                     #   unit of money.
-
 bit       !          # Basic unit of information (entropy).  The entropy in bits
                      #   of a random variable over a finite alphabet is defined
                      #   to be the sum of -p(i)*log2(p(i)) over the alphabet where
@@ -484,7 +481,6 @@ current                 ? ampere
 amount                  ? mole
 angle                   ? radian
 solid_angle             ? steradian
-money                   ? US$
 force                   ? newton
 pressure                ? pascal
 stress                    pascal
@@ -2319,11 +2315,6 @@ europeshoesize          2|3 cm
 # USA slang units
 #
 
-buck                    US$
-fin                     5 US$
-sawbuck                 10 US$
-usgrand                 1000 US$
-greenback               US$
 key                     kg           # usually of marijuana, 60's
 lid                     1 oz         # Another 60's weed unit
 footballfield           usfootballfield
@@ -3918,130 +3909,6 @@ megohm                  megaohm
 kilohm                  kiloohm
 microhm                 microohm
 megalerg                megaerg    # 'L' added to make it pronounceable [18].
-
-#
-# Money
-#
-# Note that US$ is the primitive unit so other currencies are
-# generally given in US$.
-#
-
-unitedstatesdollar      US$
-$                       dollar
-# mark                    germanymark
-# bolivar                 venezuelabolivar
-# venezuelanbolivarfuerte venezuelabolivar
-# bolivarfuerte           bolivar        # The currency was revalued by
-# oldbolivar              1|1000 bolivar # a factor of 1000.
-# peseta                  spainpeseta
-# rand                    southafricarand
-# escudo                  portugalescudo
-# guilder                 netherlandsguilder
-# hollandguilder          netherlandsguilder
-# peso                    mexicopeso
-# yen                     japanyen
-# lira                    italylira
-# rupee                   indiarupee
-# drachma                 greecedrachma
-# franc                   francefranc
-# markka                  finlandmarkka
-# britainpound            unitedkingdompound
-# greatbritainpound       unitedkingdompound
-# unitedkingdompound      ukpound
-# poundsterling           britainpound
-# yuan                    chinayuan
-
-# Some European currencies have permanent fixed exchange rates with
-# the Euro.  These rates were taken from the EC's web site:
-# http://ec.europa.eu/economy_finance/euro/adoption/conversion/index_en.htm
-
-# austriaschilling        1|13.7603 euro
-# belgiumfranc            1|40.3399 euro
-# estoniakroon            1|15.6466 euro # Equal to 1|8 germanymark
-# finlandmarkka           1|5.94573 euro
-# francefranc             1|6.55957 euro
-# germanymark             1|1.95583 euro
-# greecedrachma           1|340.75 euro
-# irelandpunt             1|0.787564 euro
-# italylira               1|1936.27 euro
-# luxembourgfranc         1|40.3399 euro
-# netherlandsguilder      1|2.20371 euro
-# portugalescudo          1|200.482 euro
-# spainpeseta             1|166.386 euro
-# cypruspound             1|0.585274 euro
-# maltalira               1|0.429300 euro
-# sloveniatolar           1|239.640 euro
-# slovakiakoruna          1|30.1260 euro
-
-# UKP                     GBP        # Not an ISO code, but looks like one, and
-#                                    # sometimes used on usenet.
-# VEB                     1|1000 VEF # old venezuelan bolivar
-
-# !include currency.units
-
-# Money on the gold standard, used in the late 19th century and early
-# 20th century.
-
-# olddollargold           23.22 grains goldprice  # Used until 1934
-# newdollargold           96|7 grains goldprice   # After Jan 31, 1934
-# dollargold              newdollargold
-# poundgold               113 grains goldprice
-# goldounce               goldprice troyounce
-# silverounce             silverprice troyounce
-# platinumounce		platinumprice troyounce
-# XAU                     goldounce
-# XPT                     platinumounce
-# XAG                     silverounce
-
-# Nominal masses of US coins.  Note that dimes, quarters and half dollars
-# have weight proportional to value.  Before 1965 it was $40 / kg.
-
-USpennyweight           2.5 grams         # Since 1982, 48 grains before
-USnickelweight          5 grams
-USdimeweight            US$ 0.10 / (20 US$ / lb)   # Since 1965
-USquarterweight         US$ 0.25 / (20 US$ / lb)   # Since 1965
-UShalfdollarweight      US$ 0.50 / (20 US$ / lb)   # Since 1971
-USdollarmass            8.1 grams
-
-# British currency
-
-# quid                    britainpound        # Slang names
-# fiver                   5 quid
-# tenner                  10 quid
-# monkey                  500 quid
-# brgrand                 1000 quid
-# bob                     shilling
-
-# shilling                1|20 britainpound   # Before decimalisation, there
-# oldpence                1|12 shilling       # were 20 shillings to a pound,
-# farthing                1|4 oldpence        # each of twelve old pence
-# guinea                  21 shilling         # Still used in horse racing
-# crown                   5 shilling
-# florin                  2 shilling
-# groat                   4 oldpence
-# tanner                  6 oldpence
-# brpenny                 0.01 britainpound
-# pence                   brpenny
-# tuppence                2 pence
-# tuppenny                tuppence
-# ha'penny                halfbrpenny
-# hapenny                 ha'penny
-# oldpenny                oldpence
-# oldtuppence             2 oldpence
-# oldtuppenny             oldtuppence
-# threepence              3 oldpence    # threepence never refers to new money
-# threepenny              threepence
-# oldthreepence           threepence
-# oldthreepenny           threepence
-# oldhalfpenny            halfoldpenny
-# oldha'penny             oldhalfpenny
-# oldhapenny              oldha'penny
-# brpony                  25 britainpound
-
-# Canadian currency
-
-# loony                   1 canadadollar    # This coin depicts a loon
-# toony                   2 canadadollar
 
 #
 # Units used for measuring volume of wood
@@ -5915,12 +5782,8 @@ quarter                 quarterweight
 cup                     uscup
 tablespoon              ustablespoon
 teaspoon                usteaspoon
-dollar                  US$
-cent                    $ 0.01
-penny                   cent
 minim                   minimvolume
 pony                    ponyvolume
-grand                   usgrand
 firkin                  usfirkin
 hogshead                ushogshead
 !endvar
@@ -5938,8 +5801,6 @@ hogshead                ushogshead
 # teacup                  brteacup
 # tablespoon              brtablespoon
 # teaspoon                brteaspoon
-# dollar                  US$
-# cent                    $ 0.01
 # penny                   brpenny
 # minim                   minimnote
 # pony                    brpony
@@ -5990,14 +5851,6 @@ röntgen                 roentgen
 #℉                       degF
 K                       K          # Kelvin symbol, U+212A
 ℓ                       liter      # unofficial abbreviation used in some places
-¢                       cent
-#£                       britainpound
-#¥                       japanyen
-#€                       euro
-#₩                       southkoreawon
-#₪                       israelnewshekel
-#₤                       lira
-#₨                       rupee
 
 Ω                       ohm       # Ohm symbol U+2126
 Ω                       ohm       # Greek capital omega U+03A9

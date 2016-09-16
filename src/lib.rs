@@ -101,11 +101,7 @@ fn config_dir() -> Result<PathBuf, String> {
 
 #[cfg(feature = "currency")]
 fn load_currency() -> Option<Result<ast::Defs, String>> {
-    let res = match currency::load() {
-        Ok(x) => x,
-        Err(e) => return Some(Err(e))
-    };
-    unimplemented!()
+    Some(currency::load())
 }
 
 #[cfg(not(feature = "currency"))]
@@ -119,6 +115,7 @@ static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.un
 static DEFAULT_FILE: Option<&'static str> = None;
 
 static DATES_FILE: &'static str = include_str!("../datepatterns.txt");
+static CURRENCY_FILE: &'static str = include_str!("../currency.units");
 
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
@@ -158,7 +155,16 @@ pub fn load() -> Result<Context, String> {
     let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
     let units = gnu_units::parse(&mut iter);
     let dates = date::parse_datefile(&*dates);
-    let currency = load_currency();
+    let currency = load_currency().map(|x| x.map(|mut defs| {
+        let currency =
+            load(Path::new("currency.units").to_path_buf())
+            .or_else(|_| load(path.join("currency.units")))
+            .unwrap_or_else(|_| CURRENCY_FILE.to_owned());
+        let mut iter = gnu_units::TokenIterator::new(&*currency).peekable();
+        let mut currency = gnu_units::parse(&mut iter);
+        currency.defs.append(&mut defs.defs);
+        currency
+    }));
 
     let mut ctx = eval::Context::new();
     ctx.load(units);
