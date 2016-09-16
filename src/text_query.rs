@@ -97,6 +97,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             ',' => Token::Comma,
             '|' => Token::Pipe,
             ':' => Token::Colon,
+            '→' => Token::DashArrow,
             '*' => if self.0.peek().cloned() == Some('*') {
                 self.0.next();
                 Token::Caret
