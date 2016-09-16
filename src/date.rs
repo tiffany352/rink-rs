@@ -302,18 +302,27 @@ pub fn to_duration(num: &Number) -> Result<Duration, String> {
     if num.0.abs() > max {
         return Err(format!("Implementation error: Number is out of range ({:?})", max))
     }
-    let num: Option<i64> = (&(&num.0.get_num() / &num.0.get_den())).into();
-    Ok(Duration::seconds(num.unwrap()))
+    let ms_div = Mpz::from(1_000);
+    let ms = &(&num.0.get_num() * &ms_div) / &num.0.get_den();
+    let ns_div = Mpz::from(1_000_000_000);
+    let ns = &num.0 - &Mpq::ratio(&ms, &ms_div);
+    let ns = &(&ns.get_num() * &ns_div) / &ns.get_den();
+    let ms: Option<i64> = (&ms).into();
+    let ns: Option<i64> = (&ns).into();
+    Ok(Duration::milliseconds(ms.unwrap()) + Duration::nanoseconds(ns.unwrap()))
 }
 
 pub fn from_duration(duration: &Duration) -> Result<Number, String> {
     use gmp::mpq::Mpq;
     use gmp::mpz::Mpz;
 
-    let ns = try!(duration.num_nanoseconds()
-                  .ok_or(format!("Implementation error: Duration is out of range")));
-    let div = Mpz::from(1_000_000_000);
-    Ok(Number::new_unit(Mpq::ratio(&Mpz::from(ns), &div), Dim::new("s")))
+    let ms = duration.num_milliseconds();
+    let ns = (*duration - Duration::milliseconds(ms)).num_nanoseconds().unwrap();
+    let ms_div = Mpz::from(1_000);
+    let ns_div = Mpz::from(1_000_000_000);
+    let ms = Mpq::ratio(&Mpz::from(ms), &ms_div);
+    let ns = Mpq::ratio(&Mpz::from(ns), &ns_div);
+    Ok(Number::new_unit(&ms + &ns, Dim::new("s")))
 }
 
 pub fn now() -> DateTime<FixedOffset> {
