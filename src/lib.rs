@@ -39,6 +39,10 @@ extern crate chrono_humanize;
 extern crate libc;
 #[cfg(feature = "sandbox")]
 extern crate ipc_channel;
+#[cfg(feature = "currency")]
+extern crate hyper;
+#[cfg(feature = "currency")]
+extern crate xml;
 
 pub mod text_query;
 pub mod eval;
@@ -49,6 +53,8 @@ pub mod gnu_units;
 pub mod ast;
 pub mod value;
 pub mod reply;
+#[cfg(feature = "currency")]
+pub mod currency;
 
 pub use number::Number;
 pub use eval::Context;
@@ -91,6 +97,20 @@ fn config_dir() -> Result<PathBuf, String> {
         .ok_or("Home dir not present".to_owned())
         .map(From::from)
         .map(|mut x: PathBuf| { x.push("Library/Application Support"); x})
+}
+
+#[cfg(feature = "currency")]
+fn load_currency() -> Option<Result<ast::Defs, String>> {
+    let res = match currency::load() {
+        Ok(x) => x,
+        Err(e) => return Some(Err(e))
+    };
+    unimplemented!()
+}
+
+#[cfg(not(feature = "currency"))]
+fn load_currency() -> Option<Result<ast::Defs, String>> {
+    None
 }
 
 #[cfg(feature = "gpl")]
@@ -138,10 +158,16 @@ pub fn load() -> Result<Context, String> {
     let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
     let units = gnu_units::parse(&mut iter);
     let dates = date::parse_datefile(&*dates);
+    let currency = load_currency();
 
     let mut ctx = eval::Context::new();
     ctx.load(units);
     ctx.load_dates(dates);
+    match currency {
+        Some(Ok(currency)) => ctx.load(currency),
+        Some(Err(e)) => println!("Failed to load currency data: {}", e),
+        None => (),
+    }
     Ok(ctx)
 }
 

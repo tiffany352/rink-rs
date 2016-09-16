@@ -531,6 +531,7 @@ specific_volume         ? volume / mass
 spin                    ? mass area / time
 surface_tension         ? energy / area
 fuel_efficiency         ? area^-1
+specific_energy         ? energy / mass
 
 
 #
@@ -4886,7 +4887,7 @@ Ci                      curie        # emitted by the amount of radon that is
                                      # in equilibrium with 1 gram of radium.
 rutherford              1e6 Bq       #
 
-radiation_dose          ? gray
+radiation_dose          gray
 gray                    J/kg         # Absorbed dose of radiation
 Gy                      gray         #
 rad                     1e-2 Gy      # From Radiation Absorbed Dose
