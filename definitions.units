@@ -528,6 +528,7 @@ spin                    ? mass area / time
 surface_tension         ? energy / area
 fuel_efficiency         ? area^-1
 specific_energy         ? energy / mass
+molar_mass              ? mass / amount
 
 
 #
@@ -4056,22 +4057,22 @@ lapserate	6.5 K/km	# US Std Atm (1976)
 # air molecular weight, including constituent mol wt, given
 # in Table 3, p. 3
 
-air_1976    78.084   %    28.0134 \
-          + 20.9476  %    31.9988 \
-          + 9340     ppm  39.948 \
-          +  314     ppm  44.00995 \
-          +   18.18  ppm  20.183 \
-          +    5.24  ppm   4.0026 \
-          +    2     ppm  16.04303 \
-          +    1.14  ppm  83.80 \
-          +    0.55  ppm   2.01594 \
-          +    0.087 ppm 131.30
+air_1976      78.084   %  28.0134  g/mol \
+          +   20.9476  %  31.9988  g/mol \
+          + 9340     ppm  39.948   g/mol \
+          +  314     ppm  44.00995 g/mol \
+          +   18.18  ppm  20.183   g/mol \
+          +    5.24  ppm   4.0026  g/mol \
+          +    2     ppm  16.04303 g/mol \
+          +    1.14  ppm  83.80    g/mol \
+          +    0.55  ppm   2.01594 g/mol \
+          +    0.087 ppm 131.30    g/mol
 
 # universal gas constant
 R_1976		8.31432e3 N m/(kmol K)
 
 # polytropic index n
-polyndx_1976	air_1976 (kg/kmol) gravity/(R_1976 lapserate) - 1
+polyndx_1976	air_1976 gravity/(R_1976 lapserate) - 1
 
 # If desired, redefine using current values for air mol wt and R
 
@@ -4815,110 +4816,110 @@ mache                   3.7e-7 Ci/m^3
 # lived isotope.
 #
 
-actinium                227.0278
-aluminum                26.981539
-americium               243.0614     # Longest lived. 241.06
-antimony                121.760
-argon                   39.948
-arsenic                 74.92159
-astatine                209.9871     # Longest lived
-barium                  137.327
-berkelium               247.0703     # Longest lived. 249.08
-beryllium               9.012182
-bismuth                 208.98037
-boron                   10.811
-bromine                 79.904
-cadmium                 112.411
-calcium                 40.078
-californium             251.0796     # Longest lived.  252.08
-carbon                  12.011
-cerium                  140.115
-cesium                  132.90543
-chlorine                35.4527
-chromium                51.9961
-cobalt                  58.93320
-copper                  63.546
-curium                  247.0703
-deuterium               2.0141017778
-dysprosium              162.50
-einsteinium             252.083      # Longest lived
-erbium                  167.26
-europium                151.965
-fermium                 257.0951     # Longest lived
-fluorine                18.9984032
-francium                223.0197     # Longest lived
-gadolinium              157.25
-gallium                 69.723
-germanium               72.61
-gold                    196.96654
-hafnium                 178.49
-helium                  4.002602
-holmium                 164.93032
-hydrogen                1.00794
-indium                  114.818
-iodine                  126.90447
-iridium                 192.217
-iron                    55.845
-krypton                 83.80
-lanthanum               138.9055
-lawrencium              262.11       # Longest lived
-lead                    207.2
-lithium                 6.941
-lutetium                174.967
-magnesium               24.3050
-manganese               54.93805
-mendelevium             258.10       # Longest lived
-mercury                 200.59
-molybdenum              95.94
-neodymium               144.24
-neon                    20.1797
-neptunium               237.0482
-nickel                  58.6934
-niobium                 92.90638
-nitrogen                14.00674
-nobelium                259.1009     # Longest lived
-osmium                  190.23
-oxygen                  15.9994
-palladium               106.42
-phosphorus              30.973762
-platinum                195.08
-plutonium               244.0642     # Longest lived.  239.05
-polonium                208.9824     # Longest lived.  209.98
-potassium               39.0983
-praseodymium            140.90765
-promethium              144.9127     # Longest lived.  146.92
-protactinium            231.03588
-radium                  226.0254
-radon                   222.0176     # Longest lived
-rhenium                 186.207
-rhodium                 102.90550
-rubidium                85.4678
-ruthenium               101.07
-samarium                150.36
-scandium                44.955910
-selenium                78.96
-silicon                 28.0855
-silver                  107.8682
-sodium                  22.989768
-strontium               87.62
-sulfur                  32.066
-tantalum                180.9479
-technetium              97.9072      # Longest lived.  98.906
-tellurium               127.60
-terbium                 158.92534
-thallium                204.3833
-thorium                 232.0381
-thullium                168.93421
-tin                     118.710
-titanium                47.867
-tungsten                183.84
-uranium                 238.0289
-vanadium                50.9415
-xenon                   131.29
-ytterbium               173.04
-yttrium                 88.90585
-zinc                    65.39
-zirconium               91.224
+actinium                227.0278 g/mol
+aluminum                26.981539 g/mol
+americium               243.0614 g/mol     # Longest lived. 241.06
+antimony                121.760 g/mol
+argon                   39.948 g/mol
+arsenic                 74.92159 g/mol
+astatine                209.9871 g/mol     # Longest lived
+barium                  137.327 g/mol
+berkelium               247.0703 g/mol     # Longest lived. 249.08
+beryllium               9.012182 g/mol
+bismuth                 208.98037 g/mol
+boron                   10.811 g/mol
+bromine                 79.904 g/mol
+cadmium                 112.411 g/mol
+calcium                 40.078 g/mol
+californium             251.0796 g/mol     # Longest lived.  252.08
+carbon                  12.011 g/mol
+cerium                  140.115 g/mol
+cesium                  132.90543 g/mol
+chlorine                35.4527 g/mol
+chromium                51.9961 g/mol
+cobalt                  58.93320 g/mol
+copper                  63.546 g/mol
+curium                  247.0703 g/mol
+deuterium               2.0141017778 g/mol
+dysprosium              162.50 g/mol
+einsteinium             252.083 g/mol      # Longest lived
+erbium                  167.26 g/mol
+europium                151.965 g/mol
+fermium                 257.0951 g/mol     # Longest lived
+fluorine                18.9984032 g/mol
+francium                223.0197 g/mol     # Longest lived
+gadolinium              157.25 g/mol
+gallium                 69.723 g/mol
+germanium               72.61 g/mol
+gold                    196.96654 g/mol
+hafnium                 178.49 g/mol
+helium                  4.002602 g/mol
+holmium                 164.93032 g/mol
+hydrogen                1.00794 g/mol
+indium                  114.818 g/mol
+iodine                  126.90447 g/mol
+iridium                 192.217 g/mol
+iron                    55.845 g/mol
+krypton                 83.80 g/mol
+lanthanum               138.9055 g/mol
+lawrencium              262.11 g/mol       # Longest lived
+lead                    207.2 g/mol
+lithium                 6.941 g/mol
+lutetium                174.967 g/mol
+magnesium               24.3050 g/mol
+manganese               54.93805 g/mol
+mendelevium             258.10 g/mol       # Longest lived
+mercury                 200.59 g/mol
+molybdenum              95.94 g/mol
+neodymium               144.24 g/mol
+neon                    20.1797 g/mol
+neptunium               237.0482 g/mol
+nickel                  58.6934 g/mol
+niobium                 92.90638 g/mol
+nitrogen                14.00674 g/mol
+nobelium                259.1009 g/mol     # Longest lived
+osmium                  190.23 g/mol
+oxygen                  15.9994 g/mol
+palladium               106.42 g/mol
+phosphorus              30.973762 g/mol
+platinum                195.08 g/mol
+plutonium               244.0642 g/mol     # Longest lived.  239.05
+polonium                208.9824 g/mol     # Longest lived.  209.98
+potassium               39.0983 g/mol
+praseodymium            140.90765 g/mol
+promethium              144.9127 g/mol     # Longest lived.  146.92
+protactinium            231.03588 g/mol
+radium                  226.0254 g/mol
+radon                   222.0176 g/mol     # Longest lived
+rhenium                 186.207 g/mol
+rhodium                 102.90550 g/mol
+rubidium                85.4678 g/mol
+ruthenium               101.07 g/mol
+samarium                150.36 g/mol
+scandium                44.955910 g/mol
+selenium                78.96 g/mol
+silicon                 28.0855 g/mol
+silver                  107.8682 g/mol
+sodium                  22.989768 g/mol
+strontium               87.62 g/mol
+sulfur                  32.066 g/mol
+tantalum                180.9479 g/mol
+technetium              97.9072 g/mol      # Longest lived.  98.906
+tellurium               127.60 g/mol
+terbium                 158.92534 g/mol
+thallium                204.3833 g/mol
+thorium                 232.0381 g/mol
+thullium                168.93421 g/mol
+tin                     118.710 g/mol
+titanium                47.867 g/mol
+tungsten                183.84 g/mol
+uranium                 238.0289 g/mol
+vanadium                50.9415 g/mol
+xenon                   131.29 g/mol
+ytterbium               173.04 g/mol
+yttrium                 88.90585 g/mol
+zinc                    65.39 g/mol
+zirconium               91.224 g/mol
 
 # Average molecular weight of air
 #
