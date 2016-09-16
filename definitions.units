@@ -4827,6 +4827,7 @@ barium                  137.327 g/mol
 berkelium               247.0703 g/mol     # Longest lived. 249.08
 beryllium               9.012182 g/mol
 bismuth                 208.98037 g/mol
+bohrium                 272.13826 g/mol
 boron                   10.811 g/mol
 bromine                 79.904 g/mol
 cadmium                 112.411 g/mol
@@ -4838,14 +4839,18 @@ cesium                  132.90543 g/mol
 chlorine                35.4527 g/mol
 chromium                51.9961 g/mol
 cobalt                  58.93320 g/mol
+copernicium             285.17712 g/mol
 copper                  63.546 g/mol
 curium                  247.0703 g/mol
+darmstadtium            281.16451 g/mol
 deuterium               2.0141017778 g/mol
+dubnium                 268.12567 g/mol
 dysprosium              162.50 g/mol
 einsteinium             252.083 g/mol      # Longest lived
 erbium                  167.26 g/mol
 europium                151.965 g/mol
 fermium                 257.0951 g/mol     # Longest lived
+flerovium               289.19042 g/mol
 fluorine                18.9984032 g/mol
 francium                223.0197 g/mol     # Longest lived
 gadolinium              157.25 g/mol
@@ -4853,6 +4858,7 @@ gallium                 69.723 g/mol
 germanium               72.61 g/mol
 gold                    196.96654 g/mol
 hafnium                 178.49 g/mol
+hassium                 270.13429 g/mol
 helium                  4.002602 g/mol
 holmium                 164.93032 g/mol
 hydrogen                1.00794 g/mol
@@ -4865,9 +4871,11 @@ lanthanum               138.9055 g/mol
 lawrencium              262.11 g/mol       # Longest lived
 lead                    207.2 g/mol
 lithium                 6.941 g/mol
+livermorium             293.20449 g/mol
 lutetium                174.967 g/mol
 magnesium               24.3050 g/mol
 manganese               54.93805 g/mol
+meitnerium              276.15159 g/mol
 mendelevium             258.10 g/mol       # Longest lived
 mercury                 200.59 g/mol
 molybdenum              95.94 g/mol
@@ -4893,10 +4901,13 @@ radium                  226.0254 g/mol
 radon                   222.0176 g/mol     # Longest lived
 rhenium                 186.207 g/mol
 rhodium                 102.90550 g/mol
+roentgenium             280.16514 g/mol
 rubidium                85.4678 g/mol
 ruthenium               101.07 g/mol
+rutherfordium           267.12179 g/mol
 samarium                150.36 g/mol
 scandium                44.955910 g/mol
+seaborgium              271.13393 g/mol
 selenium                78.96 g/mol
 silicon                 28.0855 g/mol
 silver                  107.8682 g/mol
@@ -4913,6 +4924,10 @@ thullium                168.93421 g/mol
 tin                     118.710 g/mol
 titanium                47.867 g/mol
 tungsten                183.84 g/mol
+uniunoctium             294.21392 g/mol
+ununpentium             288.19274 g/mol
+ununseptium             292.20746 g/mol
+ununtrium               284.17873 g/mol
 uranium                 238.0289 g/mol
 vanadium                50.9415 g/mol
 xenon                   131.29 g/mol
