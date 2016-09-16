@@ -257,19 +257,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                             }
                             DateToken::Space
                         },
-                        x if x.is_alphabetic() => {
-                            let mut buf = String::new();
-                            buf.push(x);
-                            while let Some(c) = self.0.peek().cloned() {
-                                if c.is_alphabetic() {
-                                    self.0.next();
-                                    buf.push(c);
-                                } else {
-                                    break;
-                                }
-                            }
-                            DateToken::Literal(buf)
-                        },
                         x if x.is_digit(10) => {
                             let mut integer = String::new();
                             integer.push(x);
@@ -298,7 +285,20 @@ impl<'a> Iterator for TokenIterator<'a> {
                             };
                             DateToken::Number(integer, frac)
                         },
-                        x => DateToken::Error(format!("Unexpected character '{}'", x))
+                        x => {
+                            let mut buf = String::new();
+                            buf.push(x);
+                            while let Some(c) = self.0.peek().cloned() {
+                                if !"#:-+ ".contains(c) && !c.is_digit(10) {
+                                    self.0.next();
+                                    buf.push(c);
+                                } else {
+                                    break;
+                                }
+                            }
+                            DateToken::Literal(buf)
+                        },
+                        //x => DateToken::Error(format!("Unexpected character '{}'", x))
                     };
                     toks.push(res);
                 }
