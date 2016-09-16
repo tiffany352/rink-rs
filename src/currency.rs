@@ -40,7 +40,8 @@ pub fn parse(f: File) -> Result<Defs, String> {
                     let frac = iter.next().map(|x| x.to_owned());
                     out.push((currency.to_owned(), Rc::new(Def::Unit(
                         Expr::Mul(vec![
-                            Expr::Const(integer, frac, None),
+                            Expr::Frac(Box::new(Expr::Const("1".to_owned(), None, None)),
+                                       Box::new(Expr::Const(integer, frac, None))),
                             Expr::Unit("EUR".to_string())
                         ])))));
                 }
