@@ -167,7 +167,6 @@ mol       !mole      # The amount of substance of a system which contains as man
 
 K         !kelvin    # 1|273.16 of the thermodynamic temperature of the triple
                      #   point of water
-k         K          # common but incorrect shorthand
 
 #
 # The radian and steradian are defined as dimensionless primitive units.
