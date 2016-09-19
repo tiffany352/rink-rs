@@ -547,7 +547,11 @@ pub fn parse_unitlist(mut iter: &mut Iter) -> Option<Vec<String>> {
         Token::Eof | Token::Newline | Token::Comment(_) if !expecting_term => break,
         _ => return None
     }}
-    Some(res)
+    if res.len() > 1 {
+        Some(res)
+    } else {
+        None
+    }
 }
 
 pub fn parse_offset(mut iter: &mut Iter) -> Option<i64> {
@@ -670,5 +674,14 @@ mod test {
                    "<error: Expected term, got <Malformed number literal: No digits after exponent>>");
         assert_eq!(parse("1."),
                    "<error: Expected term, got <Malformed number literal: No digits after decimal point>>");
+    }
+
+    #[test]
+    fn mono_unit_list() {
+        use ast::*;
+        match parse_query(&mut TokenIterator::new("foo -> bar").peekable()) {
+            Query::Convert(_, Conversion::Expr(_)) => (),
+            x => panic!("Expected Convert(_, Expr(_)), got {:?}", x),
+        }
     }
 }
