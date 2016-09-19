@@ -380,7 +380,7 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
         })
         .or_else(|_| {
             try!(create_dir_all(path.parent().unwrap()).map_err(|x| format!("{}", x)));
-            let mut f = try!(File::create(path).map_err(|x| format!("{}", x)));
+            let mut f = try!(File::create(path.clone()).map_err(|x| format!("{}", x)));
 
             let client = Client::new();
             let mut res = try!(client.get(url).send().map_err(|x| format!("{}", x)));
@@ -398,6 +398,7 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
                 }
             }
             try!(f.sync_all().map_err(|x| format!("{}", x)));
-            Ok(f)
+            drop(f);
+            File::open(path).map_err(|x| format!("{}", x))
         })
 }
