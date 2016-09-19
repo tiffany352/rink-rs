@@ -65,9 +65,10 @@ fn main() {
                     }
                 }
             } else if let Err(e) = message {
-                println!("{}", e);
+                println!("{}: {}", config, e);
             }
         }
+        println!("Thread {} exiting", config);
     }
 
     let mut threads = vec![];
