@@ -43,6 +43,8 @@ extern crate ipc_channel;
 extern crate hyper;
 #[cfg(feature = "currency")]
 extern crate xml;
+#[cfg(feature = "currency")]
+extern crate json;
 
 pub mod text_query;
 pub mod eval;
@@ -55,6 +57,8 @@ pub mod value;
 pub mod reply;
 #[cfg(feature = "currency")]
 pub mod currency;
+#[cfg(feature = "currency")]
+pub mod btc;
 
 pub use number::Number;
 pub use eval::Context;
@@ -64,6 +68,8 @@ use std::env;
 use std::convert::From;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
+use std::fs::File;
+use std::time::Duration;
 
 const DATA_FILE_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
 
@@ -106,6 +112,16 @@ fn load_currency() -> Option<Result<ast::Defs, String>> {
 
 #[cfg(not(feature = "currency"))]
 fn load_currency() -> Option<Result<ast::Defs, String>> {
+    None
+}
+
+#[cfg(feature = "currency")]
+fn load_btc() -> Option<Result<ast::Defs, String>> {
+    Some(btc::load())
+}
+
+#[cfg(not(feature = "currency"))]
+fn load_btc() -> Option<Result<ast::Defs, String>> {
     None
 }
 
@@ -155,25 +171,39 @@ pub fn load() -> Result<Context, String> {
     let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
     let units = gnu_units::parse(&mut iter);
     let dates = date::parse_datefile(&*dates);
-    let currency = load_currency().map(|x| x.map(|mut defs| {
-        let currency =
-            load(Path::new("currency.units").to_path_buf())
+    let ecb = load_currency();
+    let btc = load_btc();
+    let currency_defs = {
+        let defs = load(Path::new("currency.units").to_path_buf())
             .or_else(|_| load(path.join("currency.units")))
             .unwrap_or_else(|_| CURRENCY_FILE.to_owned());
-        let mut iter = gnu_units::TokenIterator::new(&*currency).peekable();
-        let mut currency = gnu_units::parse(&mut iter);
-        currency.defs.append(&mut defs.defs);
+        let mut iter = gnu_units::TokenIterator::new(&*defs).peekable();
+        let currency = gnu_units::parse(&mut iter);
         currency
-    }));
+    };
+    let currency = {
+        let mut defs = vec![];
+        if let Some(Ok(mut ecb)) = ecb {
+            defs.append(&mut ecb.defs)
+        } else if let Some(Err(e)) = ecb {
+            println!("Failed to load ECB currency data: {}", e);
+        }
+        if let Some(Ok(mut btc)) = btc {
+            defs.append(&mut btc.defs)
+        } else if let Some(Err(e)) = btc {
+            println!("Failed to load BTC currency data: {}", e);
+        }
+        let mut currency_defs = currency_defs;
+        defs.append(&mut currency_defs.defs);
+        ast::Defs {
+            defs: defs
+        }
+    };
 
     let mut ctx = eval::Context::new();
     ctx.load(units);
     ctx.load_dates(dates);
-    match currency {
-        Some(Ok(currency)) => ctx.load(currency),
-        Some(Err(e)) => println!("Failed to load currency data: {}", e),
-        None => (),
-    }
+    ctx.load(currency);
     Ok(ctx)
 }
 
@@ -317,4 +347,57 @@ fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
         }
     }
     res
+}
+
+#[cfg(feature = "hyper")]
+fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
+    use std::fmt::Display;
+    use std::time::SystemTime;
+    use std::fs::create_dir_all;
+    use std::io::{Read, Write};
+    use hyper::Client;
+    use hyper::status::StatusCode;
+
+    fn ts<T:Display>(x: T) -> String {
+        format!("{}", x)
+    }
+    let mut path = try!(config_dir());
+    path.push("rink/");
+    path.push(file);
+
+    File::open(path.clone())
+        .map_err(ts)
+        .and_then(|f| {
+            let stats = try!(f.metadata().map_err(ts));
+            let mtime = try!(stats.modified().map_err(ts));
+            let now = SystemTime::now();
+            let elapsed = try!(now.duration_since(mtime).map_err(ts));
+            if elapsed > expiration {
+                Err(format!("File is out of date"))
+            } else {
+                Ok(f)
+            }
+        })
+        .or_else(|_| {
+            try!(create_dir_all(path.parent().unwrap()).map_err(|x| format!("{}", x)));
+            let mut f = try!(File::create(path).map_err(|x| format!("{}", x)));
+
+            let client = Client::new();
+            let mut res = try!(client.get(url).send().map_err(|x| format!("{}", x)));
+            if res.status != StatusCode::Ok {
+                return Err(format!("Request failed with status code {}", res.status))
+            }
+            let mut buf = vec![0; 8192];
+            loop {
+                match res.read(&mut buf) {
+                    Ok(0) => break,
+                    Ok(n) => {
+                        try!(f.write(&buf[..n]).map_err(|x| format!("{}", x)));
+                    },
+                    Err(e) => return Err(format!("{}", e))
+                }
+            }
+            try!(f.sync_all().map_err(|x| format!("{}", x)));
+            Ok(f)
+        })
 }
