@@ -64,7 +64,6 @@ fn test_number_regress() {
 
 #[test]
 fn test_lookup() {
-    test("ks", "1 kilosecond (time)");
     test("pcs", "approx. 32.31314 petameter (length)");
 }
 
@@ -132,4 +131,10 @@ fn test_volume_prefix() {
 fn test_offset_conversion() {
     test("#jan 01, 1970# -> -05:00",
          "1969-12-31 19:00:00 -05:00 (46 years ago)");
+}
+
+#[test]
+fn test_time_hms() {
+    test("ks", "16 minute, 40 second (time)");
+    test("nanosecond", "1 nanosecond (time)");
 }

@@ -11,7 +11,8 @@ use std::rc::Rc;
 use factorize::{factorize, Factors};
 use value::{Value, Show};
 use reply::{DefReply, ConversionReply, FactorizeReply, UnitsForReply,
-            QueryReply, ConformanceError, QueryError, UnitListReply};
+            QueryReply, ConformanceError, QueryError, UnitListReply,
+            DurationReply};
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
@@ -478,6 +479,59 @@ impl Context {
             }
         };
 
+        let to_list = |top: &Number, list: &[&str]| -> Result<Vec<NumberParts>, QueryError> {
+            let units = try!(list.iter().map(|x| {
+                self.lookup(x).ok_or_else(|| self.unknown_unit_err(x))
+            }).collect::<Result<Vec<Number>, _>>());
+            {
+                let first = try!(units.first().ok_or(format!("Expected non-empty unit list")));
+                try!(units.iter().skip(1).map(|x| {
+                    if first.1 != x.1 {
+                        Err(format!("Units in unit list must conform: <{}> ; <{}>",
+                                    first.show(self), x.show(self)))
+                    } else {
+                        Ok(())
+                    }
+                }).collect::<Result<Vec<()>, _>>());
+                if top.1 != first.1 {
+                    return Err(QueryError::Conformance(conformance_err(&top, &first)))
+                }
+            }
+            let mut value = top.0.clone();
+            let mut out = vec![];
+            let len = units.len();
+            for (i, unit) in units.into_iter().enumerate() {
+                // value -= unit * floor(value/unit)
+                use gmp::mpz::Mpz;
+
+                let res = &value / &unit.0;
+                let div = &res.get_num() / res.get_den();
+                let rem = &value - &(&unit.0 * &Mpq::ratio(&div, &Mpz::one()));
+                value = rem;
+                if i == len-1 {
+                    out.push(res);
+                } else {
+                    out.push(Mpq::ratio(&div, &Mpz::one()));
+                }
+            }
+            Ok(list.into_iter().zip(out.into_iter()).map(|(name, value)| {
+                let pretty = Number(value, Number::one_unit(Dim::new(name)).1).to_parts(self);
+                NumberParts {
+                    unit: Some(pretty.unit.or(pretty.dimensions)
+                               .map(|x| self.canonicalize(&*x).unwrap_or(x))
+                               .expect("to_parts returned no dimensions")),
+                    exact_value: Some(pretty.approx_value.or(pretty.exact_value)
+                                      .expect("to_parts returned neither exact nor approx value")),
+                    ..Default::default()
+                }
+                /*NumberParts {
+                    unit: Some(self.canonicalize(name).unwrap_or_else(|| (*name).to_owned())),
+                    exact_value: Some(::number::to_string(&value).1),
+                    ..Default::default()
+                }*/
+            }).collect())
+        };
+
         match *expr {
             Query::Expr(Expr::Unit(ref name)) if self.definitions.contains_key(name) => {
                 let mut name = name;
@@ -524,53 +578,15 @@ impl Context {
                     _ => return Err(QueryError::Generic(format!(
                         "Cannot convert <{}> to {:?}", top.show(self), list)))
                 };
-                let units = try!(list.iter().map(|x| {
-                    self.lookup(x).ok_or_else(|| self.unknown_unit_err(x))
-                }).collect::<Result<Vec<Number>, _>>());
-                {
-                    let first = try!(units.first().ok_or(format!("Expected non-empty unit list")));
-                    try!(units.iter().skip(1).map(|x| {
-                        if first.1 != x.1 {
-                            Err(format!("Units in unit list must conform: <{}> ; <{}>",
-                                        first.show(self), x.show(self)))
-                        } else {
-                            Ok(())
-                        }
-                    }).collect::<Result<Vec<()>, _>>());
-                    if top.1 != first.1 {
-                        return Err(QueryError::Conformance(conformance_err(&top, &first)))
-                    }
-                }
-                let mut value = top.0;
-                let mut out = vec![];
-                let len = units.len();
-                for (i, unit) in units.into_iter().enumerate() {
-                    // value -= unit * floor(value/unit)
-                    use gmp::mpz::Mpz;
-
-                    let res = &value / &unit.0;
-                    let div = &res.get_num() / res.get_den();
-                    let rem = &value - &(&unit.0 * &Mpq::ratio(&div, &Mpz::one()));
-                    value = rem;
-                    if i == len-1 {
-                        out.push(res);
-                    } else {
-                        out.push(Mpq::ratio(&div, &Mpz::one()));
-                    }
-                }
-                Ok(QueryReply::UnitList(UnitListReply {
-                    rest: NumberParts {
-                        quantity: self.quantities.get(&top.1).cloned(),
-                        ..Default::default()
-                    },
-                    list: list.into_iter().zip(out.into_iter()).map(|(name, value)| {
-                        NumberParts {
-                            unit: Some(self.canonicalize(name).unwrap_or_else(|| name.clone())),
-                            exact_value: Some(::number::to_string(&value).1),
+                to_list(&top, &list.iter().map(|x| &**x).collect::<Vec<_>>()[..]).map(|list| {
+                    QueryReply::UnitList(UnitListReply {
+                        rest: NumberParts {
+                            quantity: self.quantities.get(&top.1).cloned(),
                             ..Default::default()
-                        }
-                    }).collect(),
-                }))
+                        },
+                        list: list,
+                    })
+                })
             },
             Query::Convert(ref top, Conversion::Offset(off)) => {
                 use chrono::FixedOffset;
@@ -677,6 +693,26 @@ impl Context {
             Query::Expr(ref expr) => {
                 let val = try!(self.eval(expr));
                 match val {
+                    Value::Number(ref n) if n.1 == Number::one_unit(Dim::new("s")).1 => {
+                        let units = &["year", "week", "day", "hour", "minute", "second"];
+                        let list = try!(to_list(&n, units));
+                        let mut list = list.into_iter();
+                        Ok(QueryReply::Duration(DurationReply {
+                            raw: n.to_parts(self),
+                            years: list.next().expect("Unexpected end of iterator"),
+                            //months: list.next().expect("Unexpected end of iterator"),
+                            months: NumberParts {
+                                exact_value: Some("0".to_owned()),
+                                unit: Some("month".to_owned()),
+                                ..Default::default()
+                            },
+                            weeks: list.next().expect("Unexpected end of iterator"),
+                            days: list.next().expect("Unexpected end of iterator"),
+                            hours: list.next().expect("Unexpected end of iterator"),
+                            minutes: list.next().expect("Unexpected end of iterator"),
+                            seconds: list.next().expect("Unexpected end of iterator"),
+                        }))
+                    },
                     Value::Number(n) => Ok(QueryReply::Number(n.to_parts(self))),
                     Value::DateTime(d) => Ok(QueryReply::Date(d)),
                 }

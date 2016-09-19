@@ -44,9 +44,22 @@ pub struct UnitListReply {
 }
 
 #[derive(Debug, Clone)]
+pub struct DurationReply {
+    pub raw: NumberParts,
+    pub years: NumberParts,
+    pub months: NumberParts,
+    pub weeks: NumberParts,
+    pub days: NumberParts,
+    pub hours: NumberParts,
+    pub minutes: NumberParts,
+    pub seconds: NumberParts,
+}
+
+#[derive(Debug, Clone)]
 pub enum QueryReply {
     Number(NumberParts),
     Date(DateTime<FixedOffset>),
+    Duration(DurationReply),
     Def(DefReply),
     Conversion(ConversionReply),
     Factorize(FactorizeReply),
@@ -72,6 +85,7 @@ impl Display for QueryReply {
         match *self {
             QueryReply::Number(ref v) => write!(fmt, "{}", v),
             QueryReply::Date(ref v) => write!(fmt, "{} ({})", v, HumanTime::from(*v)),
+            QueryReply::Duration(ref v) => write!(fmt, "{}", v),
             QueryReply::Def(ref v) => write!(fmt, "{}", v),
             QueryReply::Conversion(ref v) => write!(fmt, "{}", v),
             QueryReply::Factorize(ref v) => write!(fmt, "{}", v),
@@ -124,6 +138,31 @@ impl Display for FactorizeReply {
 impl Display for UnitsForReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         write!(fmt, "Units for {}: {}", self.of.format("D w"), self.units.join(", "))
+    }
+}
+
+impl Display for DurationReply {
+    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+        let res = [&self.years, &self.months, &self.weeks, &self.days, &self.hours, &self.minutes, &self.seconds]
+            .iter()
+            .filter_map(|x| {
+                if x.exact_value.as_ref().map(|x| &**x) == Some("0") {
+                    None
+                } else {
+                    Some(x)
+                }
+            })
+            .map(|x| {
+                 format!("{}", x)
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        try!(write!(fmt, "{}", res));
+        if let Some(q) = self.raw.quantity.as_ref() {
+            write!(fmt, " ({})", q)
+        } else {
+            Ok(())
+        }
     }
 }
 
