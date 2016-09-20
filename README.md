@@ -5,7 +5,8 @@ engineering calculations, as well as dimensionality analysis.
 
 Rink supports most systems of measurements including SI, CGS, natural,
 international customary, US customary, UK customary, as well as
-historical measurements.
+historical measurements. In addition, Rink supports currency
+conversions.
 
 Unique features:
 
@@ -86,6 +87,21 @@ submitted for inclusion in the work will grant the rights lined out in
 the MPL, including larger works with secondary licenses.
 
 ## Changelog
+
+### 0.3.2
+- Time quantities now automatically display in human units (year,
+  week, day, hour, minute, second)
+- Currency conversions sourced from the European Central Bank, and the
+  BTC-E bitcoin exchange
+- Move all element units from being dimensionless to being g/mol
+  (molar mass)
+- Add atomic masses for elements 104 (rutherfordium) through 118
+  (ununoctium)
+- Add more date patterns and make them less strict
+- Allow durations larger than ~200 years
+- Fix viscosity quantity dimensionality
+- Time offset conversions
+- Fix bugs in date parser
 
 ### 0.3.1
 - Automatically find SI prefixes
