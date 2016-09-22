@@ -5,6 +5,8 @@
 use std::str::Chars;
 use std::iter::Peekable;
 use ast::*;
+use gmp::mpz::Mpz;
+use gmp::mpq::Mpq;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -12,6 +14,8 @@ pub enum Token {
     Comment(usize),
     Ident(String),
     Decimal(String, Option<String>, Option<String>),
+    Hex(String),
+    Oct(String),
     Quote(String),
     Slash,
     Pipe,
@@ -42,6 +46,8 @@ fn describe(token: &Token) -> String {
         Token::Newline | Token::Comment(_) => "\\n".to_owned(),
         Token::Ident(_) => "ident".to_owned(),
         Token::Decimal(_, _, _) => "number".to_owned(),
+        Token::Hex(_) => "hex".to_owned(),
+        Token::Oct(_) => "octal".to_owned(),
         Token::Quote(_) => "quote".to_owned(),
         Token::Slash => "`/`".to_owned(),
         Token::Pipe => "`|`".to_owned(),
@@ -138,6 +144,42 @@ impl<'a> Iterator for TokenIterator<'a> {
             },
             x @ '0'...'9' | x @ '.' => {
                 use std::ascii::AsciiExt;
+
+                if x == '0' && self.0.peek() == Some(&'x') {
+                    self.0.next();
+                    let mut hex = String::new();
+
+                    while let Some(c) = self.0.peek().cloned() {
+                        match c {
+                            '0'...'9' | 'a'...'f' | 'A'...'F' =>
+                                hex.push(self.0.next().unwrap()),
+                            _ => break
+                        }
+                    }
+                    if hex.len() == 0 {
+                        return Some(Token::Error(
+                            "Malformed hexadecimal literal: No digits after 0x".to_owned()))
+                    }
+                    return Some(Token::Hex(hex))
+                }
+
+                if x == '0' && self.0.peek() == Some(&'o') {
+                    self.0.next();
+                    let mut oct = String::new();
+
+                    while let Some(c) = self.0.peek().cloned() {
+                        match c {
+                            '0'...'7' =>
+                                oct.push(self.0.next().unwrap()),
+                            _ => break
+                        }
+                    }
+                    if oct.len() == 0 {
+                        return Some(Token::Error(
+                            "Malformed octal literal: No digits after 0o".to_owned()))
+                    }
+                    return Some(Token::Oct(oct))
+                }
 
                 let mut integer = String::new();
                 let mut frac = None;
@@ -410,6 +452,16 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
             ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
             .unwrap_or_else(|e| Expr::Error(format!("{}", e))),
+        Token::Hex(num) =>
+            Mpz::from_str_radix(&*num, 16)
+            .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Expr::Const)
+            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse hex"))),
+        Token::Oct(num) =>
+            Mpz::from_str_radix(&*num, 8)
+            .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Expr::Const)
+            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse octal"))),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         Token::LPar => {
