@@ -284,12 +284,8 @@ impl Context {
             Expr::Unit(ref name) =>
                 self.lookup(name).ok_or_else(|| self.unknown_unit_err(name)).map(Value::Number),
             Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dim::new(&**name)))),
-            Expr::Const(ref num, ref frac, ref exp) =>
-                Number::from_parts(
-                    num,
-                    frac.as_ref().map(AsRef::as_ref),
-                    exp.as_ref().map(AsRef::as_ref))
-                .map(Value::Number),
+            Expr::Const(ref num) =>
+                Ok(Value::Number(Number::new(num.clone()))),
             Expr::Date(ref date) => date::try_decode(date, self).map(Value::DateTime),
             Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| (-&v).map_err(|e| {
                 format!("{}: - <{}>", e, v.show(self))
@@ -359,9 +355,8 @@ impl Context {
                 map.insert(self.canonicalize(&**name).unwrap_or_else(|| name.clone()), 1);
                 Ok((map, Mpq::one()))
             },
-            Expr::Const(ref i, ref f, ref e) =>
-                Ok((BTreeMap::new(), try!(Number::from_parts(
-                    i, f.as_ref().map(AsRef::as_ref), e.as_ref().map(AsRef::as_ref))).0)),
+            Expr::Const(ref i) =>
+                Ok((BTreeMap::new(), i.clone())),
             Expr::Frac(ref left, ref right) => {
                 let (left, lv) = try!(self.eval_unit_name(left));
                 let (right, rv) = try!(self.eval_unit_name(right));

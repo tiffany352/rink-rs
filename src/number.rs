@@ -353,7 +353,7 @@ impl Number {
         Number(num, map)
     }
 
-    pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Number, String> {
+    pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Mpq, String> {
         use std::str::FromStr;
 
         let num = Mpz::from_str_radix(integer, 10).unwrap();
@@ -381,7 +381,7 @@ impl Number {
         };
         let num = &Mpq::ratio(&num, &Mpz::one()) + &frac;
         let num = &num * &exp;
-        Ok(Number::new(num))
+        Ok(num)
     }
 
     /// Computes the reciprocal (1/x) of the value.

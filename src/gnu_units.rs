@@ -6,6 +6,7 @@ use std::str::Chars;
 use std::iter::Peekable;
 use std::rc::Rc;
 use ast::*;
+use gmp::mpq::Mpq;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -165,11 +166,14 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(name) => Expr::Unit(name),
-        Token::Number(num, frac, exp) => Expr::Const(num, frac, exp),
+        Token::Number(num, frac, exp) =>
+            ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
+            .map(Expr::Const)
+            .unwrap_or_else(|e| Expr::Error(format!("{}", e))),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
         Token::Slash => Expr::Frac(
-            Box::new(Expr::Const("1".to_owned(), None, None)),
+            Box::new(Expr::Const(Mpq::one())),
             Box::new(parse_term(iter))),
         Token::LPar => {
             let res = parse_expr(iter);

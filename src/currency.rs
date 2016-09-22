@@ -4,6 +4,7 @@ use xml::EventReader;
 use xml::reader::XmlEvent;
 use ast::{Defs, Def, Expr};
 use std::rc::Rc;
+use gmp::mpq::Mpq;
 
 static URL: &'static str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 
@@ -30,14 +31,16 @@ pub fn parse(f: File) -> Result<Defs, String> {
                 }
                 if let (Some(currency), Some(rate)) = (currency, rate) {
                     let mut iter = rate.split(".");
-                    let integer = iter.next().unwrap().to_owned();
-                    let frac = iter.next().map(|x| x.to_owned());
-                    out.push((currency.to_owned(), Rc::new(Def::Unit(
-                        Expr::Mul(vec![
-                            Expr::Frac(Box::new(Expr::Const("1".to_owned(), None, None)),
-                                       Box::new(Expr::Const(integer, frac, None))),
-                            Expr::Unit("EUR".to_string())
-                        ])))));
+                    let integer = iter.next().unwrap();
+                    let frac = iter.next();
+                    if let Ok(num) = ::number::Number::from_parts(integer, frac, None) {
+                        out.push((currency.to_owned(), Rc::new(Def::Unit(
+                            Expr::Mul(vec![
+                                Expr::Frac(Box::new(Expr::Const(Mpq::one())),
+                                           Box::new(Expr::Const(num))),
+                                Expr::Unit("EUR".to_string())
+                            ])))));
+                    }
                 }
             },
             Err(e) => return Err(format!("{}", e)),

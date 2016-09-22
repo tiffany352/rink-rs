@@ -4,6 +4,7 @@
 
 use std::rc::Rc;
 use std::fmt;
+use gmp::mpq::Mpq;
 
 #[derive(Debug, Clone)]
 pub enum SuffixOp {
@@ -30,7 +31,7 @@ pub enum DateToken {
 pub enum Expr {
     Unit(String),
     Quote(String),
-    Const(String, Option<String>, Option<String>),
+    Const(Mpq),
     Date(Vec<DateToken>),
     Frac(Box<Expr>, Box<Expr>),
     Mul(Vec<Expr>),
@@ -131,15 +132,9 @@ impl fmt::Display for Expr {
             match *expr {
                 Expr::Unit(ref name) => write!(fmt, "{}", name),
                 Expr::Quote(ref name) => write!(fmt, "'{}'", name),
-                Expr::Const(ref integer, ref frac, ref exp) => {
-                    try!(write!(fmt, "{}", integer));
-                    if let Some(ref frac) = *frac {
-                        try!(write!(fmt, ".{}", frac));
-                    }
-                    if let Some(ref exp) = *exp {
-                        try!(write!(fmt, "e{}", exp));
-                    }
-                    Ok(())
+                Expr::Const(ref num) => {
+                    let (_exact, val) = ::number::to_string(num);
+                    write!(fmt, "{}", val)
                 },
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),
                 Expr::Mul(ref exprs) => {

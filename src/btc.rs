@@ -19,11 +19,13 @@ pub fn parse(mut f: File) -> Result<Defs, String> {
             if let Some(avg) = avg {
                 let (sign, mantissa, exp) = avg.as_parts();
                 let integer = format!("{}{}", if sign { "" } else { "-" }, mantissa);
-                out.push((name, Rc::new(Def::Unit(
-                    Expr::Mul(vec![
-                        Expr::Const(integer, None, Some(exp.to_string())),
-                        Expr::Unit("USD".to_owned())
-                    ])))));
+                if let Ok(num) = ::Number::from_parts(&*integer, None, Some(&*format!("{}", exp))) {
+                    out.push((name, Rc::new(Def::Unit(
+                        Expr::Mul(vec![
+                            Expr::Const(num),
+                            Expr::Unit("USD".to_owned())
+                        ])))));
+                }
             }
         }
     }

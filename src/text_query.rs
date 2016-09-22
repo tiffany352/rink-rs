@@ -11,7 +11,7 @@ pub enum Token {
     Newline,
     Comment(usize),
     Ident(String),
-    Number(String, Option<String>, Option<String>),
+    Decimal(String, Option<String>, Option<String>),
     Quote(String),
     Slash,
     Pipe,
@@ -41,7 +41,7 @@ fn describe(token: &Token) -> String {
     match *token {
         Token::Newline | Token::Comment(_) => "\\n".to_owned(),
         Token::Ident(_) => "ident".to_owned(),
-        Token::Number(_, _, _) => "number".to_owned(),
+        Token::Decimal(_, _, _) => "number".to_owned(),
         Token::Quote(_) => "quote".to_owned(),
         Token::Slash => "`/`".to_owned(),
         Token::Pipe => "`|`".to_owned(),
@@ -203,7 +203,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                     exp = Some(buf)
                 }
-                Token::Number(integer, frac, exp)
+                Token::Decimal(integer, frac, exp)
             },
             '\\' => match self.0.next() {
                 Some('u') => {
@@ -406,7 +406,10 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         },
         Token::Ident(name) => Expr::Unit(name),
         Token::Quote(name) => Expr::Quote(name),
-        Token::Number(num, frac, exp) => Expr::Const(num, frac, exp),
+        Token::Decimal(num, frac, exp) =>
+            ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
+            .map(Expr::Const)
+            .unwrap_or_else(|e| Expr::Error(format!("{}", e))),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         Token::LPar => {
@@ -563,7 +566,7 @@ pub fn parse_offset(mut iter: &mut Iter) -> Option<i64> {
         _ => return None
     };
     let hour = match iter.next().unwrap() {
-        Token::Number(ref i, None, None) if i.len() == 2 => i.clone(),
+        Token::Decimal(ref i, None, None) if i.len() == 2 => i.clone(),
         _ => return None
     };
     let _col = match iter.next().unwrap() {
@@ -571,7 +574,7 @@ pub fn parse_offset(mut iter: &mut Iter) -> Option<i64> {
         _ => return None
     };
     let min = match iter.next().unwrap() {
-        Token::Number(ref i, None, None) if i.len() == 2 => i.clone(),
+        Token::Decimal(ref i, None, None) if i.len() == 2 => i.clone(),
         _ => return None
     };
     Some(sign * (i64::from_str(&*hour).unwrap() * 3600 + i64::from_str(&*min).unwrap() * 60))
