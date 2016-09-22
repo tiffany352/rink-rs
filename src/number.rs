@@ -70,14 +70,14 @@ fn root(left: &Mpq, n: i32) -> Mpq {
     }
 }
 
-pub fn to_string(rational: &Mpq) -> (bool, String) {
+pub fn to_string(rational: &Mpq, base: u8) -> (bool, String) {
     use std::char::from_digit;
 
     let sign = *rational < Mpq::zero();
     let rational = rational.abs();
     let num = rational.get_num();
     let den = rational.get_den();
-    let intdigits = (&num / &den).size_in_base(10) as u32;
+    let intdigits = (&num / &den).size_in_base(base) as u32;
 
     let mut buf = String::new();
     if sign {
@@ -85,7 +85,7 @@ pub fn to_string(rational: &Mpq) -> (bool, String) {
     }
     let zero = Mpq::zero();
     let one = Mpz::one();
-    let ten = Mpz::from(10);
+    let ten = Mpz::from(base as u64);
     let ten_mpq = Mpq::ratio(&ten, &one);
     let mut cursor = rational / Mpq::ratio(&ten.pow(intdigits), &one);
     let mut n = 0;
@@ -130,7 +130,7 @@ pub fn to_string(rational: &Mpq) -> (bool, String) {
             zeros += 1;
         }
         if !(v == 0 && only_zeros && n < intdigits-1) {
-            buf.push(from_digit(v as u32, 10).unwrap());
+            buf.push(from_digit(v as u32, base as u32).unwrap());
         }
         cursor = &cursor * &ten_mpq;
         cursor = &cursor - &Mpq::ratio(&digit, &one);
@@ -440,8 +440,8 @@ impl Number {
         }
     }
 
-    fn numeric_value(&self) -> (Option<String>, Option<String>) {
-        match to_string(&self.0) {
+    pub fn numeric_value(&self, base: u8) -> (Option<String>, Option<String>) {
+        match to_string(&self.0, base) {
             (true, v) => (Some(v), None),
             (false, v) => if {self.0.get_den() > Mpz::from(1_000_000) ||
                               self.0.get_num() > Mpz::from(1_000_000_000u64)} {
@@ -453,7 +453,7 @@ impl Number {
     }
 
     pub fn to_parts_simple(&self) -> NumberParts {
-        let (exact, approx) = self.numeric_value();
+        let (exact, approx) = self.numeric_value(10);
         NumberParts {
             exact_value: exact,
             approx_value: approx,
@@ -510,7 +510,7 @@ impl Number {
 
     pub fn to_parts(&self, context: &::eval::Context) -> NumberParts {
         let value = self.prettify(context);
-        let (exact, approx) = value.numeric_value();
+        let (exact, approx) = value.numeric_value(10);
 
         let quantity = context.quantities.get(&self.1).cloned().or_else(|| {
             if self.1.len() == 1 {

@@ -55,6 +55,7 @@ pub enum Conversion {
     DegRo,
     DegDe,
     DegN,
+    Base(u8),
     List(Vec<String>),
     Offset(i64),
 }
@@ -133,7 +134,7 @@ impl fmt::Display for Expr {
                 Expr::Unit(ref name) => write!(fmt, "{}", name),
                 Expr::Quote(ref name) => write!(fmt, "'{}'", name),
                 Expr::Const(ref num) => {
-                    let (_exact, val) = ::number::to_string(num);
+                    let (_exact, val) = ::number::to_string(num, 10);
                     write!(fmt, "{}", val)
                 },
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),

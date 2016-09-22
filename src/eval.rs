@@ -634,6 +634,23 @@ impl Context {
                     _ => panic!()
                 }
             },
+            Query::Convert(ref top, Conversion::Base(base)) => {
+                let top = try!(self.eval(top));
+                let top = match top {
+                    Value::Number(top) => top,
+                    _ => return Err(QueryError::Generic(format!(
+                        "Cannot convert <{}> to base {}", top.show(self), base)))
+                };
+                let (exact, approx) = top.numeric_value(base);
+                let parts = NumberParts {
+                    exact_value: exact,
+                    approx_value: approx,
+                    .. top.to_parts(self)
+                };
+                Ok(QueryReply::Conversion(ConversionReply {
+                    value: parts
+                }))
+            },
             Query::Factorize(ref expr) => {
                 let val = try!(self.eval(expr));
                 let val = match val {

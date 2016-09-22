@@ -702,6 +702,28 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
                 return Query::Convert(left, Conversion::List(res))
             }
             let right = match iter.peek().cloned().unwrap() {
+                Token::Ident(ref s) if s == "base" => {
+                    iter.next();
+                    match iter.next() {
+                        Some(Token::Decimal(int, None, None)) => match u8::from_str_radix(&*int, 10) {
+                            Ok(v) if v >= 2 && v <= 62 => Conversion::Base(v),
+                            Ok(v) => return Query::Error(format!(
+                                "Unsupported base {}, must be from 2 to 62", v)),
+                            Err(e) => return Query::Error(format!(
+                                "Failed to parse base: {}", e))
+                        },
+                        Some(x) => return Query::Error(format!(
+                            "Expected decimal base, got {}", describe(&x))),
+                        None => return Query::Error(format!(
+                            "Expected decimal base, got eof"))
+                    }
+                },
+                Token::Ident(ref s) if s == "hex" || s == "hexadecimal" || s == "base16" =>
+                    Conversion::Base(16),
+                Token::Ident(ref s) if s == "oct" || s == "octal" || s == "base8" =>
+                    Conversion::Base(8),
+                Token::Ident(ref s) if s == "bin" || s == "binary" || s == "base2" =>
+                    Conversion::Base(2),
                 Token::DegC => Conversion::DegC,
                 Token::DegF => Conversion::DegF,
                 Token::DegRe => Conversion::DegRe,
