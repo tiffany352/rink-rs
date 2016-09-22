@@ -155,6 +155,9 @@ impl<'a> Iterator for TokenIterator<'a> {
                         match c {
                             '0'...'9' | 'a'...'f' | 'A'...'F' =>
                                 hex.push(self.0.next().unwrap()),
+                            '\u{2009}' | '_' => {
+                                self.0.next();
+                            },
                             _ => break
                         }
                     }
@@ -173,6 +176,9 @@ impl<'a> Iterator for TokenIterator<'a> {
                         match c {
                             '0'...'7' =>
                                 oct.push(self.0.next().unwrap()),
+                            '\u{2009}' | '_' => {
+                                self.0.next();
+                            },
                             _ => break
                         }
                     }
@@ -191,6 +197,9 @@ impl<'a> Iterator for TokenIterator<'a> {
                         match c {
                             '0' | '1' =>
                                 bin.push(self.0.next().unwrap()),
+                            '\u{2009}' | '_' => {
+                                self.0.next();
+                            },
                             _ => break
                         }
                     }
@@ -211,6 +220,9 @@ impl<'a> Iterator for TokenIterator<'a> {
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
                             '0'...'9' => integer.push(self.0.next().unwrap()),
+                            '\u{2009}' | '_' => {
+                                self.0.next();
+                            },
                             _ => break
                         }
                     }
@@ -226,6 +238,9 @@ impl<'a> Iterator for TokenIterator<'a> {
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
                             '0'...'9' => buf.push(self.0.next().unwrap()),
+                            '\u{2009}' | '_' => {
+                                self.0.next();
+                            },
                             _ => break
                         }
                     }
@@ -256,6 +271,9 @@ impl<'a> Iterator for TokenIterator<'a> {
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
                             '0'...'9' => buf.push(self.0.next().unwrap()),
+                            '\u{2009}' | '_' => {
+                                self.0.next();
+                            },
                             _ => break
                         }
                     }
