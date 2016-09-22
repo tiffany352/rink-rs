@@ -16,6 +16,7 @@ pub enum Token {
     Decimal(String, Option<String>, Option<String>),
     Hex(String),
     Oct(String),
+    Bin(String),
     Quote(String),
     Slash,
     Pipe,
@@ -48,6 +49,7 @@ fn describe(token: &Token) -> String {
         Token::Decimal(_, _, _) => "number".to_owned(),
         Token::Hex(_) => "hex".to_owned(),
         Token::Oct(_) => "octal".to_owned(),
+        Token::Bin(_) => "binary".to_owned(),
         Token::Quote(_) => "quote".to_owned(),
         Token::Slash => "`/`".to_owned(),
         Token::Pipe => "`|`".to_owned(),
@@ -179,6 +181,24 @@ impl<'a> Iterator for TokenIterator<'a> {
                             "Malformed octal literal: No digits after 0o".to_owned()))
                     }
                     return Some(Token::Oct(oct))
+                }
+
+                if x == '0' && self.0.peek() == Some(&'b') {
+                    self.0.next();
+                    let mut bin = String::new();
+
+                    while let Some(c) = self.0.peek().cloned() {
+                        match c {
+                            '0' | '1' =>
+                                bin.push(self.0.next().unwrap()),
+                            _ => break
+                        }
+                    }
+                    if bin.len() == 0 {
+                        return Some(Token::Error(
+                            "Malformed binary literal: No digits after 0b".to_owned()))
+                    }
+                    return Some(Token::Bin(bin))
                 }
 
                 let mut integer = String::new();
@@ -462,6 +482,11 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Expr::Const)
             .unwrap_or_else(|()| Expr::Error(format!("Failed to parse octal"))),
+        Token::Bin(num) =>
+            Mpz::from_str_radix(&*num, 2)
+            .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Expr::Const)
+            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse binary"))),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         Token::LPar => {
