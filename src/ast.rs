@@ -92,7 +92,7 @@ pub enum Def {
 
 #[derive(Debug)]
 pub struct Defs {
-    pub defs: Vec<(String, Rc<Def>)>,
+    pub defs: Vec<(String, Rc<Def>, Option<String>)>,
 }
 
 impl fmt::Display for Conversion {

@@ -12,6 +12,7 @@ use gmp::mpq::Mpq;
 pub enum Token {
     Eof,
     Newline,
+    Doc(String),
     Ident(String),
     Number(String, Option<String>, Option<String>),
     LPar,
@@ -64,7 +65,17 @@ impl<'a> Iterator for TokenIterator<'a> {
             '-' => Token::Dash,
             '+' => Token::Plus,
             '*' => Token::Asterisk,
-            '?' => Token::Question,
+            '?' => if self.0.peek() == Some(&'?') {
+                self.0.next();
+                let mut out = String::new();
+                loop { match self.0.next() {
+                    Some('\n') | None => break,
+                    Some(x) => out.push(x),
+                }}
+                Token::Doc(out)
+            } else {
+                Token::Question
+            },
             '\\' => match self.0.next() {
                 Some('\n') => self.next().unwrap(),
                 Some(x) => Token::Error(format!("Invalid escape: \\{}", x)),
@@ -257,6 +268,7 @@ pub fn parse_expr(mut iter: &mut Iter) -> Expr {
 pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
     let mut line = 1;
+    let mut doc = None;
     loop {
         match iter.next().unwrap() {
             Token::Newline => line += 1,
@@ -267,6 +279,12 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     _ => ()
                 }
             },
+            Token::Doc(line) => {
+                doc = match doc.take() {
+                    None => Some(line.trim().to_owned()),
+                    Some(old) => Some(format!("{} {}", old.trim(), line.trim())),
+                };
+            },
             Token::Ident(name) => {
                 if name.ends_with("-") {
                     // prefix
@@ -275,9 +293,9 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     name.pop();
                     if name.ends_with("-") {
                         name.pop();
-                        map.push((name, Rc::new(Def::Prefix(expr))));
+                        map.push((name, Rc::new(Def::Prefix(expr)), doc.take()));
                     } else {
-                        map.push((name, Rc::new(Def::SPrefix(expr))));
+                        map.push((name, Rc::new(Def::SPrefix(expr)), doc.take()));
                     }
                 } else {
                     // unit
@@ -286,20 +304,21 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                         iter.next();
                         if let Some(Token::Ident(ref long)) = iter.peek().cloned() {
                             iter.next();
-                            map.push((name.clone(), Rc::new(Def::Dimension)));
-                            map.push((long.clone(), Rc::new(Def::Canonicalization(name.clone()))));
+                            map.push((name.clone(), Rc::new(Def::Dimension), doc.take()));
+                            map.push((long.clone(), Rc::new(Def::Canonicalization(name.clone())),
+                                      doc.take()));
                         } else {
-                            map.push((name.clone(), Rc::new(Def::Dimension)));
+                            map.push((name.clone(), Rc::new(Def::Dimension), doc.take()));
                         }
                     } else if let Some(&Token::Question) = iter.peek() {
                         // quantity
                         iter.next();
                         let expr = parse_expr(iter);
-                        map.push((name, Rc::new(Def::Quantity(expr))));
+                        map.push((name, Rc::new(Def::Quantity(expr)), doc.take()));
                     } else {
                         // derived
                         let expr = parse_expr(iter);
-                        map.push((name, Rc::new(Def::Unit(expr))));
+                        map.push((name, Rc::new(Def::Unit(expr)), doc.take()));
                     }
                 }
             },

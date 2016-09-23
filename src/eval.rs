@@ -24,6 +24,7 @@ pub struct Context {
     pub reverse: BTreeMap<Unit, String>,
     pub prefixes: Vec<(String, Number)>,
     pub definitions: BTreeMap<String, Expr>,
+    pub docs: BTreeMap<String, String>,
     pub datepatterns: Vec<Vec<DatePattern>>,
     pub short_output: bool,
 }
@@ -545,7 +546,8 @@ impl Context {
                 Ok(QueryReply::Def(DefReply {
                     canon_name: name.clone(),
                     def: format!("{}", def),
-                    value: res.to_parts(self)
+                    value: res.to_parts(self),
+                    doc: self.docs.get(name).cloned(),
                 }))
             },
             Query::Convert(ref top, Conversion::None, Some(base)) => {
@@ -757,6 +759,7 @@ impl Context {
             reverse: BTreeMap::new(),
             prefixes: Vec::new(),
             definitions: BTreeMap::new(),
+            docs: BTreeMap::new(),
             datepatterns: Vec::new(),
             short_output: false,
         }
@@ -782,6 +785,7 @@ impl Context {
             sorted: Vec<Name>,
             unmarked: BTreeSet<Name>,
             temp_marks: BTreeSet<Name>,
+            docs: BTreeMap<Name, String>,
         }
 
         impl Resolver {
@@ -912,14 +916,18 @@ impl Context {
             sorted: vec![],
             unmarked: BTreeSet::new(),
             temp_marks: BTreeSet::new(),
+            docs: BTreeMap::new(),
         };
-        for (name, def) in defs.defs.into_iter() {
+        for (name, def, doc) in defs.defs.into_iter() {
             let name = resolver.intern(&name);
             let unit = match *def {
                 Def::Prefix(_) | Def::SPrefix(_) => Name::Prefix(name),
                 Def::Quantity(_) => Name::Quantity(name),
                 _ => Name::Unit(name)
             };
+            if let Some(doc) = doc {
+                resolver.docs.insert(unit.clone(), doc);
+            }
             if resolver.input.insert(unit.clone(), def).is_some() {
                 let (ty, name) = match unit {
                     Name::Prefix(ref name) => ("prefixes", name),
@@ -1020,6 +1028,17 @@ impl Context {
                 },
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
+        }
+
+        for (name, val) in resolver.docs {
+            let name = match name {
+                Name::Unit(name) => (*name).clone(),
+                Name::Prefix(name) => (*name).clone(),
+                Name::Quantity(name) => (*name).clone(),
+            };
+            if self.docs.insert(name.clone(), val).is_some() {
+                println!("Doc conflict for {}", name);
+            }
         }
     }
 }

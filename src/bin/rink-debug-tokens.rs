@@ -21,6 +21,7 @@ fn main() {
         match tok {
             Token::Eof => panic!(),
             Token::Newline => print!("\n"),
+            Token::Doc(doc) => print!("?? {}\n", doc),
             Token::Ident(name) => print!("`{}` ", name),
             Token::Number(i, f, e) => {
                 print!("{}", i);

@@ -39,7 +39,7 @@ pub fn parse(f: File) -> Result<Defs, String> {
                                 Expr::Frac(Box::new(Expr::Const(Mpq::one())),
                                            Box::new(Expr::Const(num))),
                                 Expr::Unit("EUR".to_string())
-                            ])))));
+                            ]))), Some(format!("Sourced from European Central Bank."))));
                     }
                 }
             },

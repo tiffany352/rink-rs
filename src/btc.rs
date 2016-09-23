@@ -24,7 +24,7 @@ pub fn parse(mut f: File) -> Result<Defs, String> {
                         Expr::Mul(vec![
                             Expr::Const(num),
                             Expr::Unit("USD".to_owned())
-                        ])))));
+                        ]))), Some(format!("Sourced from BTC-E exchange."))));
                 }
             }
         }
