@@ -549,23 +549,34 @@ impl Context {
                 while let Some(&Expr::Unit(ref unit)) = {
                     self.definitions.get(&name).or_else(|| self.definitions.get(&*canon))
                 } {
+                    if self.dimensions.contains(&*name) {
+                        break;
+                    }
                     let unit_canon = self.canonicalize(unit).unwrap_or_else(|| unit.clone());
+                    if self.dimensions.contains(&**unit) {
+                        name = unit.clone();
+                        canon = unit_canon;
+                        break;
+                    }
                     if self.definitions.get(unit).is_none() {
                         if self.definitions.get(&unit_canon).is_none() {
                             if !self.dimensions.contains(&**unit) {
                                 break
                             } else {
+                                assert!(name != *unit || canon != unit_canon);
                                 name = unit.clone();
                                 canon = unit_canon;
                                 break;
                             }
                         } else {
+                            assert!(name != unit_canon || canon != unit_canon);
                             name = unit_canon.clone();
                             canon = unit_canon;
                         }
                     } else {
+                        assert!(name != *unit || canon != unit_canon);
                         name = unit.clone();
-                        canon = unit_canon;
+                        canon = unit_canon.clone();
                     }
                 }
                 let (def, res) = if self.dimensions.contains(&*name) {
@@ -1021,6 +1032,7 @@ impl Context {
                     self.canonicalizations.insert(of.clone(), name.clone());
                     match self.lookup(of) {
                         Some(v) => {
+                            self.definitions.insert(name.clone(), Expr::Unit(of.clone()));
                             self.units.insert(name.clone(), v);
                         },
                         None => println!("Canonicalization {} is malformed: {} not found", name, of)
