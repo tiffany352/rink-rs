@@ -447,16 +447,16 @@ impl Context {
             }
         };
 
-        let show = |raw: &Number, bottom: &Number, bottom_name: (BTreeMap<String, isize>, Mpq)| -> ConversionReply {
+        let show = |raw: &Number, bottom: &Number, bottom_name: (BTreeMap<String, isize>, Mpq), base: u8| -> ConversionReply {
             use gmp::mpz::Mpz;
             let (bottom_name, bottom_const) = bottom_name;
-            let parts = raw.to_parts(self);
+            let (exact, approx) = raw.numeric_value(base);
             let bottom_name = bottom_name.into_iter().map(
                 |(a,b)| (Dim::new(&*a), b as i64)).collect();
             ConversionReply {
                 value: NumberParts {
-                    exact_value: parts.exact_value,
-                    approx_value: parts.approx_value,
+                    exact_value: exact,
+                    approx_value: approx,
                     factor: if bottom_const.get_num() != Mpz::one() {
                         Some(format!("{}", bottom_const.get_num()))
                     } else {
@@ -544,10 +544,28 @@ impl Context {
                     value: res.to_parts(self)
                 }))
             },
-            Query::Convert(ref top, Conversion::Expr(ref bottom)) => match (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom)) {
+            Query::Convert(ref top, Conversion::None, Some(base)) => {
+                let top = try!(self.eval(top));
+                let top = match top {
+                    Value::Number(top) => top,
+                    _ => return Err(QueryError::Generic(format!(
+                        "<{}> in base {} is not defined", top.show(self), base)))
+                };
+                let (exact, approx) = top.numeric_value(base);
+                let parts = NumberParts {
+                    exact_value: exact,
+                    approx_value: approx,
+                    .. top.to_parts(self)
+                };
+                Ok(QueryReply::Conversion(ConversionReply {
+                    value: parts
+                }))
+            },
+            Query::Convert(ref top, Conversion::Expr(ref bottom), base) => match (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom)) {
                 (Ok(top), Ok(bottom), Ok(bottom_name)) => {
                     let (top, bottom) = match (top, bottom) {
-                        (Value::Number(top), Value::Number(bottom)) => (top, bottom),
+                        (Value::Number(top), Value::Number(bottom)) =>
+                            (top, bottom),
                         _ => return Err(QueryError::Generic(format!(
                             "Conversion of non-numbers is not defined")))
                     };
@@ -555,18 +573,21 @@ impl Context {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
                             None => return Err(QueryError::Generic(format!(
-                                "Division by zero: {} / {}", top.show(self), bottom.show(self))))
+                                "Division by zero: {} / {}",
+                                top.show(self), bottom.show(self))))
                         };
-                        Ok(QueryReply::Conversion(show(&raw, &bottom, bottom_name)))
+                        Ok(QueryReply::Conversion(show(
+                            &raw, &bottom, bottom_name, base.unwrap_or(10))))
                     } else {
-                        Err(QueryError::Conformance(conformance_err(&top, &bottom)))
+                        Err(QueryError::Conformance(conformance_err(
+                            &top, &bottom)))
                     }
                 },
                 (Err(e), _, _) => Err(QueryError::Generic(e)),
                 (_, Err(e), _) => Err(QueryError::Generic(e)),
                 (_, _, Err(e)) => Err(QueryError::Generic(e)),
             },
-            Query::Convert(ref top, Conversion::List(ref list)) => {
+            Query::Convert(ref top, Conversion::List(ref list), None) => {
                 let top = try!(self.eval(top));
                 let top = match top {
                     Value::Number(num) => num,
@@ -583,7 +604,7 @@ impl Context {
                     })
                 })
             },
-            Query::Convert(ref top, Conversion::Offset(off)) => {
+            Query::Convert(ref top, Conversion::Offset(off), None) => {
                 use chrono::FixedOffset;
 
                 let top = try!(self.eval(top));
@@ -595,12 +616,12 @@ impl Context {
                 let top = top.with_timezone(&FixedOffset::east(off as i32));
                 Ok(QueryReply::Date(top))
             },
-            Query::Convert(ref top, ref which @ Conversion::DegC) |
-            Query::Convert(ref top, ref which @ Conversion::DegF) |
-            Query::Convert(ref top, ref which @ Conversion::DegN) |
-            Query::Convert(ref top, ref which @ Conversion::DegRe) |
-            Query::Convert(ref top, ref which @ Conversion::DegRo) |
-            Query::Convert(ref top, ref which @ Conversion::DegDe) => {
+            Query::Convert(ref top, ref which @ Conversion::DegC, None) |
+            Query::Convert(ref top, ref which @ Conversion::DegF, None) |
+            Query::Convert(ref top, ref which @ Conversion::DegN, None) |
+            Query::Convert(ref top, ref which @ Conversion::DegRe, None) |
+            Query::Convert(ref top, ref which @ Conversion::DegRo, None) |
+            Query::Convert(ref top, ref which @ Conversion::DegDe, None) => {
                 let top = try!(self.eval(top));
                 macro_rules! temperature {
                     ($name:expr, $base:expr, $scale:expr) => {{
@@ -619,7 +640,7 @@ impl Context {
                             let res = (&res / &bottom).unwrap();
                             let mut name = BTreeMap::new();
                             name.insert(format!("°{}", $name), 1);
-                            Ok(QueryReply::Conversion(show(&res, &bottom, (name, Mpq::one()))))
+                            Ok(QueryReply::Conversion(show(&res, &bottom, (name, Mpq::one()), 10)))
                         }
                     }}
                 }
@@ -634,22 +655,10 @@ impl Context {
                     _ => panic!()
                 }
             },
-            Query::Convert(ref top, Conversion::Base(base)) => {
-                let top = try!(self.eval(top));
-                let top = match top {
-                    Value::Number(top) => top,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Cannot convert <{}> to base {}", top.show(self), base)))
-                };
-                let (exact, approx) = top.numeric_value(base);
-                let parts = NumberParts {
-                    exact_value: exact,
-                    approx_value: approx,
-                    .. top.to_parts(self)
-                };
-                Ok(QueryReply::Conversion(ConversionReply {
-                    value: parts
-                }))
+            Query::Convert(ref _expr, ref which, Some(base)) => {
+                Err(QueryError::Generic(format!(
+                    "Conversion to {} is not defined in base {}",
+                    which, base)))
             },
             Query::Factorize(ref expr) => {
                 let val = try!(self.eval(expr));
@@ -702,7 +711,8 @@ impl Context {
                     },
                 }))
             },
-            Query::Expr(ref expr) => {
+            Query::Expr(ref expr) |
+            Query::Convert(ref expr, Conversion::None, None) => {
                 let val = try!(self.eval(expr));
                 match val {
                     Value::Number(ref n) if n.1 == Number::one_unit(Dim::new("s")).1 => {

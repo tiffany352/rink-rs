@@ -138,3 +138,15 @@ fn test_time_hms() {
     test("ks", "16 minute, 40 second (time)");
     test("nanosecond", "1 nanosecond (time)");
 }
+
+#[test]
+fn test_bases() {
+    test("pi -> hex", "approx. 3.243f6a (dimensionless)");
+    test("pi -> oct", "approx. 3.110375 (dimensionless)");
+    test("pi -> bin", "approx. 11.00100 (dimensionless)");
+    test("pi m -> hex m", "approx. 3.243f6a meter (length)");
+    test("pi m -> oct m", "approx. 3.110375 meter (length)");
+    test("pi m -> bin m", "approx. 11.00100 meter (length)");
+    test("100K -> hex °C", "Conversion to °C is not defined in base 16");
+    test("now -> hex +00:00", "Conversion to 00:00 is not defined in base 16");
+}

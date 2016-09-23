@@ -699,14 +699,16 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
             let mut copy = iter.clone();
             if let Some(res) = parse_unitlist(&mut copy) {
                 *iter = copy;
-                return Query::Convert(left, Conversion::List(res))
+                return Query::Convert(left, Conversion::List(res), None)
             }
-            let right = match iter.peek().cloned().unwrap() {
+            let base = match iter.peek().cloned().unwrap() {
                 Token::Ident(ref s) if s == "base" => {
                     iter.next();
                     match iter.next() {
                         Some(Token::Decimal(int, None, None)) => match u8::from_str_radix(&*int, 10) {
-                            Ok(v) if v >= 2 && v <= 62 => Conversion::Base(v),
+                            Ok(v) if v >= 2 && v <= 62 => {
+                                Some(v)
+                            },
                             Ok(v) => return Query::Error(format!(
                                 "Unsupported base {}, must be from 2 to 62", v)),
                             Err(e) => return Query::Error(format!(
@@ -718,12 +720,22 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
                             "Expected decimal base, got eof"))
                     }
                 },
-                Token::Ident(ref s) if s == "hex" || s == "hexadecimal" || s == "base16" =>
-                    Conversion::Base(16),
-                Token::Ident(ref s) if s == "oct" || s == "octal" || s == "base8" =>
-                    Conversion::Base(8),
-                Token::Ident(ref s) if s == "bin" || s == "binary" || s == "base2" =>
-                    Conversion::Base(2),
+                Token::Ident(ref s) if s == "hex" || s == "hexadecimal" || s == "base16" => {
+                    iter.next();
+                    Some(16)
+                },
+                Token::Ident(ref s) if s == "oct" || s == "octal" || s == "base8" => {
+                    iter.next();
+                    Some(8)
+                },
+                Token::Ident(ref s) if s == "bin" || s == "binary" || s == "base2" => {
+                    iter.next();
+                    Some(2)
+                },
+                _ => None
+            };
+            let right = match iter.peek().cloned().unwrap() {
+                Token::Eof => Conversion::None,
                 Token::DegC => Conversion::DegC,
                 Token::DegF => Conversion::DegF,
                 Token::DegRe => Conversion::DegRe,
@@ -740,7 +752,7 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
                 },
                 _ => Conversion::Expr(parse_eq(iter))
             };
-            Query::Convert(left, right)
+            Query::Convert(left, right, base)
         },
         _ => Query::Expr(left)
     }
@@ -800,8 +812,8 @@ mod test {
     fn mono_unit_list() {
         use ast::*;
         match parse_query(&mut TokenIterator::new("foo -> bar").peekable()) {
-            Query::Convert(_, Conversion::Expr(_)) => (),
-            x => panic!("Expected Convert(_, Expr(_)), got {:?}", x),
+            Query::Convert(_, Conversion::Expr(_), _) => (),
+            x => panic!("Expected Convert(_, Expr(_), _), got {:?}", x),
         }
     }
 }

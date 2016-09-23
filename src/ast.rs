@@ -48,6 +48,7 @@ pub enum Expr {
 
 #[derive(Debug, Clone)]
 pub enum Conversion {
+    None,
     Expr(Expr),
     DegC,
     DegF,
@@ -55,7 +56,6 @@ pub enum Conversion {
     DegRo,
     DegDe,
     DegN,
-    Base(u8),
     List(Vec<String>),
     Offset(i64),
 }
@@ -63,7 +63,7 @@ pub enum Conversion {
 #[derive(Debug, Clone)]
 pub enum Query {
     Expr(Expr),
-    Convert(Expr, Conversion),
+    Convert(Expr, Conversion, Option<u8>),
     Factorize(Expr),
     UnitsFor(Expr),
     Error(String),
@@ -93,6 +93,31 @@ pub enum Def {
 #[derive(Debug)]
 pub struct Defs {
     pub defs: Vec<(String, Rc<Def>)>,
+}
+
+impl fmt::Display for Conversion {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Conversion::None => write!(fmt, "nothing"),
+            Conversion::Expr(ref expr) => write!(fmt, "{}", expr),
+            Conversion::DegC => write!(fmt, "°C"),
+            Conversion::DegF => write!(fmt, "°F"),
+            Conversion::DegRe => write!(fmt, "°Ré"),
+            Conversion::DegRo => write!(fmt, "°Rø"),
+            Conversion::DegDe => write!(fmt, "°De"),
+            Conversion::DegN => write!(fmt, "°N"),
+            Conversion::List(ref list) => {
+                let list = list
+                    .iter()
+                    .map(|x| format!("{}", x))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                write!(fmt, "{}", list)
+            },
+            Conversion::Offset(off) =>
+                write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
+        }
+    }
 }
 
 impl fmt::Display for SuffixOp {
