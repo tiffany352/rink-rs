@@ -9,8 +9,8 @@ use chrono::{DateTime, FixedOffset};
 #[derive(Debug, Clone)]
 pub struct DefReply {
     pub canon_name: String,
-    pub def: String,
-    pub value: NumberParts,
+    pub def: Option<String>,
+    pub value: Option<NumberParts>,
     pub doc: Option<String>,
 }
 
@@ -114,8 +114,13 @@ impl Display for ConformanceError {
 
 impl Display for DefReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        try!(write!(fmt, "Definition: {} = {} = {}",
-                    self.canon_name, self.def, self.value.format("n u p")));
+        try!(write!(fmt, "Definition: {}", self.canon_name));
+        if let Some(ref def) = self.def {
+            try!(write!(fmt, " = {}", def));
+        }
+        if let Some(ref value) = self.value {
+            try!(write!(fmt, " = {}", value.format("n u p")));
+        }
         if let Some(ref doc) = self.doc {
             try!(write!(fmt, ". {}", doc));
         }

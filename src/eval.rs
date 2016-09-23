@@ -533,21 +533,60 @@ impl Context {
         };
 
         match *expr {
-            Query::Expr(Expr::Unit(ref name)) if self.definitions.contains_key(name) => {
-                let mut name = name;
-                while let Some(&Expr::Unit(ref unit)) = self.definitions.get(name) {
+            Query::Expr(Expr::Unit(ref name)) if {
+                let a = self.definitions.contains_key(name);
+                let b = self.canonicalize(name)
+                    .map(|x| self.definitions.contains_key(&*x))
+                    .unwrap_or(false);
+                let c = self.dimensions.contains(&**name);
+                let d = self.canonicalize(name)
+                    .map(|x| self.dimensions.contains(&*x))
+                    .unwrap_or(false);
+                a || b || c || d
+            } => {
+                let mut name = name.clone();
+                let mut canon = self.canonicalize(&name).unwrap_or_else(|| name.clone());
+                while let Some(&Expr::Unit(ref unit)) = {
+                    self.definitions.get(&name).or_else(|| self.definitions.get(&*canon))
+                } {
+                    let unit_canon = self.canonicalize(unit).unwrap_or_else(|| unit.clone());
                     if self.definitions.get(unit).is_none() {
-                        break
+                        if self.definitions.get(&unit_canon).is_none() {
+                            if !self.dimensions.contains(&**unit) {
+                                break
+                            } else {
+                                name = unit.clone();
+                                canon = unit_canon;
+                                break;
+                            }
+                        } else {
+                            name = unit_canon.clone();
+                            canon = unit_canon;
+                        }
+                    } else {
+                        name = unit.clone();
+                        canon = unit_canon;
                     }
-                    name = unit;
                 }
-                let ref def = self.definitions[name];
-                let res = self.lookup(name).unwrap();
+                let (def, res) = if self.dimensions.contains(&*name) {
+                    let parts = self.lookup(&name)
+                        .expect("Lookup of base unit failed")
+                        .to_parts(self);
+                    let def = if let Some(ref q) = parts.quantity {
+                        format!("base unit of {}", q)
+                    } else {
+                        format!("base unit")
+                    };
+                    (Some(def), None)
+                } else {
+                    (self.definitions.get(&name).map(|x| format!("{}", x)),
+                     self.lookup(&name).map(|x| x.to_parts(self)))
+                };
                 Ok(QueryReply::Def(DefReply {
-                    canon_name: name.clone(),
-                    def: format!("{}", def),
-                    value: res.to_parts(self),
-                    doc: self.docs.get(name).cloned(),
+                    canon_name: canon,
+                    def: def,
+                    value: res,
+                    doc: self.docs.get(&name).cloned(),
                 }))
             },
             Query::Convert(ref top, Conversion::None, Some(base)) => {
