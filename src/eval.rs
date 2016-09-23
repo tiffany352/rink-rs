@@ -219,8 +219,12 @@ impl Context {
         let mut best = None;
         {
             let mut try = |x: &'a str| {
-                let score = jaro_winkler(x, what);
-                let better = best.as_ref().map(|&(s, _v)| score > s).unwrap_or(true);
+                let score = jaro_winkler(
+                    &*x.to_lowercase(), &*what.to_lowercase());
+                let better = best
+                    .as_ref()
+                    .map(|&(s, _v)| score > s)
+                    .unwrap_or(true);
                 if better {
                     best = Some((score, x));
                 }

@@ -150,3 +150,8 @@ fn test_bases() {
     test("100K -> hex °C", "Conversion to °C is not defined in base 16");
     test("now -> hex +00:00", "Conversion to 00:00 is not defined in base 16");
 }
+
+#[test]
+fn test_typos() {
+    test("rsi", "Unknown unit rsi, did you mean RSI?");
+}
