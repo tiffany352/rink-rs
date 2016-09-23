@@ -135,38 +135,45 @@
 # SI units
 #
 
-kg        !kilogram  # Mass of the international prototype
+?? Equal to the mass of the international prototype of the
+?? kilogram. 3rd CGPM (1901, CR, 70).
+kg        !kilogram
 
-s         !second    # Duration of 9192631770 periods of the radiation
-                     #   corresponding to the transition between the two hyperfine
-                     #   levels of the ground state of the cesium-133 atom
+?? Duration of 9192631770 periods of the radiation corresponding to
+?? the transition between the two hyperfine levels of the ground state
+?? of the cesium-133 atom at rest at a temperature of 0 K. 13th CGPM
+?? (1968/68, Resolution 1; CR; 103).
+s         !second
 
-m         !meter     # Length of the path traveled by light in a vacuum
-                     #   during 1|299792458 seconds.  Originally meant to be
-                     #   1e-7 of the length along a meridian from the equator
-                     #   to a pole.
+?? Length of the path travelled by light in vacuum during a time
+?? interval of 1 / 299 792 458 of a second. 17th CGPM (1983, CR, 70).
+m         !meter
 
-A         !ampere    # The current which produces a force of 2e-7 N/m between two
-amp       A          #   infinitely long wires that are 1 meter apart
+?? The constant current which, if maintained in two straight parallel
+?? conductors of infinite length, of negligible circular
+?? cross-section, and placed 1 meter apart in vacuum, would produce
+?? between those conductors a force equal to 2e-7 newton per meter of
+?? length. 9th CGPM (1948).
+A         !ampere
+amp       A
 
-cd        !candela   # Luminous intensity in a given direction of a source which
-                     #   emits monochromatic radiation at 540e12 Hz with radiant
-                     #   intensity 1|683 W/steradian.  (This differs from radiant
-                     #   intensity (W/sr) in that it is adjusted for human
-                     #   perceptual dependence on wavelength.  The frequency of
-                     #   540e12 Hz (yellow) is where human perception is most
-                     #   efficient.)
+?? The luminous intensity, in a given direction, of a source that
+?? emits monochromatic radiation of frequency 540e12 hertz and that
+?? has a radiant intensity in that direction of 1/683 watt per
+?? steradian. 16th CGPM (1979, Resolution 3; CR, 100).
+cd        !candela
 
-mol       !mole      # The amount of substance of a system which contains as many
-                     #   elementary entities as there are atoms in 0.012 kg of
-                     #   carbon 12.  The elementary entities must be specified and
-                     #   may be atoms, molecules, ions, electrons, or other
-                     #   particles or groups of particles.  It is understood that
-                     #   unbound atoms of carbon 12, at rest and in the ground
-                     #   state, are referred to.
+?? The amount of substance a system which contains as many elementary
+?? entities as there are atoms in 0.012 kilogram of carbon 12 at rest
+?? and in their ground state. When the mole is used, the elementary
+?? entities must be specified and may be atoms, molecules, ions,
+?? electrons, other particles, or specified groups of such
+?? particles. 14th CGPM (1971, Resolution 3; CR, 78).
+mol       !mole
 
-K         !kelvin    # 1|273.16 of the thermodynamic temperature of the triple
-                     #   point of water
+?? The fraction 1 / 273.16 of the thermodynamic temperature of the
+?? triple point of water. 13th CGPM (1967/68, Resolution 4; CR, 104).
+K         !kelvin
 
 #
 # The radian and steradian are defined as dimensionless primitive units.
@@ -177,23 +184,24 @@ K         !kelvin    # 1|273.16 of the thermodynamic temperature of the triple
 # arguments to functions.
 #
 
-radian    !          # The angle subtended at the center of a circle by
-                     #   an arc equal in length to the radius of the
-                     #   circle
-sr        !steradian # Solid angle which cuts off an area of the surface
-                     #   of the sphere equal to that of a square with
-                     #   sides of length equal to the radius of the
-                     #   sphere
+?? The angle subtended at the center of a circle by an arc equal in
+?? length to the radius of the circle
+radian    !
+
+?? Solid angle which cuts off an area of the surface of the sphere
+?? equal to that of a square with sides of length equal to the radius
+?? of the sphere
+sr        !steradian
 
 #
 # Some primitive non-SI units
 #
 
-bit       !          # Basic unit of information (entropy).  The entropy in bits
-                     #   of a random variable over a finite alphabet is defined
-                     #   to be the sum of -p(i)*log2(p(i)) over the alphabet where
-                     #   p(i) is the probability that the random variable takes
-                     #   on the value i.
+?? Basic unit of information (entropy).  The entropy in bits of a
+?? random variable over a finite alphabet is defined to be the sum of
+?? -p(i)*log2(p(i)) over the alphabet where p(i) is the probability
+?? that the random variable takes on the value i.
+bit       !
 
 ###########################################################################
 #                                                                         #
