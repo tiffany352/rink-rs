@@ -37,10 +37,6 @@ name = "rink"
 doc = false
 
 [[bin]]
-name = "rink-debug-tokens"
-doc = false
-
-[[bin]]
 name = "rink-irc"
 doc = false
 
