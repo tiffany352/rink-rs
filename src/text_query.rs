@@ -7,6 +7,7 @@ use std::iter::Peekable;
 use ast::*;
 use gmp::mpz::Mpz;
 use gmp::mpq::Mpq;
+use number::Num;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -493,16 +494,19 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         Token::Hex(num) =>
             Mpz::from_str_radix(&*num, 16)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Num::Mpq)
             .map(Expr::Const)
             .unwrap_or_else(|()| Expr::Error(format!("Failed to parse hex"))),
         Token::Oct(num) =>
             Mpz::from_str_radix(&*num, 8)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Num::Mpq)
             .map(Expr::Const)
             .unwrap_or_else(|()| Expr::Error(format!("Failed to parse octal"))),
         Token::Bin(num) =>
             Mpz::from_str_radix(&*num, 2)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Num::Mpq)
             .map(Expr::Const)
             .unwrap_or_else(|()| Expr::Error(format!("Failed to parse binary"))),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),

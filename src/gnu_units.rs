@@ -6,7 +6,7 @@ use std::str::Chars;
 use std::iter::Peekable;
 use std::rc::Rc;
 use ast::*;
-use gmp::mpq::Mpq;
+use number::Num;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -184,7 +184,7 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
         Token::Slash => Expr::Frac(
-            Box::new(Expr::Const(Mpq::one())),
+            Box::new(Expr::Const(Num::one())),
             Box::new(parse_term(iter))),
         Token::LPar => {
             let res = parse_expr(iter);

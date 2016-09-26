@@ -3,8 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::BTreeMap;
-use gmp::mpq::Mpq;
-use number::{Number, Dim, NumberParts, pow};
+use number::{Number, Num, Int, Dim, NumberParts, pow};
 use date;
 use ast::{Expr, SuffixOp, Query, Conversion};
 use std::rc::Rc;
@@ -17,7 +16,6 @@ use reply::{
 };
 use search;
 use context::Context;
-use gmp::mpz::Mpz;
 
 impl Context {
     /// Evaluates an expression to compute its value, *excluding* `->`
@@ -113,13 +111,13 @@ impl Context {
         }
     }
 
-    pub fn eval_unit_name(&self, expr: &Expr) -> Result<(BTreeMap<String, isize>, Mpq), String> {
+    pub fn eval_unit_name(&self, expr: &Expr) -> Result<(BTreeMap<String, isize>, Num), String> {
         match *expr {
             Expr::Equals(ref left, ref _right) => match **left {
                 Expr::Unit(ref name) => {
                     let mut map = BTreeMap::new();
                     map.insert(name.clone(), 1);
-                    Ok((map, Mpq::one()))
+                    Ok((map, Num::one()))
                 },
                 ref x => Err(format!("Expected identifier, got {:?}", x))
             },
@@ -127,7 +125,7 @@ impl Context {
             Expr::Unit(ref name) | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(self.canonicalize(&**name).unwrap_or_else(|| name.clone()), 1);
-                Ok((map, Mpq::one()))
+                Ok((map, Num::one()))
             },
             Expr::Const(ref i) =>
                 Ok((BTreeMap::new(), i.clone())),
@@ -189,9 +187,9 @@ impl Context {
 
     fn conformance_err(&self, top: &Number, bottom: &Number) -> ConformanceError {
         let mut topu = top.clone();
-        topu.0 = Mpq::one();
+        topu.0 = Num::one();
         let mut bottomu = bottom.clone();
-        bottomu.0 = Mpq::one();
+        bottomu.0 = Num::one();
         let mut suggestions = vec![];
         let diff = (&topu * &bottomu).unwrap();
         if diff.1.len() == 0 {
@@ -224,23 +222,24 @@ impl Context {
         raw: &Number,
         bottom: &Number,
         bottom_name: BTreeMap<String, isize>,
-        bottom_const: Mpq,
+        bottom_const: Num,
         base: u8
     ) -> ConversionReply {
         let (exact, approx) = raw.numeric_value(base);
         let bottom_name = bottom_name.into_iter().map(
             |(a,b)| (Dim::new(&*a), b as i64)).collect();
+        let (num, den) = bottom_const.to_rational();
         ConversionReply {
             value: NumberParts {
                 exact_value: exact,
                 approx_value: approx,
-                factor: if bottom_const.get_num() != Mpz::one() {
-                    Some(format!("{}", bottom_const.get_num()))
+                factor: if num != Int::one() {
+                    Some(format!("{}", num))
                 } else {
                     None
                 },
-                divfactor: if bottom_const.get_den() != Mpz::one() {
-                    Some(format!("{}", bottom_const.get_den()))
+                divfactor: if den != Int::one() {
+                    Some(format!("{}", den))
                 } else {
                     None
                 },
@@ -278,14 +277,12 @@ impl Context {
         let mut out = vec![];
         let len = units.len();
         for (i, unit) in units.into_iter().enumerate() {
-            let res = &value / &unit.0;
-            let div = &res.get_num() / res.get_den();
-            let rem = &value - &(&unit.0 * &Mpq::ratio(&div, &Mpz::one()));
-            value = rem;
             if i == len-1 {
-                out.push(res);
+                out.push(&value / &unit.0);
             } else {
-                out.push(Mpq::ratio(&div, &Mpz::one()));
+                let (div, rem) = value.div_rem(&unit.0);
+                out.push(div);
+                value = rem;
             }
         }
         Ok(list.into_iter().zip(out.into_iter()).map(|(name, value)| {
@@ -479,7 +476,7 @@ impl Context {
                             name.insert(format!("°{}", $name), 1);
                             Ok(QueryReply::Conversion(self.show(
                                 &res, &bottom,
-                                name, Mpq::one(),
+                                name, Num::one(),
                                 10)))
                         }
                     }}

@@ -3,8 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::{BTreeMap, BTreeSet};
-use gmp::mpq::Mpq;
-use number::Dim;
+use number::{Dim, Num};
 use ast::{Expr, Def, Defs};
 use std::rc::Rc;
 use value::Value;
@@ -232,7 +231,7 @@ impl Context {
                 },
                 Def::Unit(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        if v.0 == Mpq::one() && reverse.contains(&*name) {
+                        if v.0 == Num::one() && reverse.contains(&*name) {
                             self.reverse.insert(v.1.clone(), name.clone());
                         }
                         self.definitions.insert(name.clone(), expr.clone());

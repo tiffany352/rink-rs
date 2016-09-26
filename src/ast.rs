@@ -4,7 +4,7 @@
 
 use std::rc::Rc;
 use std::fmt;
-use gmp::mpq::Mpq;
+use number::Num;
 
 #[derive(Debug, Clone)]
 pub enum SuffixOp {
@@ -31,7 +31,7 @@ pub enum DateToken {
 pub enum Expr {
     Unit(String),
     Quote(String),
-    Const(Mpq),
+    Const(Num),
     Date(Vec<DateToken>),
     Frac(Box<Expr>, Box<Expr>),
     Mul(Vec<Expr>),

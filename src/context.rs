@@ -3,9 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::{BTreeMap, BTreeSet};
-use number::{Dim, Number, Unit};
+use number::{Dim, Number, Unit, Num};
 use ast::{Expr, DatePattern};
-use gmp::mpq::Mpq;
 use search;
 
 /// The evaluation context that contains unit definitions.
@@ -157,8 +156,8 @@ impl Context {
 
         let mut buf = vec![];
         let mut recip = false;
-        let square = Number(Mpq::one(), value.1.clone()).root(2).ok();
-        let inverse = (&Number::one() / &Number(Mpq::one(), value.1.clone())).unwrap();
+        let square = Number(Num::one(), value.1.clone()).root(2).ok();
+        let inverse = (&Number::one() / &Number(Num::one(), value.1.clone())).unwrap();
         if let Some(name) = self.quantities.get(&value.1) {
             write!(buf, "{}", name).unwrap();
         } else if let Some(name) = square.and_then(|square| self.quantities.get(&square.1)) {

@@ -6,7 +6,7 @@ use ast::{DatePattern, DateToken, show_datepattern};
 use chrono::format::Parsed;
 use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration, Date};
 use context::Context;
-use number::{Number, Dim};
+use number::{Number, Num, Dim};
 use std::iter::Peekable;
 
 pub fn parse_date<I>(
@@ -292,24 +292,17 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime<Fixe
 }
 
 pub fn to_duration(num: &Number) -> Result<Duration, String> {
-    use gmp::mpq::Mpq;
-    use gmp::mpz::Mpz;
-
     if num.1.len() != 1 || num.1.get("s") != Some(&1) {
         return Err(format!("Expected seconds"))
     }
-    let max = Mpq::ratio(&Mpz::from(i64::max_value() / 1000), &Mpz::one());
+    let max = Num::from(i64::max_value() / 1000);
     if num.0.abs() > max {
         return Err(format!("Implementation error: Number is out of range ({:?})", max))
     }
-    let ms_div = Mpz::from(1_000);
-    let ms = &(&num.0.get_num() * &ms_div) / &num.0.get_den();
-    let ns_div = Mpz::from(1_000_000_000);
-    let ns = &num.0 - &Mpq::ratio(&ms, &ms_div);
-    let ns = &(&ns.get_num() * &ns_div) / &ns.get_den();
-    let ms: Option<i64> = (&ms).into();
-    let ns: Option<i64> = (&ns).into();
-    Ok(Duration::milliseconds(ms.unwrap()) + Duration::nanoseconds(ns.unwrap()))
+    let (ms, rem) = num.0.div_rem(&Num::from(1000));
+    let ns = &rem / &Num::from(1_000_000_000);
+    Ok(Duration::milliseconds(ms.to_int().unwrap()) +
+       Duration::nanoseconds(ns.to_int().unwrap()))
 }
 
 pub fn from_duration(duration: &Duration) -> Result<Number, String> {
@@ -322,7 +315,7 @@ pub fn from_duration(duration: &Duration) -> Result<Number, String> {
     let ns_div = Mpz::from(1_000_000_000);
     let ms = Mpq::ratio(&Mpz::from(ms), &ms_div);
     let ns = Mpq::ratio(&Mpz::from(ns), &ns_div);
-    Ok(Number::new_unit(&ms + &ns, Dim::new("s")))
+    Ok(Number::new_unit(Num::Mpq(&ms + &ns), Dim::new("s")))
 }
 
 pub fn now() -> DateTime<FixedOffset> {

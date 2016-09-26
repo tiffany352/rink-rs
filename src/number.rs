@@ -11,9 +11,127 @@ use std::rc::Rc;
 use std::fmt;
 use std::borrow::Borrow;
 use context::Context;
+use std::cmp::Ordering;
 
-/// Number type
-pub type Num = Mpq;
+pub type Int = Mpz;
+
+/// Number type.
+#[derive(Clone, PartialEq, Debug)]
+pub enum Num {
+    /// Arbitrary-precision rational fraction.
+    Mpq(Mpq),
+    // /// Machine floats.
+    // Float(f64),
+    // /// Machine ints.
+    // Int(i64),
+}
+
+impl Num {
+    pub fn one() -> Num {
+        Num::Mpq(Mpq::one())
+        //Num::Int(1)
+    }
+
+    pub fn zero() -> Num {
+        Num::Mpq(Mpq::zero())
+        //Num::Int(0)
+    }
+
+    pub fn abs(&self) -> Num {
+        match *self {
+            Num::Mpq(ref mpq) => Num::Mpq(mpq.abs())
+        }
+    }
+
+    pub fn div_rem(&self, other: &Num) -> (Num, Num) {
+        match (self, other) {
+            (&Num::Mpq(ref left), &Num::Mpq(ref right)) => {
+                let div = left / right;
+                let floor = &div.get_num() / div.get_den();
+                let rem = left - &(right * &Mpq::ratio(&floor, &Mpz::one()));
+                (Num::Mpq(Mpq::ratio(&floor, &Mpz::one())), Num::Mpq(rem))
+            }
+        }
+    }
+
+    pub fn to_rational(&self) -> (Int, Int) {
+        match *self {
+            Num::Mpq(ref mpq) => (mpq.get_num(), mpq.get_den())
+        }
+    }
+
+    pub fn to_int(&self) -> Option<i64> {
+        match *self {
+            Num::Mpq(ref mpq) => (&(mpq.get_num() / mpq.get_den())).into()
+        }
+    }
+}
+
+impl From<Mpq> for Num {
+    fn from(mpq: Mpq) -> Num {
+        Num::Mpq(mpq)
+    }
+}
+
+impl From<Mpz> for Num {
+    fn from(mpz: Mpz) -> Num {
+        Num::Mpq(Mpq::ratio(&mpz, &Mpz::one()))
+    }
+}
+
+impl From<i64> for Num {
+    fn from(i: i64) -> Num {
+        Num::from(Mpz::from(i))
+    }
+}
+
+impl Into<f64> for Num {
+    fn into(self) -> f64 {
+        match self {
+            Num::Mpq(mpq) => mpq.into(),
+        }
+    }
+}
+
+impl PartialOrd for Num {
+    fn partial_cmp(&self, other: &Num) -> Option<Ordering> {
+        match (self, other) {
+            (&Num::Mpq(ref left), &Num::Mpq(ref right)) =>
+                left.partial_cmp(right)
+        }
+    }
+}
+
+macro_rules! num_binop {
+    ($what:ident, $func:ident) => {
+        impl<'a, 'b> $what<&'b Num> for &'a Num {
+            type Output = Num;
+
+            fn $func(self, other: &'b Num) -> Num {
+                match (self, other) {
+                    (&Num::Mpq(ref left), &Num::Mpq(ref right)) =>
+                        Num::Mpq(left.$func(right))
+                }
+            }
+        }
+    }
+}
+
+num_binop!(Add, add);
+num_binop!(Sub, sub);
+num_binop!(Mul, mul);
+num_binop!(Div, div);
+
+impl<'a> Neg for &'a Num {
+    type Output = Num;
+
+    fn neg(self) -> Num {
+        match *self {
+            Num::Mpq(ref mpq) => Num::Mpq(-mpq),
+        }
+    }
+}
+
 /// Alias for the primary representation of dimensionality.
 pub type Unit = BTreeMap<Dim, i64>;
 
@@ -22,7 +140,7 @@ pub type Unit = BTreeMap<Dim, i64>;
 pub struct Dim(pub Rc<String>);
 
 /// The basic representation of a number with a unit.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq)]
 pub struct Number(pub Num, pub Unit);
 
 impl Borrow<str> for Dim {
@@ -43,41 +161,41 @@ impl Dim {
     }
 }
 
-fn one() -> Mpq {
-    Mpq::one()
-}
-
-fn zero() -> Mpq {
-    Mpq::zero()
-}
-
-pub fn pow(left: &Mpq, exp: i32) -> Mpq {
+pub fn pow(left: &Num, exp: i32) -> Num {
     if exp < 0 {
-        one() / pow(left, -exp)
+        &Num::one() / &pow(left, -exp)
     } else {
+        let left = match *left {
+            Num::Mpq(ref left) => left
+        };
         let num = left.get_num().pow(exp as u32);
         let den = left.get_den().pow(exp as u32);
-        Mpq::ratio(&num, &den)
+        Num::Mpq(Mpq::ratio(&num, &den))
     }
 }
 
-fn root(left: &Mpq, n: i32) -> Mpq {
+fn root(left: &Num, n: i32) -> Num {
     if n < 0 {
-        one() / root(left, -n)
+        &Num::one() / &root(left, -n)
     } else {
+        let left = match *left {
+            Num::Mpq(ref left) => left
+        };
         let num = left.get_num().root(n as u32);
         let den = left.get_den().root(n as u32);
-        Mpq::ratio(&num, &den)
+        Num::Mpq(Mpq::ratio(&num, &den))
     }
 }
 
-pub fn to_string(rational: &Mpq, base: u8) -> (bool, String) {
+pub fn to_string(rational: &Num, base: u8) -> (bool, String) {
     use std::char::from_digit;
 
-    let sign = *rational < Mpq::zero();
+    let sign = *rational < Num::zero();
     let rational = rational.abs();
-    let num = rational.get_num();
-    let den = rational.get_den();
+    let (num, den) = rational.to_rational();
+    let rational = match rational {
+        Num::Mpq(mpq) => mpq
+    };
     let intdigits = (&num / &den).size_in_base(base) as u32;
 
     let mut buf = String::new();
@@ -85,10 +203,10 @@ pub fn to_string(rational: &Mpq, base: u8) -> (bool, String) {
         buf.push('-');
     }
     let zero = Mpq::zero();
-    let one = Mpz::one();
-    let ten = Mpz::from(base as u64);
+    let one = Int::one();
+    let ten = Int::from(base as u64);
     let ten_mpq = Mpq::ratio(&ten, &one);
-    let mut cursor = rational / Mpq::ratio(&ten.pow(intdigits), &one);
+    let mut cursor = &rational / &Mpq::ratio(&ten.pow(intdigits), &one);
     let mut n = 0;
     let mut only_zeros = true;
     let mut zeros = 0;
@@ -331,15 +449,15 @@ impl fmt::Display for NumberParts {
 
 impl Number {
     pub fn one() -> Number {
-        Number(one(), Unit::new())
+        Number(Num::one(), Unit::new())
     }
 
     pub fn one_unit(unit: Dim) -> Number {
-        Number::new_unit(one(), unit)
+        Number::new_unit(Num::one(), unit)
     }
 
     pub fn zero() -> Number {
-        Number(zero(), Unit::new())
+        Number(Num::zero(), Unit::new())
     }
 
     /// Creates a dimensionless value.
@@ -354,7 +472,7 @@ impl Number {
         Number(num, map)
     }
 
-    pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Mpq, String> {
+    pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Num, String> {
         use std::str::FromStr;
 
         let num = Mpz::from_str_radix(integer, 10).unwrap();
@@ -382,12 +500,12 @@ impl Number {
         };
         let num = &Mpq::ratio(&num, &Mpz::one()) + &frac;
         let num = &num * &exp;
-        Ok(num)
+        Ok(Num::Mpq(num))
     }
 
     /// Computes the reciprocal (1/x) of the value.
     pub fn invert(&self) -> Number {
-        Number(&one() / &self.0,
+        Number(&Num::one() / &self.0,
                self.1.iter()
                .map(|(k, &power)| (k.clone(), -power))
                .collect::<Unit>())
@@ -404,7 +522,7 @@ impl Number {
     /// Computes the nth root of a value iff all of its units have
     /// powers divisible by n.
     pub fn root(&self, exp: i32) -> Result<Number, String> {
-        if self.0 < Mpq::zero() {
+        if self.0 < Num::zero() {
             return Err(format!("Complex numbers are not implemented"))
         }
         let mut res = Unit::new();
@@ -425,11 +543,8 @@ impl Number {
         if exp.1.len() != 0 {
             return Err(format!("Exponent must be dimensionless"))
         }
-        let mut exp = exp.0.clone();
-        exp.canonicalize();
-        let num = exp.get_num();
-        let den = exp.get_den();
-        let one = Mpz::one();
+        let (num, den) = exp.0.to_rational();
+        let one = Int::one();
         if den == one {
             let exp: Option<i64> = (&num).into();
             Ok(self.powi(exp.unwrap() as i32))
@@ -442,13 +557,14 @@ impl Number {
     }
 
     pub fn numeric_value(&self, base: u8) -> (Option<String>, Option<String>) {
+        let (num, den) = self.0.to_rational();
         match to_string(&self.0, base) {
             (true, v) => (Some(v), None),
-            (false, v) => if {self.0.get_den() > Mpz::from(1_000_000) ||
-                              self.0.get_num() > Mpz::from(1_000_000_000u64)} {
+            (false, v) => if {den > Mpz::from(1_000_000) ||
+                              num > Mpz::from(1_000_000_000u64)} {
                 (None, Some(v))
             } else {
-                (Some(format!("{:?}", self.0)), Some(v))
+                (Some(format!("{}/{}", num, den)), Some(v))
             }
         }
     }
@@ -476,7 +592,7 @@ impl Number {
             let orig = unit.iter().next().unwrap();
             // kg special case
             let (val, orig) = if &**(orig.0).0 == "kg" || &**(orig.0).0 == "kilogram" {
-                (&self.0 * &pow(&Mpq::ratio(&Mpz::from(1000), &Mpz::one()), (*orig.1) as i32),
+                (&self.0 * &pow(&Num::from(1000), (*orig.1) as i32),
                  (Dim::new("gram"), orig.1))
             } else {
                 (self.0.clone(), (orig.0.clone(), orig.1))
@@ -487,7 +603,7 @@ impl Number {
                 }
                 let abs = val.abs();
                 if { abs >= pow(&v.0, (*orig.1) as i32) &&
-                     abs < pow(&(&v.0 * &Mpq::ratio(&Mpz::from(1000), &Mpz::one())),
+                     abs < pow(&(&v.0 * &Num::from(1000)),
                                (*orig.1) as i32) } {
                     let res = &val / &pow(&v.0, (*orig.1) as i32);
                     // tonne special case
@@ -641,7 +757,7 @@ impl<'a, 'b> Div<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
     fn div(self, other: &Number) -> Self::Output {
-        if other.0 == zero() {
+        if other.0 == Num::zero() {
             None
         } else {
             self * &other.invert()
