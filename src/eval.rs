@@ -3,8 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::BTreeMap;
-use gmp::mpq::Mpq;
-use number::{Number, Dim, NumberParts, pow};
+use number::{Number, Num, Int, Dim, NumberParts, pow};
 use date;
 use ast::{Expr, SuffixOp, Query, Conversion};
 use std::rc::Rc;
@@ -17,7 +16,6 @@ use reply::{
 };
 use search;
 use context::Context;
-use gmp::mpz::Mpz;
 
 impl Context {
     /// Evaluates an expression to compute its value, *excluding* `->`
@@ -93,19 +91,149 @@ impl Context {
             }),
             Expr::Equals(_, ref right) => self.eval(right),
             Expr::Call(ref name, ref args) => {
-                let args = try!(args.iter().map(|x| self.eval(x)).collect::<Result<Vec<_>, _>>());
+                let args = try!(
+                    args.iter()
+                        .map(|x| self.eval(x))
+                        .collect::<Result<Vec<_>, _>>());
+
+                macro_rules! func {
+                    (fn $fname:ident($($name:ident : $ty:ident),*) $block:block) => {{
+                        let mut iter = args.iter();
+                        let mut count = 0;
+                        $( count += 1; let _ = stringify!($name); )*;
+                        $(
+                            let $name = match iter.next() {
+                                Some(&Value::$ty(ref v)) => v,
+                                Some(x) => return Err(format!(
+                                    "Expected {}, got <{}>",
+                                    stringify!($ty), x.show(self))),
+                                None => return Err(format!(
+                                    "Argument number mismatch for {}: \
+                                     Expected {}, got {}",
+                                    stringify!($fname), count, args.len()))
+                            };
+                        )*;
+                        if iter.next().is_some() {
+                            return Err(format!(
+                                "Argument number mismatch for {}: \
+                                 Expected {}, got {}",
+                                stringify!($fname), count, args.len()));
+                        }
+                        let res: Result<Value, String> = {
+                            $block
+                        };
+                        res.map_err(|e| {
+                            format!(
+                                "{}: {}({})",
+                                e, stringify!($fname),
+                                args.iter()
+                                    .map(|x| x.show(self))
+                                    .collect::<Vec<_>>()
+                                    .join(", "))
+                        })
+                    }
+                }}
+
                 match &**name {
-                    "sqrt" => {
-                        if args.len() != 1 {
-                            return Err(format!("Argument number mismatch for sqrt: expected 1, got {}", args.len()))
+                    "sqrt" => func!(fn sqrt(num: Number) {
+                        num.root(2).map(Value::Number)
+                    }),
+                    "exp" => func!(fn exp(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().exp()), num.1.clone())))
+                    }),
+                    "ln" => func!(fn ln(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().ln()), num.1.clone())))
+                    }),
+                    "log" => func!(fn log(num: Number, base: Number) {
+                        if base.1.len() > 0 {
+                            Err(format!(
+                                "Base must be dimensionless"))
+                        } else {
+                            Ok(Value::Number(Number(
+                                Num::Float(num.0.to_f64().log(base.0.to_f64())),
+                                num.1.clone())))
                         }
-                        match args[0] {
-                            Value::Number(ref num) =>
-                                num.root(2).map(Value::Number).map_err(|e| format!(
-                                    "{}: sqrt <{}>", e, num.show(self))),
-                            ref x => Err(format!("Expected number, got <{}>", x.show(self)))
+                    }),
+                    "log2" => func!(fn log2(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().log2()), num.1.clone())))
+                    }),
+                    "log10" => func!(fn ln(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().log10()), num.1.clone())))
+                    }),
+                    "hypot" => func!(fn hypot(x: Number, y: Number) {
+                        if x.1 != y.1 {
+                            Err(format!(
+                                "Arguments to hypot must have matching \
+                                 dimensionality"))
+                        } else {
+                            Ok(Value::Number(Number(
+                                Num::Float(x.0.to_f64().hypot(y.0.to_f64())),
+                                x.1.clone())))
                         }
-                    },
+                    }),
+                    "sin" => func!(fn sin(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().sin()), num.1.clone())))
+                    }),
+                    "cos" => func!(fn cos(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().cos()), num.1.clone())))
+                    }),
+                    "tan" => func!(fn tan(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().tan()), num.1.clone())))
+                    }),
+                    "asin" => func!(fn asin(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().asin()), num.1.clone())))
+                    }),
+                    "acos" => func!(fn acos(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().acos()), num.1.clone())))
+                    }),
+                    "atan" => func!(fn atan(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().atan()), num.1.clone())))
+                    }),
+                    "atan2" => func!(fn atan2(x: Number, y: Number) {
+                        if x.1 != y.1 {
+                            Err(format!(
+                                "Arguments to atan2 must have matching \
+                                 dimensionality"))
+                        } else {
+                            Ok(Value::Number(Number(
+                                Num::Float(x.0.to_f64().atan2(y.0.to_f64())),
+                                x.1.clone())))
+                        }
+                    }),
+                    "sinh" => func!(fn sinh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().sinh()), num.1.clone())))
+                    }),
+                    "cosh" => func!(fn cosh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().cosh()), num.1.clone())))
+                    }),
+                    "tanh" => func!(fn tanh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().tanh()), num.1.clone())))
+                    }),
+                    "asinh" => func!(fn asinh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().asinh()), num.1.clone())))
+                    }),
+                    "acosh" => func!(fn acosh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().acosh()), num.1.clone())))
+                    }),
+                    "atanh" => func!(fn atanh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().atanh()), num.1.clone())))
+                    }),
                     _ => Err(format!("Function not found: {}", name))
                 }
             },
@@ -113,13 +241,13 @@ impl Context {
         }
     }
 
-    pub fn eval_unit_name(&self, expr: &Expr) -> Result<(BTreeMap<String, isize>, Mpq), String> {
+    pub fn eval_unit_name(&self, expr: &Expr) -> Result<(BTreeMap<String, isize>, Num), String> {
         match *expr {
             Expr::Equals(ref left, ref _right) => match **left {
                 Expr::Unit(ref name) => {
                     let mut map = BTreeMap::new();
                     map.insert(name.clone(), 1);
-                    Ok((map, Mpq::one()))
+                    Ok((map, Num::one()))
                 },
                 ref x => Err(format!("Expected identifier, got {:?}", x))
             },
@@ -127,7 +255,7 @@ impl Context {
             Expr::Unit(ref name) | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(self.canonicalize(&**name).unwrap_or_else(|| name.clone()), 1);
-                Ok((map, Mpq::one()))
+                Ok((map, Num::one()))
             },
             Expr::Const(ref i) =>
                 Ok((BTreeMap::new(), i.clone())),
@@ -156,7 +284,7 @@ impl Context {
                 if res.1.len() > 0 {
                     return Err(format!("Exponents must be dimensionless"))
                 }
-                let res: f64 = res.0.into();
+                let res = res.0.to_f64();
                 let (left, lv) = try!(self.eval_unit_name(left));
                 Ok((left.into_iter()
                    .filter_map(|(k, v)| {
@@ -189,9 +317,9 @@ impl Context {
 
     fn conformance_err(&self, top: &Number, bottom: &Number) -> ConformanceError {
         let mut topu = top.clone();
-        topu.0 = Mpq::one();
+        topu.0 = Num::one();
         let mut bottomu = bottom.clone();
-        bottomu.0 = Mpq::one();
+        bottomu.0 = Num::one();
         let mut suggestions = vec![];
         let diff = (&topu * &bottomu).unwrap();
         if diff.1.len() == 0 {
@@ -224,23 +352,24 @@ impl Context {
         raw: &Number,
         bottom: &Number,
         bottom_name: BTreeMap<String, isize>,
-        bottom_const: Mpq,
+        bottom_const: Num,
         base: u8
     ) -> ConversionReply {
         let (exact, approx) = raw.numeric_value(base);
         let bottom_name = bottom_name.into_iter().map(
             |(a,b)| (Dim::new(&*a), b as i64)).collect();
+        let (num, den) = bottom_const.to_rational();
         ConversionReply {
             value: NumberParts {
                 exact_value: exact,
                 approx_value: approx,
-                factor: if bottom_const.get_num() != Mpz::one() {
-                    Some(format!("{}", bottom_const.get_num()))
+                factor: if num != Int::one() {
+                    Some(format!("{}", num))
                 } else {
                     None
                 },
-                divfactor: if bottom_const.get_den() != Mpz::one() {
-                    Some(format!("{}", bottom_const.get_den()))
+                divfactor: if den != Int::one() {
+                    Some(format!("{}", den))
                 } else {
                     None
                 },
@@ -278,14 +407,12 @@ impl Context {
         let mut out = vec![];
         let len = units.len();
         for (i, unit) in units.into_iter().enumerate() {
-            let res = &value / &unit.0;
-            let div = &res.get_num() / res.get_den();
-            let rem = &value - &(&unit.0 * &Mpq::ratio(&div, &Mpz::one()));
-            value = rem;
             if i == len-1 {
-                out.push(res);
+                out.push(&value / &unit.0);
             } else {
-                out.push(Mpq::ratio(&div, &Mpz::one()));
+                let (div, rem) = value.div_rem(&unit.0);
+                out.push(div);
+                value = rem;
             }
         }
         Ok(list.into_iter().zip(out.into_iter()).map(|(name, value)| {
@@ -479,7 +606,7 @@ impl Context {
                             name.insert(format!("°{}", $name), 1);
                             Ok(QueryReply::Conversion(self.show(
                                 &res, &bottom,
-                                name, Mpq::one(),
+                                name, Num::one(),
                                 10)))
                         }
                     }}

@@ -7,6 +7,7 @@ use std::iter::Peekable;
 use ast::*;
 use gmp::mpz::Mpz;
 use gmp::mpq::Mpq;
+use number::Num;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -423,6 +424,25 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 fn is_func(name: &str) -> bool {
     match name {
         "sqrt" => true,
+        "exp" => true,
+        "ln" => true,
+        "log" => true,
+        "log2" => true,
+        "log10" => true,
+        "hypot" => true,
+        "sin" => true,
+        "cos" => true,
+        "tan" => true,
+        "asin" => true,
+        "acos" => true,
+        "atan" => true,
+        "atan2" => true,
+        "sinh" => true,
+        "cosh" => true,
+        "tanh" => true,
+        "asinh" => true,
+        "acosh" => true,
+        "atanh" => true,
         _ => false
     }
 }
@@ -493,16 +513,19 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         Token::Hex(num) =>
             Mpz::from_str_radix(&*num, 16)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Num::Mpq)
             .map(Expr::Const)
             .unwrap_or_else(|()| Expr::Error(format!("Failed to parse hex"))),
         Token::Oct(num) =>
             Mpz::from_str_radix(&*num, 8)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Num::Mpq)
             .map(Expr::Const)
             .unwrap_or_else(|()| Expr::Error(format!("Failed to parse octal"))),
         Token::Bin(num) =>
             Mpz::from_str_radix(&*num, 2)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
+            .map(Num::Mpq)
             .map(Expr::Const)
             .unwrap_or_else(|()| Expr::Error(format!("Failed to parse binary"))),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),

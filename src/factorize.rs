@@ -4,9 +4,8 @@
 
 use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;
-use number::{Number, Unit, Dim};
+use number::{Number, Num, Unit, Dim};
 use std::cmp;
-use gmp::mpq::Mpq;
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct Factors(pub usize, pub Vec<Rc<String>>);
@@ -34,7 +33,7 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
                 continue 'outer
             }
         }
-        let num = Number(Mpq::one(), unit.clone());
+        let num = Number(Num::one(), unit.clone());
         for &i in [-1, 1, 2].into_iter() {
             let res = (value / &num.powi(i)).unwrap();
             let score = res.complexity_score();
@@ -46,7 +45,7 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
     }
     if let Some((name, unit, pow, score)) = best {
         if score < value.complexity_score() {
-            let mut res = (value / &Number(Mpq::one(), unit.clone()).powi(pow)).unwrap().1;
+            let mut res = (value / &Number(Num::one(), unit.clone()).powi(pow)).unwrap().1;
             res.insert(Dim::new(&**name), pow as i64);
             return res
         }
@@ -64,7 +63,7 @@ pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>)
     let mut candidates: BinaryHeap<Factors> = BinaryHeap::new();
     let value_score = value.complexity_score();
     for (unit, name) in quantities.iter().rev() {
-        let res = (value / &Number(Mpq::one(), unit.clone())).unwrap();
+        let res = (value / &Number(Num::one(), unit.clone())).unwrap();
         //if res.1.len() >= value.1.len() {
         let score = res.complexity_score();
         // we are not making the unit any simpler

@@ -8,7 +8,7 @@ use xml::EventReader;
 use xml::reader::XmlEvent;
 use ast::{Defs, Def, Expr};
 use std::rc::Rc;
-use gmp::mpq::Mpq;
+use number::Num;
 
 static URL: &'static str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 
@@ -40,7 +40,7 @@ pub fn parse(f: File) -> Result<Defs, String> {
                     if let Ok(num) = ::number::Number::from_parts(integer, frac, None) {
                         out.push((currency.to_owned(), Rc::new(Def::Unit(
                             Expr::Mul(vec![
-                                Expr::Frac(Box::new(Expr::Const(Mpq::one())),
+                                Expr::Frac(Box::new(Expr::Const(Num::one())),
                                            Box::new(Expr::Const(num))),
                                 Expr::Unit("EUR".to_string())
                             ]))), Some(format!("Sourced from European Central Bank."))));
