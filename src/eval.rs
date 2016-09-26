@@ -82,11 +82,10 @@ impl Context {
             Expr::Suffix(SuffixOp::Newton, ref left) =>
                 temperature!(left, "N", "zerocelsius", "newton_absolute"),
 
-            // TODO: A type might not implement * on Number, and this would fail
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
                 a.and_then(|a| {
                     let b = try!(self.eval(b));
-                    Ok((&a * &b).unwrap())
+                    (&a * &b).map_err(|e| format!("{}: <{}> * <{}>", e, a.show(self), b.show(self)))
                 })
             }),
             Expr::Equals(_, ref right) => self.eval(right),
