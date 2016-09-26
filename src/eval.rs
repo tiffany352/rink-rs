@@ -91,33 +91,149 @@ impl Context {
             }),
             Expr::Equals(_, ref right) => self.eval(right),
             Expr::Call(ref name, ref args) => {
-                let args = try!(args.iter().map(|x| self.eval(x)).collect::<Result<Vec<_>, _>>());
-                match &**name {
-                    "sqrt" => {
-                        if args.len() != 1 {
-                            return Err(format!("Argument number mismatch for sqrt: expected 1, got {}", args.len()))
-                        }
-                        match args[0] {
-                            Value::Number(ref num) =>
-                                num.root(2).map(Value::Number).map_err(|e| format!(
-                                    "{}: sqrt <{}>", e, num.show(self))),
-                            ref x => Err(format!("Expected number, got <{}>", x.show(self)))
-                        }
-                    },
-                    "sin" => {
-                        if args.len() != 1 {
+                let args = try!(
+                    args.iter()
+                        .map(|x| self.eval(x))
+                        .collect::<Result<Vec<_>, _>>());
+
+                macro_rules! func {
+                    (fn $fname:ident($($name:ident : $ty:ident),*) $block:block) => {{
+                        let mut iter = args.iter();
+                        let mut count = 0;
+                        $( count += 1; let _ = stringify!($name); )*;
+                        $(
+                            let $name = match iter.next() {
+                                Some(&Value::$ty(ref v)) => v,
+                                Some(x) => return Err(format!(
+                                    "Expected {}, got <{}>",
+                                    stringify!($ty), x.show(self))),
+                                None => return Err(format!(
+                                    "Argument number mismatch for {}: \
+                                     Expected {}, got {}",
+                                    stringify!($fname), count, args.len()))
+                            };
+                        )*;
+                        if iter.next().is_some() {
                             return Err(format!(
-                                "Argument number mismatch for sin: \
-                                 expected 1, got {}", args.len()))
+                                "Argument number mismatch for {}: \
+                                 Expected {}, got {}",
+                                stringify!($fname), count, args.len()));
                         }
-                        match args[0] {
-                            Value::Number(ref num) =>
-                                Ok(Value::Number(Number(Num::Float(
-                                    num.0.to_f64().sin()), num.1.clone()))),
-                            ref x => Err(format!(
-                                "Expected number, got <{}>", x.show(self)))
+                        let res: Result<Value, String> = {
+                            $block
+                        };
+                        res.map_err(|e| {
+                            format!(
+                                "{}: {}({})",
+                                e, stringify!($fname),
+                                args.iter()
+                                    .map(|x| x.show(self))
+                                    .collect::<Vec<_>>()
+                                    .join(", "))
+                        })
+                    }
+                }}
+
+                match &**name {
+                    "sqrt" => func!(fn sqrt(num: Number) {
+                        num.root(2).map(Value::Number)
+                    }),
+                    "exp" => func!(fn exp(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().exp()), num.1.clone())))
+                    }),
+                    "ln" => func!(fn ln(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().ln()), num.1.clone())))
+                    }),
+                    "log" => func!(fn log(num: Number, base: Number) {
+                        if base.1.len() > 0 {
+                            Err(format!(
+                                "Base must be dimensionless"))
+                        } else {
+                            Ok(Value::Number(Number(
+                                Num::Float(num.0.to_f64().log(base.0.to_f64())),
+                                num.1.clone())))
                         }
-                    },
+                    }),
+                    "log2" => func!(fn log2(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().log2()), num.1.clone())))
+                    }),
+                    "log10" => func!(fn ln(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().log10()), num.1.clone())))
+                    }),
+                    "hypot" => func!(fn hypot(x: Number, y: Number) {
+                        if x.1 != y.1 {
+                            Err(format!(
+                                "Arguments to hypot must have matching \
+                                 dimensionality"))
+                        } else {
+                            Ok(Value::Number(Number(
+                                Num::Float(x.0.to_f64().hypot(y.0.to_f64())),
+                                x.1.clone())))
+                        }
+                    }),
+                    "sin" => func!(fn sin(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().sin()), num.1.clone())))
+                    }),
+                    "cos" => func!(fn cos(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().cos()), num.1.clone())))
+                    }),
+                    "tan" => func!(fn tan(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().tan()), num.1.clone())))
+                    }),
+                    "asin" => func!(fn asin(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().asin()), num.1.clone())))
+                    }),
+                    "acos" => func!(fn acos(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().acos()), num.1.clone())))
+                    }),
+                    "atan" => func!(fn atan(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().atan()), num.1.clone())))
+                    }),
+                    "atan2" => func!(fn atan2(x: Number, y: Number) {
+                        if x.1 != y.1 {
+                            Err(format!(
+                                "Arguments to atan2 must have matching \
+                                 dimensionality"))
+                        } else {
+                            Ok(Value::Number(Number(
+                                Num::Float(x.0.to_f64().atan2(y.0.to_f64())),
+                                x.1.clone())))
+                        }
+                    }),
+                    "sinh" => func!(fn sinh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().sinh()), num.1.clone())))
+                    }),
+                    "cosh" => func!(fn cosh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().cosh()), num.1.clone())))
+                    }),
+                    "tanh" => func!(fn tanh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().tanh()), num.1.clone())))
+                    }),
+                    "asinh" => func!(fn asinh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().asinh()), num.1.clone())))
+                    }),
+                    "acosh" => func!(fn acosh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().acosh()), num.1.clone())))
+                    }),
+                    "atanh" => func!(fn atanh(num: Number) {
+                        Ok(Value::Number(Number(Num::Float(
+                            num.0.to_f64().atanh()), num.1.clone())))
+                    }),
                     _ => Err(format!("Function not found: {}", name))
                 }
             },
