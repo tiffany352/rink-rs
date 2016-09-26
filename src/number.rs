@@ -239,20 +239,6 @@ pub fn pow(left: &Num, exp: i32) -> Num {
     }
 }
 
-fn root(left: &Num, n: i32) -> Num {
-    if n < 0 {
-        &Num::one() / &root(left, -n)
-    } else {
-        let left = match *left {
-            Num::Mpq(ref left) => left,
-            Num::Float(f) => return Num::Float(f.powf(1.0 / n as f64))
-        };
-        let num = left.get_num().root(n as u32);
-        let den = left.get_den().root(n as u32);
-        Num::Mpq(Mpq::ratio(&num, &den))
-    }
-}
-
 pub fn to_string(rational: &Num, base: u8) -> (bool, String) {
     use std::char::from_digit;
 
@@ -605,7 +591,7 @@ impl Number {
                 res.insert(dim.clone(), power / exp as i64);
             }
         }
-        Ok(Number(root(&self.0, exp), res))
+        Ok(Number(Num::Float(self.0.to_f64().powf(1.0 / exp as f64)), res))
     }
 
     pub fn pow(&self, exp: &Number) -> Result<Number, String> {
@@ -623,7 +609,15 @@ impl Number {
             let exp: Option<i64> = (&den).into();
             self.root(exp.unwrap() as i32)
         } else {
-            Err(format!("Exponent must be either an integer or the reciprocal of an integer"))
+            if self.1.len() > 0 {
+                Err(format!(
+                    "Exponentiation must result in integer dimensions"))
+            } else {
+                let exp = exp.0.to_f64();
+                Ok(Number(Num::Float(
+                    self.0.to_f64().powf(exp)),
+                    self.1.clone()))
+            }
         }
     }
 
