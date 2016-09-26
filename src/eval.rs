@@ -154,7 +154,7 @@ impl Context {
                 if res.1.len() > 0 {
                     return Err(format!("Exponents must be dimensionless"))
                 }
-                let res: f64 = res.0.into();
+                let res = res.0.to_f64();
                 let (left, lv) = try!(self.eval_unit_name(left));
                 Ok((left.into_iter()
                    .filter_map(|(k, v)| {

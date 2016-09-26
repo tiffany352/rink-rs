@@ -20,10 +20,15 @@ pub type Int = Mpz;
 pub enum Num {
     /// Arbitrary-precision rational fraction.
     Mpq(Mpq),
-    // /// Machine floats.
-    // Float(f64),
+    /// Machine floats.
+    Float(f64),
     // /// Machine ints.
     // Int(i64),
+}
+
+enum NumParity {
+    Mpq(Mpq, Mpq),
+    Float(f64, f64)
 }
 
 impl Num {
@@ -39,31 +44,86 @@ impl Num {
 
     pub fn abs(&self) -> Num {
         match *self {
-            Num::Mpq(ref mpq) => Num::Mpq(mpq.abs())
+            Num::Mpq(ref mpq) => Num::Mpq(mpq.abs()),
+            Num::Float(f) => Num::Float(f.abs()),
+        }
+    }
+
+    fn parity(&self, other: &Num) -> NumParity {
+        match (self, other) {
+            (&Num::Float(left), right) =>
+                NumParity::Float(left, right.into()),
+            (left, &Num::Float(right)) =>
+                NumParity::Float(left.into(), right),
+            (&Num::Mpq(ref left), &Num::Mpq(ref right)) =>
+                NumParity::Mpq(left.clone(), right.clone()),
         }
     }
 
     pub fn div_rem(&self, other: &Num) -> (Num, Num) {
-        match (self, other) {
-            (&Num::Mpq(ref left), &Num::Mpq(ref right)) => {
-                let div = left / right;
+        match self.parity(other) {
+            NumParity::Mpq(left, right) => {
+                let div = &left / &right;
                 let floor = &div.get_num() / div.get_den();
-                let rem = left - &(right * &Mpq::ratio(&floor, &Mpz::one()));
+                let rem = &left - &(&right * &Mpq::ratio(&floor, &Mpz::one()));
                 (Num::Mpq(Mpq::ratio(&floor, &Mpz::one())), Num::Mpq(rem))
-            }
+            },
+            NumParity::Float(left, right) => {
+                (Num::Float(left / right), Num::Float(left % right))
+            },
         }
     }
 
     pub fn to_rational(&self) -> (Int, Int) {
         match *self {
-            Num::Mpq(ref mpq) => (mpq.get_num(), mpq.get_den())
+            Num::Mpq(ref mpq) => (mpq.get_num(), mpq.get_den()),
+            Num::Float(mut x) => {
+                let mut m = [
+                    [1, 0],
+                    [0, 1]
+                ];
+                let maxden = 1_000_000;
+
+                // loop finding terms until denom gets too big
+                loop {
+                    let ai = x as i64;
+                    if m[1][0] * ai + m[1][1] > maxden {
+                        break;
+                    }
+                    let mut t;
+                    t = m[0][0] * ai + m[0][1];
+                    m[0][1] = m[0][0];
+                    m[0][0] = t;
+                    t = m[1][0] * ai + m[1][1];
+                    m[1][1] = m[1][0];
+                    m[1][0] = t;
+                    if x == ai as f64 {
+                        break; // division by zero
+                    }
+                    x = 1.0/(x - ai as f64);
+                    if x as i64 > i64::max_value() / 2 {
+                        break; // representation failure
+                    }
+                }
+
+                (Int::from(m[0][0]), Int::from(m[1][0]))
+            },
         }
     }
 
     pub fn to_int(&self) -> Option<i64> {
         match *self {
-            Num::Mpq(ref mpq) => (&(mpq.get_num() / mpq.get_den())).into()
+            Num::Mpq(ref mpq) => (&(mpq.get_num() / mpq.get_den())).into(),
+            Num::Float(f) => if f.abs() < i64::max_value() as f64 {
+                Some(f as i64)
+            } else {
+                None
+            },
         }
+    }
+
+    pub fn to_f64(&self) -> f64 {
+        self.into()
     }
 }
 
@@ -85,19 +145,20 @@ impl From<i64> for Num {
     }
 }
 
-impl Into<f64> for Num {
+impl<'a> Into<f64> for &'a Num {
     fn into(self) -> f64 {
-        match self {
-            Num::Mpq(mpq) => mpq.into(),
+        match *self {
+            Num::Mpq(ref mpq) => mpq.clone().into(),
+            Num::Float(f) => f,
         }
     }
 }
 
 impl PartialOrd for Num {
     fn partial_cmp(&self, other: &Num) -> Option<Ordering> {
-        match (self, other) {
-            (&Num::Mpq(ref left), &Num::Mpq(ref right)) =>
-                left.partial_cmp(right)
+        match self.parity(other) {
+            NumParity::Mpq(left, right) => left.partial_cmp(&right),
+            NumParity::Float(left, right) => left.partial_cmp(&right),
         }
     }
 }
@@ -108,9 +169,11 @@ macro_rules! num_binop {
             type Output = Num;
 
             fn $func(self, other: &'b Num) -> Num {
-                match (self, other) {
-                    (&Num::Mpq(ref left), &Num::Mpq(ref right)) =>
-                        Num::Mpq(left.$func(right))
+                match self.parity(other) {
+                    NumParity::Mpq(left, right) =>
+                        Num::Mpq(left.$func(&right)),
+                    NumParity::Float(left, right) =>
+                        Num::Float(left.$func(&right)),
                 }
             }
         }
@@ -128,6 +191,7 @@ impl<'a> Neg for &'a Num {
     fn neg(self) -> Num {
         match *self {
             Num::Mpq(ref mpq) => Num::Mpq(-mpq),
+            Num::Float(f) => Num::Float(-f),
         }
     }
 }
@@ -166,7 +230,8 @@ pub fn pow(left: &Num, exp: i32) -> Num {
         &Num::one() / &pow(left, -exp)
     } else {
         let left = match *left {
-            Num::Mpq(ref left) => left
+            Num::Mpq(ref left) => left,
+            Num::Float(f) => return Num::Float(f.powi(exp))
         };
         let num = left.get_num().pow(exp as u32);
         let den = left.get_den().pow(exp as u32);
@@ -179,7 +244,8 @@ fn root(left: &Num, n: i32) -> Num {
         &Num::one() / &root(left, -n)
     } else {
         let left = match *left {
-            Num::Mpq(ref left) => left
+            Num::Mpq(ref left) => left,
+            Num::Float(f) => return Num::Float(f.powf(1.0 / n as f64))
         };
         let num = left.get_num().root(n as u32);
         let den = left.get_den().root(n as u32);
@@ -194,7 +260,12 @@ pub fn to_string(rational: &Num, base: u8) -> (bool, String) {
     let rational = rational.abs();
     let (num, den) = rational.to_rational();
     let rational = match rational {
-        Num::Mpq(mpq) => mpq
+        Num::Mpq(mpq) => mpq,
+        Num::Float(f) => {
+            let mut m = Mpq::one();
+            m.set_d(f);
+            m
+        },
     };
     let intdigits = (&num / &den).size_in_base(base) as u32;
 
