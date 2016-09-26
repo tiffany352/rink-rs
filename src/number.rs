@@ -10,6 +10,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
 use std::fmt;
 use std::borrow::Borrow;
+use context::Context;
 
 /// Number type
 pub type Num = Mpq;
@@ -464,7 +465,7 @@ impl Number {
 
     /// Convert the units of the number from base units to display
     /// units, and possibly apply SI prefixes.
-    pub fn prettify(&self, context: &::eval::Context) -> Number {
+    pub fn prettify(&self, context: &Context) -> Number {
         let unit = self.pretty_unit(context);
         if unit.len() == 1 {
             use std::collections::HashSet;
@@ -508,7 +509,7 @@ impl Number {
         }
     }
 
-    pub fn to_parts(&self, context: &::eval::Context) -> NumberParts {
+    pub fn to_parts(&self, context: &Context) -> NumberParts {
         let value = self.prettify(context);
         let (exact, approx) = value.numeric_value(10);
 
@@ -570,7 +571,7 @@ impl Number {
         String::from_utf8(out).unwrap()
     }
 
-    fn pretty_unit(&self, context: &::eval::Context) -> Unit {
+    fn pretty_unit(&self, context: &Context) -> Unit {
         let pretty = ::factorize::fast_decompose(self, &context.reverse);
         let pretty = pretty.into_iter()
             .map(|(k, p)| (context.canonicalizations.get(&*k.0).map(|x| Dim::new(x)).unwrap_or(k), p))
@@ -591,7 +592,7 @@ impl fmt::Debug for Number {
 }
 
 impl Show for Number {
-    fn show(&self, context: &::eval::Context) -> String {
+    fn show(&self, context: &Context) -> String {
         let parts = self.to_parts(context);
         format!("{}", parts)
     }

@@ -4,7 +4,7 @@
 
 use number::Number;
 use chrono::{DateTime, FixedOffset};
-use eval::Context;
+use context::Context;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use date;
 

@@ -47,6 +47,7 @@ extern crate xml;
 extern crate json;
 
 pub mod text_query;
+pub mod context;
 pub mod eval;
 pub mod number;
 pub mod date;
@@ -56,13 +57,14 @@ pub mod ast;
 pub mod value;
 pub mod reply;
 pub mod search;
+pub mod load;
 #[cfg(feature = "currency")]
 pub mod currency;
 #[cfg(feature = "currency")]
 pub mod btc;
 
 pub use number::Number;
-pub use eval::Context;
+pub use context::Context;
 pub use value::Value;
 
 use std::env;
@@ -201,7 +203,7 @@ pub fn load() -> Result<Context, String> {
         }
     };
 
-    let mut ctx = eval::Context::new();
+    let mut ctx = context::Context::new();
     ctx.load(units);
     ctx.load_dates(dates);
     ctx.load(currency);
