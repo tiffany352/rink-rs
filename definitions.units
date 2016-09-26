@@ -898,6 +898,8 @@ tempK                   K         # For consistency
 
 π                       3.14159265358979323846
 pi                      π
+τ                       2 pi
+tau                     τ
 c                       2.99792458e8 m/s # speed of light in vacuum (exact)
 light                   c
 mu0                     4 pi 1e-7 H/m    # permeability of vacuum (exact)
