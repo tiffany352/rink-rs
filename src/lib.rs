@@ -55,6 +55,7 @@ pub mod gnu_units;
 pub mod ast;
 pub mod value;
 pub mod reply;
+pub mod search;
 #[cfg(feature = "currency")]
 pub mod currency;
 #[cfg(feature = "currency")]

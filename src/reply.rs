@@ -57,6 +57,11 @@ pub struct DurationReply {
 }
 
 #[derive(Debug, Clone)]
+pub struct SearchReply {
+    pub results: Vec<NumberParts>,
+}
+
+#[derive(Debug, Clone)]
 pub enum QueryReply {
     Number(NumberParts),
     Date(DateTime<FixedOffset>),
@@ -66,6 +71,7 @@ pub enum QueryReply {
     Factorize(FactorizeReply),
     UnitsFor(UnitsForReply),
     UnitList(UnitListReply),
+    Search(SearchReply),
 }
 
 #[derive(Debug, Clone)]
@@ -92,6 +98,7 @@ impl Display for QueryReply {
             QueryReply::Factorize(ref v) => write!(fmt, "{}", v),
             QueryReply::UnitsFor(ref v) => write!(fmt, "{}", v),
             QueryReply::UnitList(ref v) => write!(fmt, "{}", v),
+            QueryReply::Search(ref v) => write!(fmt, "{}", v),
         }
     }
 }
@@ -188,5 +195,17 @@ impl Display for UnitListReply {
         } else {
             Ok(())
         }
+    }
+}
+
+impl Display for SearchReply {
+    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+        write!(
+            fmt, "Search results: {}",
+            self.results.iter()
+                .map(|x| x.format("u p"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
     }
 }

@@ -690,6 +690,12 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
             }
             return Query::UnitsFor(parse_eq(iter))
         },
+        Some(Token::Ident(ref s)) if s == "search" => {
+            iter.next();
+            if let Some(Token::Ident(ref s)) = iter.peek().cloned() {
+                return Query::Search(s.clone())
+            }
+        },
         _ => ()
     }
     let left = parse_eq(iter);

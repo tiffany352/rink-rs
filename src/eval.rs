@@ -10,9 +10,12 @@ use ast::{DatePattern, Expr, SuffixOp, Def, Defs, Query, Conversion};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
 use value::{Value, Show};
-use reply::{DefReply, ConversionReply, FactorizeReply, UnitsForReply,
-            QueryReply, ConformanceError, QueryError, UnitListReply,
-            DurationReply};
+use reply::{
+    DefReply, ConversionReply, FactorizeReply, UnitsForReply,
+    QueryReply, ConformanceError, QueryError, UnitListReply,
+    DurationReply, SearchReply
+};
+use search;
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
@@ -215,33 +218,7 @@ impl Context {
     }
 
     fn typo_dym<'a>(&'a self, what: &str) -> Option<&'a str> {
-        use strsim::jaro_winkler;
-
-        let mut best = None;
-        {
-            let mut try = |x: &'a str| {
-                let score = jaro_winkler(
-                    &*x.to_lowercase(), &*what.to_lowercase());
-                let better = best
-                    .as_ref()
-                    .map(|&(s, _v)| score > s)
-                    .unwrap_or(true);
-                if better {
-                    best = Some((score, x));
-                }
-            };
-
-            for k in &self.dimensions {
-                try(&**k.0);
-            }
-            for (k, _v) in &self.units {
-                try(&**k);
-            }
-            for (_u, k) in &self.quantities {
-                try(&**k);
-            }
-        }
-        best.and_then(|(s, v)| if s > 0.8 { Some(v) } else { None })
+        search::search(self, what, 1).into_iter().next()
     }
 
     fn unknown_unit_err(&self, name: &str) -> String {
@@ -765,6 +742,23 @@ impl Context {
                         quantity: parts.quantity,
                         ..Default::default()
                     },
+                }))
+            },
+            Query::Search(ref string) => {
+                Ok(QueryReply::Search(SearchReply {
+                    results: search::search(self, &**string, 5)
+                        .into_iter()
+                        .map(|x| {
+                            let parts = self.lookup(x)
+                                .expect("Search returned non-existent result")
+                                .to_parts(self);
+                            NumberParts {
+                                unit: Some(x.to_owned()),
+                                quantity: parts.quantity,
+                                ..Default::default()
+                            }
+                        })
+                        .collect(),
                 }))
             },
             Query::Expr(ref expr) |
