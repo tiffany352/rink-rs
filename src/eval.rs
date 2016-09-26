@@ -104,6 +104,20 @@ impl Context {
                             ref x => Err(format!("Expected number, got <{}>", x.show(self)))
                         }
                     },
+                    "sin" => {
+                        if args.len() != 1 {
+                            return Err(format!(
+                                "Argument number mismatch for sin: \
+                                 expected 1, got {}", args.len()))
+                        }
+                        match args[0] {
+                            Value::Number(ref num) =>
+                                Ok(Value::Number(Number(Num::Float(
+                                    num.0.to_f64().sin()), num.1.clone()))),
+                            ref x => Err(format!(
+                                "Expected number, got <{}>", x.show(self)))
+                        }
+                    },
                     _ => Err(format!("Function not found: {}", name))
                 }
             },

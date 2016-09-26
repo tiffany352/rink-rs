@@ -424,6 +424,7 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 fn is_func(name: &str) -> bool {
     match name {
         "sqrt" => true,
+        "sin" => true,
         _ => false
     }
 }
