@@ -628,15 +628,24 @@ impl Number {
     }
 
     pub fn numeric_value(&self, base: u8) -> (Option<String>, Option<String>) {
-        let (num, den) = self.0.to_rational();
-        match to_string(&self.0, base) {
-            (true, v) => (Some(v), None),
-            (false, v) => if {den > Mpz::from(1_000_000) ||
-                              num > Mpz::from(1_000_000_000u64)} {
-                (None, Some(v))
-            } else {
-                (Some(format!("{}/{}", num, den)), Some(v))
-            }
+        match self.0 {
+            Num::Mpq(ref mpq) => {
+                let num = mpq.get_num();
+                let den = mpq.get_den();
+
+                match to_string(&self.0, base) {
+                    (true, v) => (Some(v), None),
+                    (false, v) => if {den > Mpz::from(1_000_000) ||
+                                      num > Mpz::from(1_000_000_000u64)} {
+                        (None, Some(v))
+                    } else {
+                        (Some(format!("{}/{}", num, den)), Some(v))
+                    }
+                }
+            },
+            Num::Float(_f) => {
+                (None, Some(to_string(&self.0, base).1))
+            },
         }
     }
 
