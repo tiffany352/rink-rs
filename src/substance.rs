@@ -7,6 +7,7 @@ use number::Number;
 use value::Show;
 use std::collections::BTreeMap;
 use reply::{PropertyReply, SubstanceReply};
+use std::ops::{Mul, Div};
 
 #[derive(Debug, Clone)]
 pub struct Property {
@@ -17,6 +18,7 @@ pub struct Property {
 
 #[derive(Debug, Clone)]
 pub struct Substance {
+    pub amount: Number,
     pub properties: BTreeMap<String, Property>,
 }
 
@@ -24,13 +26,18 @@ impl Substance {
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
         Ok(SubstanceReply {
             properties: try!(self.properties.iter().map(|(k, x)| {
-                let (input, output) = if x.input.1.len() == 0 {
+                let input = try!((&x.input / &self.amount).ok_or_else(|| format!(
+                    "Division by zero: <{}> / <{}>",
+                    x.input.show(context),
+                    self.amount.show(context)
+                )));
+                let (input, output) = if input.1.len() == 0 {
                     let div = try!(
-                        (&x.output / &x.input).ok_or_else(|| {
+                        (&x.output / &input).ok_or_else(|| {
                             format!(
                                 "Division by zero: <{}> / <{}>",
                                 x.output.show(context),
-                                x.input.show(context)
+                                input.show(context)
                             )
                         })
                     );
@@ -56,5 +63,29 @@ impl Show for Substance {
             Ok(v) => format!("{}", v),
             Err(e) => e
         }
+    }
+}
+
+impl<'a, 'b> Mul<&'b Number> for &'a Substance {
+    type Output = Result<Substance, String>;
+
+    fn mul(self, other: &'b Number) -> Self::Output {
+        Ok(Substance {
+            amount: try!((&self.amount * other).ok_or_else(
+                || "Multiplication of numbers should not fail".to_owned())),
+            properties: self.properties.clone(),
+        })
+    }
+}
+
+impl<'a, 'b> Div<&'b Number> for &'a Substance {
+    type Output = Result<Substance, String>;
+
+    fn div(self, other: &'b Number) -> Self::Output {
+        Ok(Substance {
+            amount: try!((&self.amount / other).ok_or_else(
+                || "Division by zero".to_owned())),
+            properties: self.properties.clone(),
+        })
     }
 }

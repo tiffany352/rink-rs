@@ -118,6 +118,9 @@ impl<'a,'b> Mul<&'b Value> for &'a Value {
                 (left * right)
                 .ok_or(format!("Bug: Mul should not fail"))
                 .map(Value::Number),
+            (&Value::Number(ref co), &Value::Substance(ref sub)) |
+            (&Value::Substance(ref sub), &Value::Number(ref co)) =>
+                (sub * co).map(Value::Substance),
             (_, _) => Err(format!("Operation is not defined"))
         }
     }
@@ -132,6 +135,8 @@ impl<'a,'b> Div<&'b Value> for &'a Value {
                 (left / right)
                 .ok_or(format!("Division by zero"))
                 .map(Value::Number),
+            (&Value::Substance(ref sub), &Value::Number(ref co)) =>
+                (sub / co).map(Value::Substance),
             (_, _) => Err(format!("Operation is not defined"))
         }
     }

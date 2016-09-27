@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::{BTreeMap, BTreeSet};
-use number::{Dim, Num};
+use number::{Number, Dim, Num};
 use ast::{Expr, Def, Defs};
 use substance::{Substance, Property};
 use std::rc::Rc;
@@ -296,6 +296,7 @@ impl Context {
                     match res {
                         Ok(res) => {
                             self.substances.insert(name, Substance {
+                                amount: Number::one(),
                                 properties: res,
                             });
                         },
