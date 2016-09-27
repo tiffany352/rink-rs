@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use number::{Dim, Num};
 use ast::{Expr, Def, Defs};
-use context::Property;
+use substance::{Substance, Property};
 use std::rc::Rc;
 use value::Value;
 use Context;
@@ -271,7 +271,7 @@ impl Context {
                 },
                 Def::Substance(ref props) => {
                     let res = props.iter().map(|prop| {
-                        Ok((name.clone(), Property {
+                        Ok((prop.name.clone(), Property {
                             input: match self.eval(&prop.input) {
                                 Ok(Value::Number(v)) => v,
                                 Ok(x) => return Err(format!(
@@ -295,7 +295,9 @@ impl Context {
                     }).collect::<Result<BTreeMap<_,_>, _>>();
                     match res {
                         Ok(res) => {
-                            self.substances.insert(name, res);
+                            self.substances.insert(name, Substance {
+                                properties: res,
+                            });
                         },
                         Err(e) => println!("Substance {} is malformed: {}", name, e),
                     }

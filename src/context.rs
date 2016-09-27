@@ -6,13 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use number::{Dim, Number, Unit, Num};
 use ast::{Expr, DatePattern};
 use search;
-
-#[derive(Debug)]
-pub struct Property {
-    pub input: Number,
-    pub output: Number,
-    pub doc: Option<String>,
-}
+use substance::Substance;
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
@@ -26,7 +20,7 @@ pub struct Context {
     pub definitions: BTreeMap<String, Expr>,
     pub docs: BTreeMap<String, String>,
     pub datepatterns: Vec<Vec<DatePattern>>,
-    pub substances: BTreeMap<String, BTreeMap<String, Property>>,
+    pub substances: BTreeMap<String, Substance>,
     pub short_output: bool,
 }
 

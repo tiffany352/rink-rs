@@ -5,6 +5,7 @@
 use number::Number;
 use chrono::{DateTime, FixedOffset};
 use context::Context;
+use substance::Substance;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use date;
 
@@ -12,6 +13,7 @@ use date;
 pub enum Value {
     Number(Number),
     DateTime(DateTime<FixedOffset>),
+    Substance(Substance),
 }
 
 pub trait Show {
@@ -39,6 +41,7 @@ impl Show for Value {
         match *self {
             Value::Number(ref num) => num.show(context),
             Value::DateTime(ref dt) => dt.show(context),
+            Value::Substance(ref v) => v.show(context),
         }
     }
 }
@@ -89,7 +92,7 @@ impl<'a,'b> Sub<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::DateTime(ref right)) =>
                 date::from_duration(&(*left - *right))
                 .map(Value::Number),
-            //(_, _) => Err(format!("Operation is not defined"))
+            (_, _) => Err(format!("Operation is not defined"))
         }
     }
 }
