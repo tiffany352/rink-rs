@@ -16,6 +16,7 @@ use reply::{
 };
 use search;
 use context::Context;
+use substance::SubstanceGetError;
 
 impl Context {
     /// Evaluates an expression to compute its value, *excluding* `->`
@@ -91,9 +92,18 @@ impl Context {
                 })
             }),
             Expr::Equals(_, ref right) => self.eval(right),
-            Expr::Of(ref _field, ref val) => {
-                let _val = try!(self.eval(val));
-                unimplemented!()
+            Expr::Of(ref field, ref val) => {
+                let val = try!(self.eval(val));
+                let val = match val {
+                    Value::Substance(sub) => sub,
+                    x => return Err(format!(
+                        "Not defined: {} of <{}>", field, x.show(self)))
+                };
+                val.get(&**field).map(Value::Number).map_err(|e| match e {
+                    SubstanceGetError::Generic(s) => s,
+                    SubstanceGetError::Conformance(left, right) =>
+                        format!("{}", self.conformance_err(&left, &right))
+                })
             },
             Expr::Call(ref name, ref args) => {
                 let args = try!(

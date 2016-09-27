@@ -25,7 +25,58 @@ pub struct Substance {
     pub properties: BTreeMap<String, Property>,
 }
 
+pub enum SubstanceGetError {
+    Generic(String),
+    Conformance(Number, Number),
+}
+
 impl Substance {
+    pub fn get(&self, name: &str) -> Result<Number, SubstanceGetError> {
+        if self.amount == Number::one() {
+            self.properties.get(name)
+                .ok_or_else(|| SubstanceGetError::Generic(format!(
+                    "No such property {}", name)))
+                .map(|prop| {
+                    (&prop.input / &prop.output)
+                        .expect("Non-zero property")
+                })
+        } else {
+            for (_name, prop) in &self.properties {
+                if name == prop.output_name {
+                    let input = try!(
+                        (&prop.input / &self.amount).ok_or_else(
+                            || SubstanceGetError::Generic(
+                                "Division by zero".to_owned())));
+                    if input.1.len() == 0 {
+                        let res = try!((&prop.output / &input).ok_or_else(
+                            || SubstanceGetError::Generic(
+                                "Division by zero".to_owned())));
+                        return Ok(res)
+                    } else {
+                        return Err(SubstanceGetError::Conformance(
+                            self.amount.clone(), prop.input.clone()))
+                    }
+                } else if name == prop.input_name {
+                    let output = try!(
+                        (&prop.output / &self.amount).ok_or_else(
+                            || SubstanceGetError::Generic(
+                                "Division by zero".to_owned())));
+                    if output.1.len() == 0 {
+                        let res = try!((&prop.input / &output).ok_or_else(
+                            || SubstanceGetError::Generic(
+                                "Division by zero".to_owned())));
+                        return Ok(res)
+                    } else {
+                        return Err(SubstanceGetError::Conformance(
+                            self.amount.clone(), prop.output.clone()))
+                    }
+                }
+            }
+            Err(SubstanceGetError::Generic(format!(
+                "No such property {}", name)))
+        }
+    }
+
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
         if self.amount == Number::one() {
             Ok(SubstanceReply {
