@@ -82,6 +82,14 @@ pub enum DatePattern {
 }
 
 #[derive(Debug)]
+pub struct Property {
+    pub name: String,
+    pub input: Expr,
+    pub output: Expr,
+    pub doc: Option<String>,
+}
+
+#[derive(Debug)]
 pub enum Def {
     Dimension,
     Canonicalization(String),
@@ -89,6 +97,7 @@ pub enum Def {
     SPrefix(Expr),
     Unit(Expr),
     Quantity(Expr),
+    Substance(Vec<Property>),
     Error(String),
 }
 

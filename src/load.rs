@@ -268,6 +268,10 @@ impl Context {
                     Ok(_) => println!("Quantity {} is not a number", name),
                     Err(e) => println!("Quantity {} is malformed: {}", name, e)
                 },
+                Def::Substance(ref props) => {
+                    println!("{:#?}", props);
+                    unimplemented!()
+                },
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
         }
