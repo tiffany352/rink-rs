@@ -27,43 +27,74 @@ pub struct Substance {
 
 impl Substance {
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
-        Ok(SubstanceReply {
-            properties: try!(
-                once(Ok(PropertyReply {
-                    name: "amount".to_owned(),
-                    input: None,
-                    output: self.amount.to_parts(context),
-                    doc: None,
-                })).chain(self.properties.iter().map(|(k, x)| {
-                    let input = try!((&x.input / &self.amount).ok_or_else(|| format!(
-                        "Division by zero: <{}> / <{}>",
-                        x.input.show(context),
-                        self.amount.show(context)
-                    )));
-                    let (name, input, output) = if input.1.len() == 0 {
-                        let div = try!(
-                            (&x.output / &input).ok_or_else(|| {
-                                format!(
-                                    "Division by zero: <{}> / <{}>",
-                                    x.output.show(context),
-                                    input.show(context)
-                                )
-                            })
-                        );
-                        (x.output_name.clone(), None, div.to_parts(context))
-                    } else {
-                        (k.clone(), Some(x.input.to_parts(context)),
-                         x.output.to_parts(context))
-                    };
-                    Ok(PropertyReply {
-                        name: name,
-                        input: input,
-                        output: output,
-                        doc: x.doc.clone(),
-                    })
-                })).collect::<Result<Vec<PropertyReply>, String>>()
-            ),
-        })
+        if self.amount == Number::one() {
+            Ok(SubstanceReply {
+                properties: self.properties.iter().map(|(k, v)| {
+                    PropertyReply {
+                        name: k.clone(),
+                        input: Some(v.input.to_parts(context)),
+                        output: v.output.to_parts(context),
+                        doc: v.doc.clone()
+                    }
+                }).collect(),
+            })
+        } else {
+            let func = |(_k, v): (&String, &Property)| {
+                let input = try!((&v.input / &self.amount).ok_or_else(|| format!(
+                    "Division by zero: <{}> / <{}>",
+                    v.input.show(context),
+                    self.amount.show(context)
+                )));
+                let output = try!((&v.output / &self.amount).ok_or_else(|| format!(
+                    "Division by zero: <{}> / <{}>",
+                    v.output.show(context),
+                    self.amount.show(context)
+                )));
+                let (name, input, output) = if input.1.len() == 0 {
+                    let div = try!(
+                        (&v.output / &input).ok_or_else(|| format!(
+                            "Division by zero: <{}> / <{}>",
+                            v.output.show(context),
+                            input.show(context)
+                        ))
+                    );
+                    (v.output_name.clone(), None, div.to_parts(context))
+                } else if output.1.len() == 0 {
+                    let div = try!(
+                        (&v.input / &output).ok_or_else(|| format!(
+                            "Division by zero: <{}> / <{}>",
+                            v.input.show(context),
+                            output.show(context)
+                        ))
+                    );
+                    (v.input_name.clone(), None, div.to_parts(context))
+                } else {
+                    return Ok(None)
+                };
+                Ok(Some(PropertyReply {
+                    name: name,
+                    input: input,
+                    output: output,
+                    doc: v.doc.clone(),
+                }))
+            };
+            let amount = PropertyReply {
+                name: self.amount.to_parts(context).quantity
+                    .unwrap_or_else(|| "amount".to_owned()),
+                input: None,
+                output: self.amount.to_parts(context),
+                doc: None,
+            };
+            Ok(SubstanceReply {
+                properties: try!(
+                    once(Ok(Some(amount)))
+                        .chain(self.properties.iter().map(func))
+                        .collect::<Result<Vec<Option<PropertyReply>>, String>>())
+                    .into_iter()
+                    .filter_map(|x| x)
+                    .collect(),
+            })
+        }
     }
 }
 

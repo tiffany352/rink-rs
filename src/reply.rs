@@ -143,12 +143,12 @@ impl Display for SubstanceReply {
                 prop.input.as_ref()
                     .map(|x| format!("{} -> ", x.format("n u")))
                     .unwrap_or_else(|| "".to_owned()),
-                prop.output.format("n u w"),
+                prop.output.format("n u"),
                 prop.doc.as_ref()
-                    .map(|x| format!(". {}", x))
-                    .unwrap_or_else(|| ".".to_owned())
+                    .map(|x| format!(" ({})", x))
+                    .unwrap_or_else(|| "".to_owned())
             )
-        }).collect::<Vec<_>>().join(" "))
+        }).collect::<Vec<_>>().join("; "))
     }
 }
 
