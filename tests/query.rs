@@ -51,9 +51,9 @@ fn test_determinism() {
 #[test]
 fn test_sqrt_errors() {
     test("sqrt -1",
-         "Complex numbers are not implemented: sqrt <-1 (dimensionless)>");
+         "Complex numbers are not implemented: sqrt(-1 (dimensionless))");
     test("sqrt(2m)",
-         "Result must have integer dimensions: sqrt <2 meter (length)>");
+         "Result must have integer dimensions: sqrt(2 meter (length))");
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn test_units_for() {
 fn test_factorize() {
     test("factorize velocity",
          "Factorizations: velocity;  acceleration time;  \
-          angular_momentum fuel_efficiency;  \
+          flow_rate fuel_efficiency;  \
           frequency length;  jerk time^2");
 }
 
