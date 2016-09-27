@@ -7,6 +7,13 @@ use number::{Dim, Number, Unit, Num};
 use ast::{Expr, DatePattern};
 use search;
 
+#[derive(Debug)]
+pub struct Property {
+    pub input: Number,
+    pub output: Number,
+    pub doc: Option<String>,
+}
+
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
 pub struct Context {
@@ -19,6 +26,7 @@ pub struct Context {
     pub definitions: BTreeMap<String, Expr>,
     pub docs: BTreeMap<String, String>,
     pub datepatterns: Vec<Vec<DatePattern>>,
+    pub substances: BTreeMap<String, BTreeMap<String, Property>>,
     pub short_output: bool,
 }
 
@@ -35,6 +43,7 @@ impl Context {
             definitions: BTreeMap::new(),
             docs: BTreeMap::new(),
             datepatterns: Vec::new(),
+            substances: BTreeMap::new(),
             short_output: false,
         }
     }

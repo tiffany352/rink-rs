@@ -5,6 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use number::{Dim, Num};
 use ast::{Expr, Def, Defs};
+use context::Property;
 use std::rc::Rc;
 use value::Value;
 use Context;
@@ -269,8 +270,35 @@ impl Context {
                     Err(e) => println!("Quantity {} is malformed: {}", name, e)
                 },
                 Def::Substance(ref props) => {
-                    println!("{:#?}", props);
-                    unimplemented!()
+                    let res = props.iter().map(|prop| {
+                        Ok((name.clone(), Property {
+                            input: match self.eval(&prop.input) {
+                                Ok(Value::Number(v)) => v,
+                                Ok(x) => return Err(format!(
+                                    "Expected number for input of \
+                                     property {}, got {:?}", name, x)),
+                                Err(e) => return Err(format!(
+                                    "Malformed property input for {}: {}",
+                                    name, e)),
+                            },
+                            output: match self.eval(&prop.output) {
+                                Ok(Value::Number(v)) => v,
+                                Ok(x) => return Err(format!(
+                                    "Expected number for output of \
+                                     property {}, got {:?}", name, x)),
+                                Err(e) => return Err(format!(
+                                    "Malformed property output for {}: {}",
+                                    name, e)),
+                            },
+                            doc: prop.doc.clone(),
+                        }))
+                    }).collect::<Result<BTreeMap<_,_>, _>>();
+                    match res {
+                        Ok(res) => {
+                            self.substances.insert(name, res);
+                        },
+                        Err(e) => println!("Substance {} is malformed: {}", name, e),
+                    }
                 },
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
