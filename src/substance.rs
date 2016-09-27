@@ -8,11 +8,14 @@ use value::Show;
 use std::collections::BTreeMap;
 use reply::{PropertyReply, SubstanceReply};
 use std::ops::{Mul, Div};
+use std::iter::once;
 
 #[derive(Debug, Clone)]
 pub struct Property {
     pub input: Number,
+    pub input_name: String,
     pub output: Number,
+    pub output_name: String,
     pub doc: Option<String>,
 }
 
@@ -25,34 +28,41 @@ pub struct Substance {
 impl Substance {
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
         Ok(SubstanceReply {
-            properties: try!(self.properties.iter().map(|(k, x)| {
-                let input = try!((&x.input / &self.amount).ok_or_else(|| format!(
-                    "Division by zero: <{}> / <{}>",
-                    x.input.show(context),
-                    self.amount.show(context)
-                )));
-                let (input, output) = if input.1.len() == 0 {
-                    let div = try!(
-                        (&x.output / &input).ok_or_else(|| {
-                            format!(
-                                "Division by zero: <{}> / <{}>",
-                                x.output.show(context),
-                                input.show(context)
-                            )
-                        })
-                    );
-                    (None, div.to_parts(context))
-                } else {
-                    (Some(x.input.to_parts(context)),
-                     x.output.to_parts(context))
-                };
-                Ok(PropertyReply {
-                    name: k.clone(),
-                    input: input,
-                    output: output,
-                    doc: x.doc.clone(),
-                })
-            }).collect::<Result<Vec<PropertyReply>, String>>()),
+            properties: try!(
+                once(Ok(PropertyReply {
+                    name: "amount".to_owned(),
+                    input: None,
+                    output: self.amount.to_parts(context),
+                    doc: None,
+                })).chain(self.properties.iter().map(|(k, x)| {
+                    let input = try!((&x.input / &self.amount).ok_or_else(|| format!(
+                        "Division by zero: <{}> / <{}>",
+                        x.input.show(context),
+                        self.amount.show(context)
+                    )));
+                    let (name, input, output) = if input.1.len() == 0 {
+                        let div = try!(
+                            (&x.output / &input).ok_or_else(|| {
+                                format!(
+                                    "Division by zero: <{}> / <{}>",
+                                    x.output.show(context),
+                                    input.show(context)
+                                )
+                            })
+                        );
+                        (x.output_name.clone(), None, div.to_parts(context))
+                    } else {
+                        (k.clone(), Some(x.input.to_parts(context)),
+                         x.output.to_parts(context))
+                    };
+                    Ok(PropertyReply {
+                        name: name,
+                        input: input,
+                        output: output,
+                        doc: x.doc.clone(),
+                    })
+                })).collect::<Result<Vec<PropertyReply>, String>>()
+            ),
         })
     }
 }

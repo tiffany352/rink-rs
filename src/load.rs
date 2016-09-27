@@ -281,6 +281,7 @@ impl Context {
                                     "Malformed property input for {}: {}",
                                     name, e)),
                             },
+                            input_name: prop.input_name.clone(),
                             output: match self.eval(&prop.output) {
                                 Ok(Value::Number(v)) => v,
                                 Ok(x) => return Err(format!(
@@ -290,6 +291,7 @@ impl Context {
                                     "Malformed property output for {}: {}",
                                     name, e)),
                             },
+                            output_name: prop.output_name.clone(),
                             doc: prop.doc.clone(),
                         }))
                     }).collect::<Result<BTreeMap<_,_>, _>>();

@@ -85,7 +85,9 @@ pub enum DatePattern {
 pub struct Property {
     pub name: String,
     pub input: Expr,
+    pub input_name: String,
     pub output: Expr,
+    pub output_name: String,
     pub doc: Option<String>,
 }
 

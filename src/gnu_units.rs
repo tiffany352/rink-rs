@@ -347,6 +347,13 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                                     break
                                 },
                             };
+                            let input_name = match iter.next().unwrap() {
+                                Token::Ident(name) => name,
+                                x => {
+                                    println!("Expected property input name, got {:?}", x);
+                                    break
+                                },
+                            };
                             let input = parse_mul(iter);
                             match iter.next().unwrap() {
                                 Token::Slash => (),
@@ -355,11 +362,20 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                                     break
                                 }
                             }
+                            let output_name = match iter.next().unwrap() {
+                                Token::Ident(name) => name,
+                                x => {
+                                    println!("Expected property input name, got {:?}", x);
+                                    break
+                                },
+                            };
                             let output = parse_mul(iter);
                             props.push(Property {
                                 name: name,
                                 input: input,
+                                input_name: input_name,
                                 output: output,
+                                output_name: output_name,
                                 doc: prop_doc.take()
                             });
                         }
