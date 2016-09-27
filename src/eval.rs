@@ -89,6 +89,10 @@ impl Context {
                 })
             }),
             Expr::Equals(_, ref right) => self.eval(right),
+            Expr::Of(ref _field, ref val) => {
+                let _val = try!(self.eval(val));
+                unimplemented!()
+            },
             Expr::Call(ref name, ref args) => {
                 let args = try!(
                     args.iter()
@@ -296,6 +300,9 @@ impl Context {
                    })
                     .collect::<BTreeMap<_, _>>(),
                     pow(&lv, res as i32)))
+            },
+            Expr::Of(ref _field, ref _expr) => {
+                Err(format!("Property access in right-hand of conversion is not yet implemented"))
             },
             Expr::Add(ref left, ref right) | Expr::Sub(ref left, ref right) => {
                 let left = try!(self.eval_unit_name(left));

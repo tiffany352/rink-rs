@@ -42,6 +42,7 @@ pub enum Expr {
     Plus(Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
     Suffix(SuffixOp, Box<Expr>),
+    Of(String, Box<Expr>),
     Call(String, Vec<Expr>),
     Error(String),
 }
@@ -211,6 +212,17 @@ impl fmt::Display for Expr {
                     try!(recurse(expr, fmt, Prec::Mul));
                     try!(write!(fmt, " {}", op));
                     if prec < Prec::Mul {
+                        try!(write!(fmt, ")"));
+                    }
+                    Ok(())
+                },
+                Expr::Of(ref field, ref expr) => {
+                    if prec < Prec::Add {
+                        try!(write!(fmt, "("));
+                    }
+                    try!(write!(fmt, "{} of ", field));
+                    try!(recurse(expr, fmt, Prec::Div));
+                    if prec < Prec::Add {
                         try!(write!(fmt, ")"));
                     }
                     Ok(())
