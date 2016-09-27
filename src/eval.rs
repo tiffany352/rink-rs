@@ -12,7 +12,7 @@ use value::{Value, Show};
 use reply::{
     DefReply, ConversionReply, FactorizeReply, UnitsForReply,
     QueryReply, ConformanceError, QueryError, UnitListReply,
-    DurationReply, SearchReply, SubstanceReply, PropertyReply,
+    DurationReply, SearchReply
 };
 use search;
 use context::Context;
@@ -729,31 +729,9 @@ impl Context {
                     },
                     Value::Number(n) => Ok(QueryReply::Number(n.to_parts(self))),
                     Value::DateTime(d) => Ok(QueryReply::Date(d)),
-                    Value::Substance(s) => Ok(QueryReply::Substance(SubstanceReply {
-                        properties: try!(s.properties.iter().map(|(k, x)| {
-                            let (input, output) = if x.input.1.len() == 0 {
-                                let div = try!(
-                                    (&x.output / &x.input).ok_or_else(|| {
-                                        QueryError::Generic(format!(
-                                            "Division by zero: <{}> / <{}>",
-                                            x.output.show(self),
-                                            x.input.show(self)
-                                        ))
-                                    })
-                                );
-                                (None, div.to_parts(self))
-                            } else {
-                                (Some(x.input.to_parts(self)),
-                                 x.output.to_parts(self))
-                            };
-                            Ok(PropertyReply {
-                                name: k.clone(),
-                                input: input,
-                                output: output,
-                                doc: x.doc.clone(),
-                            })
-                        }).collect::<Result<Vec<PropertyReply>, QueryError>>()),
-                    })),
+                    Value::Substance(s) => Ok(QueryReply::Substance(
+                        try!(s.to_reply(self).map_err(QueryError::Generic))
+                    )),
                 }
             },
             Query::Error(ref e) => Err(QueryError::Generic(e.clone())),
