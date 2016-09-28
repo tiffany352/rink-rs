@@ -180,7 +180,13 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
-        Token::Ident(name) => Expr::Unit(name),
+        Token::Ident(name) => match iter.peek().cloned().unwrap() {
+            Token::Ident(ref s) if s == "of" => {
+                iter.next();
+                Expr::Of(name, Box::new(parse_mul(iter)))
+            },
+            _ => Expr::Unit(name)
+        },
         Token::Number(num, frac, exp) =>
             ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
