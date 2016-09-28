@@ -631,9 +631,6 @@ pyron            cal_IT / cm^2 min # Measures heat flow from solar radiation,
 katal                   mol/sec    # Measure of the amount of a catalyst.  One
 kat                     katal      #   katal of catalyst enables the reaction
                                    #   to consume or produce on mol/sec.
-solarluminosity         384.6e24 W # A common yardstick for comparing the
-                                   #   output of different stars.
-                # http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
 
 #
 # time
@@ -1372,16 +1369,6 @@ footlambert             cd / pi ft^2
 
 #bril(x) units=[1;lambert]  2^(x+-100) lamberts ;log2(bril/lambert)+100
 
-# Some luminance data from the IES Lighting Handbook, 8th ed, 1993
-
-sunlum                  1.6e9 cd/m^2  # at zenith
-sunillum                100e3 lux     # clear sky
-sunillum_o              10e3 lux      # overcast sky
-sunlum_h                6e6 cd/m^2    # value at horizon
-skylum                  8000 cd/m^2   # average, clear sky
-skylum_o                2000 cd/m^2   # average, overcast sky
-moonlum                 2500 cd/m^2
-
 #
 # Photographic Exposure Value
 # This section by Jeff Conrad (jeff_conrad@msn.com)
@@ -1742,34 +1729,6 @@ islamicmonth            1|12 islamicyear # They have 29 day and 30 day months.
 # 3rd, 6th, 8th, 11th, 14th, 17th, and 19th years of a 19 year cycle.  This
 # gives leap years that last 383, 384, or 385 days.
 
-
-# Sidereal days
-
-mercuryday              58.6462 day
-venusday                243.01 day        # retrograde
-earthday                siderealday
-marsday                 1.02595675 day
-jupiterday              0.41354 day
-saturnday               0.4375 day
-uranusday               0.65 day          # retrograde
-neptuneday              0.768 day
-plutoday                6.3867 day
-
-# Sidereal years from http://ssd.jpl.nasa.gov/phys_props_planets.html.  Data
-# was updated in May 2001 based on the 1992 Explanatory Supplement to the
-# Astronomical Almanac and the mean longitude rates.  Apparently the table of
-# years in that reference is incorrect.
-
-mercuryyear             0.2408467 julianyear
-venusyear               0.61519726 julianyear
-earthyear               siderealyear
-marsyear                1.8808476 julianyear
-jupiteryear             11.862615 julianyear
-saturnyear              29.447498 julianyear
-uranusyear              84.016846 julianyear
-neptuneyear             164.79132 julianyear
-plutoyear               247.92065 julianyear
-
 # Objects on the earth are charted relative to a perfect ellipsoid whose
 # dimensions are specified by different organizations.  The ellipsoid is
 # specified by an equatorial radius and a flattening value which defines the
@@ -1821,63 +1780,6 @@ astronomicalunit         149597870700 m # IAU definition from 2012, exact
 au                     astronomicalunit # ephemeris for the above described
                                         # astronomical unit.  (See the NASA
                                         # site listed above.)
-solarmass                  1.9891e30 kg
-sunmass                       solarmass
-
-
-sundist                 1.0000010178 au # mean earth-sun distance
-moondist                3.844e8 m       # mean earth-moon distance
-sundist_near            1.471e11 m      # earth-sun distance at perihelion
-sundist_far             1.521e11 m      # earth-sun distance at aphelion
-
-# The following are masses for planetary systems, not just the planet itself.
-# The comments give the uncertainty in the denominators.  As noted above,
-# masses are given relative to the solarmass because this is more accurate.
-# The conversion to SI is uncertain because of uncertainty in G, the
-# gravitational constant.
-#
-# Values are from http://ssd.jpl.nasa.gov/astro_constants.html
-
-mercurymass             solarmass / 6023600   # 250
-venusmass               solarmass / 408523.71 # 0.06
-earthmoonmass           solarmass / 328900.56 # 0.02
-marsmass                solarmass / 3098708   # 9
-jupitermass             solarmass / 1047.3486 # 0.0008
-saturnmass              solarmass / 3497.898  # 0.018
-uranusmass              solarmass / 22902.98  # 0.03
-neptunemass             solarmass / 19412.24  # 0.04
-plutomass               solarmass / 1.35e8    # 0.07e8
-
-moonearthmassratio      0.012300034 # uncertainty 3 x 10-9
-earthmass               earthmoonmass / ( 1 + moonearthmassratio)
-moonmass                moonearthmassratio earthmass
-
-# These are the old values for the planetary masses.  They may give
-# the masses of the planets alone.
-
-oldmercurymass             0.33022e24 kg
-oldvenusmass               4.8690e24 kg
-oldmarsmass                0.64191e24 kg
-oldjupitermass             1898.8e24 kg
-oldsaturnmass              568.5e24 kg
-olduranusmass              86.625e24 kg
-oldneptunemass             102.78e24 kg
-oldplutomass               0.015e24 kg
-
-# Mean radius from http://ssd.jpl.nsaa.gov/phys_props_planets.html which in
-# turn cites Global Earth Physics by CF Yoder, 1995.
-
-mercuryradius           2440 km
-venusradius             6051.84 km
-earthradius             6371.01 km
-marsradius              3389.92 km
-jupiterradius           69911 km
-saturnradius            58232 km
-uranusradius            25362 km
-neptuneradius           24624 km
-plutoradius             1151 km
-
-moongravity             1.62 m/s^2
 
 #
 # The Hartree system of atomic units, derived from fundamental units
@@ -4681,17 +4583,17 @@ shaku              1|3.3 m
 mou                1|10000 shaku
 rin                1|1000 shaku
 bu_distance        1|100 shaku
-sun                1|10 shaku
+ja_sun             1|10 shaku
 jou_distance       10 shaku
 jou                jou_distance
 
-kanejakusun        sun      # Alias to emphasize architectural name
+kanejakusun        ja_sun      # Alias to emphasize architectural name
 kanejaku           shaku
 kanejakujou        jou
 
 # http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement
 taichi             shaku   # http://zh.wikipedia.org/wiki/台尺
-taicun             sun     # http://zh.wikipedia.org/wiki/台制
+taicun             ja_sun  # http://zh.wikipedia.org/wiki/台制
 !utf8
 台尺               taichi  # via Hanyu Pinyin romanizations
 台寸               taicun
@@ -4763,7 +4665,7 @@ tatami               jou_area
 shaku_volume         1|10 gou_volume
 gou_volume           1|10 shou
 gou                  gou_volume
-shou                 (4.9*4.9*2.7) sun^3   # The character shou which is
+shou                 (4.9*4.9*2.7) ja_sun^3# The character shou which is
                                            # the same as masu refers to a
                                            # rectangular wooden cup used to
                                            # measure liquids and cereal.
@@ -5758,8 +5660,146 @@ electron {
 
 #
 # Celestial bodies
-# TODO
 #
+
+# Sidereal years from http://ssd.jpl.nasa.gov/phys_props_planets.html.  Data
+# was updated in May 2001 based on the 1992 Explanatory Supplement to the
+# Astronomical Almanac and the mean longitude rates.  Apparently the table of
+# years in that reference is incorrect.
+
+# The following are masses for planetary systems, not just the planet itself.
+# The comments give the uncertainty in the denominators.  As noted above,
+# masses are given relative to the solarmass because this is more accurate.
+# The conversion to SI is uncertain because of uncertainty in G, the
+# gravitational constant.
+#
+# Values are from http://ssd.jpl.nasa.gov/astro_constants.html
+
+# Mean radius from http://ssd.jpl.nsaa.gov/phys_props_planets.html which in
+# turn cites Global Earth Physics by CF Yoder, 1995.
+
+sun {
+    mass                const solar_mass        1.9891e30 kg
+    ?? Average earth-sun distance
+    distance            const sun_distance      1.0000010178 au
+    ?? Earth-sun distance at periphelion
+    distance_near       const sun_distance_near 1.471e11 m
+    ?? Earth-sun distance at aphelion
+    distance_far        const sun_distance_far  1.521e11 m
+    ?? Source: http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
+    luminosity          const solar_luminosity  384.6e24 W
+
+    # Some luminance data from the IES Lighting Handbook, 8th ed, 1993
+
+    ?? Clear sky.
+    illum_zenith        const sun_illum_zenith  100e3 lux
+    illum_overcast      const sun_illum_overcast 10e3 lux
+    luminance_zenith    const sun_lum_zenith    1.6e9 cd/m^2
+    luminance_horizon   const sun_lum_horizon   6e6 cd/m^2
+    ?? Average, clear sky.
+    luminance_clear     const sun_lum_clear     8000 cd/m^2
+    ?? Average, overcast sky.
+    luminance_overcast  const sun_lum_overcast  2000 cd/m^2
+}
+
+solarmass               mass of sun
+sunmass                 solarmass
+sundist                 distance of sun
+solarluminosity         luminosity of sun
+
+mercury_planet {
+    ?? ±250
+    mass                const mercury_mass      solarmass / 6023600
+    mass_old            const mercury_old       0.33022e24 kg
+    radius              const mercury_radius    2440 km
+    sidereal_day        const mercury_day       58.6462 day
+    year                const mercury_year      0.2408467 julianyear
+}
+
+venus {
+    ?? ± 0.06
+    mass                const venus_mass        solarmass / 408523.71
+    mass_old            const venus_old         4.8690e24 kg
+    radius              const venus_radius      6051.84 km
+    ?? Retrograde.
+    sidereal_day        const venus_day         243.01 day
+    year                const venus_year        0.61519726 julianyear
+}
+
+?? ±0.02
+earthmoonmass           solarmass / 328900.56
+?? ±3e-9
+moonearthmassratio      0.012300034
+
+earth {
+    mass                const earth_mass        earthmoonmass / ( 1 + moonearthmassratio)
+    radius              const earth_radius      6371.01 km
+    sidereal_day        const earth_day         siderealday
+    year                const earth_year        siderealyear
+}
+
+moon {
+    ?? Average earth-moon distance.
+    mass                const moon_mass         moonearthmassratio mass of earth
+    distance            const moon_dist         3.844e8 m
+    gravity             const moon_gravity      1.62 m/s^2
+    luminance           const moon_luminance    2500 cd/m^2
+}
+
+mars {
+    ?? ±9
+    mass                const mars_mass         solarmass / 3098708
+    mass_old            const mars_old          0.64191e24 kg
+    radius              const mars_radius       3389.92 km
+    sidereal_day        const mars_day          1.02595675 day
+    year                const mars_year         1.8808476 julianyear
+}
+
+jupiter {
+    ?? ±0.0008
+    mass                const jupiter_mass      solarmass / 1047.3486
+    mass_old            const jupiter_old       1898.8e24 kg
+    radius              const jupiter_radius    69911 km
+    sidereal_day        const jupiter_day       0.41354 day
+    year                const jupiter_year      11.862615 julianyear
+}
+
+saturn {
+    ?? ±0.018
+    mass                const saturn_mass       solarmass / 3497.898
+    mass_old            const saturn_old        568.5e24 kg
+    radius              const saturn_radius     58232 km
+    sidereal_day        const saturn_day        0.4375 day
+    year                const saturn_year       29.447498 julianyear
+}
+
+uranus {
+    ?? ±0.03
+    mass                const uranus_mass       solarmass / 22902.98
+    mass_old            const uranus_old        86.625e24 kg
+    radius              const uranus_radius     25362 km
+    ?? Retrograde.
+    sidereal_day        const uranus_day        0.65 day
+    year                const uranus_year       84.016846 julianyear
+}
+
+neptune {
+    ?? ±0.04
+    mass                const neptune_mass      solarmass / 19412.24
+    mass_old            const neptune_old       102.78e24 kg
+    radius              const neptune_radius    24624 km
+    sidereal_day        const neptune_day       0.768 day
+    year                const neptune_year      164.79132 julianyear
+}
+
+pluto {
+    ?? ±0.07e8
+    mass                const pluto_mass        solarmass / 1.35e8
+    mass_old            const pluto_old         0.015e24 kg
+    radius              const pluto_radius      1151 km
+    sidereal_day        const pluto_day         6.3867 day
+    year                const pluto_year        247.92065 julianyear
+}
 
 #
 # Energy densities of various fuels
