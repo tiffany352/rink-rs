@@ -46,6 +46,80 @@ fn main() {
                         });
                     }
                 }
+                for (ref k, ref sub) in &ctx.substances {
+                    if k.starts_with(name) {
+                        out.push(Completion {
+                            completion: (*k).clone(),
+                            display: Some(format!(
+                                "{} (substance{})",
+                                k,
+                                ctx.docs.get(&**k)
+                                    .map(|x| format!(", {}", x))
+                                    .unwrap_or_default()
+                            )),
+                            suffix: None,
+                        });
+                    }
+                    for (pk, prop) in &sub.properties.properties {
+                        if pk.starts_with(name) {
+                            out.push(Completion {
+                                completion: format!("{} of", pk),
+                                display: Some(format!(
+                                    "{} of (property of {}{}{})",
+                                    pk, k,
+                                    (&prop.input / &prop.output)
+                                        .expect("Non-zero substance properties")
+                                        .to_parts(ctx)
+                                        .quantity
+                                        .map(|x| format!("; {}", x))
+                                        .unwrap_or_default(),
+                                    prop.doc.as_ref()
+                                        .map(|x| format!("; {}", x))
+                                        .unwrap_or_default(),
+                                )),
+                                suffix: None,
+                            });
+                        }
+                        if prop.input_name.starts_with(name) {
+                            out.push(Completion {
+                                completion: format!("{} of", prop.input_name),
+                                display: Some(format!(
+                                    "{} of (property of {} {}{}{})",
+                                    prop.input_name, k,
+                                    prop.output_name,
+                                    prop.input
+                                        .to_parts(ctx)
+                                        .quantity
+                                        .map(|x| format!("; {}", x))
+                                        .unwrap_or_default(),
+                                    prop.doc.as_ref()
+                                        .map(|x| format!("; {}", x))
+                                        .unwrap_or_default(),
+                                )),
+                                suffix: None,
+                            });
+                        }
+                        if prop.output_name.starts_with(name) {
+                            out.push(Completion {
+                                completion: format!("{} of", prop.output_name),
+                                display: Some(format!(
+                                    "{} of (property of {} {}{}{})",
+                                    prop.output_name, k,
+                                    prop.input_name,
+                                    prop.output
+                                        .to_parts(ctx)
+                                        .quantity
+                                        .map(|x| format!("; {}", x))
+                                        .unwrap_or_default(),
+                                    prop.doc.as_ref()
+                                        .map(|x| format!("; {}", x))
+                                        .unwrap_or_default(),
+                                )),
+                                suffix: None,
+                            });
+                        }
+                    }
+                }
                 for (ref unit, ref k) in &ctx.quantities {
                     if k.starts_with(name) {
                         out.push(Completion {
