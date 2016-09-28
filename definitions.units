@@ -5537,8 +5537,8 @@ water {
     density             mass gram / volume cm^3
     pressure_column     pressure gram force cm^-2 / column cm
     specific_heat       specific_energy calorie g^-1 / temperature K
-    fusion_heat         fusion_energy 79.8 calorie / mass gram
-    vaporization_heat   vaporization_energy 1160 J / mass gram
+    fusion_heat         fusion_energy 79.8 calorie / fusion_mass gram
+    vaporization_heat   vaporization_energy 1160 J / vaporization_mass gram
 
     pressure_column_0C   pressure_0C   0.99987 force gram cm^-2 / column_0C   cm
     pressure_column_5C   pressure_5C   0.99999 force gram cm^-2 / column_5C   cm
@@ -6027,9 +6027,9 @@ salt {
 
 koshersalt {
     ?? Diamond Crystal kosher salt
-    density_dc           mass 2.8 g / volume ustsp
+    density_dc           dc_mass 2.8 g / dc_volume ustsp
     ?? Morton kosher salt
-    density_morton       mass 4.8 g / volume ustsp
+    density_morton       morton_mass 4.8 g / morton_volume ustsp
 }
 
 ?? USA large egg
