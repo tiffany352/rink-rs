@@ -118,7 +118,8 @@ impl Context {
                         self.eval(left);
                         self.eval(right);
                     },
-                    Expr::Neg(ref expr) | Expr::Plus(ref expr) | Expr::Suffix(_, ref expr) =>
+                    Expr::Neg(ref expr) | Expr::Plus(ref expr) |
+                    Expr::Suffix(_, ref expr) | Expr::Of(_, ref expr) =>
                         self.eval(expr),
                     Expr::Mul(ref exprs) | Expr::Call(_, ref exprs) => for expr in exprs {
                         self.eval(expr);
@@ -141,6 +142,12 @@ impl Context {
                                 self.eval(e),
                             Def::Canonicalization(ref e) => {
                                 self.lookup(&Rc::new(e.clone()));
+                            },
+                            Def::Substance(ref props) => {
+                                for prop in props {
+                                    self.eval(&prop.input);
+                                    self.eval(&prop.output);
+                                }
                             },
                             _ => (),
                         }
@@ -237,6 +244,11 @@ impl Context {
                         }
                         self.definitions.insert(name.clone(), expr.clone());
                         self.units.insert(name.clone(), v);
+                    },
+                    Ok(Value::Substance(sub)) => {
+                        if self.substances.insert(name.clone(), sub).is_some() {
+                            println!("Warning: Conflicting substances for {}", name);
+                        }
                     },
                     Ok(_) => println!("Unit {} is not a number", name),
                     Err(e) => println!("Unit {} is malformed: {}", name, e)
