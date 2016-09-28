@@ -80,15 +80,25 @@ impl Substance {
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
         if self.amount.1.len() == 0 {
             Ok(SubstanceReply {
-                properties: self.properties.iter().map(|(k, v)| {
-                    PropertyReply {
+                properties: try!(self.properties.iter().map(|(k, v)| {
+                    let (input, output) = if v.input.1.len() == 0 {
+                        let res = (&v.output * &self.amount).unwrap();
+                        (None, try!((&res / &v.input)
+                         .ok_or_else(|| format!(
+                             "Division by zero: <{}> / <{}>",
+                             res.show(context),
+                             v.input.show(context)
+                         ))))
+                    } else {
+                        (Some(v.input.clone()), v.output.clone())
+                    };
+                    Ok(PropertyReply {
                         name: k.clone(),
-                        input: Some((&v.input * &self.amount)
-                                    .unwrap().to_parts(context)),
-                        output: v.output.to_parts(context),
+                        input: input.map(|x| x.to_parts(context)),
+                        output: output.to_parts(context),
                         doc: v.doc.clone()
-                    }
-                }).collect(),
+                    })
+                }).collect::<Result<Vec<PropertyReply>, String>>()),
             })
         } else {
             let func = |(_k, v): (&String, &Property)| {
