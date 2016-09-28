@@ -37,7 +37,7 @@ impl Substance {
                 .ok_or_else(|| SubstanceGetError::Generic(format!(
                     "No such property {}", name)))
                 .map(|prop| {
-                    (&(&self.amount * &prop.input).unwrap() / &prop.output)
+                    (&(&self.amount * &prop.output).unwrap() / &prop.input)
                         .expect("Non-zero property")
                 })
         } else {
