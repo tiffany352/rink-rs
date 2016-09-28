@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use number::{Number, Dim, Num};
 use ast::{Expr, Def, Defs};
-use substance::{Substance, Property};
+use substance::{Substance, Property, Properties};
 use std::rc::Rc;
 use value::Value;
 use Context;
@@ -309,9 +309,12 @@ impl Context {
                     }).collect::<Result<BTreeMap<_,_>, _>>();
                     match res {
                         Ok(res) => {
-                            self.substances.insert(name, Substance {
+                            self.substances.insert(name.clone(), Substance {
                                 amount: Number::one(),
-                                properties: res,
+                                properties: Rc::new(Properties {
+                                    name: name,
+                                    properties: res,
+                                }),
                             });
                         },
                         Err(e) => println!("Substance {} is malformed: {}", name, e),

@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use reply::{PropertyReply, SubstanceReply};
 use std::ops::{Mul, Div};
 use std::iter::once;
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct Property {
@@ -20,9 +21,15 @@ pub struct Property {
 }
 
 #[derive(Debug, Clone)]
+pub struct Properties {
+    pub name: String,
+    pub properties: BTreeMap<String, Property>,
+}
+
+#[derive(Debug, Clone)]
 pub struct Substance {
     pub amount: Number,
-    pub properties: BTreeMap<String, Property>,
+    pub properties: Rc<Properties>,
 }
 
 pub enum SubstanceGetError {
@@ -33,15 +40,16 @@ pub enum SubstanceGetError {
 impl Substance {
     pub fn get(&self, name: &str) -> Result<Number, SubstanceGetError> {
         if self.amount.1.len() == 0 {
-            self.properties.get(name)
+            self.properties.properties.get(name)
                 .ok_or_else(|| SubstanceGetError::Generic(format!(
-                    "No such property {}", name)))
+                    "No such property {} of {}",
+                    name, self.properties.name)))
                 .map(|prop| {
                     (&(&self.amount * &prop.output).unwrap() / &prop.input)
                         .expect("Non-zero property")
                 })
         } else {
-            for (_name, prop) in &self.properties {
+            for (_name, prop) in &self.properties.properties {
                 if name == prop.output_name {
                     let input = try!(
                         (&prop.input / &self.amount).ok_or_else(
@@ -73,14 +81,15 @@ impl Substance {
                 }
             }
             Err(SubstanceGetError::Generic(format!(
-                "No such property {}", name)))
+                "No such property {} of {}",
+                name, self.properties.name)))
         }
     }
 
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
         if self.amount.1.len() == 0 {
             Ok(SubstanceReply {
-                properties: try!(self.properties.iter().map(|(k, v)| {
+                properties: try!(self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.1.len() == 0 {
                         let res = (&v.output * &self.amount).unwrap();
                         (None, try!((&res / &v.input)
@@ -150,7 +159,7 @@ impl Substance {
             Ok(SubstanceReply {
                 properties: try!(
                     once(Ok(Some(amount)))
-                        .chain(self.properties.iter().map(func))
+                        .chain(self.properties.properties.iter().map(func))
                         .collect::<Result<Vec<Option<PropertyReply>>, String>>())
                     .into_iter()
                     .filter_map(|x| x)
