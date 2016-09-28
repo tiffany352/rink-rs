@@ -32,12 +32,12 @@ pub enum SubstanceGetError {
 
 impl Substance {
     pub fn get(&self, name: &str) -> Result<Number, SubstanceGetError> {
-        if self.amount == Number::one() {
+        if self.amount.1.len() == 0 {
             self.properties.get(name)
                 .ok_or_else(|| SubstanceGetError::Generic(format!(
                     "No such property {}", name)))
                 .map(|prop| {
-                    (&prop.input / &prop.output)
+                    (&(&self.amount * &prop.input).unwrap() / &prop.output)
                         .expect("Non-zero property")
                 })
         } else {
@@ -78,12 +78,13 @@ impl Substance {
     }
 
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
-        if self.amount == Number::one() {
+        if self.amount.1.len() == 0 {
             Ok(SubstanceReply {
                 properties: self.properties.iter().map(|(k, v)| {
                     PropertyReply {
                         name: k.clone(),
-                        input: Some(v.input.to_parts(context)),
+                        input: Some((&v.input * &self.amount)
+                                    .unwrap().to_parts(context)),
                         output: v.output.to_parts(context),
                         doc: v.doc.clone()
                     }
