@@ -171,10 +171,7 @@ impl Substance {
 
 impl Show for Substance {
     fn show(&self, context: &Context) -> String {
-        match self.to_reply(context) {
-            Ok(v) => format!("{}", v),
-            Err(e) => e
-        }
+        format!("{} {}", self.amount.to_parts(context).format("n u p"), self.properties.name)
     }
 }
 
