@@ -536,13 +536,8 @@ impl Context {
             Query::Convert(ref top, Conversion::Expr(ref bottom), base) => match
                 (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom))
             {
-                (Ok(top), Ok(bottom), Ok((bottom_name, bottom_const))) => {
-                    let (top, bottom) = match (top, bottom) {
-                        (Value::Number(top), Value::Number(bottom)) =>
-                            (top, bottom),
-                        _ => return Err(QueryError::Generic(format!(
-                            "Conversion of non-numbers is not defined")))
-                    };
+                (Ok(Value::Number(top)), Ok(Value::Number(bottom)),
+                 Ok((bottom_name, bottom_const))) => {
                     if top.1 == bottom.1 {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
@@ -559,6 +554,11 @@ impl Context {
                             &top, &bottom)))
                     }
                 },
+                (Ok(x), Ok(y), Ok(_)) => Err(QueryError::Generic(format!(
+                    "Operation is not defined: <{}> -> <{}>",
+                    x.show(self),
+                    y.show(self)
+                ))),
                 (Err(e), _, _) => Err(QueryError::Generic(e)),
                 (_, Err(e), _) => Err(QueryError::Generic(e)),
                 (_, _, Err(e)) => Err(QueryError::Generic(e)),
