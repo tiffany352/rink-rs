@@ -354,6 +354,26 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                                 },
                             };
                             let input_name = match iter.next().unwrap() {
+                                Token::Ident(ref s) if s == "const" => {
+                                    let input_name = match iter.next().unwrap() {
+                                        Token::Ident(name) => name,
+                                        x => {
+                                            println!("Expected property input \
+                                                      name, got {:?}", x);
+                                            break
+                                        },
+                                    };
+                                    let output = parse_div(iter);
+                                    props.push(Property {
+                                        output_name: name.clone(),
+                                        name: name,
+                                        input: Expr::Const(Num::one()),
+                                        input_name: input_name,
+                                        output: output,
+                                        doc: prop_doc.take()
+                                    });
+                                    continue
+                                },
                                 Token::Ident(name) => name,
                                 x => {
                                     println!("Expected property input name, got {:?}", x);
