@@ -365,7 +365,7 @@ impl Context {
         }
     }
 
-    fn show(
+    pub fn show(
         &self,
         raw: &Number,
         bottom: &Number,
@@ -553,6 +553,20 @@ impl Context {
                         Err(QueryError::Conformance(self.conformance_err(
                             &top, &bottom)))
                     }
+                },
+                (Ok(Value::Substance(sub)), Ok(Value::Number(bottom)),
+                 Ok((bottom_name, bottom_const))) => {
+                    sub.get_in_unit(
+                        bottom,
+                        self,
+                        bottom_name,
+                        bottom_const,
+                        base.unwrap_or(10)
+                    ).map_err(
+                        QueryError::Generic
+                    ).map(
+                        QueryReply::Substance
+                    )
                 },
                 (Ok(x), Ok(y), Ok(_)) => Err(QueryError::Generic(format!(
                     "Operation is not defined: <{}> -> <{}>",
