@@ -3,11 +3,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use context::Context;
-use number::{Number, Num};
+use number::{Number, Num, Dim};
 use value::Show;
 use std::collections::BTreeMap;
 use reply::{PropertyReply, SubstanceReply};
-use std::ops::{Mul, Div};
+use std::ops::{Mul, Div, Add};
 use std::iter::once;
 use std::rc::Rc;
 
@@ -325,5 +325,56 @@ impl<'a, 'b> Div<&'b Number> for &'a Substance {
                 || "Division by zero".to_owned())),
             properties: self.properties.clone(),
         })
+    }
+}
+
+impl<'a, 'b> Add<&'b Substance> for &'a Substance {
+    type Output = Result<Substance, String>;
+
+    fn add(self, other: &'b Substance) -> Self::Output {
+        let res = Substance {
+            amount: Number::one(),
+            properties: Rc::new(Properties {
+                name: format!(
+                    "{} {} + {} {}",
+                    self.amount.to_parts_simple().format("n u"),
+                    self.properties.name,
+                    other.amount.to_parts_simple().format("n u"),
+                    other.properties.name,
+                ),
+                properties: self.properties.properties.iter().filter_map(|(k, prop1)| {
+                    let prop2 = match other.properties.properties.get(k) {
+                        Some(v) => v,
+                        None => return None
+                    };
+                    let mol = Number::one_unit(Dim::new("mol"));
+                    if
+                        prop1.input_name != prop2.input_name ||
+                        prop1.output_name != prop2.output_name ||
+                        prop1.input.1 != prop2.input.1 ||
+                        prop1.output.1 != prop2.output.1 ||
+                        prop1.output != mol ||
+                        prop2.output != mol
+                    {
+                        return None
+                    }
+                    Some((k.clone(), Property {
+                        input: (
+                            &(&self.amount * &prop1.input).unwrap() +
+                                &(&other.amount * &prop2.input).unwrap()
+                        ).expect("Add"),
+                        input_name: prop1.input_name.clone(),
+                        output: mol,
+                        output_name: prop1.output_name.clone(),
+                        doc: None,
+                    }))
+                }).collect()
+            })
+        };
+        if res.properties.properties.len() == 0 {
+            Err(format!("No shared properties"))
+        } else {
+            Ok(res)
+        }
     }
 }

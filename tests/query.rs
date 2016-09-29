@@ -181,3 +181,9 @@ fn test_convert_to_substances() {
           egg_white = 100/3, approx. 33.33333; \
           egg_yolk = 5000/93, approx. 53.76344");
 }
+
+#[test]
+fn test_substance_add() {
+    test("air",
+         "molar_mass = approx. 28.96790 gram -> 1 mole");
+}

@@ -6614,15 +6614,15 @@ zirconium {
 # Numbers do not add up to exactly 100% due to roundoff and uncertainty Water
 # is highly variable, typically makes up about 1%
 
-air               78.08   % molar_mass of nitrogen 2 \
-              +   20.95   % molar_mass of oxygen 2 \
-              + 9340    ppm molar_mass of argon \
-              +  400    ppm (molar_mass of carbon + molar_mass of oxygen 2) \
-              +   18.18 ppm molar_mass of neon \
-              +    5.24 ppm molar_mass of helium \
-              +    1.7  ppm (molar_mass of carbon + 4 molar_mass of hydrogen) \
-              +    1.14 ppm molar_mass of krypton \
-              +    0.55 ppm molar_mass of hydrogen 2
+air               78.08   % nitrogen 2 \
+              +   20.95   % oxygen 2 \
+              + 9340    ppm argon \
+              +  400    ppm (carbon + oxygen 2) \
+              +   18.18 ppm neon \
+              +    5.24 ppm helium \
+              +    1.7  ppm (carbon + 4 hydrogen) \
+              +    1.14 ppm krypton \
+              +    0.55 ppm hydrogen 2
 
 ############################################################################
 #

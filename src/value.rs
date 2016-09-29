@@ -70,6 +70,9 @@ impl<'a,'b> Add<&'b Value> for &'a Value {
                 left.checked_add(try!(date::to_duration(right)))
                 .ok_or(format!("Implementation error: value is out of range representable by datetime"))
                 .map(Value::DateTime),
+            (&Value::Substance(ref left), &Value::Substance(ref right)) =>
+                left.add(right)
+                .map(Value::Substance),
             (_, _) => Err(format!("Operation is not defined"))
         }
     }
