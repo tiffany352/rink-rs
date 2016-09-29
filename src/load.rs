@@ -318,6 +318,23 @@ impl Context {
                             );
                         }
                         existing.append(&mut unique);
+                        self.temporaries.insert(
+                            prop.name.clone(),
+                            (&input / &output)
+                                .expect("Non-zero property")
+                        );
+                        if output == Number::one() {
+                            self.temporaries.insert(
+                                prop.input_name.clone(),
+                                input.clone()
+                            );
+                        }
+                        if input == Number::one() {
+                            self.temporaries.insert(
+                                prop.output_name.clone(),
+                                output.clone()
+                            );
+                        }
                         Ok((prop.name.clone(), Property {
                             input: input,
                             input_name: prop.input_name.clone(),
@@ -326,6 +343,7 @@ impl Context {
                             doc: prop.doc.clone(),
                         }))
                     }).collect::<Result<BTreeMap<_,_>, _>>();
+                    self.temporaries.clear();
                     match res {
                         Ok(res) => {
                             self.substances.insert(name.clone(), Substance {
