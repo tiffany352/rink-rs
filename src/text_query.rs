@@ -504,7 +504,13 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                                          describe(&x)))
             }
         },
-        Token::Ident(name) => Expr::Unit(name),
+        Token::Ident(name) => match iter.peek().cloned().unwrap() {
+            Token::Ident(ref s) if s == "of" => {
+                iter.next();
+                Expr::Of(name.clone(), Box::new(parse_mul(iter)))
+            },
+            _ => Expr::Unit(name)
+        },
         Token::Quote(name) => Expr::Quote(name),
         Token::Decimal(num, frac, exp) =>
             ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
@@ -844,5 +850,11 @@ mod test {
             Query::Convert(_, Conversion::Expr(_), _) => (),
             x => panic!("Expected Convert(_, Expr(_), _), got {:?}", x),
         }
+    }
+
+    #[test]
+    fn test_of() {
+        assert_eq!(parse("foo of 1 abc def / 12"),
+                   "(foo of 1 abc def) / 12");
     }
 }

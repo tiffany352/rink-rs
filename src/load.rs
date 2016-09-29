@@ -3,8 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::{BTreeMap, BTreeSet};
-use number::{Dim, Num};
+use number::{Number, Dim, Num};
 use ast::{Expr, Def, Defs};
+use substance::{Substance, Property, Properties};
 use std::rc::Rc;
 use value::Value;
 use Context;
@@ -117,7 +118,8 @@ impl Context {
                         self.eval(left);
                         self.eval(right);
                     },
-                    Expr::Neg(ref expr) | Expr::Plus(ref expr) | Expr::Suffix(_, ref expr) =>
+                    Expr::Neg(ref expr) | Expr::Plus(ref expr) |
+                    Expr::Suffix(_, ref expr) | Expr::Of(_, ref expr) =>
                         self.eval(expr),
                     Expr::Mul(ref exprs) | Expr::Call(_, ref exprs) => for expr in exprs {
                         self.eval(expr);
@@ -140,6 +142,12 @@ impl Context {
                                 self.eval(e),
                             Def::Canonicalization(ref e) => {
                                 self.lookup(&Rc::new(e.clone()));
+                            },
+                            Def::Substance(ref props) => {
+                                for prop in props {
+                                    self.eval(&prop.input);
+                                    self.eval(&prop.output);
+                                }
                             },
                             _ => (),
                         }
@@ -237,6 +245,16 @@ impl Context {
                         self.definitions.insert(name.clone(), expr.clone());
                         self.units.insert(name.clone(), v);
                     },
+                    Ok(Value::Substance(sub)) => {
+                        let sub = if sub.properties.name.contains("+") {
+                            sub.rename(name.clone())
+                        } else {
+                            sub
+                        };
+                        if self.substances.insert(name.clone(), sub).is_some() {
+                            println!("Warning: Conflicting substances for {}", name);
+                        }
+                    },
                     Ok(_) => println!("Unit {} is not a number", name),
                     Err(e) => println!("Unit {} is malformed: {}", name, e)
                 },
@@ -267,6 +285,82 @@ impl Context {
                     },
                     Ok(_) => println!("Quantity {} is not a number", name),
                     Err(e) => println!("Quantity {} is malformed: {}", name, e)
+                },
+                Def::Substance(ref props) => {
+                    let mut prev = BTreeMap::new();
+                    let res = props.iter().map(|prop| {
+                        let input = match self.eval(&prop.input) {
+                            Ok(Value::Number(v)) => v,
+                            Ok(x) => return Err(format!(
+                                "Expected number for input of \
+                                 property {}, got {:?}", name, x)),
+                            Err(e) => return Err(format!(
+                                "Malformed property input for {}: {}",
+                                name, e)),
+                        };
+                        let output = match self.eval(&prop.output) {
+                            Ok(Value::Number(v)) => v,
+                            Ok(x) => return Err(format!(
+                                "Expected number for output of \
+                                 property {}, got {:?}", name, x)),
+                            Err(e) => return Err(format!(
+                                "Malformed property output for {}: {}",
+                                name, e)),
+                        };
+                        let mut unique = BTreeSet::new();
+                        unique.insert(&*prop.name);
+                        unique.insert(&*prop.input_name);
+                        unique.insert(&*prop.output_name);
+                        let unit = (&input / &output)
+                            .expect("Non-zero property")
+                            .1;
+                        let mut existing = prev.entry(unit).or_insert(BTreeSet::new());
+                        for conflict in existing.intersection(&unique) {
+                            println!(
+                                "Warning: conflicting \
+                                 properties for {} of {}",
+                                conflict, name
+                            );
+                        }
+                        existing.append(&mut unique);
+                        self.temporaries.insert(
+                            prop.name.clone(),
+                            (&input / &output)
+                                .expect("Non-zero property")
+                        );
+                        if output == Number::one() {
+                            self.temporaries.insert(
+                                prop.input_name.clone(),
+                                input.clone()
+                            );
+                        }
+                        if input == Number::one() {
+                            self.temporaries.insert(
+                                prop.output_name.clone(),
+                                output.clone()
+                            );
+                        }
+                        Ok((prop.name.clone(), Property {
+                            input: input,
+                            input_name: prop.input_name.clone(),
+                            output: output,
+                            output_name: prop.output_name.clone(),
+                            doc: prop.doc.clone(),
+                        }))
+                    }).collect::<Result<BTreeMap<_,_>, _>>();
+                    self.temporaries.clear();
+                    match res {
+                        Ok(res) => {
+                            self.substances.insert(name.clone(), Substance {
+                                amount: Number::one(),
+                                properties: Rc::new(Properties {
+                                    name: name,
+                                    properties: res,
+                                }),
+                            });
+                        },
+                        Err(e) => println!("Substance {} is malformed: {}", name, e),
+                    }
                 },
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };

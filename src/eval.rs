@@ -16,6 +16,7 @@ use reply::{
 };
 use search;
 use context::Context;
+use substance::SubstanceGetError;
 
 impl Context {
     /// Evaluates an expression to compute its value, *excluding* `->`
@@ -54,7 +55,9 @@ impl Context {
         match *expr {
             Expr::Unit(ref name) if name == "now" => Ok(Value::DateTime(date::now())),
             Expr::Unit(ref name) =>
-                self.lookup(name).ok_or_else(|| self.unknown_unit_err(name)).map(Value::Number),
+                self.lookup(name).map(Value::Number)
+                .or_else(|| self.substances.get(name).cloned().map(Value::Substance))
+                .ok_or_else(|| self.unknown_unit_err(name)),
             Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dim::new(&**name)))),
             Expr::Const(ref num) =>
                 Ok(Value::Number(Number::new(num.clone()))),
@@ -89,6 +92,19 @@ impl Context {
                 })
             }),
             Expr::Equals(_, ref right) => self.eval(right),
+            Expr::Of(ref field, ref val) => {
+                let val = try!(self.eval(val));
+                let val = match val {
+                    Value::Substance(sub) => sub,
+                    x => return Err(format!(
+                        "Not defined: {} of <{}>", field, x.show(self)))
+                };
+                val.get(&**field).map(Value::Number).map_err(|e| match e {
+                    SubstanceGetError::Generic(s) => s,
+                    SubstanceGetError::Conformance(left, right) =>
+                        format!("{}", self.conformance_err(&left, &right))
+                })
+            },
             Expr::Call(ref name, ref args) => {
                 let args = try!(
                     args.iter()
@@ -297,6 +313,9 @@ impl Context {
                     .collect::<BTreeMap<_, _>>(),
                     pow(&lv, res as i32)))
             },
+            Expr::Of(ref _field, ref _expr) => {
+                Err(format!("Property access in right-hand of conversion is not yet implemented"))
+            },
             Expr::Add(ref left, ref right) | Expr::Sub(ref left, ref right) => {
                 let left = try!(self.eval_unit_name(left));
                 let right = try!(self.eval_unit_name(right));
@@ -346,7 +365,7 @@ impl Context {
         }
     }
 
-    fn show(
+    pub fn show(
         &self,
         raw: &Number,
         bottom: &Number,
@@ -517,13 +536,8 @@ impl Context {
             Query::Convert(ref top, Conversion::Expr(ref bottom), base) => match
                 (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom))
             {
-                (Ok(top), Ok(bottom), Ok((bottom_name, bottom_const))) => {
-                    let (top, bottom) = match (top, bottom) {
-                        (Value::Number(top), Value::Number(bottom)) =>
-                            (top, bottom),
-                        _ => return Err(QueryError::Generic(format!(
-                            "Conversion of non-numbers is not defined")))
-                    };
+                (Ok(Value::Number(top)), Ok(Value::Number(bottom)),
+                 Ok((bottom_name, bottom_const))) => {
                     if top.1 == bottom.1 {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
@@ -540,6 +554,39 @@ impl Context {
                             &top, &bottom)))
                     }
                 },
+                (Ok(Value::Substance(sub)), Ok(Value::Number(bottom)),
+                 Ok((bottom_name, bottom_const))) => {
+                    sub.get_in_unit(
+                        bottom,
+                        self,
+                        bottom_name,
+                        bottom_const,
+                        base.unwrap_or(10)
+                    ).map_err(
+                        QueryError::Generic
+                    ).map(
+                        QueryReply::Substance
+                    )
+                },
+                (Ok(Value::Number(top)), Ok(Value::Substance(mut sub)), _) => {
+                    sub.amount = try!((&top / &sub.amount).ok_or_else(|| format!(
+                        "Division by zero: <{}> / <{}>",
+                        top.show(self),
+                        sub.amount.show(self)
+                    )));
+                    sub.to_reply(
+                        self
+                    ).map_err(
+                        QueryError::Generic
+                    ).map(
+                        QueryReply::Substance
+                    )
+                },
+                (Ok(x), Ok(y), Ok(_)) => Err(QueryError::Generic(format!(
+                    "Operation is not defined: <{}> -> <{}>",
+                    x.show(self),
+                    y.show(self)
+                ))),
                 (Err(e), _, _) => Err(QueryError::Generic(e)),
                 (_, Err(e), _) => Err(QueryError::Generic(e)),
                 (_, _, Err(e)) => Err(QueryError::Generic(e)),
@@ -720,6 +767,9 @@ impl Context {
                     },
                     Value::Number(n) => Ok(QueryReply::Number(n.to_parts(self))),
                     Value::DateTime(d) => Ok(QueryReply::Date(d)),
+                    Value::Substance(s) => Ok(QueryReply::Substance(
+                        try!(s.to_reply(self).map_err(QueryError::Generic))
+                    )),
                 }
             },
             Query::Error(ref e) => Err(QueryError::Generic(e.clone())),

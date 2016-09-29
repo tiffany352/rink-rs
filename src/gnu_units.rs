@@ -25,6 +25,8 @@ pub enum Token {
     Dash,
     Asterisk,
     Question,
+    LeftBrace,
+    RightBrace,
     Error(String),
 }
 
@@ -65,6 +67,8 @@ impl<'a> Iterator for TokenIterator<'a> {
             '-' => Token::Dash,
             '+' => Token::Plus,
             '*' => Token::Asterisk,
+            '{' => Token::LeftBrace,
+            '}' => Token::RightBrace,
             '?' => if self.0.peek() == Some(&'?') {
                 self.0.next();
                 let mut out = String::new();
@@ -176,7 +180,13 @@ pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
 fn parse_term(mut iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
-        Token::Ident(name) => Expr::Unit(name),
+        Token::Ident(name) => match iter.peek().cloned().unwrap() {
+            Token::Ident(ref s) if s == "of" => {
+                iter.next();
+                Expr::Of(name, Box::new(parse_mul(iter)))
+            },
+            _ => Expr::Unit(name)
+        },
         Token::Number(num, frac, exp) =>
             ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
@@ -315,6 +325,90 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                         iter.next();
                         let expr = parse_expr(iter);
                         map.push((name, Rc::new(Def::Quantity(expr)), doc.take()));
+                    } else if let Some(&Token::LeftBrace) = iter.peek() {
+                        // substance
+                        iter.next();
+                        let mut props = vec![];
+                        let mut prop_doc = None;
+                        loop {
+                            let name = match iter.next().unwrap() {
+                                Token::Ident(name) => name,
+                                Token::Newline => {
+                                    line += 1;
+                                    continue
+                                },
+                                Token::Eof => break,
+                                Token::Doc(line) => {
+                                    prop_doc = match prop_doc.take() {
+                                        None => Some(line.trim().to_owned()),
+                                        Some(old) => Some(format!(
+                                            "{} {}", old.trim(), line.trim())),
+                                    };
+                                    continue
+                                },
+                                Token::RightBrace =>
+                                    break,
+                                x => {
+                                    println!("Expected property, got {:?}", x);
+                                    break
+                                },
+                            };
+                            let input_name = match iter.next().unwrap() {
+                                Token::Ident(ref s) if s == "const" => {
+                                    let input_name = match iter.next().unwrap() {
+                                        Token::Ident(name) => name,
+                                        x => {
+                                            println!("Expected property input \
+                                                      name, got {:?}", x);
+                                            break
+                                        },
+                                    };
+                                    let output = parse_div(iter);
+                                    props.push(Property {
+                                        output_name: name.clone(),
+                                        name: name,
+                                        input: Expr::Const(Num::one()),
+                                        input_name: input_name,
+                                        output: output,
+                                        doc: prop_doc.take()
+                                    });
+                                    continue
+                                },
+                                Token::Ident(name) => name,
+                                x => {
+                                    println!("Expected property input name, got {:?}", x);
+                                    break
+                                },
+                            };
+                            let input = parse_mul(iter);
+                            match iter.next().unwrap() {
+                                Token::Slash => (),
+                                x => {
+                                    println!("Expected /, got {:?}", x);
+                                    break
+                                }
+                            }
+                            let output_name = match iter.next().unwrap() {
+                                Token::Ident(name) => name,
+                                x => {
+                                    println!("Expected property input name, got {:?}", x);
+                                    break
+                                },
+                            };
+                            let output = parse_mul(iter);
+                            props.push(Property {
+                                name: name,
+                                input: input,
+                                input_name: input_name,
+                                output: output,
+                                output_name: output_name,
+                                doc: prop_doc.take()
+                            });
+                        }
+                        map.push((
+                            name,
+                            Rc::new(Def::Substance(props)),
+                            doc.take()));
                     } else {
                         // derived
                         let expr = parse_expr(iter);

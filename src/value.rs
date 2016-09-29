@@ -5,6 +5,7 @@
 use number::Number;
 use chrono::{DateTime, FixedOffset};
 use context::Context;
+use substance::Substance;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use date;
 
@@ -12,6 +13,7 @@ use date;
 pub enum Value {
     Number(Number),
     DateTime(DateTime<FixedOffset>),
+    Substance(Substance),
 }
 
 pub trait Show {
@@ -39,6 +41,7 @@ impl Show for Value {
         match *self {
             Value::Number(ref num) => num.show(context),
             Value::DateTime(ref dt) => dt.show(context),
+            Value::Substance(ref v) => v.show(context),
         }
     }
 }
@@ -67,6 +70,9 @@ impl<'a,'b> Add<&'b Value> for &'a Value {
                 left.checked_add(try!(date::to_duration(right)))
                 .ok_or(format!("Implementation error: value is out of range representable by datetime"))
                 .map(Value::DateTime),
+            (&Value::Substance(ref left), &Value::Substance(ref right)) =>
+                left.add(right)
+                .map(Value::Substance),
             (_, _) => Err(format!("Operation is not defined"))
         }
     }
@@ -89,7 +95,7 @@ impl<'a,'b> Sub<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::DateTime(ref right)) =>
                 date::from_duration(&(*left - *right))
                 .map(Value::Number),
-            //(_, _) => Err(format!("Operation is not defined"))
+            (_, _) => Err(format!("Operation is not defined"))
         }
     }
 }
@@ -115,6 +121,9 @@ impl<'a,'b> Mul<&'b Value> for &'a Value {
                 (left * right)
                 .ok_or(format!("Bug: Mul should not fail"))
                 .map(Value::Number),
+            (&Value::Number(ref co), &Value::Substance(ref sub)) |
+            (&Value::Substance(ref sub), &Value::Number(ref co)) =>
+                (sub * co).map(Value::Substance),
             (_, _) => Err(format!("Operation is not defined"))
         }
     }
@@ -129,6 +138,8 @@ impl<'a,'b> Div<&'b Value> for &'a Value {
                 (left / right)
                 .ok_or(format!("Division by zero"))
                 .map(Value::Number),
+            (&Value::Substance(ref sub), &Value::Number(ref co)) =>
+                (sub / co).map(Value::Substance),
             (_, _) => Err(format!("Operation is not defined"))
         }
     }

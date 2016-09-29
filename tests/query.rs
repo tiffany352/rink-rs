@@ -155,3 +155,37 @@ fn test_bases() {
 fn test_typos() {
     test("rsi", "Unknown unit rsi, did you mean RSI?");
 }
+
+#[test]
+fn test_convert_from_substances() {
+    test("density of water",
+         "0.001 meter^3 / kilogram (specific_volume)");
+    test("mass of ml water",
+         "1 gram (mass)");
+    test("volume of g water",
+         "1000 millimeter^3 (volume)");
+    test("ml water -> g",
+         "water: volume = 1000 millimeter^3; mass = 1 gram");
+    test("g water -> ml",
+         "water: mass = 1 gram; \
+          volume = 1 milliliter; \
+          fusion_energy = 334106640 milliliter; \
+          vaporization_energy = 1.16e9 milliliter");
+}
+
+#[test]
+fn test_convert_to_substances() {
+    test("kg -> egg",
+         "egg: USA large egg. \
+          mass = 1 kilogram; \
+          egg_shelled = 20; \
+          egg_white = 100/3, approx. 33.33333; \
+          egg_yolk = 5000/93, approx. 53.76344");
+}
+
+#[test]
+fn test_substance_add() {
+    test("air",
+         "air: Average molecular weight of air. \
+          molar_mass = approx. 28.96790 gram -> 1 mole");
+}

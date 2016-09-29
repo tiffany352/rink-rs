@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use number::{Dim, Number, Unit, Num};
 use ast::{Expr, DatePattern};
 use search;
+use substance::Substance;
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
@@ -19,6 +20,8 @@ pub struct Context {
     pub definitions: BTreeMap<String, Expr>,
     pub docs: BTreeMap<String, String>,
     pub datepatterns: Vec<Vec<DatePattern>>,
+    pub substances: BTreeMap<String, Substance>,
+    pub temporaries: BTreeMap<String, Number>,
     pub short_output: bool,
 }
 
@@ -35,6 +38,8 @@ impl Context {
             definitions: BTreeMap::new(),
             docs: BTreeMap::new(),
             datepatterns: Vec::new(),
+            substances: BTreeMap::new(),
+            temporaries: BTreeMap::new(),
             short_output: false,
         }
     }
@@ -47,6 +52,9 @@ impl Context {
     /// prefixes, plurals, bare dimensions like length, and quantities.
     pub fn lookup(&self, name: &str) -> Option<Number> {
         fn inner(ctx: &Context, name: &str) -> Option<Number> {
+            if let Some(v) = ctx.temporaries.get(name).cloned() {
+                return Some(v)
+            }
             if let Some(k) = ctx.dimensions.get(name) {
                 return Some(Number::one_unit(k.to_owned()))
             }

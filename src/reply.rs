@@ -62,9 +62,25 @@ pub struct SearchReply {
 }
 
 #[derive(Debug, Clone)]
+pub struct PropertyReply {
+    pub name: String,
+    pub input: Option<NumberParts>,
+    pub output: NumberParts,
+    pub doc: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct SubstanceReply {
+    pub name: String,
+    pub doc: Option<String>,
+    pub properties: Vec<PropertyReply>,
+}
+
+#[derive(Debug, Clone)]
 pub enum QueryReply {
     Number(NumberParts),
     Date(DateTime<FixedOffset>),
+    Substance(SubstanceReply),
     Duration(DurationReply),
     Def(DefReply),
     Conversion(ConversionReply),
@@ -92,6 +108,7 @@ impl Display for QueryReply {
         match *self {
             QueryReply::Number(ref v) => write!(fmt, "{}", v),
             QueryReply::Date(ref v) => write!(fmt, "{} ({})", v, HumanTime::from(*v)),
+            QueryReply::Substance(ref v) => write!(fmt, "{}", v),
             QueryReply::Duration(ref v) => write!(fmt, "{}", v),
             QueryReply::Def(ref v) => write!(fmt, "{}", v),
             QueryReply::Conversion(ref v) => write!(fmt, "{}", v),
@@ -116,6 +133,27 @@ impl Display for ConformanceError {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         try!(writeln!(fmt, "Conformance error: {} != {}", self.left, self.right));
         write!(fmt, "Suggestions: {}", self.suggestions.join(", "))
+    }
+}
+
+impl Display for SubstanceReply {
+    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+        write!(
+            fmt, "{}: {}{}",
+            self.name,
+            self.doc.as_ref().map(|x| format!("{} ", x)).unwrap_or_default(),
+            self.properties.iter().map(|prop| format!(
+                "{} = {}{}{}",
+                prop.name,
+                prop.input.as_ref()
+                    .map(|x| format!("{} -> ", x.format("n u")))
+                    .unwrap_or_else(|| "".to_owned()),
+                prop.output.format("n u"),
+                prop.doc.as_ref()
+                    .map(|x| format!(" ({})", x))
+                    .unwrap_or_else(|| "".to_owned())
+            )).collect::<Vec<_>>().join("; ")
+        )
     }
 }
 

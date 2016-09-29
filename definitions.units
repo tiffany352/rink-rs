@@ -536,6 +536,7 @@ fuel_efficiency         ? area^-1
 specific_energy         ? energy / mass
 molar_mass              ? mass / amount
 flow_rate               ? volume / time
+pressure_column         ? pressure / length
 
 
 #
@@ -630,9 +631,6 @@ pyron            cal_IT / cm^2 min # Measures heat flow from solar radiation,
 katal                   mol/sec    # Measure of the amount of a catalyst.  One
 kat                     katal      #   katal of catalyst enables the reaction
                                    #   to consume or produce on mol/sec.
-solarluminosity         384.6e24 W # A common yardstick for comparing the
-                                   #   output of different stars.
-                # http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
 
 #
 # time
@@ -905,10 +903,7 @@ light                   c
 mu0                     4 pi 1e-7 H/m    # permeability of vacuum (exact)
 epsilon0                1/mu0 c^2        # permittivity of vacuum (exact)
 mass_energy             c^2              # convert mass to energy
-electroncharge        1.6021766208e-19 C # electron charge
-#e                      electroncharge   # makes room for exp(1)
-planck_constant     4.135667662e-15 eV s # Planck constant
-#h                       planck_constant # too commonly, users meant hours, not planck
+planck_constant         6.626070040e-34 J s
 hbar                    planck_constant / 2 pi
 spin                    hbar
 G               6.67408e-11 N m^2 / kg^2 # Newtonian gravitational constant
@@ -989,35 +984,11 @@ gravity                 9.80665 m/s^2    # std acceleration of gravity (exact)
 force                   gravity          # use to turn masses into forces
 atm                     101325 Pa        # Standard atmospheric pressure
 atmosphere              atm
-Hg             13.5951 gram force / cm^3 # Standard weight of mercury (exact)
-water                   gram force/cm^3  # Standard weight of water (exact)
-waterdensity            gram / cm^3      # Density of water
-H2O                     water
-wc                      water            # water column
 mach                    331.46 m/s       # speed of sound in dry air at STP
 standardtemp            273.15 K         # standard temperature
 stdtemp                 standardtemp
 normaltemp              529.67 degR      # for gas density, from NIST
 normtemp                normaltemp       # Handbook 44
-
-# Weight of mercury and water at different temperatures using the standard
-# force of gravity.
-
-Hg10C         13.5708 force gram / cm^3  # These units, when used to form
-Hg20C         13.5462 force gram / cm^3  # pressure measures, are not accurate
-Hg23C         13.5386 force gram / cm^3  # because of considerations of the
-Hg30C         13.5217 force gram / cm^3  # revised practical temperature scale.
-Hg40C         13.4973 force gram / cm^3
-Hg60F         13.5574 force gram / cm^3
-H2O0C         0.99987 force gram / cm^3
-H2O5C         0.99999 force gram / cm^3
-H2O10C        0.99973 force gram / cm^3
-H2O15C        0.99913 force gram / cm^3
-H2O18C        0.99862 force gram / cm^3
-H2O20C        0.99823 force gram / cm^3
-H2O25C        0.99707 force gram / cm^3
-H2O50C        0.98807 force gram / cm^3
-H2O100C       0.95838 force gram / cm^3
 
 # Atomic constants
 
@@ -1053,59 +1024,12 @@ t_P                     plancktime
 plancklength            plancktime c
 l_P                     plancklength
 
-# Particle radius
-
-electronradius    (1/4 pi epsilon0) electroncharge^2 / electronmass c^2   # Classical
-deuteronchargeradius    2.1413e-15 m
-protonchargeradius      0.8751e-15 m
-
-# Masses of elementary particles
-
-electronmass            5.48579909070e-4 u
-m_e                     electronmass
-protonmass              1.007276466879 u
-m_p                     protonmass
-neutronmass             1.00866491588 u
-m_n                     neutronmass
-muonmass                0.1134289257 u
-m_mu                    muonmass
-deuteronmass            2.013553212745 u
-m_d                     deuteronmass
-alphaparticlemass       4.001506179127 u
-m_alpha                 alphaparticlemass
-taumass                 1.90749 u
-m_tau                   taumass
-tritonmass              3.01550071632 u
-m_t                     tritonmass
-helionmass              3.01493224673 u
-m_h                     helionmass
-
-
-
-# particle wavelengths: the compton wavelength of a particle is
-# defined as h / m c where m is the mass of the particle.
-
-electronwavelength      planck_constant / m_e c
-lambda_C                electronwavelength
-protonwavelength        planck_constant / m_p c
-lambda_C,p              protonwavelength
-neutronwavelength       planck_constant / m_n c
-lambda_C,n              neutronwavelength
-
 # Magnetic moments
 
-bohrmagneton            electroncharge hbar / 2 electronmass
+bohrmagneton            electroncharge hbar / mass of 2 electron
 mu_B                    bohrmagneton
-nuclearmagneton         electroncharge hbar /  2 protonmass
+nuclearmagneton         electroncharge hbar / mass of 2 proton
 mu_N                    nuclearmagneton
-mu_mu                  -4.49044826e-26 J/T   # Muon magnetic moment
-mu_p                    1.4106067873e-26 J/T # Proton magnetic moment
-mu_e                   -928.4764620e-26 J/T  # Electron magnetic moment
-mu_n                   -0.96623650e-26 J/T   # Neutron magnetic moment
-mu_d                    0.4330735040e-26 J/T # Deuteron magnetic moment
-mu_t                    1.504609503e-26 J/T  # Triton magnetic moment
-mu_h                   -1.074617522e-26 J/T  # Helion magnetic moment
-
 
 #
 # Units derived from physical constants
@@ -1115,12 +1039,8 @@ kgf                     kg force
 technicalatmosphere     kgf / cm^2
 at                      technicalatmosphere
 hyl                     kgf s^2 / m   # Also gram-force s^2/m according to [15]
-mmHg                    mm Hg
 torr                    atm / 760  # These units, both named after Evangelista
 tor                     Pa         # Torricelli, should not be confused.  The
-inHg                    inch Hg    # torr is very close to the mm Hg. 
-inH2O                   inch water
-mmH2O                   mm water
 eV                      electroncharge V # Energy acquired by a particle with charge e
 electronvolt            eV       #   when it is accelerated through 1 V
 lightyear               c julianyear # The 365.25 day year is specified in
@@ -1398,16 +1318,6 @@ footlambert             cd / pi ft^2
 # have a brilliance of 1 bril.
 
 #bril(x) units=[1;lambert]  2^(x+-100) lamberts ;log2(bril/lambert)+100
-
-# Some luminance data from the IES Lighting Handbook, 8th ed, 1993
-
-sunlum                  1.6e9 cd/m^2  # at zenith
-sunillum                100e3 lux     # clear sky
-sunillum_o              10e3 lux      # overcast sky
-sunlum_h                6e6 cd/m^2    # value at horizon
-skylum                  8000 cd/m^2   # average, clear sky
-skylum_o                2000 cd/m^2   # average, overcast sky
-moonlum                 2500 cd/m^2
 
 #
 # Photographic Exposure Value
@@ -1769,34 +1679,6 @@ islamicmonth            1|12 islamicyear # They have 29 day and 30 day months.
 # 3rd, 6th, 8th, 11th, 14th, 17th, and 19th years of a 19 year cycle.  This
 # gives leap years that last 383, 384, or 385 days.
 
-
-# Sidereal days
-
-mercuryday              58.6462 day
-venusday                243.01 day        # retrograde
-earthday                siderealday
-marsday                 1.02595675 day
-jupiterday              0.41354 day
-saturnday               0.4375 day
-uranusday               0.65 day          # retrograde
-neptuneday              0.768 day
-plutoday                6.3867 day
-
-# Sidereal years from http://ssd.jpl.nasa.gov/phys_props_planets.html.  Data
-# was updated in May 2001 based on the 1992 Explanatory Supplement to the
-# Astronomical Almanac and the mean longitude rates.  Apparently the table of
-# years in that reference is incorrect.
-
-mercuryyear             0.2408467 julianyear
-venusyear               0.61519726 julianyear
-earthyear               siderealyear
-marsyear                1.8808476 julianyear
-jupiteryear             11.862615 julianyear
-saturnyear              29.447498 julianyear
-uranusyear              84.016846 julianyear
-neptuneyear             164.79132 julianyear
-plutoyear               247.92065 julianyear
-
 # Objects on the earth are charted relative to a perfect ellipsoid whose
 # dimensions are specified by different organizations.  The ellipsoid is
 # specified by an equatorial radius and a flattening value which defines the
@@ -1848,63 +1730,6 @@ astronomicalunit         149597870700 m # IAU definition from 2012, exact
 au                     astronomicalunit # ephemeris for the above described
                                         # astronomical unit.  (See the NASA
                                         # site listed above.)
-solarmass                  1.9891e30 kg
-sunmass                       solarmass
-
-
-sundist                 1.0000010178 au # mean earth-sun distance
-moondist                3.844e8 m       # mean earth-moon distance
-sundist_near            1.471e11 m      # earth-sun distance at perihelion
-sundist_far             1.521e11 m      # earth-sun distance at aphelion
-
-# The following are masses for planetary systems, not just the planet itself.
-# The comments give the uncertainty in the denominators.  As noted above,
-# masses are given relative to the solarmass because this is more accurate.
-# The conversion to SI is uncertain because of uncertainty in G, the
-# gravitational constant.
-#
-# Values are from http://ssd.jpl.nasa.gov/astro_constants.html
-
-mercurymass             solarmass / 6023600   # 250
-venusmass               solarmass / 408523.71 # 0.06
-earthmoonmass           solarmass / 328900.56 # 0.02
-marsmass                solarmass / 3098708   # 9
-jupitermass             solarmass / 1047.3486 # 0.0008
-saturnmass              solarmass / 3497.898  # 0.018
-uranusmass              solarmass / 22902.98  # 0.03
-neptunemass             solarmass / 19412.24  # 0.04
-plutomass               solarmass / 1.35e8    # 0.07e8
-
-moonearthmassratio      0.012300034 # uncertainty 3 x 10-9
-earthmass               earthmoonmass / ( 1 + moonearthmassratio)
-moonmass                moonearthmassratio earthmass
-
-# These are the old values for the planetary masses.  They may give
-# the masses of the planets alone.
-
-oldmercurymass             0.33022e24 kg
-oldvenusmass               4.8690e24 kg
-oldmarsmass                0.64191e24 kg
-oldjupitermass             1898.8e24 kg
-oldsaturnmass              568.5e24 kg
-olduranusmass              86.625e24 kg
-oldneptunemass             102.78e24 kg
-oldplutomass               0.015e24 kg
-
-# Mean radius from http://ssd.jpl.nsaa.gov/phys_props_planets.html which in
-# turn cites Global Earth Physics by CF Yoder, 1995.
-
-mercuryradius           2440 km
-venusradius             6051.84 km
-earthradius             6371.01 km
-marsradius              3389.92 km
-jupiterradius           69911 km
-saturnradius            58232 km
-uranusradius            25362 km
-neptuneradius           24624 km
-plutoradius             1151 km
-
-moongravity             1.62 m/s^2
 
 #
 # The Hartree system of atomic units, derived from fundamental units
@@ -2704,59 +2529,6 @@ ollock                  1|4 liter      # Is this right?
 
 japancup                200 ml
 
-# densities of cooking ingredients from The Cake Bible by Rose Levy Beranbaum
-# so you can convert '2 cups sugar' to grams, for example, or in the other
-# direction grams could be converted to 'cup flour_scooped'.
-
-butter                  8 oz/uscup
-butter_clarified        6.8 oz/uscup
-cocoa_butter            9 oz/uscup
-shortening              6.75 oz/uscup   # vegetable shortening
-oil                     7.5 oz/uscup
-cakeflour_sifted        3.5 oz/uscup    # The density of flour depends on the
-cakeflour_spooned       4 oz/uscup      # measuring method.  "Scooped",  or
-cakeflour_scooped       4.5 oz/uscup    # "dip and sweep" refers to dipping a
-flour_sifted            4 oz/uscup      # measure into a bin, and then sweeping
-flour_spooned           4.25 oz/uscup   # the excess off the top.  "Spooned"
-flour_scooped           5 oz/uscup      # means to lightly spoon into a measure
-breadflour_sifted       4.25 oz/uscup   # and then sweep the top.  Sifted means
-breadflour_spooned      4.5 oz/uscup    # sifting the flour directly into a
-breadflour_scooped      5.5 oz/uscup    # measure and then sweeping the top.
-cornstarch              120 grams/uscup
-dutchcocoa_sifted       75 g/uscup      # These are for Dutch processed cocoa
-dutchcocoa_spooned      92 g/uscup
-dutchcocoa_scooped      95 g/uscup
-cocoa_sifted            75 g/uscup      # These are for nonalkalized cocoa
-cocoa_spooned           82 g/uscup
-cocoa_scooped           95 g/uscup
-heavycream              232 g/uscup
-milk                    242 g/uscup
-sourcream               242 g/uscup
-molasses                11.25 oz/uscup
-cornsyrup               11.5 oz/uscup
-honey                   11.75 oz/uscup
-sugar                   200 g/uscup
-powdered_sugar          4 oz/uscup
-brownsugar_light        217 g/uscup     # packed
-brownsugar_dark         239 g/uscup
-
-baking_powder           4.6 grams / ustsp
-salt                    6 g / ustsp
-koshersalt              2.8 g / ustsp   # Diamond Crystal kosher salt
-koshersalt_morton       4.8 g / ustsp   # Morton kosher salt
-                                        # Values are from the nutrition info
-                                        # on the packages
-
-
-# Egg weights and volumes for a USA large egg
-
-egg                     50 grams        # without shell
-eggwhite                30 grams
-eggyolk                 18.6 grams
-eggvolume               3 ustablespoons + 1|2 ustsp
-eggwhitevolume          2 ustablespoons
-eggyolkvolume           3.5 ustsp
-
 #
 # Density measures.  Density has traditionally been measured on a variety of
 # bizarre nonlinear scales.
@@ -3007,7 +2779,7 @@ beespace               1|4 inch      # Bees will fill any space that is smaller
                                      #   than the bee space and leave open
                                      #   spaces that are larger.  The size of
                                      #   the space varies with species.
-diamond                8|5 ft        # Marking on US tape measures that is
+tapediamond            8|5 ft        # Marking on US tape measures that is
                                      #   useful to carpenters who wish to place
                                      #   five studs in an 8 ft distance.  Note
                                      #   that the numbers appear in red every
@@ -3061,158 +2833,6 @@ quad                    quadrillion btu
 ECtherm                 1.05506e8 J    # Exact definition, close to 1e5 btu
 UStherm                 1.054804e8 J   # Exact definition
 therm                   UStherm
-
-# Water latent heat (from Wikipedia)
-
-water_fusion_heat       79.8 calorie/g
-water_vaporization_heat 1160 J/g
-
-# Specific heat capacities of various substances
-
-specificheat_water      calorie / g K
-water_specificheat      specificheat_water
-     # Values from www.engineeringtoolbox.com/specific-heat-metals-d_152.html
-specificheat_aluminum   0.91 J/g K
-specificheat_antimony   0.21 J/g K
-specificheat_barium     0.20 J/g K
-specificheat_beryllium  1.83 J/g K
-specificheat_bismuth    0.13 J/g K
-specificheat_cadmium    0.23 J/g K
-specificheat_cesium     0.24 J/g K
-specificheat_chromium   0.46 J/g K
-specificheat_cobalt     0.42 J/g K
-specificheat_copper     0.39 J/g K
-specificheat_gallium    0.37 J/g K
-specificheat_germanium  0.32 J/g K
-specificheat_gold       0.13 J/g K
-specificheat_hafnium    0.14 J/g K
-specificheat_indium     0.24 J/g K
-specificheat_iridium    0.13 J/g K
-specificheat_iron       0.45 J/g K
-specificheat_lanthanum  0.195 J/g K
-specificheat_lead       0.13 J/g K
-specificheat_lithium    3.57 J/g K
-specificheat_lutetium   0.15 J/g K
-specificheat_magnesium  1.05 J/g K
-specificheat_manganese  0.48 J/g K
-specificheat_mercury    0.14 J/g K
-specificheat_molybdenum 0.25 J/g K
-specificheat_nickel     0.44 J/g K
-specificheat_osmium     0.13 J/g K
-specificheat_palladium  0.24 J/g K
-specificheat_platinum   0.13 J/g K
-specificheat_plutonum   0.13 J/g K
-specificheat_potassium  0.75 J/g K
-specificheat_rhenium    0.14 J/g K
-specificheat_rhodium    0.24 J/g K
-specificheat_rubidium   0.36 J/g K
-specificheat_ruthenium  0.24 J/g K
-specificheat_scandium   0.57  J/g K
-specificheat_selenium   0.32 J/g K
-specificheat_silicon    0.71 J/g K
-specificheat_silver     0.23 J/g K
-specificheat_sodium     1.21 J/g K
-specificheat_strontium  0.30 J/g K
-specificheat_tantalum   0.14 J/g K
-specificheat_thallium   0.13 J/g K
-specificheat_thorium    0.13 J/g K
-specificheat_tin        0.21 J/g K
-specificheat_titanium   0.54 J/g K
-specificheat_tungsten   0.13 J/g K
-specificheat_uranium    0.12 J/g K
-specificheat_vanadium   0.39 J/g K
-specificheat_yttrium    0.30 J/g K
-specificheat_zinc       0.39 J/g K
-specificheat_zirconium  0.27 J/g K
-specificheat_ethanol    2.3  J/g K
-specificheat_ammonia    4.6 J/g K
-specificheat_freon      0.91 J/g K   # R-12 at 0 degrees Fahrenheit
-specificheat_gasoline   2.22 J/g K
-specificheat_iodine     2.15 J/g K
-specificheat_oliveoil   1.97 J/g K
-
-#  en.wikipedia.org/wiki/Heat_capacity#Table_of_specific_heat_capacities
-specificheat_hydrogen   14.3 J/g K
-specificheat_helium     5.1932 J/g K
-specificheat_argon      0.5203 J/g K
-specificheat_tissue     3.5 J/g K
-specificheat_diamond    0.5091 J/g K
-specificheat_granite    0.79 J/g K
-specificheat_graphite   0.71 J/g K
-specificheat_ice        2.11 J/g K
-specificheat_asphalt    0.92 J/g K
-specificheat_brick      0.84 J/g K
-specificheat_concrete   0.88 J/g K
-specificheat_glass_silica 0.84 J/g K
-specificheat_glass_flint  0.503 J/g K
-specificheat_glass_pyrex  0.753 J/g K
-specificheat_gypsum     1.09 J/g K
-specificheat_marble     0.88 J/g K
-specificheat_sand       0.835 J/g K
-specificheat_soil       0.835 J/g K
-specificheat_wood       1.7 J/g K
-
-specificheat_sucrose    1.244 J/g K #www.sugartech.co.za/heatcapacity/index.php
-
-
-# Energy densities of various fuels
-#
-# Most of these fuels have varying compositions or qualities and hence their
-# actual energy densities vary.  These numbers are hence only approximate.
-#
-# E1. http://bioenergy.ornl.gov/papers/misc/energy_conv.html
-# E2. http://www.aps.org/policy/reports/popa-reports/energy/units.cfm
-# E3. http://www.ior.com.au/ecflist.html
-
-tonoil                  1e10 cal_IT    # Ton oil equivalent.  A conventional
-                                       # value for the energy released by
-toe                     tonoil         # burning one metric ton of oil. [18,E2]
-                                       # Note that energy per mass of petroleum
-                                       # products is fairly constant.
-                                       # Variations in volumetric energy
-                                       # density result from variations in the
-                                       # density (kg/m^3) of different fuels.
-                                       # This definition is given by the
-                                       # IEA/OECD.
-toncoal                 7e9 cal_IT     # Energy in metric ton coal from [18].
-                                       # This is a nominal value which
-                                       # is close to the heat content
-                                       # of coal used in the 1950's
-barreloil               5.8 Mbtu       # Conventional value for barrel of crude
-                                       # oil [E2].  Actual range is 5.6 - 6.3.
-naturalgas_HHV          1027 btu/ft^3  # Energy content of natural gas.  HHV
-naturalgas_LHV          930 btu/ft^3   # is for Higher Heating Value and
-naturalgas              naturalgas_HHV # includes energy from condensation
-                                       # combustion products.  LHV is for Lower
-                                       # Heating Value and excludes these.
-                                       # American publications typically report
-                                       # HHV whereas European ones report LHV.
-charcoal                30 GJ/tonne
-woodenergy_dry          20 GJ/tonne    # HHV, a cord weights about a tonne
-woodenergy_airdry       15 GJ/tonne    # 20% moisture content
-coal_bituminous         27 GJ / tonne
-coal_lignite            15 GJ / tonne
-coal_US                 22 GJ / uston  # Average for US coal (short ton), 1995
-ethanol_HHV         84000 btu/usgallon
-ethanol_LHV         75700 btu/usgallon
-diesel             130500 btu/usgallon
-gasoline_LHV       115000 btu/usgallon
-gasoline_HHV       125000 btu/usgallon
-gasoline                gasoline_HHV
-heating                 37.3 MJ/liter
-fueloil                 39.7 MJ/liter  # low sulphur
-propane                 93.3 MJ/m^3
-butane                  124 MJ/m^3
-
-# These values give total energy from uranium fission.  Actual efficiency
-# of nuclear power plants is around 30%-40%.  Note also that some reactors
-# use enriched uranium around 3% U-235.  Uranium during processing or use
-# may be in a compound of uranium oxide or uranium hexafluoride, in which
-# case the energy density would be lower depending on how much uranium is
-# in the compound.
-
-uranium_pure     200 MeV avogadro / (235.0439299 g/mol)  # Pure U-235
-uranium_natural         0.7% uranium_pure        # Natural uranium: 0.7% U-235
 
 # Celsius heat unit: energy to raise a pound of water 1 degC
 
@@ -3363,7 +2983,7 @@ perm_0C                 grain / hr ft^2 inHg
 perm_zero               perm_0C
 perm_0                  perm_0C
 perm                    perm_0C
-perm_23C                grain / hr ft^2 in Hg23C
+perm_23C                grain / hr ft^2 in pressure_column_23C of Hg
 perm_twentythree        perm_23C
 
 #
@@ -4814,155 +4434,6 @@ eman                    1e-7 Ci/m^3  # radioactive concentration
 mache                   3.7e-7 Ci/m^3
 
 #
-# Atomic weights.  The atomic weight of an element is the ratio of the mass of
-# a mole of the element to 1|12 of a mole of Carbon 12.  The Standard Atomic
-# Weights apply to the elements as they occur naturally on earth.  Elements
-# which do not occur naturally or which occur with wide isotopic variability do
-# not have Standard Atomic Weights.  For these elements, the atomic weight is
-# based on the longest lived isotope, as marked in the comments.  In some
-# cases, the comment for these entries also gives a number which is an atomic
-# weight for a different isotope that may be of more interest than the longest
-# lived isotope.
-#
-
-actinium                227.0278 g/mol
-aluminum                26.981539 g/mol
-americium               243.0614 g/mol     # Longest lived. 241.06
-antimony                121.760 g/mol
-argon                   39.948 g/mol
-arsenic                 74.92159 g/mol
-astatine                209.9871 g/mol     # Longest lived
-barium                  137.327 g/mol
-berkelium               247.0703 g/mol     # Longest lived. 249.08
-beryllium               9.012182 g/mol
-bismuth                 208.98037 g/mol
-bohrium                 272.13826 g/mol
-boron                   10.811 g/mol
-bromine                 79.904 g/mol
-cadmium                 112.411 g/mol
-calcium                 40.078 g/mol
-californium             251.0796 g/mol     # Longest lived.  252.08
-carbon                  12.011 g/mol
-cerium                  140.115 g/mol
-cesium                  132.90543 g/mol
-chlorine                35.4527 g/mol
-chromium                51.9961 g/mol
-cobalt                  58.93320 g/mol
-copernicium             285.17712 g/mol
-copper                  63.546 g/mol
-curium                  247.0703 g/mol
-darmstadtium            281.16451 g/mol
-deuterium               2.0141017778 g/mol
-dubnium                 268.12567 g/mol
-dysprosium              162.50 g/mol
-einsteinium             252.083 g/mol      # Longest lived
-erbium                  167.26 g/mol
-europium                151.965 g/mol
-fermium                 257.0951 g/mol     # Longest lived
-flerovium               289.19042 g/mol
-fluorine                18.9984032 g/mol
-francium                223.0197 g/mol     # Longest lived
-gadolinium              157.25 g/mol
-gallium                 69.723 g/mol
-germanium               72.61 g/mol
-gold                    196.96654 g/mol
-hafnium                 178.49 g/mol
-hassium                 270.13429 g/mol
-helium                  4.002602 g/mol
-holmium                 164.93032 g/mol
-hydrogen                1.00794 g/mol
-indium                  114.818 g/mol
-iodine                  126.90447 g/mol
-iridium                 192.217 g/mol
-iron                    55.845 g/mol
-krypton                 83.80 g/mol
-lanthanum               138.9055 g/mol
-lawrencium              262.11 g/mol       # Longest lived
-lead                    207.2 g/mol
-lithium                 6.941 g/mol
-livermorium             293.20449 g/mol
-lutetium                174.967 g/mol
-magnesium               24.3050 g/mol
-manganese               54.93805 g/mol
-meitnerium              276.15159 g/mol
-mendelevium             258.10 g/mol       # Longest lived
-mercury                 200.59 g/mol
-molybdenum              95.94 g/mol
-neodymium               144.24 g/mol
-neon                    20.1797 g/mol
-neptunium               237.0482 g/mol
-nickel                  58.6934 g/mol
-niobium                 92.90638 g/mol
-nitrogen                14.00674 g/mol
-nobelium                259.1009 g/mol     # Longest lived
-osmium                  190.23 g/mol
-oxygen                  15.9994 g/mol
-palladium               106.42 g/mol
-phosphorus              30.973762 g/mol
-platinum                195.08 g/mol
-plutonium               244.0642 g/mol     # Longest lived.  239.05
-polonium                208.9824 g/mol     # Longest lived.  209.98
-potassium               39.0983 g/mol
-praseodymium            140.90765 g/mol
-promethium              144.9127 g/mol     # Longest lived.  146.92
-protactinium            231.03588 g/mol
-radium                  226.0254 g/mol
-radon                   222.0176 g/mol     # Longest lived
-rhenium                 186.207 g/mol
-rhodium                 102.90550 g/mol
-roentgenium             280.16514 g/mol
-rubidium                85.4678 g/mol
-ruthenium               101.07 g/mol
-rutherfordium           267.12179 g/mol
-samarium                150.36 g/mol
-scandium                44.955910 g/mol
-seaborgium              271.13393 g/mol
-selenium                78.96 g/mol
-silicon                 28.0855 g/mol
-silver                  107.8682 g/mol
-sodium                  22.989768 g/mol
-strontium               87.62 g/mol
-sulfur                  32.066 g/mol
-tantalum                180.9479 g/mol
-technetium              97.9072 g/mol      # Longest lived.  98.906
-tellurium               127.60 g/mol
-terbium                 158.92534 g/mol
-thallium                204.3833 g/mol
-thorium                 232.0381 g/mol
-thullium                168.93421 g/mol
-tin                     118.710 g/mol
-titanium                47.867 g/mol
-tungsten                183.84 g/mol
-ununoctium              294.21392 g/mol
-ununpentium             288.19274 g/mol
-ununseptium             292.20746 g/mol
-ununtrium               284.17873 g/mol
-uranium                 238.0289 g/mol
-vanadium                50.9415 g/mol
-xenon                   131.29 g/mol
-ytterbium               173.04 g/mol
-yttrium                 88.90585 g/mol
-zinc                    65.39 g/mol
-zirconium               91.224 g/mol
-
-# Average molecular weight of air
-#
-# The atmospheric composition listed is from NASA Earth Fact Sheet (accessed
-# 28 August 2015)
-# http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
-# Numbers do not add up to exactly 100% due to roundoff and uncertainty Water
-# is highly variable, typically makes up about 1%
-
-air            78.08% nitrogen 2 \
-              + 20.95% oxygen 2 \
-              + 9340 ppm argon \
-              +  400 ppm (carbon + oxygen 2) \
-              +   18.18 ppm neon \
-              +    5.24 ppm helium \
-              +    1.7  ppm (carbon + 4 hydrogen) \
-              +    1.14 ppm krypton \
-              +    0.55 ppm hydrogen 2
-#
 # population units
 #
 
@@ -5062,17 +4533,17 @@ shaku              1|3.3 m
 mou                1|10000 shaku
 rin                1|1000 shaku
 bu_distance        1|100 shaku
-sun                1|10 shaku
+ja_sun             1|10 shaku
 jou_distance       10 shaku
 jou                jou_distance
 
-kanejakusun        sun      # Alias to emphasize architectural name
+kanejakusun        ja_sun      # Alias to emphasize architectural name
 kanejaku           shaku
 kanejakujou        jou
 
 # http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement
 taichi             shaku   # http://zh.wikipedia.org/wiki/台尺
-taicun             sun     # http://zh.wikipedia.org/wiki/台制
+taicun             ja_sun  # http://zh.wikipedia.org/wiki/台制
 !utf8
 台尺               taichi  # via Hanyu Pinyin romanizations
 台寸               taicun
@@ -5144,7 +4615,7 @@ tatami               jou_area
 shaku_volume         1|10 gou_volume
 gou_volume           1|10 shou
 gou                  gou_volume
-shou                 (4.9*4.9*2.7) sun^3   # The character shou which is
+shou                 (4.9*4.9*2.7) ja_sun^3# The character shou which is
                                            # the same as masu refers to a
                                            # rectangular wooden cup used to
                                            # measure liquids and cereal.
@@ -6001,6 +5472,1165 @@ röntgen                 roentgen
 #㏿                      gal     Invalid on Mac
 
 !endutf8
+
+############################################################################
+#
+# Substances
+#
+############################################################################
+
+#
+# Assorted
+#
+
+water {
+    density             mass gram / volume cm^3
+    pressure_column     pressure gram force cm^-2 / column cm
+    specific_heat       specific_energy calorie g^-1 / temperature K
+    fusion_heat         fusion_energy 79.8 calorie / fusion_mass gram
+    vaporization_heat   vaporization_energy 1160 J / vaporization_mass gram
+
+    pressure_column_0C   pressure_0C   0.99987 force gram cm^-2 / column_0C   cm
+    pressure_column_5C   pressure_5C   0.99999 force gram cm^-2 / column_5C   cm
+    pressure_column_10C  pressure_10C  0.99973 force gram cm^-2 / column_10C  cm
+    pressure_column_15C  pressure_15C  0.99913 force gram cm^-2 / column_15C  cm
+    pressure_column_18C  pressure_18C  0.99862 force gram cm^-2 / column_18C  cm
+    pressure_column_20C  pressure_20C  0.99823 force gram cm^-2 / column_20C  cm
+    pressure_column_25C  pressure_25C  0.99707 force gram cm^-2 / column_25C  cm
+    pressure_column_50C  pressure_50C  0.98807 force gram cm^-2 / column_50C  cm
+    pressure_column_100C pressure_100C 0.95838 force gram cm^-2 / column_100C cm
+}
+
+H2O                     water
+wc                      pressure_column of water
+mmH2O                   pressure of mm water
+inH2O                   pressure of inch water
+
+
+mercury {
+    density             mass 13.5951 gram / volume cm^3
+    pressure_column     pressure 13.5951 gram force cm^-2 / column cm
+    specific_heat       specific_energy 0.14 J g^-1 / temperature K
+    molar_mass          mass 200.59 g / amount mol
+
+    # These units, when used to form
+    # pressure measures, are not accurate
+    # because of considerations of the
+    # revised practical temperature scale.
+    pressure_column_10C pressure_10C 13.5708 force gram cm^-2 / column_10C cm
+    pressure_column_20C pressure_20C 13.5462 force gram cm^-2 / column_20C cm
+    pressure_column_23C pressure_23C 13.5386 force gram cm^-2 / column_23C cm
+    pressure_column_30C pressure_30C 13.5217 force gram cm^-2 / column_30C cm
+    pressure_column_40C pressure_40C 13.4973 force gram cm^-2 / column_40C cm
+    pressure_column_60F pressure_60F 13.5574 force gram cm^-2 / column_60F cm
+}
+
+Hg                      mercury
+mmHg                    pressure of mm mercury
+inHg                    pressure of inch mercury
+
+ammonia {
+    specific_heat       specific_energy 4.6 J g^-1 / temperature K
+}
+
+freon {
+    ?? R-12 at 0 degrees Fahrenheit.
+    specific_heat       specific_energy 0.91 J g^-1 / temperature K
+}
+
+tissue {
+    specific_heat       specific_energy 3.5 J g^-1 / temperature K
+}
+
+diamond {
+    specific_heat       specific_energy 0.5091 J g^-1 / temperature K
+}
+
+granite {
+    specific_heat       specific_energy 0.79 J g^-1 / temperature K
+}
+
+graphite {
+    specific_heat       specific_energy 0.71 J g^-1 / temperature K
+}
+
+ice {
+    specific_heat       specific_energy 2.11 J g^-1 / temperature K
+}
+
+asphalt {
+    specific_heat       specific_energy 0.92 J g^-1 / temperature K
+}
+
+brick {
+    specific_heat       specific_energy 0.84 J g^-1 / temperature K
+}
+
+concrete {
+    specific_heat       specific_energy 0.88 J g^-1 / temperature K
+}
+
+glass_silica {
+    specific_heat       specific_energy 0.84 J g^-1 / temperature K
+}
+
+glass_flint {
+    specific_heat       specific_energy 0.503 J g^-1 / temperature K
+}
+
+glass_pyrex {
+    specific_heat       specific_energy 0.753 J g^-1 / temperature K
+}
+
+gypsum {
+    specific_heat       specific_energy 1.09 J g^-1 / temperature K
+}
+
+marble {
+    specific_heat       specific_energy 0.88 J g^-1 / temperature K
+}
+
+sand {
+    specific_heat       specific_energy 0.835 J g^-1 / temperature K
+}
+
+soil {
+    specific_heat       specific_energy 0.835 J g^-1 / temperature K
+}
+
+#
+# Fundamental particles
+#
+
+# particle wavelengths: the compton wavelength of a particle is
+# defined as h / m c where m is the mass of the particle.
+
+electron {
+    mass                const electron_mass         5.48579909070e-4 u
+    charge              const electron_charge       1.6021766208e-19 C
+    radius              const electron_radius       ((1/4 pi epsilon0) \
+                                                    charge^2 / mass c^2)
+    wavelength          const electron_wavelength   planck_constant / mass c
+    magnetic_moment     const electron_moment       -928.4764620e-26 J/T
+}
+
+electronmass            mass of electron
+electroncharge          charge of electron
+m_e                     electronmass
+
+proton {
+    mass                const proton_mass           1.007276466879 u
+    wavelength          const proton_wavelength     planck_constant / mass c
+    charge_radius       const proton_radius         0.8751e-15 m
+    magnetic_moment     const proton_moment         1.4106067873e-26 J/T
+}
+
+m_p                     mass of proton
+
+neutron {
+    mass                const neutron_mass          1.00866491588 u
+    wavelength          const neutron_wavelength    planck_constant / mass c
+    magnetic_moment     const neutron_moment        -0.96623650e-26 J/T
+}
+
+m_n                     mass of neutron
+
+deuteron {
+    mass                const deuteron_mass         2.013553212745 u
+    charge_radius       const deuteron_radius       2.1413e-15 m
+    magnetic_moment     const deuteron_moment       0.4330735040e-26 J/T
+}
+
+m_d                     mass of deuteron
+
+muon {
+    mass                const muon_mass             0.1134289257 u
+    magnetic_moment     const muon_moment           -4.49044826e-26 J/T
+}
+
+m_mu                    mass of muon
+
+helion {
+    mass                const helion_mass           3.01493224673 u
+    magnetic_moment     const helion_moment         -1.074617522e-26 J/T
+}
+
+tauparticle {
+    mass                const tau_mass              1.90749 u
+}
+
+alphaparticle {
+    mass                const alpha_mass            4.001506179127 u
+}
+
+triton {
+    mass                const triton_mass           3.01550071632 u
+    magnetic_moment     const triton_moment         1.504609503e-26 J/T
+}
+
+#
+# Celestial bodies
+#
+
+# Sidereal years from http://ssd.jpl.nasa.gov/phys_props_planets.html.  Data
+# was updated in May 2001 based on the 1992 Explanatory Supplement to the
+# Astronomical Almanac and the mean longitude rates.  Apparently the table of
+# years in that reference is incorrect.
+
+# The following are masses for planetary systems, not just the planet itself.
+# The comments give the uncertainty in the denominators.  As noted above,
+# masses are given relative to the solarmass because this is more accurate.
+# The conversion to SI is uncertain because of uncertainty in G, the
+# gravitational constant.
+#
+# Values are from http://ssd.jpl.nasa.gov/astro_constants.html
+
+# Mean radius from http://ssd.jpl.nsaa.gov/phys_props_planets.html which in
+# turn cites Global Earth Physics by CF Yoder, 1995.
+
+sun {
+    mass                const solar_mass        1.9891e30 kg
+    ?? Average earth-sun distance
+    distance            const sun_distance      1.0000010178 au
+    ?? Earth-sun distance at periphelion
+    distance_near       const sun_distance_near 1.471e11 m
+    ?? Earth-sun distance at aphelion
+    distance_far        const sun_distance_far  1.521e11 m
+    ?? Source: http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
+    luminosity          const solar_luminosity  384.6e24 W
+
+    # Some luminance data from the IES Lighting Handbook, 8th ed, 1993
+
+    ?? Clear sky.
+    illum_zenith        const sun_illum_zenith  100e3 lux
+    illum_overcast      const sun_illum_overcast 10e3 lux
+    luminance_zenith    const sun_lum_zenith    1.6e9 cd/m^2
+    luminance_horizon   const sun_lum_horizon   6e6 cd/m^2
+    ?? Average, clear sky.
+    luminance_clear     const sun_lum_clear     8000 cd/m^2
+    ?? Average, overcast sky.
+    luminance_overcast  const sun_lum_overcast  2000 cd/m^2
+}
+
+solarmass               mass of sun
+sunmass                 solarmass
+sundist                 distance of sun
+solarluminosity         luminosity of sun
+
+mercury_planet {
+    ?? ±250
+    mass                const mercury_mass      solarmass / 6023600
+    mass_old            const mercury_old       0.33022e24 kg
+    radius              const mercury_radius    2440 km
+    sidereal_day        const mercury_day       58.6462 day
+    year                const mercury_year      0.2408467 julianyear
+}
+
+venus {
+    ?? ± 0.06
+    mass                const venus_mass        solarmass / 408523.71
+    mass_old            const venus_old         4.8690e24 kg
+    radius              const venus_radius      6051.84 km
+    ?? Retrograde.
+    sidereal_day        const venus_day         243.01 day
+    year                const venus_year        0.61519726 julianyear
+}
+
+?? ±0.02
+earthmoonmass           solarmass / 328900.56
+?? ±3e-9
+moonearthmassratio      0.012300034
+
+earth {
+    mass                const earth_mass        earthmoonmass / ( 1 + moonearthmassratio)
+    radius              const earth_radius      6371.01 km
+    sidereal_day        const earth_day         siderealday
+    year                const earth_year        siderealyear
+}
+
+moon {
+    ?? Average earth-moon distance.
+    mass                const moon_mass         moonearthmassratio mass of earth
+    distance            const moon_dist         3.844e8 m
+    gravity             const moon_gravity      1.62 m/s^2
+    luminance           const moon_luminance    2500 cd/m^2
+}
+
+mars {
+    ?? ±9
+    mass                const mars_mass         solarmass / 3098708
+    mass_old            const mars_old          0.64191e24 kg
+    radius              const mars_radius       3389.92 km
+    sidereal_day        const mars_day          1.02595675 day
+    year                const mars_year         1.8808476 julianyear
+}
+
+jupiter {
+    ?? ±0.0008
+    mass                const jupiter_mass      solarmass / 1047.3486
+    mass_old            const jupiter_old       1898.8e24 kg
+    radius              const jupiter_radius    69911 km
+    sidereal_day        const jupiter_day       0.41354 day
+    year                const jupiter_year      11.862615 julianyear
+}
+
+saturn {
+    ?? ±0.018
+    mass                const saturn_mass       solarmass / 3497.898
+    mass_old            const saturn_old        568.5e24 kg
+    radius              const saturn_radius     58232 km
+    sidereal_day        const saturn_day        0.4375 day
+    year                const saturn_year       29.447498 julianyear
+}
+
+uranus {
+    ?? ±0.03
+    mass                const uranus_mass       solarmass / 22902.98
+    mass_old            const uranus_old        86.625e24 kg
+    radius              const uranus_radius     25362 km
+    ?? Retrograde.
+    sidereal_day        const uranus_day        0.65 day
+    year                const uranus_year       84.016846 julianyear
+}
+
+neptune {
+    ?? ±0.04
+    mass                const neptune_mass      solarmass / 19412.24
+    mass_old            const neptune_old       102.78e24 kg
+    radius              const neptune_radius    24624 km
+    sidereal_day        const neptune_day       0.768 day
+    year                const neptune_year      164.79132 julianyear
+}
+
+pluto {
+    ?? ±0.07e8
+    mass                const pluto_mass        solarmass / 1.35e8
+    mass_old            const pluto_old         0.015e24 kg
+    radius              const pluto_radius      1151 km
+    sidereal_day        const pluto_day         6.3867 day
+    year                const pluto_year        247.92065 julianyear
+}
+
+#
+# Energy densities of various fuels
+#
+# Most of these fuels have varying compositions or qualities and hence their
+# actual energy densities vary.  These numbers are hence only approximate.
+#
+# E1. http://bioenergy.ornl.gov/papers/misc/energy_conv.html
+# E2. http://www.aps.org/policy/reports/popa-reports/energy/units.cfm
+# E3. http://www.ior.com.au/ecflist.html
+
+oil {
+    ?? Ton oil equivalent.  A conventional
+    ?? value for the energy released by
+    ?? burning one metric ton of oil. [18,E2]
+    ?? Note that energy per mass of petroleum
+    ?? products is fairly constant.
+    ?? Variations in volumetric energy
+    ?? density result from variations in the
+    ?? density (kg/m^3) of different fuels.
+    ?? This definition is given by the
+    ?? IEA/OECD.
+    specific_energy     energy 1e10 cal_IT / mass ton
+}
+
+tonoil                  energy of ton oil
+toe                     tonoil
+?? Conventional value for barrel of crude
+?? oil [E2].  Actual range is 5.6 - 6.3.
+barreloil               5.8 Mbtu
+
+coal {
+    ?? Energy in metric ton coal from [18].
+    ?? This is a nominal value which
+    ?? is close to the heat content
+    ?? of coal used in the 1950's.
+    specific_energy             energy 7e9 cal_IT / mass ton
+    specific_energy_bituminous  energy_bituminous 27 GJ / mass_bituminous tonne
+    specific_energy_lignite     energy_lignite 15 GJ / mass_lignite tonne
+    specific_energy_us          energy_us 22 GJ / mass_us uston
+}
+
+naturalgas {
+    ?? Energy content of natural gas.  HHV
+    ?? is for Higher Heating Value and
+    ?? includes energy from condensation
+    ?? combustion products.  LHV is for Lower
+    ?? Heating Value and excludes these.
+    ?? American publications typically report
+    ?? HHV whereas European ones report LHV.
+    energy_density_HHV  energy_HHV 1027 btu / volume_HHV ft^3
+    energy_density_LHV  energy_LHV 930 btu / volume_LHV ft^3
+}
+
+charcoal {
+    specific_energy     energy 30 GJ / mass tonne
+}
+
+wood {
+    ?? HHV, a cord weights about a tonne.
+    specific_energy_dry         energy_dry 20 GJ / mass_dry tonne
+    ?? 20% moisture content.
+    specific_energy_airdry      energy_airdry 15 GJ / mass_airdry tonne
+    specific_heat               specific_energy 1.7 J g^-1 / temperature K
+}
+
+ethanol {
+    energy_density_HHV  energy_HHV 84000 btu / volume_HHV usgallon
+    energy_density_LHV  energy_LHV 75700 btu / volume_LHV usgallon
+    specific_heat       specific_energy 2.3 J g^-1 / temperature K
+}
+
+diesel {
+    energy_density      energy 130500 btu / volume usgallon
+}
+
+gasoline {
+    energy_density_LHV  energy_LHV 115000 btu / volume_LHV usgallon
+    energy_density_HHV  energy_HHV 125000 btu / volume_HHV usgallon
+    specific_heat       specific_energy 2.22 J g^-1 / temperature K
+}
+
+heating_oil {
+    energy_density      energy 37.3 MJ / volume liter
+}
+
+fueloil {
+    ?? Low sulphur.
+    energy_density      energy 39.7 MJ / volume liter
+}
+
+propane {
+    energy_density      energy 93.3 MJ / volume m^3
+}
+
+butane {
+    energy_density      energy 124 MJ / volume m^3
+}
+
+# densities of cooking ingredients from The Cake Bible by Rose Levy Beranbaum
+# so you can convert '2 cups sugar' to grams, for example, or in the other
+# direction grams could be converted to 'cup flour_scooped'.
+
+butter {
+    density             mass 8 oz / volume uscup
+}
+
+butter_clarified {
+    density             mass 6.8 oz / volume uscup
+}
+
+cocoa_butter {
+    density             mass 9 oz / volume uscup
+}
+
+?? Vegetable shortening.
+shortening {
+    density             mass 6.75 oz / volume uscup
+}
+
+vegetable_oil {
+    density             mass 7.5 oz / volume uscup
+}
+
+olive_oil {
+    density             mass 0.918 g / volume cm^3
+    specific_heat       specific_energy 1.97 J g^-1 / temperature K
+}
+
+# The density of flour depends on the
+# measuring method.  "Scooped",  or
+# "dip and sweep" refers to dipping a
+# measure into a bin, and then sweeping
+# the excess off the top.  "Spooned"
+# means to lightly spoon into a measure
+# and then sweep the top.  Sifted means
+# sifting the flour directly into a
+# measure and then sweeping the top.
+
+cakeflour {
+    density_sifted      mass_sifted 3.5 oz / volume_sifted uscup
+    density_spooned     mass_spooned 4 oz / volume_spooned uscup
+    density_scooped     mass_scooped 4.5 oz / volume_scooped uscup
+}
+
+flour {
+    density_sifted      mass_sifted 4 oz / volume_sifted uscup
+    density_spooned     mass_spooned 4.25 oz / volume_spooned uscup
+    density_scooped     mass_scooped 5 oz / volume_scooped uscup
+}
+
+breadflour {
+    density_sifted      mass_sifted 4.25 oz / volume_sifted uscup
+    density_spooned     mass_spooned 4.5 oz / volume_spooned uscup
+    density_scooped     mass_scooped 5.5 oz / volume_scooped uscup
+}
+
+cornstarch {
+    density             mass 120 grams / volume uscup
+}
+
+?? Alkalized Dutch processed cocoa.
+dutchcocoa {
+    density_sifted      mass_sifted 75 g / volume_sifted uscup
+    density_spooned     mass_spooned 92 g / volume_spooned uscup
+    density_scooped     mass_scooped 95 g / volume_scooped uscup
+}
+
+?? Non-alkalized cocoa.
+cocoa {
+    density_sifted      mass_sifted 75 g / volume_sifted uscup
+    density_spooned     mass_spooned 82 g / volume_spooned uscup
+    density_scooped     mass_scooped 95 g / volume_scooped uscup
+}
+
+heavycream {
+    density             mass 232 g / volume uscup
+}
+
+milk {
+    density             mass 242 g / volume uscup
+}
+
+sourcream {
+    density             mass 242 g / volume uscup
+}
+
+molasses {
+    density             mass 11.25 oz / volume uscup
+}
+
+cornsyrup {
+    density             mass 11.5 oz / volume uscup
+}
+
+honey {
+    density             mass 11.75 oz / volume uscup
+}
+
+sugar {
+    density             mass 200 g / volume uscup
+    specific_heat       specific_energy 1.244 J g^-1 / temperature K
+}
+
+powdered_sugar {
+    density             mass 4 oz / volume uscup
+}
+
+brownsugar_light {
+    ?? Packed.
+    density             mass 217 g / volume uscup
+}
+
+brownsugar_dark {
+    density             mass 239 g / volume uscup
+}
+
+baking_powder {
+    density             mass 4.6 grams / volume ustsp
+}
+
+salt {
+    density             mass 6 g / volume ustsp
+}
+
+koshersalt {
+    ?? Diamond Crystal kosher salt
+    density_dc           dc_mass 2.8 g / dc_volume ustsp
+    ?? Morton kosher salt
+    density_morton       morton_mass 4.8 g / morton_volume ustsp
+}
+
+?? USA large egg.
+egg {
+    mass_shelled        const egg_shelled  50 grams
+    mass_white          const egg_white    30 grams
+    mass_yolk           const egg_yolk     18.6 grams
+    volume              const egg_volume   (3 ustbsp + 1|2 ustsp)
+    volume_white        const egg_white    2 tbsp
+    volume_yolk         const egg_yolk     3.5 ustsp
+}
+
+#
+# Atomic weights.  The atomic weight of an element is the ratio of the mass of
+# a mole of the element to 1|12 of a mole of Carbon 12.  The Standard Atomic
+# Weights apply to the elements as they occur naturally on earth.  Elements
+# which do not occur naturally or which occur with wide isotopic variability do
+# not have Standard Atomic Weights.  For these elements, the atomic weight is
+# based on the longest lived isotope, as marked in the comments.  In some
+# cases, the comment for these entries also gives a number which is an atomic
+# weight for a different isotope that may be of more interest than the longest
+# lived isotope.
+#
+
+actinium {
+    molar_mass      mass 227.0278 g / amount mol
+}
+
+aluminum {
+    molar_mass      mass 26.981539 g / amount mol
+    specific_heat   specific_energy 0.91 J g^-1 / temperature K
+}
+
+americium {
+    ?? Longest lived. 241.06
+    molar_mass      mass 243.0614 g / amount mol
+}
+
+antimony {
+    molar_mass      mass 121.760 g / amount mol
+    specific_heat   specific_energy 0.21 J g^-1 / temperature K
+}
+
+argon {
+    molar_mass      mass 39.948 g / amount mol
+    specific_heat   specific_energy 0.5203 J g^-1 / temperature K
+}
+
+arsenic {
+    molar_mass      mass 74.92159 g / amount mol
+}
+
+astatine {
+    ?? Longest lived.
+    molar_mass      mass 209.9871 g / amount mol
+}
+
+barium {
+    molar_mass      mass 137.327 g / amount mol
+    specific_heat   specific_energy 0.20 J g^-1 / temperature K
+}
+
+berkelium {
+    ?? Longest lived. 249.08
+    molar_mass      mass 247.0703 g / amount mol
+}
+
+beryllium {
+    molar_mass      mass 9.012182 g / amount mol
+    specific_heat   specific_energy 1.83 J g^-1 / temperature K
+}
+
+bismuth {
+    molar_mass      mass 208.98037 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+bohrium {
+    molar_mass      mass 272.13826 g / amount mol
+}
+
+boron {
+    molar_mass      mass 10.811 g / amount mol
+}
+
+bromine {
+    molar_mass      mass 79.904 g / amount mol
+}
+
+cadmium {
+    molar_mass      mass 112.411 g / amount mol
+    specific_heat   specific_energy 0.23 J g^-1 / temperature K
+}
+
+calcium {
+    molar_mass      mass 40.078 g / amount mol
+}
+
+californium {
+    ?? Longest lived. 252.08
+    molar_mass      mass 251.0796 g / amount mol
+}
+
+carbon {
+    molar_mass      mass 12.011 g / amount mol
+}
+
+cerium {
+    molar_mass      mass 140.115 g / amount mol
+}
+
+cesium {
+    molar_mass      mass 132.90543 g / amount mol
+    specific_heat   specific_energy 0.24 J g^-1 / temperature K
+}
+
+chlorine {
+    molar_mass      mass 35.4527 g / amount mol
+}
+
+chromium {
+    molar_mass      mass 51.9961 g / amount mol
+    specific_heat   specific_energy 0.46 J g^-1 / temperature K
+}
+
+cobalt {
+    molar_mass      mass 58.93320 g / amount mol
+    specific_heat   specific_energy 0.42 J g^-1 / temperature K
+}
+
+copernicium {
+    molar_mass      mass 285.17712 g / amount mol
+}
+
+copper {
+    molar_mass      mass 63.546 g / amount mol
+    specific_heat   specific_energy 0.39 J g^-1 / temperature K
+}
+
+curium {
+    molar_mass      mass 247.0703 g / amount mol
+}
+
+darmstadtium {
+    molar_mass      mass 281.16451 g / amount mol
+}
+
+deuterium {
+    molar_mass      mass 2.0141017778 g / amount mol
+}
+
+dubnium {
+    molar_mass      mass 268.12567 g / amount mol
+}
+
+dysprosium {
+    molar_mass      mass 162.50 g / amount mol
+}
+
+einsteinium {
+    ?? Longest lived.
+    molar_mass      mass 252.083 g / amount mol
+}
+
+erbium {
+    molar_mass      mass 167.26 g / amount mol
+}
+
+europium {
+    molar_mass      mass 151.965 g / amount mol
+}
+
+fermium {
+    ?? Longest lived.
+    molar_mass      mass 257.0951 g / amount mol
+}
+
+flerovium {
+    molar_mass      mass 289.19042 g / amount mol
+}
+
+fluorine {
+    molar_mass      mass 18.9984032 g / amount mol
+}
+
+francium {
+    ?? Longest lived
+    molar_mass      mass 223.0197 g / amount mol
+}
+
+gadolinium {
+    molar_mass      mass 157.25 g / amount mol
+}
+
+gallium {
+    molar_mass      mass 69.723 g / amount mol
+    specific_heat   specific_energy 0.37 J g^-1 / temperature K
+}
+
+germanium {
+    molar_mass      mass 72.61 g / amount mol
+    specific_heat   specific_energy 0.32 J g^-1 / temperature K
+}
+
+gold {
+    molar_mass      mass 196.96654 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+hafnium {
+    molar_mass      mass 178.49 g / amount mol
+    specific_heat   specific_energy 0.14 J g^-1 / temperature K
+}
+
+hassium {
+    molar_mass      mass 270.13429 g / amount mol
+}
+
+helium {
+    molar_mass      mass 4.002602 g / amount mol
+}
+
+holmium {
+    molar_mass      mass 164.93032 g / amount mol
+    specific_heat   specific_energy 5.1932 J g^-1 / temperature K
+}
+
+hydrogen {
+    molar_mass      mass 1.00794 g / amount mol
+    specific_heat   specific_energy 14.3 J g^-1 / temperature K
+}
+
+indium {
+    molar_mass      mass 114.818 g / amount mol
+    specific_heat   specific_energy 0.24 J g^-1 / temperature K
+}
+
+iodine {
+    molar_mass      mass 126.90447 g / amount mol
+    specific_heat   specific_energy 2.15 J g^-1 / temperature K
+}
+
+iridium {
+    molar_mass      mass 192.217 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+iron {
+    molar_mass      mass 55.845 g / amount mol
+    specific_heat   specific_energy 0.45 J g^-1 / temperature K
+}
+
+krypton {
+    molar_mass      mass 83.80 g / amount mol
+}
+
+lanthanum {
+    molar_mass      mass 138.9055 g / amount mol
+    specific_heat   specific_energy 0.195 J g^-1 / temperature K
+}
+
+lawrencium {
+    ?? Longest lived.
+    molar_mass      mass 262.11 g / amount mol
+}
+
+lead {
+    molar_mass      mass 207.2 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+lithium {
+    molar_mass      mass 6.941 g / amount mol
+    specific_heat   specific_energy 3.57 J g^-1 / temperature K
+}
+
+livermorium {
+    molar_mass      mass 293.20449 g / amount mol
+}
+
+lutetium {
+    molar_mass      mass 174.967 g / amount mol
+    specific_heat   specific_energy 0.15 J g^-1 / temperature K
+}
+
+magnesium {
+    molar_mass      mass 24.3050 g / amount mol
+    specific_heat   specific_energy 1.05 J g^-1 / temperature K
+}
+
+manganese {
+    molar_mass      mass 54.93805 g / amount mol
+    specific_heat   specific_energy 0.48 J g^-1 / temperature K
+}
+
+meitnerium {
+    molar_mass      mass 276.15159 g / amount mol
+}
+
+mendelevium {
+    ?? Longest lived
+    molar_mass      mass 258.10 g / amount mol
+}
+
+molybdenum {
+    molar_mass      mass 95.94 g / amount mol
+    specific_heat   specific_energy 0.25 J g^-1 / temperature K
+}
+
+neodymium {
+    molar_mass      mass 144.24 g / amount mol
+}
+
+neon {
+    molar_mass      mass 20.1797 g / amount mol
+}
+
+neptunium {
+    molar_mass      mass 237.0482 g / amount mol
+}
+
+nickel {
+    molar_mass      mass 58.6934 g / amount mol
+    specific_heat   specific_energy 0.44 J g^-1 / temperature K
+}
+
+niobium {
+    molar_mass      mass 92.90638 g / amount mol
+}
+
+nitrogen {
+    molar_mass      mass 14.00674 g / amount mol
+}
+
+nobelium {
+    ?? Longest lived.
+    molar_mass      mass 259.1009 g / amount mol
+}
+
+osmium {
+    molar_mass      mass 190.23 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+oxygen {
+    molar_mass      mass 15.9994 g / amount mol
+}
+
+palladium {
+    molar_mass      mass 106.42 g / amount mol
+    specific_heat   specific_energy 0.24 J g^-1 / temperature K
+}
+
+phosphorus {
+    molar_mass      mass 30.973762 g / amount mol
+}
+
+platinum {
+    molar_mass      mass 195.08 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+plutonium {
+    ?? Longest lived. 239.05
+    molar_mass      mass 244.0642 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+polonium {
+    ?? Longest lived. 209.98
+    molar_mass      mass 208.9824 g / amount mol
+}
+
+potassium {
+    molar_mass      mass 39.0983 g / amount mol
+    specific_heat   specific_energy 0.75 J g^-1 / temperature K
+}
+
+praseodymium {
+    molar_mass      mass 140.90765 g / amount mol
+}
+
+promethium {
+    ?? Longest lived. 146.92
+    molar_mass      mass 144.9127 g / amount mol
+}
+
+protactinium {
+    molar_mass      mass 231.03588 g / amount mol
+}
+
+radium {
+    molar_mass      mass 226.0254 g / amount mol
+}
+
+radon {
+    ?? Longest lived.
+    molar_mass      mass 222.0176 g / amount mol
+}
+
+rhenium {
+    molar_mass      mass 186.207 g / amount mol
+    specific_heat   specific_energy 0.14 J g^-1 / temperature K
+}
+
+rhodium {
+    molar_mass      mass 102.90550 g / amount mol
+    specific_heat   specific_energy 0.24 J g^-1 / temperature K
+}
+
+roentgenium {
+    molar_mass      mass 280.16514 g / amount mol
+}
+
+rubidium {
+    molar_mass      mass 85.4678 g / amount mol
+    specific_heat   specific_energy 0.36 J g^-1 / temperature K
+}
+
+ruthenium {
+    molar_mass      mass 101.07 g / amount mol
+    specific_heat   specific_energy 0.24 J g^-1 / temperature K
+}
+
+rutherfordium {
+    molar_mass      mass 267.12179 g / amount mol
+}
+
+samarium {
+    molar_mass      mass 150.36 g / amount mol
+}
+
+scandium {
+    molar_mass      mass 44.955910 g / amount mol
+    specific_heat   specific_energy 0.57  J g^-1 / temperature K
+}
+
+seaborgium {
+    molar_mass      mass 271.13393 g / amount mol
+}
+
+selenium {
+    molar_mass      mass 78.96 g / amount mol
+    specific_heat   specific_energy 0.32 J g^-1 / temperature K
+}
+
+silicon {
+    molar_mass      mass 28.0855 g / amount mol
+    specific_heat   specific_energy 0.71 J g^-1 / temperature K
+}
+
+silver {
+    molar_mass      mass 107.8682 g / amount mol
+    specific_heat   specific_energy 0.23 J g^-1 / temperature K
+}
+
+sodium {
+    molar_mass      mass 22.989768 g / amount mol
+    specific_heat   specific_energy 1.21 J g^-1 / temperature K
+}
+
+strontium {
+    molar_mass      mass 87.62 g / amount mol
+    specific_heat   specific_energy 0.30 J g^-1 / temperature K
+}
+
+sulfur {
+    molar_mass      mass 32.066 g / amount mol
+}
+
+tantalum {
+    molar_mass      mass 180.9479 g / amount mol
+    specific_heat   specific_energy 0.14 J g^-1 / temperature K
+}
+
+technetium {
+    ?? Longest lived. 98.906
+    molar_mass      mass 97.9072 g / amount mol
+}
+
+tellurium {
+    molar_mass      mass 127.60 g / amount mol
+}
+
+terbium {
+    molar_mass      mass 158.92534 g / amount mol
+}
+
+thallium {
+    molar_mass      mass 204.3833 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+thorium {
+    molar_mass      mass 232.0381 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+thullium {
+    molar_mass      mass 168.93421 g / amount mol
+}
+
+tin {
+    molar_mass      mass 118.710 g / amount mol
+    specific_heat   specific_energy 0.21 J g^-1 / temperature K
+}
+
+titanium {
+    molar_mass      mass 47.867 g / amount mol
+    specific_heat   specific_energy 0.54 J g^-1 / temperature K
+}
+
+tungsten {
+    molar_mass      mass 183.84 g / amount mol
+    specific_heat   specific_energy 0.13 J g^-1 / temperature K
+}
+
+ununoctium {
+    molar_mass      mass 294.21392 g / amount mol
+}
+
+ununpentium {
+    molar_mass      mass 288.19274 g / amount mol
+}
+
+ununseptium {
+    molar_mass      mass 292.20746 g / amount mol
+}
+
+ununtrium {
+    molar_mass      mass 284.17873 g / amount mol
+}
+
+uranium {
+    molar_mass      mass 238.0289 g / amount mol
+    specific_heat   specific_energy 0.12 J g^-1 / temperature K
+    molar_mass_235  mass_235 235.0439299 g / amount_235 mol
+
+    ?? Total energy from uranium fission.  Actual efficiency of
+    ?? nuclear power plants is around 30%-40%.  Note also that some
+    ?? reactors use enriched uranium around 3% U-235.  Uranium during
+    ?? processing or use may be in a compound of uranium oxide or
+    ?? uranium hexafluoride, in which case the energy density would be
+    ?? lower depending on how much uranium is in the compound.
+    specific_energy_235_fission fission_energy 200 MeV / mass ((235.0439299 g/mol) / avogadro)
+}
+
+vanadium {
+    molar_mass      mass 50.9415 g / amount mol
+    specific_heat   specific_energy 0.39 J g^-1 / temperature K
+}
+
+xenon {
+    molar_mass      mass 131.29 g / amount mol
+}
+
+ytterbium {
+    molar_mass      mass 173.04 g / amount mol
+}
+
+yttrium {
+    molar_mass      mass 88.90585 g / amount mol
+    specific_heat   specific_energy 0.30 J g^-1 / temperature K
+}
+
+zinc {
+    molar_mass      mass 65.39 g / amount mol
+    specific_heat   specific_energy 0.39 J g^-1 / temperature K
+}
+
+zirconium {
+    molar_mass      mass 91.224 g / amount mol
+    specific_heat   specific_energy 0.27 J g^-1 / temperature K
+}
+
+# The atmospheric composition listed is from NASA Earth Fact Sheet (accessed
+# 28 August 2015)
+# http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+# Numbers do not add up to exactly 100% due to roundoff and uncertainty Water
+# is highly variable, typically makes up about 1%
+
+?? Average molecular weight of air.
+air               78.08   % nitrogen 2 \
+              +   20.95   % oxygen 2 \
+              + 9340    ppm argon \
+              +  400    ppm (carbon + oxygen 2) \
+              +   18.18 ppm neon \
+              +    5.24 ppm helium \
+              +    1.7  ppm (carbon + 4 hydrogen) \
+              +    1.14 ppm krypton \
+              +    0.55 ppm hydrogen 2
 
 ############################################################################
 #
