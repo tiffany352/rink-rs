@@ -568,6 +568,20 @@ impl Context {
                         QueryReply::Substance
                     )
                 },
+                (Ok(Value::Number(top)), Ok(Value::Substance(mut sub)), _) => {
+                    sub.amount = try!((&top / &sub.amount).ok_or_else(|| format!(
+                        "Division by zero: <{}> / <{}>",
+                        top.show(self),
+                        sub.amount.show(self)
+                    )));
+                    sub.to_reply(
+                        self
+                    ).map_err(
+                        QueryError::Generic
+                    ).map(
+                        QueryReply::Substance
+                    )
+                },
                 (Ok(x), Ok(y), Ok(_)) => Err(QueryError::Generic(format!(
                     "Operation is not defined: <{}> -> <{}>",
                     x.show(self),

@@ -157,7 +157,7 @@ fn test_typos() {
 }
 
 #[test]
-fn test_substances() {
+fn test_convert_from_substances() {
     test("density of water",
          "0.001 meter^3 / kilogram (specific_volume)");
     test("mass of ml water",
@@ -171,4 +171,13 @@ fn test_substances() {
           volume = 1 milliliter; \
           fusion_energy = 334106640 milliliter; \
           vaporization_energy = 1.16e9 milliliter");
+}
+
+#[test]
+fn test_convert_to_substances() {
+    test("kg -> egg",
+         "mass = 1 kilogram; \
+          egg_shelled = 20; \
+          egg_white = 100/3, approx. 33.33333; \
+          egg_yolk = 5000/93, approx. 53.76344");
 }
