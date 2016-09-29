@@ -109,9 +109,19 @@ impl Substance {
                     } else {
                         (Some(v.input.clone()), v.output.clone())
                     };
-                    if output.1 != unit.1 {
-                        return Ok(None)
-                    }
+                    let (input, output) = if output.1 != unit.1 {
+                        if let Some(input) = input {
+                            if input.1 == unit.1 {
+                                (Some(output), input)
+                            } else {
+                                return Ok(None)
+                            }
+                        } else {
+                            return Ok(None)
+                        }
+                    } else {
+                        (input, output)
+                    };
                     Ok(Some(PropertyReply {
                         name: k.clone(),
                         input: input.map(|x| x.to_parts(context)),
@@ -169,14 +179,16 @@ impl Substance {
                 };
                 Ok(Some(PropertyReply {
                     name: name,
-                    input: input.map(|x| context.show(
-                        &x, &unit,
-                        bottom_name.clone(),
-                        bottom_const.clone(),
-                        base
-                    ).value),
+                    input: input.map(|x: Number| x.to_parts(context)),
                     output: context.show(
-                        &output, &unit,
+                        &try!((
+                            &output / &unit
+                        ).ok_or_else(|| format!(
+                            "Division by zero: <{}> / <{}>",
+                            output.show(context),
+                            unit.show(context)
+                        ))),
+                        &unit,
                         bottom_name.clone(),
                         bottom_const.clone(),
                         base

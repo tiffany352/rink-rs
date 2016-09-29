@@ -155,3 +155,20 @@ fn test_bases() {
 fn test_typos() {
     test("rsi", "Unknown unit rsi, did you mean RSI?");
 }
+
+#[test]
+fn test_substances() {
+    test("density of water",
+         "0.001 meter^3 / kilogram (specific_volume)");
+    test("mass of ml water",
+         "1 gram (mass)");
+    test("volume of g water",
+         "1000 millimeter^3 (volume)");
+    test("ml water -> g",
+         "volume = 1000 millimeter^3; mass = 1 gram");
+    test("g water -> ml",
+         "mass = 1 gram; \
+          volume = 1 milliliter; \
+          fusion_energy = 334106640 milliliter; \
+          vaporization_energy = 1.16e9 milliliter");
+}
