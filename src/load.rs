@@ -246,6 +246,11 @@ impl Context {
                         self.units.insert(name.clone(), v);
                     },
                     Ok(Value::Substance(sub)) => {
+                        let sub = if sub.properties.name.contains("+") {
+                            sub.rename(name.clone())
+                        } else {
+                            sub
+                        };
                         if self.substances.insert(name.clone(), sub).is_some() {
                             println!("Warning: Conflicting substances for {}", name);
                         }

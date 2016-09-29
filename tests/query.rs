@@ -165,9 +165,9 @@ fn test_convert_from_substances() {
     test("volume of g water",
          "1000 millimeter^3 (volume)");
     test("ml water -> g",
-         "volume = 1000 millimeter^3; mass = 1 gram");
+         "water: volume = 1000 millimeter^3; mass = 1 gram");
     test("g water -> ml",
-         "mass = 1 gram; \
+         "water: mass = 1 gram; \
           volume = 1 milliliter; \
           fusion_energy = 334106640 milliliter; \
           vaporization_energy = 1.16e9 milliliter");
@@ -176,7 +176,8 @@ fn test_convert_from_substances() {
 #[test]
 fn test_convert_to_substances() {
     test("kg -> egg",
-         "mass = 1 kilogram; \
+         "egg: USA large egg. \
+          mass = 1 kilogram; \
           egg_shelled = 20; \
           egg_white = 100/3, approx. 33.33333; \
           egg_yolk = 5000/93, approx. 53.76344");
@@ -185,5 +186,6 @@ fn test_convert_to_substances() {
 #[test]
 fn test_substance_add() {
     test("air",
-         "molar_mass = approx. 28.96790 gram -> 1 mole");
+         "air: Average molecular weight of air. \
+          molar_mass = approx. 28.96790 gram -> 1 mole");
 }

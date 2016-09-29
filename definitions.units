@@ -6042,7 +6042,7 @@ koshersalt {
     density_morton       morton_mass 4.8 g / morton_volume ustsp
 }
 
-?? USA large egg
+?? USA large egg.
 egg {
     mass_shelled        const egg_shelled  50 grams
     mass_white          const egg_white    30 grams
@@ -6615,15 +6615,13 @@ zirconium {
     specific_heat   specific_energy 0.27 J g^-1 / temperature K
 }
 
-
-# Average molecular weight of air
-#
 # The atmospheric composition listed is from NASA Earth Fact Sheet (accessed
 # 28 August 2015)
 # http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 # Numbers do not add up to exactly 100% due to roundoff and uncertainty Water
 # is highly variable, typically makes up about 1%
 
+?? Average molecular weight of air.
 air               78.08   % nitrogen 2 \
               +   20.95   % oxygen 2 \
               + 9340    ppm argon \

@@ -71,6 +71,8 @@ pub struct PropertyReply {
 
 #[derive(Debug, Clone)]
 pub struct SubstanceReply {
+    pub name: String,
+    pub doc: Option<String>,
     pub properties: Vec<PropertyReply>,
 }
 
@@ -136,8 +138,11 @@ impl Display for ConformanceError {
 
 impl Display for SubstanceReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        write!(fmt, "{}", self.properties.iter().map(|prop| {
-            format!(
+        write!(
+            fmt, "{}: {}{}",
+            self.name,
+            self.doc.as_ref().map(|x| format!("{} ", x)).unwrap_or_default(),
+            self.properties.iter().map(|prop| format!(
                 "{} = {}{}{}",
                 prop.name,
                 prop.input.as_ref()
@@ -147,8 +152,8 @@ impl Display for SubstanceReply {
                 prop.doc.as_ref()
                     .map(|x| format!(" ({})", x))
                     .unwrap_or_else(|| "".to_owned())
-            )
-        }).collect::<Vec<_>>().join("; "))
+            )).collect::<Vec<_>>().join("; ")
+        )
     }
 }
 

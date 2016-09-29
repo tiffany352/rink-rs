@@ -38,6 +38,16 @@ pub enum SubstanceGetError {
 }
 
 impl Substance {
+    pub fn rename(self, name: String) -> Substance {
+        Substance {
+            amount: self.amount,
+            properties: Rc::new(Properties {
+                name: name,
+                properties: self.properties.properties.clone()
+            })
+        }
+    }
+
     pub fn get(&self, name: &str) -> Result<Number, SubstanceGetError> {
         if self.amount.1.len() == 0 {
             self.properties.properties.get(name)
@@ -97,6 +107,8 @@ impl Substance {
     ) -> Result<SubstanceReply, String> {
         if self.amount.1.len() == 0 {
             Ok(SubstanceReply {
+                name: self.properties.name.clone(),
+                doc: context.docs.get(&self.properties.name).cloned(),
                 properties: try!(self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.1.len() == 0 {
                         let res = (&v.output * &self.amount).unwrap();
@@ -204,6 +216,8 @@ impl Substance {
                 doc: None,
             };
             Ok(SubstanceReply {
+                name: self.properties.name.clone(),
+                doc: context.docs.get(&self.properties.name).cloned(),
                 properties: try!(
                     once(Ok(Some(amount)))
                         .chain(self.properties.properties.iter().map(func))
@@ -218,6 +232,8 @@ impl Substance {
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
         if self.amount.1.len() == 0 {
             Ok(SubstanceReply {
+                name: self.properties.name.clone(),
+                doc: context.docs.get(&self.properties.name).cloned(),
                 properties: try!(self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.1.len() == 0 {
                         let res = (&v.output * &self.amount).unwrap();
@@ -286,6 +302,8 @@ impl Substance {
                 doc: None,
             };
             Ok(SubstanceReply {
+                name: self.properties.name.clone(),
+                doc: context.docs.get(&self.properties.name).cloned(),
                 properties: try!(
                     once(Ok(Some(amount)))
                         .chain(self.properties.properties.iter().map(func))
