@@ -903,10 +903,7 @@ light                   c
 mu0                     4 pi 1e-7 H/m    # permeability of vacuum (exact)
 epsilon0                1/mu0 c^2        # permittivity of vacuum (exact)
 mass_energy             c^2              # convert mass to energy
-electroncharge        1.6021766208e-19 C # electron charge
-#e                      electroncharge   # makes room for exp(1)
-planck_constant     4.135667662e-15 eV s # Planck constant
-#h                       planck_constant # too commonly, users meant hours, not planck
+planck_constant         6.626070040e-34 J s
 hbar                    planck_constant / 2 pi
 spin                    hbar
 G               6.67408e-11 N m^2 / kg^2 # Newtonian gravitational constant
@@ -1027,59 +1024,12 @@ t_P                     plancktime
 plancklength            plancktime c
 l_P                     plancklength
 
-# Particle radius
-
-electronradius    (1/4 pi epsilon0) electroncharge^2 / electronmass c^2   # Classical
-deuteronchargeradius    2.1413e-15 m
-protonchargeradius      0.8751e-15 m
-
-# Masses of elementary particles
-
-electronmass            5.48579909070e-4 u
-m_e                     electronmass
-protonmass              1.007276466879 u
-m_p                     protonmass
-neutronmass             1.00866491588 u
-m_n                     neutronmass
-muonmass                0.1134289257 u
-m_mu                    muonmass
-deuteronmass            2.013553212745 u
-m_d                     deuteronmass
-alphaparticlemass       4.001506179127 u
-m_alpha                 alphaparticlemass
-taumass                 1.90749 u
-m_tau                   taumass
-tritonmass              3.01550071632 u
-m_t                     tritonmass
-helionmass              3.01493224673 u
-m_h                     helionmass
-
-
-
-# particle wavelengths: the compton wavelength of a particle is
-# defined as h / m c where m is the mass of the particle.
-
-electronwavelength      planck_constant / m_e c
-lambda_C                electronwavelength
-protonwavelength        planck_constant / m_p c
-lambda_C,p              protonwavelength
-neutronwavelength       planck_constant / m_n c
-lambda_C,n              neutronwavelength
-
 # Magnetic moments
 
-bohrmagneton            electroncharge hbar / 2 electronmass
+bohrmagneton            electroncharge hbar / mass of 2 electron
 mu_B                    bohrmagneton
-nuclearmagneton         electroncharge hbar /  2 protonmass
+nuclearmagneton         electroncharge hbar / mass of 2 proton
 mu_N                    nuclearmagneton
-mu_mu                  -4.49044826e-26 J/T   # Muon magnetic moment
-mu_p                    1.4106067873e-26 J/T # Proton magnetic moment
-mu_e                   -928.4764620e-26 J/T  # Electron magnetic moment
-mu_n                   -0.96623650e-26 J/T   # Neutron magnetic moment
-mu_d                    0.4330735040e-26 J/T # Deuteron magnetic moment
-mu_t                    1.504609503e-26 J/T  # Triton magnetic moment
-mu_h                   -1.074617522e-26 J/T  # Helion magnetic moment
-
 
 #
 # Units derived from physical constants
@@ -5650,12 +5600,72 @@ soil {
 
 #
 # Fundamental particles
-# TODO
 #
 
+# particle wavelengths: the compton wavelength of a particle is
+# defined as h / m c where m is the mass of the particle.
+
 electron {
-    mass                electron 1 / mass 5.48579909070e-4 u
-    radius              electron 1 / radius ((1/4 pi epsilon0) electroncharge^2 / electronmass c^2)
+    mass                const electron_mass         5.48579909070e-4 u
+    charge              const electron_charge       1.6021766208e-19 C
+    radius              const electron_radius       ((1/4 pi epsilon0) \
+                                                    charge^2 / mass c^2)
+    wavelength          const electron_wavelength   planck_constant / mass c
+    magnetic_moment     const electron_moment       -928.4764620e-26 J/T
+}
+
+electronmass            mass of electron
+electroncharge          charge of electron
+m_e                     electronmass
+
+proton {
+    mass                const proton_mass           1.007276466879 u
+    wavelength          const proton_wavelength     planck_constant / mass c
+    charge_radius       const proton_radius         0.8751e-15 m
+    magnetic_moment     const proton_moment         1.4106067873e-26 J/T
+}
+
+m_p                     mass of proton
+
+neutron {
+    mass                const neutron_mass          1.00866491588 u
+    wavelength          const neutron_wavelength    planck_constant / mass c
+    magnetic_moment     const neutron_moment        -0.96623650e-26 J/T
+}
+
+m_n                     mass of neutron
+
+deuteron {
+    mass                const deuteron_mass         2.013553212745 u
+    charge_radius       const deuteron_radius       2.1413e-15 m
+    magnetic_moment     const deuteron_moment       0.4330735040e-26 J/T
+}
+
+m_d                     mass of deuteron
+
+muon {
+    mass                const muon_mass             0.1134289257 u
+    magnetic_moment     const muon_moment           -4.49044826e-26 J/T
+}
+
+m_mu                    mass of muon
+
+helion {
+    mass                const helion_mass           3.01493224673 u
+    magnetic_moment     const helion_moment         -1.074617522e-26 J/T
+}
+
+tauparticle {
+    mass                const tau_mass              1.90749 u
+}
+
+alphaparticle {
+    mass                const alpha_mass            4.001506179127 u
+}
+
+triton {
+    mass                const triton_mass           3.01550071632 u
+    magnetic_moment     const triton_moment         1.504609503e-26 J/T
 }
 
 #
