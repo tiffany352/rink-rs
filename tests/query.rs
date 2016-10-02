@@ -193,3 +193,11 @@ fn test_substance_add() {
          "air: Average molecular weight of air. \
           molar_mass = approx. 28.96790 gram -> 1 mole");
 }
+
+#[test]
+fn test_duration_add() {
+    test("#jan 01, 1970# + 1 s",
+         "1970-01-01 00:00:01 +00:00");
+    test("#jan 01, 1970# + 1.123 s",
+         "1970-01-01 00:00:01.123 +00:00");
+}

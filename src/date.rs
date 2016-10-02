@@ -299,8 +299,9 @@ pub fn to_duration(num: &Number) -> Result<Duration, String> {
     if num.0.abs() > max {
         return Err(format!("Implementation error: Number is out of range ({:?})", max))
     }
-    let (ms, rem) = num.0.div_rem(&Num::from(1000));
-    let ns = &rem / &Num::from(1_000_000_000);
+    let ms = &num.0 * &Num::from(1000);
+    let (ms, rem) = ms.div_rem(&Num::from(1));
+    let ns = &rem * &Num::from(1_000_000_000);
     Ok(Duration::milliseconds(ms.to_int().unwrap()) +
        Duration::nanoseconds(ns.to_int().unwrap()))
 }
