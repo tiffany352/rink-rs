@@ -7,7 +7,11 @@ extern crate rink;
 use rink::*;
 
 thread_local! {
-    static CONTEXT: Context = load().unwrap();
+    static CONTEXT: Context = {
+        let mut ctx = load().unwrap();
+        ctx.use_humanize = false;
+        ctx
+    };
 }
 
 fn test(input: &str, output: &str) {
@@ -79,7 +83,7 @@ fn negative_prefixes() {
 
 #[test]
 fn negative_now() {
-    test("-#jan 01, 1970#", "Operation is not defined: - <1970-01-01 00:00:00 +00:00 (46 years ago)>");
+    test("-#jan 01, 1970#", "Operation is not defined: - <1970-01-01 00:00:00 +00:00>");
 }
 
 #[test]
@@ -112,7 +116,7 @@ fn test_conformance() {
 #[test]
 fn test_dates() {
     test("#jan 01, 1970#",
-         "1970-01-01 00:00:00 +00:00 (46 years ago)");
+         "1970-01-01 00:00:00 +00:00");
 }
 
 #[test]
@@ -130,7 +134,7 @@ fn test_volume_prefix() {
 #[test]
 fn test_offset_conversion() {
     test("#jan 01, 1970# -> -05:00",
-         "1969-12-31 19:00:00 -05:00 (46 years ago)");
+         "1969-12-31 19:00:00 -05:00");
 }
 
 #[test]

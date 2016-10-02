@@ -396,3 +396,20 @@ pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
     }
     defs
 }
+
+impl Context {
+    #[cfg(feature = "chrono-humanize")]
+    pub fn humanize(&self, date: DateTime<FixedOffset>) -> Option<String> {
+        if self.use_humanize {
+            use chrono_humanize::HumanTime;
+            Some(format!("{}", HumanTime::from(date)))
+        } else {
+            None
+        }
+    }
+
+    #[cfg(not(feature = "chrono-humanize"))]
+    pub fn humanize(&self, _date: DateTime<FixedOffset>) -> Option<String> {
+        None
+    }
+}

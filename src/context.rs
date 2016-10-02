@@ -23,6 +23,7 @@ pub struct Context {
     pub substances: BTreeMap<String, Substance>,
     pub temporaries: BTreeMap<String, Number>,
     pub short_output: bool,
+    pub use_humanize: bool,
 }
 
 impl Context {
@@ -41,6 +42,7 @@ impl Context {
             substances: BTreeMap::new(),
             temporaries: BTreeMap::new(),
             short_output: false,
+            use_humanize: true,
         }
     }
 

@@ -21,18 +21,13 @@ pub trait Show {
     fn show(&self, context: &Context) -> String;
 }
 
-#[cfg(feature = "chrono-humanize")]
 impl Show for DateTime<FixedOffset> {
-    fn show(&self, _context: &Context) -> String {
-        use chrono_humanize::HumanTime;
-        format!("{} ({})", self, HumanTime::from(*self))
-    }
-}
-
-#[cfg(not(feature = "chrono-humanize"))]
-impl Show for DateTime<FixedOffset> {
-    fn show(&self, _context: &Context) -> String {
-        format!("{}", self)
+    fn show(&self, context: &Context) -> String {
+        if let Some(h) = context.humanize(*self) {
+            format!("{} ({})", self, h)
+        } else {
+            format!("{}", self)
+        }
     }
 }
 

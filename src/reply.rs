@@ -79,7 +79,7 @@ pub struct SubstanceReply {
 #[derive(Debug, Clone)]
 pub enum QueryReply {
     Number(NumberParts),
-    Date(DateTime<FixedOffset>),
+    Date(DateTime<FixedOffset>, Option<String>),
     Substance(SubstanceReply),
     Duration(DurationReply),
     Def(DefReply),
@@ -104,10 +104,15 @@ impl From<String> for QueryError {
 
 impl Display for QueryReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        use chrono_humanize::HumanTime;
         match *self {
             QueryReply::Number(ref v) => write!(fmt, "{}", v),
-            QueryReply::Date(ref v) => write!(fmt, "{} ({})", v, HumanTime::from(*v)),
+            QueryReply::Date(ref v, ref h) => {
+                try!(write!(fmt, "{}", v));
+                if let Some(ref human) = *h {
+                    try!(write!(fmt, " ({})", human));
+                }
+                Ok(())
+            },
             QueryReply::Substance(ref v) => write!(fmt, "{}", v),
             QueryReply::Duration(ref v) => write!(fmt, "{}", v),
             QueryReply::Def(ref v) => write!(fmt, "{}", v),
