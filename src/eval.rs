@@ -313,8 +313,24 @@ impl Context {
                     .collect::<BTreeMap<_, _>>(),
                     pow(&lv, res as i32)))
             },
-            Expr::Of(ref _field, ref _expr) => {
-                Err(format!("Property access in right-hand of conversion is not yet implemented"))
+            Expr::Of(ref name, ref expr) => {
+                let res = try!(self.eval(expr));
+                let res = match res {
+                    Value::Substance(sub) => sub,
+                    _ => return Err(format!("Property access on non-substance"))
+                };
+                let name = if let Some(prop) = res.properties.properties.get(name) {
+                    if prop.input == Number::one() {
+                        &prop.input_name
+                    } else {
+                        name
+                    }
+                } else {
+                    name
+                };
+                let mut map = BTreeMap::new();
+                map.insert(self.canonicalize(&**name).unwrap_or_else(|| name.clone()), 1);
+                Ok((map, Num::one()))
             },
             Expr::Add(ref left, ref right) | Expr::Sub(ref left, ref right) => {
                 let left = try!(self.eval_unit_name(left));

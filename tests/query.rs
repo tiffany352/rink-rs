@@ -206,3 +206,11 @@ fn test_duration_add() {
 fn test_0_seconds() {
     test("0 s", "0 second (time)");
 }
+
+#[test]
+fn right_hand_property() {
+    test("kg -> mass_shelled of egg",
+         "20 egg_shelled (mass)");
+    test("nauticalmile -> arcmin radius of earth / radian",
+         "approx. 0.9993245 arcmin earth_radius / radian (length)");
+}
