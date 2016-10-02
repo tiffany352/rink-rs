@@ -201,3 +201,8 @@ fn test_duration_add() {
     test("#jan 01, 1970# + 1.123 s",
          "1970-01-01 00:00:01.123 +00:00");
 }
+
+#[test]
+fn test_0_seconds() {
+    test("0 s", "0 second (time)");
+}

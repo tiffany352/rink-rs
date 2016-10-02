@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use chrono::{DateTime, FixedOffset};
+use std::iter::once;
 
 #[derive(Debug, Clone)]
 pub struct DefReply {
@@ -203,7 +204,8 @@ impl Display for UnitsForReply {
 
 impl Display for DurationReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        let res = [&self.years, &self.months, &self.weeks, &self.days, &self.hours, &self.minutes, &self.seconds]
+        let res = [&self.years, &self.months, &self.weeks, &self.days,
+                   &self.hours, &self.minutes]
             .iter()
             .filter_map(|x| {
                 if x.exact_value.as_ref().map(|x| &**x) == Some("0") {
@@ -212,6 +214,7 @@ impl Display for DurationReply {
                     Some(x)
                 }
             })
+            .chain(once(&&self.seconds))
             .map(|x| {
                  format!("{}", x)
             })
