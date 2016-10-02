@@ -629,8 +629,8 @@ impl Number {
 
                 match to_string(&self.0, base) {
                     (true, v) => (Some(v), None),
-                    (false, v) => if {den > Mpz::from(1_000_000) ||
-                                      num > Mpz::from(1_000_000_000u64)} {
+                    (false, v) => if {den > Mpz::from(1_000) ||
+                                      num > Mpz::from(1_000_000u64)} {
                         (None, Some(v))
                     } else {
                         (Some(format!("{}/{}", num, den)), Some(v))
