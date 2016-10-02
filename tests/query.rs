@@ -122,7 +122,7 @@ fn test_dates() {
 #[test]
 fn test_lists() {
     test("pi hour -> hr;min;sec", "3 hour, 8 minute, 29.73355 second (time)");
-    test("meter -> ft;in;line", "3 intfoot, 3 intinch, 4.440944 intline (length)");
+    test("meter -> ft;in;line", "3 foot, 3 inch, 4.440944 line (length)");
 }
 
 #[test]

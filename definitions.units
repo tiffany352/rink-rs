@@ -1808,43 +1808,47 @@ surveymi                surveymile
 
 # International measures
 
-intinch                 2.54 cm
-intinches               inch
-intin                   inch
-intfoot                 12 inch
-intfeet                 foot
-intft                   foot
-intyard                 3 ft
-intyd                   yard
-intmile                 5280 ft          # The mile was enlarged from 5000 ft
-intmi                   intmile          # to this number in order to make
+?? International yard and pound, since July 1, 1959.
+inch                    2.54 cm
+inches                  inch
+in                      inch
+?? International yard and pound, since July 1, 1959.
+foot                    12 inch
+feet                    foot
+ft                      foot
+?? International yard and pound, since July 1, 1959.
+yard                    3 ft
+yd                      yard
+?? International yard and pound, since July 1, 1959.
+mile                    5280 ft          # The mile was enlarged from 5000 ft
+mi                      mile             # to this number in order to make
                                          # it an even number of furlongs.
                                          # (The Roman mile is 5000 romanfeet.)
-intline                 1|12 inch  # Also defined as '.1 in' or as '1e-8 Wb'
-introd                  5.5 yard
-intperch                introd
-intpole                 introd
-intfurlong              40 introd        # From "furrow long"
-intstatutemile          intmile
-intleague               3 intmile
+line                    1|12 inch  # Also defined as '.1 in' or as '1e-8 Wb'
+rod                     5.5 yard
+perch                   rod
+pole                    rod
+furlong                 40 rod        # From "furrow long"
+statutemile             mile
+league                  3 mile
 
 # aliases for international units
 
-inch                    intinch
-inches                  intinch
-in                      intin
-foot                    intfoot
-feet                    intfoot
-ft                      intfoot
-yard                    intyard
-yd                      intyard
-mile                    intmile
-mi                      intmile
-line                    intline
-rod                     introd
-perch                   intperch
-furlong                 intfurlong
-league                  intleague
+intinch                 inch
+intinches               inch
+intin                   in
+intfoot                 foot
+intfeet                 foot
+intft                   foot
+intyard                 yard
+intyd                   yard
+intmile                 mile
+intmi                   mile
+intline                 line
+introd                  rod
+intperch                perch
+intfurlong              furlong
+intleague               league
 
 # surveyor's measure
 
@@ -1856,16 +1860,16 @@ surveyorslink           1|100 surveyorschain
 surveyacre              10 surveychain^2
 surveyacrefoot          surveyacre surveyfoot
 
-intchain                66 intfoot
-intlink                 1|100 chain
-intacre                 10 chain^2       # Acre based on international ft
-intacrefoot             acre foot
+chain                   66 intfoot
+link                    1|100 chain
+acre                    10 chain^2       # Acre based on international ft
+acrefoot                acre foot
+ch                      chain
 
-chain                   intchain
-link                    intlink
-ch                      intchain
-acrefoot                intacrefoot
-acre                    intacre
+intchain                chain
+intlink                 link
+intacrefoot             acrefoot
+intacre                 acre
 section                 mile^2
 township                36 section
 homestead               160 acre # Area of land granted by the 1862 Homestead
@@ -1934,6 +1938,7 @@ klick                   click
 
 # Avoirdupois weight
 
+?? International yard and pound, since July 1, 1959. Avoirdupois.
 pound                   0.45359237 kg   # The one normally used
 lb                      pound           # From the latin libra
 grain                   1|7000 pound    # The grain is the same in all three
@@ -2358,7 +2363,7 @@ nail                    1|16 UKyard  # Originally the width of the thumbnail,
                                      #   meaning of 1|16 and settled on the
                                      #   nail of a yard or 1|16 yards as its
                                      #   final value.  [12]
-pole                    16.5 UKft    # This was 15 Saxon feet, the Saxon
+brpole                  16.5 UKft    # This was 15 Saxon feet, the Saxon
 rope                    20 UKft      #   foot (aka northern foot) being longer
 englishell              45 UKinch
 flemishell              27 UKinch
