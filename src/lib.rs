@@ -357,7 +357,7 @@ fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
 fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
     use std::fmt::Display;
     use std::time::SystemTime;
-    use std::fs::create_dir_all;
+    use std::fs;
     use std::io::{Read, Write};
     use hyper::Client;
     use hyper::status::StatusCode;
@@ -367,7 +367,10 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
     }
     let mut path = try!(config_dir());
     path.push("rink/");
+    let mut tmppath = path.clone();
     path.push(file);
+    let tmpfile = format!("{}.part", file);
+    tmppath.push(tmpfile);
 
     File::open(path.clone())
         .map_err(ts)
@@ -383,8 +386,8 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             }
         })
         .or_else(|_| {
-            try!(create_dir_all(path.parent().unwrap()).map_err(|x| format!("{}", x)));
-            let mut f = try!(File::create(path.clone()).map_err(|x| format!("{}", x)));
+            try!(fs::create_dir_all(path.parent().unwrap()).map_err(|x| format!("{}", x)));
+            let mut f = try!(File::create(tmppath.clone()).map_err(|x| format!("{}", x)));
 
             let client = Client::new();
             let mut res = try!(client.get(url).send().map_err(|x| format!("{}", x)));
@@ -403,6 +406,8 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             }
             try!(f.sync_all().map_err(|x| format!("{}", x)));
             drop(f);
+            try!(fs::rename(tmppath.clone(), path.clone())
+                 .map_err(|x| format!("{}", x)));
             File::open(path).map_err(|x| format!("{}", x))
         })
 }
