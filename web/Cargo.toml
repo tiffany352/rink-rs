@@ -8,6 +8,9 @@ repository = "https://github.com/tiffany352/rink-rs"
 readme = "README.md"
 license = "MPL-2.0"
 
+[features]
+watch = ["handlebars-iron/watch"]
+
 [dependencies.rink]
 path = "../"
 features = ["hyper", "sandbox"]
@@ -18,3 +21,5 @@ router = "0.4.0"
 params = "0.4.0"
 handlebars = "0.20.0"
 handlebars-iron = "0.18.0"
+staticfile = "0.3.0"
+mount = "0.2.1"

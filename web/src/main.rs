@@ -8,6 +8,8 @@ extern crate router;
 extern crate params;
 extern crate handlebars;
 extern crate handlebars_iron;
+extern crate staticfile;
+extern crate mount;
 
 use iron::prelude::*;
 use iron::status;
@@ -15,18 +17,30 @@ use router::Router;
 use iron::headers;
 use iron::modifiers::Header;
 use handlebars_iron::{HandlebarsEngine, DirectorySource, Template};
+use mount::Mount;
+use staticfile::Static;
+use std::collections::BTreeMap;
+use params::{Params, Value};
 
-fn root(_req: &mut Request) -> IronResult<Response> {
-    Ok(Response::with(Template::new("index", ())))
+fn root(req: &mut Request) -> IronResult<Response> {
+    let mut data = BTreeMap::new();
+
+    let map = req.get_ref::<Params>().unwrap();
+    match map.find(&["q"]) {
+        Some(&Value::String(ref query)) => {
+            let reply = rink::one_line_sandbox(query);
+            data.insert("content".to_owned(), reply);
+        },
+        _ => (),
+    };
+
+    Ok(Response::with((status::Ok, Template::new("index", data))))
 }
 
 fn api(req: &mut Request) -> IronResult<Response> {
-    use params::{Params, Value};
-
-    let map = req.get_ref::<Params>().unwrap();
-
     let acao = Header(headers::AccessControlAllowOrigin::Any);
 
+    let map = req.get_ref::<Params>().unwrap();
     let query = match map.find(&["query"]) {
         Some(&Value::String(ref query)) => query,
         _ => return Ok(Response::with((acao, status::BadRequest))),
@@ -38,11 +52,16 @@ fn api(req: &mut Request) -> IronResult<Response> {
 }
 
 fn main() {
+    let mut mount = Mount::new();
+
     let mut router = Router::new();
     router.get("/", root, "root");
     router.get("/api", api, "api");
+    mount.mount("/", router);
 
-    let mut chain = Chain::new(router);
+    mount.mount("/static", Static::new("./static/"));
+
+    let mut chain = Chain::new(mount);
     let mut hbse = HandlebarsEngine::new();
     hbse.add(Box::new(DirectorySource::new("./templates/", ".hbs")));
 
