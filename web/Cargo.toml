@@ -13,5 +13,6 @@ path = "../"
 features = ["hyper", "sandbox"]
 
 [dependencies]
-hyper = "0.9.10"
-url = "1.2.0"
+iron = "0.4.0"
+router = "0.4.0"
+params = "0.4.0"
