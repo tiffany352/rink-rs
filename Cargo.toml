@@ -11,7 +11,6 @@ keywords = ["unit", "math", "conversion", "cli", "tool"]
 
 [features]
 default = ["linefeed", "chrono-humanize", "gpl", "currency"]
-ircbot = ["irc", "glob"]
 sandbox = ["libc", "ipc-channel"]
 gpl = []
 currency = ["hyper", "xml-rs", "json"]
@@ -22,8 +21,6 @@ chrono = "0.2.25"
 strsim = "0.5.1"
 chrono-humanize = { version = "0.0.6", optional = true }
 linefeed = { version = "0.1.4", optional = true }
-irc = { version = "0.11.3", optional = true }
-glob = { version = "0.2.11", optional = true }
 hyper = { version = "0.9.10", optional = true }
 libc = { version = "0.2.14", optional = true }
 ipc-channel = { version = "0.5.1", optional = true }
@@ -34,9 +31,5 @@ json = { version = "0.10.2", optional = true }
 name = "rink"
 doc = false
 
-[[bin]]
-name = "rink-irc"
-doc = false
-
 [workspace]
-members = ["web"]
+members = ["web", "irc"]

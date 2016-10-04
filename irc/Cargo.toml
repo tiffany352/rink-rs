@@ -1,0 +1,15 @@
+[package]
+name = "rink-irc"
+version = "0.3.2"
+authors = ["Tiffany Bennett <tiffany@stormbit.net>"]
+description = "IRC bot for Rink"
+homepage = "https://github.com/tiffany352/rink-rs"
+repository = "https://github.com/tiffany352/rink-rs"
+license = "MPL-2.0"
+
+[dependencies.rink]
+path = "../"
+
+[dependencies]
+irc = "0.11.3"
+glob = "0.2.11"
