@@ -6,31 +6,18 @@ extern crate rink;
 extern crate iron;
 extern crate router;
 extern crate params;
+extern crate handlebars;
+extern crate handlebars_iron;
 
 use iron::prelude::*;
 use iron::status;
 use router::Router;
 use iron::headers;
 use iron::modifiers::Header;
-use iron::mime::Mime;
-
-static TEMPLATE: &'static str = r##"
-<html>
- <head>
-  <title>Rink</title>
- </head>
- <body>
-  <form action="/api" method="POST" target="_self">
-   <input name="query" type="text" />
-   <input type="submit" />
-  </form>
- </body>
-</html>
-"##;
+use handlebars_iron::{HandlebarsEngine, DirectorySource, Template};
 
 fn root(_req: &mut Request) -> IronResult<Response> {
-    let mime: Mime = "text/html".parse().unwrap();
-    Ok(Response::with((status::Ok, TEMPLATE, mime)))
+    Ok(Response::with(Template::new("index", ())))
 }
 
 fn api(req: &mut Request) -> IronResult<Response> {
@@ -54,5 +41,16 @@ fn main() {
     let mut router = Router::new();
     router.get("/", root, "root");
     router.get("/api", api, "api");
-    Iron::new(router).http("localhost:8000").unwrap();
+
+    let mut chain = Chain::new(router);
+    let mut hbse = HandlebarsEngine::new();
+    hbse.add(Box::new(DirectorySource::new("./templates/", ".hbs")));
+
+    // load templates from all registered sources
+    if let Err(r) = hbse.reload() {
+        panic!("{}", r);
+    }
+
+    chain.link_after(hbse);
+    Iron::new(chain).http("localhost:8000").unwrap();
 }

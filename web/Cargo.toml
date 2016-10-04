@@ -16,3 +16,5 @@ features = ["hyper", "sandbox"]
 iron = "0.4.0"
 router = "0.4.0"
 params = "0.4.0"
+handlebars = "0.20.0"
+handlebars-iron = "0.18.0"
