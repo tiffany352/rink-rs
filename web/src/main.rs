@@ -2,14 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#[cfg(feature = "web")]
 extern crate hyper;
-#[cfg(feature = "web")]
 extern crate url;
-#[cfg(feature = "web")]
 extern crate rink;
 
-#[cfg(feature = "web")]
 static TEMPLATE: &'static str = r##"
 <html>
  <head>
@@ -24,7 +20,6 @@ static TEMPLATE: &'static str = r##"
 </html>
 "##;
 
-#[cfg(feature = "web")]
 fn main() {
     use hyper;
     use hyper::status::StatusCode;
@@ -79,9 +74,4 @@ fn main() {
 
     let port = args().nth(1).map(|x| x.parse::<u16>().expect("Invalid port number")).unwrap_or(8000);
     Server::http(&*format!("127.0.0.1:{}", port)).unwrap().handle(req).unwrap();
-}
-
-#[cfg(not(feature = "web"))]
-fn main() {
-    println!("Rink was not compiled with web support.");
 }

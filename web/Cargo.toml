@@ -1,0 +1,17 @@
+[package]
+name = "rink-web"
+version = "0.3.2"
+authors = ["Tiffany Bennett <tiffany@stormbit.net>"]
+description = "Web interface to Rink"
+homepage = "https://github.com/tiffany352/rink-rs"
+repository = "https://github.com/tiffany352/rink-rs"
+readme = "README.md"
+license = "MPL-2.0"
+
+[dependencies.rink]
+path = "../"
+features = ["hyper", "sandbox"]
+
+[dependencies]
+hyper = "0.9.10"
+url = "1.2.0"
