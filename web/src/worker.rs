@@ -1,15 +1,32 @@
 use libc;
-use std::io::Error;
-use ipc_channel::ipc::{IpcOneShotServer, IpcSender};
+use ipc_channel::ipc::{IpcOneShotServer, IpcSender, IpcReceiver};
 use std::process::{Command, Stdio};
 use std::env;
 use rink;
+use rink::reply::{QueryReply, QueryError};
 use std::os::unix::process::ExitStatusExt;
+use std::io;
+use rustc_serialize;
+use serde_json;
+
+#[derive(Debug, Serialize)]
+pub enum Error {
+    Rink(QueryError),
+    Time,
+    Memory,
+    Generic(String),
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
+        Error::Generic(format!("{}", err))
+    }
+}
 
 pub fn worker(server_name: &str, query: &str) -> ! {
     let tx = IpcSender::connect(server_name.to_owned()).unwrap();
 
-    tx.send("".to_owned()).unwrap();
+    tx.send(Err(QueryError::Generic("".to_owned()))).unwrap();
 
     unsafe {
         let limit = libc::rlimit {
@@ -19,7 +36,7 @@ pub fn worker(server_name: &str, query: &str) -> ! {
         };
         let res = libc::setrlimit(libc::RLIMIT_AS, &limit);
         if res == -1 {
-            panic!("Setrlimit RLIMIT_AS failed: {}", Error::last_os_error())
+            panic!("Setrlimit RLIMIT_AS failed: {}", io::Error::last_os_error())
         }
         let limit = libc::rlimit {
             // 15 seconds
@@ -28,22 +45,21 @@ pub fn worker(server_name: &str, query: &str) -> ! {
         };
         let res = libc::setrlimit(libc::RLIMIT_CPU, &limit);
         if res == -1 {
-            panic!("Setrlimit RLIMIT_AS failed: {}", Error::last_os_error())
+            panic!("Setrlimit RLIMIT_AS failed: {}", io::Error::last_os_error())
         }
     }
 
     let mut ctx = rink::load().unwrap();
     ctx.short_output = true;
-    let reply = match rink::one_line(&mut ctx, query) {
-        Ok(v) => v,
-        Err(e) => e
-    };
+    let mut iter = rink::text_query::TokenIterator::new(query).peekable();
+    let expr = rink::text_query::parse_query(&mut iter);
+    let reply = ctx.eval_outer(&expr);
     tx.send(reply).unwrap();
 
     ::std::process::exit(0)
 }
 
-pub fn eval(query: &str) -> String {
+pub fn eval(query: &str) -> Result<QueryReply, Error> {
     let (server, server_name) = IpcOneShotServer::new().unwrap();
 
     let res = Command::new(env::current_exe().unwrap())
@@ -54,28 +70,22 @@ pub fn eval(query: &str) -> String {
         .stderr(Stdio::piped())
         .stdout(Stdio::piped())
         .env("RUST_BACKTRACE", "1")
-        .spawn()
-        .map_err(|x| format!("{}", x));
-    let child = match res {
-        Ok(s) => s,
-        Err(e) => return format!("Failed to run sandbox: {}", e)
-    };
+        .spawn();
+    let child = try!(res);
     let (rx, _) = server.accept().unwrap();
+    let rx: IpcReceiver<Result<QueryReply, QueryError>> = rx;
 
     match rx.recv() {
-        Ok(s) => s,
+        Ok(s) => s.map_err(Error::Rink),
         Err(e) => {
-            let output = match child.wait_with_output() {
-                Ok(v) => v,
-                Err(e) => return format!("{}", e)
-            };
+            let output = try!(child.wait_with_output());
             match output.status.signal() {
-                Some(libc::SIGXCPU) => return format!("Calculation went over time limit"),
+                Some(libc::SIGXCPU) => return Err(Error::Time),
                 // SIGABRT doesn't necessarily mean OOM, but GMP will raise it when it happens
-                Some(libc::SIGABRT) => return format!("Calculation ran out of memory"),
+                Some(libc::SIGABRT) => return Err(Error::Memory),
                 _ => ()
             };
-            format!(
+            Err(Error::Generic(format!(
                 "Receiving reply from sandbox failed: {}\n\
                  Signal: {}\n\
                  Sandbox stdout: {}\n\
@@ -84,7 +94,22 @@ pub fn eval(query: &str) -> String {
                 output.status.signal().map(|x| format!("{}", x)).unwrap_or("None".to_owned()),
                 String::from_utf8_lossy(&output.stdout),
                 String::from_utf8_lossy(&output.stderr)
-            )
+            )))
         }
     }
+}
+
+pub fn eval_text(query: &str) -> String {
+    match eval(query) {
+        Ok(v) => format!("{}", v),
+        Err(Error::Generic(e)) => format!("{}", e),
+        Err(Error::Memory) => format!("Calculation ran out of memory"),
+        Err(Error::Time) => format!("Calculation timed out"),
+        Err(Error::Rink(e)) => format!("{}", e),
+    }
+}
+
+pub fn eval_json(query: &str) -> rustc_serialize::json::Json {
+    let res = eval(query);
+    rustc_serialize::json::Json::from_str(&serde_json::ser::to_string(&res).unwrap()).unwrap()
 }

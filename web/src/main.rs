@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#![feature(rustc_macro)]
+
 extern crate rink;
 extern crate iron;
 extern crate router;
@@ -12,6 +14,11 @@ extern crate staticfile;
 extern crate mount;
 extern crate ipc_channel;
 extern crate libc;
+extern crate rustc_serialize;
+extern crate serde;
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 
 pub mod worker;
 
@@ -26,7 +33,7 @@ use staticfile::Static;
 use std::collections::BTreeMap;
 use params::{Params, Value};
 use std::env;
-use worker::eval;
+use worker::{eval_text, eval_json};
 
 fn root(req: &mut Request) -> IronResult<Response> {
     let mut data = BTreeMap::new();
@@ -34,7 +41,8 @@ fn root(req: &mut Request) -> IronResult<Response> {
     let map = req.get_ref::<Params>().unwrap();
     match map.find(&["q"]) {
         Some(&Value::String(ref query)) => {
-            let reply = eval(query);
+            let reply = eval_json(query);
+            println!("{}", reply.pretty());
             data.insert("content".to_owned(), reply);
         },
         _ => (),
@@ -52,7 +60,7 @@ fn api(req: &mut Request) -> IronResult<Response> {
         _ => return Ok(Response::with((acao, status::BadRequest))),
     };
 
-    let reply = eval(query);
+    let reply = eval_text(query);
 
     Ok(Response::with((acao, status::Ok, reply)))
 }
