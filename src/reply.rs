@@ -8,6 +8,7 @@ use chrono::{DateTime, FixedOffset};
 use std::iter::once;
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct DefReply {
     pub canon_name: String,
     pub def: Option<String>,
@@ -16,16 +17,19 @@ pub struct DefReply {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct ConversionReply {
     pub value: NumberParts,
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct FactorizeReply {
     pub factorizations: Vec<BTreeMap<Rc<String>, usize>>,
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct UnitsForReply {
     pub units: Vec<String>,
     /// Dimensions and quantity are set.
@@ -33,6 +37,7 @@ pub struct UnitsForReply {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct ConformanceError {
     pub left: NumberParts,
     pub right: NumberParts,
@@ -40,12 +45,14 @@ pub struct ConformanceError {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct UnitListReply {
     pub rest: NumberParts,
     pub list: Vec<NumberParts>,
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct DurationReply {
     pub raw: NumberParts,
     pub years: NumberParts,
@@ -58,11 +65,13 @@ pub struct DurationReply {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct SearchReply {
     pub results: Vec<NumberParts>,
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct PropertyReply {
     pub name: String,
     pub input: Option<NumberParts>,
@@ -71,6 +80,7 @@ pub struct PropertyReply {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct SubstanceReply {
     pub name: String,
     pub doc: Option<String>,
@@ -78,6 +88,7 @@ pub struct SubstanceReply {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub enum QueryReply {
     Number(NumberParts),
     Date(DateTime<FixedOffset>, Option<String>),
@@ -92,6 +103,7 @@ pub enum QueryReply {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub enum QueryError {
     Conformance(ConformanceError),
     Generic(String),

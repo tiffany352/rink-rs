@@ -14,6 +14,7 @@ default = ["linefeed", "chrono-humanize", "gpl", "currency"]
 sandbox = ["libc", "ipc-channel"]
 gpl = []
 currency = ["hyper", "xml-rs", "json"]
+nightly = ["serde", "serde_derive"]
 
 [dependencies]
 rust-gmp = "0.3.2"
@@ -26,6 +27,8 @@ libc = { version = "0.2.14", optional = true }
 ipc-channel = { version = "0.5.1", optional = true }
 xml-rs = { version = "0.3.4", optional = true }
 json = { version = "0.10.2", optional = true }
+serde = { version = "0.8", optional = true }
+serde_derive = { version = "0.8", optional = true }
 
 [[bin]]
 name = "rink"

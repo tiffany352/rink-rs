@@ -200,6 +200,7 @@ impl<'a> Neg for &'a Num {
 pub type Unit = BTreeMap<Dim, i64>;
 
 /// A newtype for a string dimension ID, so that we can implement traits for it.
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Dim(pub Rc<String>);
 
@@ -317,6 +318,7 @@ pub fn to_string(rational: &Num, base: u8) -> (bool, String) {
 /// Several stringified properties of a number which are useful for
 /// displaying it to a user.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct NumberParts {
     /// Present if the number can be concisely represented exactly.
     /// May be decimal, fraction, or scientific notation.

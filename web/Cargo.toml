@@ -13,7 +13,7 @@ watch = ["handlebars-iron/watch"]
 
 [dependencies.rink]
 path = "../"
-features = ["hyper", "sandbox"]
+features = ["nightly"]
 
 [dependencies]
 iron = "0.4.0"
@@ -25,3 +25,8 @@ staticfile = "0.3.0"
 mount = "0.2.1"
 ipc-channel = "0.5.1"
 libc = "0.2.14"
+chrono = { version = "*", features = ["serde"] }
+rustc-serialize = "*"
+serde_json = "0.8"
+serde_derive = "0.8"
+serde = "0.8"
