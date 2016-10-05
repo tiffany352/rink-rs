@@ -1,0 +1,265 @@
+{{#with Ok}}
+
+  {{!-- Numbers ----------------------------------------------}}
+  {{#with Number}}
+    <div class="panel panel-default">
+      <div class="panel-body">
+        {{> number}}
+      </div>
+    </div>
+  {{/with}}
+
+  {{!-- Definitions ------------------------------------------}}
+  {{#with Def}}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Definition of {{canon_name}}</h3>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item"><p>{{def}}</p></li>
+        {{#with value}}
+          <li class="list-group-item">
+            {{> number}}
+          </li>
+        {{/with}}
+        {{#if doc}}
+          <li class="list-group-item"><p>{{doc}}</p></li>
+        {{/if}}
+      </ul>
+    </div>
+  {{/with}}
+
+  {{!-- Conversions ------------------------------------------}}
+  {{#with Conversion}}
+    <div class="panel panel-default">
+      {{#with value}}
+        <div class="panel-body">
+          {{> number}}
+        </div>
+    {{/with}}
+    </div>
+  {{/with}}
+
+  {{!-- Factorizations ---------------------------------------}}
+  {{#with Factorize}}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Factorizations
+      </div>
+      <div class="panel-body">
+        {{#each factorizations}}
+          <p>
+            {{#each this}}
+              {{@key}}<sup>{{this}}</sup>
+            {{/each}}
+          </p>
+          {{else}}
+          <p>No factorizations.</p>
+            {{/each}}
+      </div>
+    </div>
+  {{/with}}
+
+  {{!-- Units for --------------------------------------------}}
+  {{#with UnitsFor}}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        {{#with of}}
+          Units for {{> number}}
+        {{/with}}
+      </div>
+      <div class="panel-body">
+        {{#if units}}
+          <ul>
+            {{#each units}}
+              <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          {{else}}
+          <p>No units found.</p>
+        {{/if}}
+      </div>
+    </div>
+  {{/with}}
+
+  {{!-- Unit list --------------------------------------------}}
+  {{#with UnitList}}
+    <div class="panel panel-default">
+      {{#if rest.quantity}}
+        <div class="panel-heading">
+          Unit list of {{rest.quantity}}
+        </div>
+      {{/if}}
+      <div class="panel-body">
+        <ul>
+          {{#each list}}
+            <li>{{> number}}</li>
+          {{/each}}
+        </ul>
+      </div>
+    </div>
+  {{/with}}
+
+  {{!-- Duration ---------------------------------------------}}
+  {{#with Duration}}
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <ul>
+          <li>{{#with years}}{{> number}}{{/with}}</li>
+          <li>{{#with months}}{{> number}}{{/with}}</li>
+          <li>{{#with weeks}}{{> number}}{{/with}}</li>
+          <li>{{#with days}}{{> number}}{{/with}}</li>
+          <li>{{#with hours}}{{> number}}{{/with}}</li>
+          <li>{{#with minutes}}{{> number}}{{/with}}</li>
+          <li>{{#with seconds}}{{> number}}{{/with}}</li>
+        </ul>
+      </div>
+    </div>
+  {{/with}}
+
+  {{!-- Search -----------------------------------------------}}
+  {{#with Search}}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Search results
+      </div>
+      <div class="panel-body">
+        {{#if results}}
+          <ol>
+            {{#each results}}
+              <li>{{> number}}</li>
+            {{/each}}
+          </ol>
+          {{else}}
+          <p>No results.</p>
+        {{/if}}
+      </div>
+    </div>
+  {{/with}}
+
+  {{!-- Substance --------------------------------------------}}
+  {{#with Substance}}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Substance: {{name}}
+      </div>
+      {{#with doc}}
+        <div class="panel-body">
+          {{this}}
+        </div>
+      {{/with}}
+      {{#if properties}}
+        <table class="table">
+          <caption>
+            Properties
+          </caption>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Input</th>
+              <th>Output</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          {{#each properties}}
+            <tr>
+              <td>{{name}}</td>
+              <td>
+                {{#with input}}
+                  {{> number}}
+                  {{else}}
+                  N/A
+                {{/with}}
+              </td>
+              <td>
+                {{#with output}}
+                  {{> number}}
+                {{/with}}
+              </td>
+              <td>{{doc}}</td>
+            </tr>
+          {{/each}}
+        </table>
+      {{/if}}
+    </div>
+  {{/with}}
+
+  {{!-- Date -------------------------------------------------}}
+  {{#with Date}}
+    <div class="panel panel-default">
+    </div>
+  {{/with}}
+
+{{/with}}{{!/Ok}}
+
+{{#with Err}}
+  {{#with Rink}}
+
+    {{!-- Conformance errors ---------------------------------}}
+    {{#with Conformance}}
+      <div class="panel panel-danger">
+        <div class="panel-heading">
+          Conformance error
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Left</th>
+              <th>Right</th>
+            </tr>
+          </thead>
+          <tr>
+            <td>
+              {{#with left}}
+                {{> number}}
+              {{/with}}
+            </td>
+            <td>
+              {{#with right}}
+                {{> number}}
+              {{/with}}
+            </td>
+          </tr>
+        </table>
+        <div class="panel-body">
+          <h4>Suggestions</h4>
+          {{#each suggestions}}
+            <p>{{.}}</p>
+          {{/each}}
+        </div>
+      </div>
+    {{/with}}
+
+    {{!-- Generic errors -------------------------------------}}
+    {{#with Generic}}
+      <div class="panel panel-danger">
+        <div class="panel-heading">
+          Rink Error
+        </div>
+        <div class="panel-body">
+          {{this}}
+        </div>
+      </div>
+    {{/with}}
+
+  {{/with}}{{!/Rink}}
+
+  {{!-- Sandbox timed out ----------------------------------}}
+  {{! TODO: Can't be matched on (value, not a key) }}
+
+  {{!-- Sandbox ran out of memory --------------------------}}
+  {{! TODO: Can't be matched on (value, not a key) }}
+
+  {{!-- Generic sandbox errors -----------------------------}}
+  {{#with Generic}}
+    <div class="panel panel-danger">
+      <div class="panel-heading">
+        Sandbox Error
+      </div>
+      <div class="panel-body" style="white-space: pre-line">
+        {{this}}
+      </div>
+    </div>
+  {{/with}}
+
+{{/with}}{{!/Err}}

@@ -41,7 +41,9 @@
     </nav>
 
     <div class="container">
-      <div class="well well-lg" style="white-space: pre-wrap;">{{content}}</div>
+      {{#with content}}
+        {{> query}}
+      {{/with}}
     </div>
   </body>
 </html>
