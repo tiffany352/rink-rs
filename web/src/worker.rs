@@ -71,6 +71,8 @@ pub fn eval(query: &str) -> String {
             };
             match output.status.signal() {
                 Some(libc::SIGXCPU) => return format!("Calculation went over time limit"),
+                // SIGABRT doesn't necessarily mean OOM, but GMP will raise it when it happens
+                Some(libc::SIGABRT) => return format!("Calculation ran out of memory"),
                 _ => ()
             };
             format!(
