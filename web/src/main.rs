@@ -10,6 +10,10 @@ extern crate handlebars;
 extern crate handlebars_iron;
 extern crate staticfile;
 extern crate mount;
+extern crate ipc_channel;
+extern crate libc;
+
+pub mod worker;
 
 use iron::prelude::*;
 use iron::status;
@@ -21,6 +25,8 @@ use mount::Mount;
 use staticfile::Static;
 use std::collections::BTreeMap;
 use params::{Params, Value};
+use std::env;
+use worker::eval;
 
 fn root(req: &mut Request) -> IronResult<Response> {
     let mut data = BTreeMap::new();
@@ -28,7 +34,7 @@ fn root(req: &mut Request) -> IronResult<Response> {
     let map = req.get_ref::<Params>().unwrap();
     match map.find(&["q"]) {
         Some(&Value::String(ref query)) => {
-            let reply = rink::one_line_sandbox(query);
+            let reply = eval(query);
             data.insert("content".to_owned(), reply);
         },
         _ => (),
@@ -46,12 +52,20 @@ fn api(req: &mut Request) -> IronResult<Response> {
         _ => return Ok(Response::with((acao, status::BadRequest))),
     };
 
-    let reply = rink::one_line_sandbox(query);
+    let reply = eval(query);
 
     Ok(Response::with((acao, status::Ok, reply)))
 }
 
 fn main() {
+    let mut args = env::args();
+    args.next();
+    if args.next().map(|x| x == "--sandbox").unwrap_or(false) {
+        let server = args.next().unwrap();
+        let query = args.next().unwrap();
+        worker::worker(&server, &query);
+    }
+
     let mut mount = Mount::new();
 
     let mut router = Router::new();
