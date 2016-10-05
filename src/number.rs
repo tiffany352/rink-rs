@@ -200,9 +200,19 @@ impl<'a> Neg for &'a Num {
 pub type Unit = BTreeMap<Dim, i64>;
 
 /// A newtype for a string dimension ID, so that we can implement traits for it.
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "nightly", derive(Deserialize))]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Dim(pub Rc<String>);
+
+#[cfg(feature = "nightly")]
+impl ::serde::ser::Serialize for Dim {
+    fn serialize<S>(
+        &self, serializer: &mut S
+    ) -> Result<(), S::Error>
+    where S: ::serde::ser::Serializer {
+        serializer.serialize_str(&**self.0)
+    }
+}
 
 /// The basic representation of a number with a unit.
 #[derive(Clone, PartialEq)]
