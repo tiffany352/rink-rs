@@ -600,6 +600,9 @@ impl Number {
         if exp.1.len() != 0 {
             return Err(format!("Exponent must be dimensionless"))
         }
+        if exp.0.abs() >= Num::from(1 << 31) {
+            return Err(format!("Exponent is too large"))
+        }
         let (num, den) = exp.0.to_rational();
         let one = Int::one();
         if den == one {
