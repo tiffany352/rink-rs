@@ -47,15 +47,16 @@
         Factorizations
       </div>
       <div class="panel-body">
+        <ul>
         {{#each factorizations}}
-          <p>
+          <li>
             {{#each this}}
               {{@key}}<sup>{{this}}</sup>
             {{/each}}
-          </p>
+          </li>
           {{else}}
           <p>No factorizations.</p>
-            {{/each}}
+        {{/each}}
       </div>
     </div>
   {{/with}}
