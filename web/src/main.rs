@@ -41,6 +41,7 @@ fn root(req: &mut Request) -> IronResult<Response> {
 
     let map = req.get_ref::<Params>().unwrap();
     match map.find(&["q"]) {
+        Some(&Value::String(ref query)) if query == "" => (),
         Some(&Value::String(ref query)) => {
             let reply = eval_json(query);
             println!("{}", reply.pretty());
