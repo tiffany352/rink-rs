@@ -8,13 +8,31 @@ use std::os::unix::process::ExitStatusExt;
 use std::io;
 use rustc_serialize;
 use serde_json;
+use serde::ser::{Serialize, Serializer};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub enum Error {
     Rink(QueryError),
     Time,
     Memory,
     Generic(String),
+}
+
+impl Serialize for Error {
+    fn serialize<S>(
+        &self, ser: &mut S
+    ) -> Result<(), S::Error> where S: Serializer {
+        match *self {
+            Error::Rink(ref e) =>
+                ser.serialize_newtype_variant("Error", 0, "Rink", e),
+            Error::Time =>
+                ser.serialize_newtype_variant("Error", 1, "Time", true),
+            Error::Memory =>
+                ser.serialize_newtype_variant("Error", 2, "Memory", true),
+            Error::Generic(ref e) =>
+                ser.serialize_newtype_variant("Error", 3, "Generic", e),
+        }
+    }
 }
 
 impl From<io::Error> for Error {

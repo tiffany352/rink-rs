@@ -245,10 +245,22 @@
   {{/with}}{{!/Rink}}
 
   {{!-- Sandbox timed out ----------------------------------}}
-  {{! TODO: Can't be matched on (value, not a key) }}
+  {{#with Time}}
+    <div class="panel panel-danger">
+      <div class="panel-heading">
+        Calculation timed out
+      </div>
+    </div>
+  {{/with}}
 
   {{!-- Sandbox ran out of memory --------------------------}}
-  {{! TODO: Can't be matched on (value, not a key) }}
+  {{#with Memory}}
+    <div class="panel panel-danger">
+      <div class="panel-heading">
+        Calculation ran out of memory
+      </div>
+    </div>
+  {{/with}}
 
   {{!-- Generic sandbox errors -----------------------------}}
   {{#with Generic}}
