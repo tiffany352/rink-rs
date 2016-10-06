@@ -25,6 +25,7 @@ pub mod worker;
 use iron::prelude::*;
 use iron::status;
 use router::Router;
+use iron::AfterMiddleware;
 use iron::headers;
 use iron::modifiers::Header;
 use handlebars_iron::{HandlebarsEngine, DirectorySource, Template};
@@ -43,12 +44,28 @@ fn root(req: &mut Request) -> IronResult<Response> {
         Some(&Value::String(ref query)) => {
             let reply = eval_json(query);
             println!("{}", reply.pretty());
-            data.insert("content".to_owned(), reply);
+            data.insert("queries".to_owned(), vec![reply]);
         },
         _ => (),
     };
 
     Ok(Response::with((status::Ok, Template::new("index", data))))
+}
+
+struct ErrorMiddleware;
+
+impl AfterMiddleware for ErrorMiddleware {
+    fn catch(&self, _req: &mut Request, err: IronError) -> IronResult<Response> {
+        let mut data = BTreeMap::new();
+        let mut error = BTreeMap::new();
+        if let Some(status) = err.response.status {
+            error.insert("status".to_owned(), format!("{}", status));
+        }
+        error.insert("message".to_owned(), format!("{}", err.error));
+        data.insert("error".to_owned(), error);
+        println!("{:#?}", data);
+        Ok(err.response.set(Template::new("index", data)))
+    }
 }
 
 fn api(req: &mut Request) -> IronResult<Response> {
@@ -92,6 +109,7 @@ fn main() {
         panic!("{}", r);
     }
 
+    chain.link_after(ErrorMiddleware);
     chain.link_after(hbse);
     Iron::new(chain).http("localhost:8000").unwrap();
 }
