@@ -89,9 +89,24 @@ pub struct SubstanceReply {
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+pub struct DateReply {
+    pub year: i32,
+    pub month: i32,
+    pub day: i32,
+    pub hour: i32,
+    pub minute: i32,
+    pub second: i32,
+    pub nanosecond: i32,
+    /// chrono-humanize output, if enabled.
+    pub human: Option<String>,
+    pub string: String,
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub enum QueryReply {
     Number(NumberParts),
-    Date(DateTime<FixedOffset>, Option<String>),
+    Date(DateReply),
     Substance(SubstanceReply),
     Duration(DurationReply),
     Def(DefReply),
@@ -119,13 +134,7 @@ impl Display for QueryReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match *self {
             QueryReply::Number(ref v) => write!(fmt, "{}", v),
-            QueryReply::Date(ref v, ref h) => {
-                try!(write!(fmt, "{}", v));
-                if let Some(ref human) = *h {
-                    try!(write!(fmt, " ({})", human));
-                }
-                Ok(())
-            },
+            QueryReply::Date(ref v) => write!(fmt, "{}", v),
             QueryReply::Substance(ref v) => write!(fmt, "{}", v),
             QueryReply::Duration(ref v) => write!(fmt, "{}", v),
             QueryReply::Def(ref v) => write!(fmt, "{}", v),
@@ -151,6 +160,33 @@ impl Display for ConformanceError {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         try!(writeln!(fmt, "Conformance error: {} != {}", self.left, self.right));
         write!(fmt, "Suggestions: {}", self.suggestions.join(", "))
+    }
+}
+
+impl DateReply {
+    pub fn new(ctx: &::context::Context, date: DateTime<FixedOffset>) -> DateReply {
+        use chrono::{Datelike, Timelike};
+        DateReply {
+            human: ctx.humanize(date),
+            string: format!("{}", date),
+            year: date.year(),
+            month: date.month() as i32,
+            day: date.day() as i32,
+            hour: date.hour() as i32,
+            minute: date.minute() as i32,
+            second: date.second() as i32,
+            nanosecond: date.nanosecond() as i32,
+        }
+    }
+}
+
+impl Display for DateReply {
+    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+        try!(write!(fmt, "{}", self.string));
+        if let Some(ref human) = self.human {
+            try!(write!(fmt, " ({})", human));
+        }
+        Ok(())
     }
 }
 

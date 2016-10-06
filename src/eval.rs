@@ -12,7 +12,7 @@ use value::{Value, Show};
 use reply::{
     DefReply, ConversionReply, FactorizeReply, UnitsForReply,
     QueryReply, ConformanceError, QueryError, UnitListReply,
-    DurationReply, SearchReply
+    DurationReply, SearchReply, DateReply
 };
 use search;
 use context::Context;
@@ -639,7 +639,7 @@ impl Context {
                         "Cannot convert <{}> to timezone offset {:+}", top.show(self), off)))
                 };
                 let top = top.with_timezone(&FixedOffset::east(off as i32));
-                Ok(QueryReply::Date(top, self.humanize(top)))
+                Ok(QueryReply::Date(DateReply::new(self, top)))
             },
             Query::Convert(ref top, ref which @ Conversion::DegC, None) |
             Query::Convert(ref top, ref which @ Conversion::DegF, None) |
@@ -782,7 +782,7 @@ impl Context {
                         }))
                     },
                     Value::Number(n) => Ok(QueryReply::Number(n.to_parts(self))),
-                    Value::DateTime(d) => Ok(QueryReply::Date(d, self.humanize(d))),
+                    Value::DateTime(d) => Ok(QueryReply::Date(DateReply::new(self, d))),
                     Value::Substance(s) => Ok(QueryReply::Substance(
                         try!(s.to_reply(self).map_err(QueryError::Generic))
                     )),

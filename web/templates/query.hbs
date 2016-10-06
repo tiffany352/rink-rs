@@ -188,6 +188,12 @@
   {{!-- Date -------------------------------------------------}}
   {{#with Date}}
     <div class="panel panel-default">
+      <div class="panel-body">
+        {{string}}
+        {{#if human}}
+          ({{human}})
+        {{/if}}
+      </div>
     </div>
   {{/with}}
 
