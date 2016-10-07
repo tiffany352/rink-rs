@@ -17,6 +17,7 @@ extern crate libc;
 extern crate rustc_serialize;
 extern crate serde;
 extern crate serde_json;
+extern crate limiter;
 #[macro_use]
 extern crate serde_derive;
 
@@ -35,6 +36,7 @@ use std::collections::BTreeMap;
 use params::{Params, Value};
 use std::env;
 use worker::{eval_text, eval_json};
+use limiter::RequestLimit;
 
 fn root(req: &mut Request) -> IronResult<Response> {
     use rustc_serialize::json::ToJson;
@@ -117,6 +119,9 @@ fn main() {
         panic!("{}", r);
     }
 
+    let limiter = RequestLimit::new(5000, 5000);
+
+    chain.link_before(limiter);
     chain.link_after(ErrorMiddleware);
     chain.link_after(hbse);
     let addr = first.as_ref().map(|x| &**x).unwrap_or("localhost:8000");
