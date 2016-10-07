@@ -410,7 +410,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     "degDe" | "°De" | "delisle" => Token::DegDe,
                     "degN" | "°N" | "degnewton" => Token::DegN,
                     "per" => Token::Slash,
-                    "to" => Token::DashArrow,
+                    "to" | "in" => Token::DashArrow,
                     _ => Token::Ident(buf)
                 }
             }
