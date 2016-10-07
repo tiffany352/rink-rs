@@ -84,6 +84,7 @@ pub struct PropertyReply {
 pub struct SubstanceReply {
     pub name: String,
     pub doc: Option<String>,
+    pub amount: NumberParts,
     pub properties: Vec<PropertyReply>,
 }
 

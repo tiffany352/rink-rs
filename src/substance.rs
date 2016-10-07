@@ -109,6 +109,7 @@ impl Substance {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
+                amount: self.amount.to_parts(context),
                 properties: try!(self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.1.len() == 0 {
                         let res = (&v.output * &self.amount).unwrap();
@@ -218,6 +219,7 @@ impl Substance {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
+                amount: self.amount.to_parts(context),
                 properties: try!(
                     once(Ok(Some(amount)))
                         .chain(self.properties.properties.iter().map(func))
@@ -234,6 +236,7 @@ impl Substance {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
+                amount: self.amount.to_parts(context),
                 properties: try!(self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.1.len() == 0 {
                         let res = (&v.output * &self.amount).unwrap();
@@ -304,6 +307,7 @@ impl Substance {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
+                amount: self.amount.to_parts(context),
                 properties: try!(
                     once(Ok(Some(amount)))
                         .chain(self.properties.properties.iter().map(func))
