@@ -92,7 +92,8 @@ fn api(req: &mut Request) -> IronResult<Response> {
 fn main() {
     let mut args = env::args();
     args.next();
-    if args.next().map(|x| x == "--sandbox").unwrap_or(false) {
+    let first = args.next();
+    if first.as_ref().map(|x| x == "--sandbox").unwrap_or(false) {
         let server = args.next().unwrap();
         let query = args.next().unwrap();
         worker::worker(&server, &query);
@@ -118,5 +119,6 @@ fn main() {
 
     chain.link_after(ErrorMiddleware);
     chain.link_after(hbse);
-    Iron::new(chain).http("localhost:8000").unwrap();
+    let addr = first.as_ref().map(|x| &**x).unwrap_or("localhost:8000");
+    Iron::new(chain).http(addr).unwrap();
 }
