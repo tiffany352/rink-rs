@@ -2,14 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#[cfg(feature = "ircbot")]
 extern crate irc;
-#[cfg(feature = "ircbot")]
 extern crate glob;
-#[cfg(feature = "ircbot")]
 extern crate rink;
 
-#[cfg(feature = "ircbot")]
 fn main() {
     use irc::client::prelude::*;
     use rink::*;
@@ -81,9 +77,4 @@ fn main() {
     for thread in threads {
         thread.join().unwrap()
     }
-}
-
-#[cfg(not(feature = "ircbot"))]
-fn main() {
-    println!("Rink was not compiled with IRC support.");
 }

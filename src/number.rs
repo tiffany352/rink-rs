@@ -200,8 +200,19 @@ impl<'a> Neg for &'a Num {
 pub type Unit = BTreeMap<Dim, i64>;
 
 /// A newtype for a string dimension ID, so that we can implement traits for it.
+#[cfg_attr(feature = "nightly", derive(Deserialize))]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Dim(pub Rc<String>);
+
+#[cfg(feature = "nightly")]
+impl ::serde::ser::Serialize for Dim {
+    fn serialize<S>(
+        &self, serializer: &mut S
+    ) -> Result<(), S::Error>
+    where S: ::serde::ser::Serializer {
+        serializer.serialize_str(&**self.0)
+    }
+}
 
 /// The basic representation of a number with a unit.
 #[derive(Clone, PartialEq)]
@@ -317,6 +328,7 @@ pub fn to_string(rational: &Num, base: u8) -> (bool, String) {
 /// Several stringified properties of a number which are useful for
 /// displaying it to a user.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct NumberParts {
     /// Present if the number can be concisely represented exactly.
     /// May be decimal, fraction, or scientific notation.
@@ -599,6 +611,9 @@ impl Number {
 
         if exp.1.len() != 0 {
             return Err(format!("Exponent must be dimensionless"))
+        }
+        if exp.0.abs() >= Num::from(1 << 31) {
+            return Err(format!("Exponent is too large"))
         }
         let (num, den) = exp.0.to_rational();
         let one = Int::one();

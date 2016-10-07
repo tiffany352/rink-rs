@@ -30,6 +30,8 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 ```
 */
 
+#![cfg_attr(feature = "nightly", feature(rustc_macro))]
+
 extern crate gmp;
 extern crate chrono;
 extern crate strsim;
@@ -45,6 +47,11 @@ extern crate hyper;
 extern crate xml;
 #[cfg(feature = "currency")]
 extern crate json;
+#[cfg(feature = "nightly")]
+extern crate serde;
+#[cfg(feature = "nightly")]
+#[macro_use]
+extern crate serde_derive;
 
 pub mod text_query;
 pub mod context;
