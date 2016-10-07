@@ -37,6 +37,8 @@ use std::env;
 use worker::{eval_text, eval_json};
 
 fn root(req: &mut Request) -> IronResult<Response> {
+    use rustc_serialize::json::ToJson;
+
     let mut data = BTreeMap::new();
 
     let map = req.get_ref::<Params>().unwrap();
@@ -45,10 +47,14 @@ fn root(req: &mut Request) -> IronResult<Response> {
         Some(&Value::String(ref query)) => {
             let reply = eval_json(query);
             println!("{}", reply.pretty());
-            data.insert("queries".to_owned(), vec![reply]);
+            data.insert("queries".to_owned(), vec![reply].to_json());
         },
         _ => (),
     };
+
+    if data.len() == 0 {
+        data.insert("main-page".to_owned(), true.to_json());
+    }
 
     Ok(Response::with((status::Ok, Template::new("index", data))))
 }
