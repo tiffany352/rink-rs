@@ -5700,6 +5700,8 @@ sun {
     distance_near       const sun_distance_near 1.471e11 m
     ?? Earth-sun distance at aphelion
     distance_far        const sun_distance_far  1.521e11 m
+    radius_equatorial   const sun_radius        695700 km
+    volume              const sun_volume        1.41e18 km^3
     ?? Source: http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
     luminosity          const solar_luminosity  384.6e24 W
 
@@ -5726,6 +5728,7 @@ mercury_planet {
     mass                const mercury_mass      solarmass / 6023600
     mass_old            const mercury_old       0.33022e24 kg
     radius              const mercury_radius    2440 km
+    volume              const mercury_volume    6.083e10 km^3
     sidereal_day        const mercury_day       58.6462 day
     year                const mercury_year      0.2408467 julianyear
 }
@@ -5735,6 +5738,7 @@ venus {
     mass                const venus_mass        solarmass / 408523.71
     mass_old            const venus_old         4.8690e24 kg
     radius              const venus_radius      6051.84 km
+    volume              const venus_volume      9.2843e11 km^3
     ?? Retrograde.
     sidereal_day        const venus_day         243.01 day
     year                const venus_year        0.61519726 julianyear
@@ -5748,6 +5752,7 @@ moonearthmassratio      0.012300034
 earth {
     mass                const earth_mass        earthmoonmass / ( 1 + moonearthmassratio)
     radius              const earth_radius      6371.01 km
+    volume              const earth_volume      1.08321e12 km^3
     sidereal_day        const earth_day         siderealday
     year                const earth_year        siderealyear
 }
@@ -5755,6 +5760,8 @@ earth {
 moon {
     ?? Average earth-moon distance.
     mass                const moon_mass         moonearthmassratio mass of earth
+    radius              const moon_radius       1737.1 km
+    volume              const moon_volume       2.1958e10 km^3
     distance            const moon_dist         3.844e8 m
     gravity             const moon_gravity      1.62 m/s^2
     luminance           const moon_luminance    2500 cd/m^2
@@ -5765,6 +5772,7 @@ mars {
     mass                const mars_mass         solarmass / 3098708
     mass_old            const mars_old          0.64191e24 kg
     radius              const mars_radius       3389.92 km
+    volume              const mars_volume       1.6318e11 km^3
     sidereal_day        const mars_day          1.02595675 day
     year                const mars_year         1.8808476 julianyear
 }
@@ -5774,6 +5782,7 @@ jupiter {
     mass                const jupiter_mass      solarmass / 1047.3486
     mass_old            const jupiter_old       1898.8e24 kg
     radius              const jupiter_radius    69911 km
+    volume              const jupiter_volume    1.4313e15 km^3
     sidereal_day        const jupiter_day       0.41354 day
     year                const jupiter_year      11.862615 julianyear
 }
@@ -5783,6 +5792,7 @@ saturn {
     mass                const saturn_mass       solarmass / 3497.898
     mass_old            const saturn_old        568.5e24 kg
     radius              const saturn_radius     58232 km
+    volume              const saturn_volume     8.2713e14 km^3
     sidereal_day        const saturn_day        0.4375 day
     year                const saturn_year       29.447498 julianyear
 }
@@ -5792,6 +5802,7 @@ uranus {
     mass                const uranus_mass       solarmass / 22902.98
     mass_old            const uranus_old        86.625e24 kg
     radius              const uranus_radius     25362 km
+    volume              const uranus_volume     6.833e13 km^3
     ?? Retrograde.
     sidereal_day        const uranus_day        0.65 day
     year                const uranus_year       84.016846 julianyear
@@ -5802,6 +5813,7 @@ neptune {
     mass                const neptune_mass      solarmass / 19412.24
     mass_old            const neptune_old       102.78e24 kg
     radius              const neptune_radius    24624 km
+    volume              const neptune_volume    6.254e13 km^3
     sidereal_day        const neptune_day       0.768 day
     year                const neptune_year      164.79132 julianyear
 }
@@ -5811,6 +5823,8 @@ pluto {
     mass                const pluto_mass        solarmass / 1.35e8
     mass_old            const pluto_old         0.015e24 kg
     radius              const pluto_radius      1151 km
+    ?? ±0.071e9 km^3
+    volume              const pluto_volume      7.006e9 km^3
     sidereal_day        const pluto_day         6.3867 day
     year                const pluto_year        247.92065 julianyear
 }
