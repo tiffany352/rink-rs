@@ -1141,7 +1141,6 @@ Mx                      maxwell
 oersted                 gauss / mu0
 Oe                      oersted
 gilbert                 gauss cm / mu0
-Gb                      gilbert
 Gi                      gilbert
 unitpole                4 pi maxwell
 emu                     erg/gauss  # "electro-magnetic unit", a measure of
