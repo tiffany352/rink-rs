@@ -746,8 +746,16 @@ impl Context {
                         .into_iter()
                         .map(|x| {
                             let parts = self.lookup(x)
-                                .expect("Search returned non-existent result")
-                                .to_parts(self);
+                                .map(|x| x.to_parts(self))
+                                .or_else(|| if self.substances.get(x).is_some() {
+                                    Some(NumberParts {
+                                        quantity: Some("substance".to_owned()),
+                                        .. Default::default()
+                                    })
+                                } else {
+                                    None
+                                })
+                                .expect("Search returned non-existent result");
                             NumberParts {
                                 unit: Some(x.to_owned()),
                                 quantity: parts.quantity,

@@ -65,6 +65,9 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         for (_u, k) in &ctx.quantities {
             try(&**k);
         }
+        for (k, _sub) in &ctx.substances {
+            try(&**k);
+        }
     }
     results.into_sorted_vec()
         .into_iter()
