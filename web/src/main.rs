@@ -30,6 +30,7 @@ use router::Router;
 use iron::AfterMiddleware;
 use iron::headers;
 use iron::modifiers::Header;
+use handlebars::Handlebars;
 use handlebars_iron::{HandlebarsEngine, DirectorySource, Template};
 use mount::Mount;
 use staticfile::Static;
@@ -95,6 +96,36 @@ fn api(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((acao, status::Ok, reply)))
 }
 
+fn ifnot1helper(
+    c: &handlebars::Context,
+    h: &handlebars::Helper,
+    r: &Handlebars,
+    rc: &mut handlebars::RenderContext
+) -> Result<(), handlebars::RenderError> {
+    use handlebars::RenderError;
+    use handlebars::Renderable;
+
+    let param = try!(h.param(0)
+                     .ok_or_else(|| RenderError::new("Param not found for helper \"ifnot1\"")));
+    let param = param.value();
+
+    let value =
+        param.as_string().map(|x| x != "1").unwrap_or(true) &&
+        param.as_i64().map(|x| x != 1).unwrap_or(true) &&
+        param.as_u64().map(|x| x != 1).unwrap_or(true) &&
+        param.as_f64().map(|x| x != 1.0).unwrap_or(true);
+
+    let tmpl = if value {
+        h.template()
+    } else {
+        h.inverse()
+    };
+    match tmpl {
+        Some(ref t) => t.render(c, r, rc),
+        None => Ok(()),
+    }
+}
+
 fn main() {
     let mut args = env::args();
     args.next();
@@ -117,9 +148,11 @@ fn main() {
     mount.mount("/static", Static::new("./static/"));
 
     let mut chain = Chain::new(mount);
-    let mut hbse = HandlebarsEngine::new();
-    hbse.add(Box::new(DirectorySource::new("./templates/", ".hbs")));
 
+    let mut hb = Handlebars::new();
+    hb.register_helper("ifnot1", Box::new(ifnot1helper));
+    let mut hbse = HandlebarsEngine::from(hb);
+    hbse.add(Box::new(DirectorySource::new("./templates/", ".hbs")));
     // load templates from all registered sources
     if let Err(r) = hbse.reload() {
         panic!("{}", r);

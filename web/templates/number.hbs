@@ -2,11 +2,15 @@
 {{#if approx_value}}
   approx. {{approx_value}}
 {{/if}}
-{{#if unit}}
-  {{unit}}
-{{else}}
-  {{dimensions}}
-{{/if}}
+{{#each raw_unit}}
+  <a href="/?q={{@key}}">{{@key}}</a>{{#ifnot1 this}}<sup>{{this}}</sup>{{/ifnot1}}
+  {{else}}
+  {{#if unit}}
+    {{unit}}
+    {{else}}
+    {{dimensions}}
+  {{/if}}
+{{/each}}
 {{insert}}
 {{#if quantity}}
   ({{quantity}})

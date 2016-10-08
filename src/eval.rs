@@ -764,8 +764,11 @@ impl Context {
                                     None
                                 })
                                 .expect("Search returned non-existent result");
+                            let mut raw = BTreeMap::new();
+                            raw.insert(Dim::new(x), 1);
                             NumberParts {
                                 unit: Some(x.to_owned()),
+                                raw_unit: Some(raw),
                                 quantity: parts.quantity,
                                 ..Default::default()
                             }
