@@ -91,7 +91,15 @@ impl Context {
                     (&a * &b).map_err(|e| format!("{}: <{}> * <{}>", e, a.show(self), b.show(self)))
                 })
             }),
-            Expr::Equals(_, ref right) => self.eval(right),
+            Expr::Equals(ref left, ref right) => {
+                match **left {
+                    Expr::Unit(_) => (),
+                    ref x => return Err(format!(
+                        "= is currently only used for inline unit definitions: \
+                         expected unit, got {}", x))
+                };
+                self.eval(right)
+            },
             Expr::Of(ref field, ref val) => {
                 let val = try!(self.eval(val));
                 let val = match val {
