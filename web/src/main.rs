@@ -41,6 +41,7 @@ use worker::{eval_text, eval_json};
 use limiter::RequestLimit;
 use logger::Logger;
 use rustc_serialize::json::ToJson;
+use std::sync::Arc;
 
 fn root(req: &mut Request) -> IronResult<Response> {
     let mut data = BTreeMap::new();
@@ -126,6 +127,15 @@ fn ifnot1helper(
     }
 }
 
+#[cfg(feature = "watch")]
+fn watch(hbse: &Arc<HandlebarsEngine>) {
+    use handlebars_iron::Watchable;
+    hbse.watch("./templates/");
+}
+
+#[cfg(not(feature = "watch"))]
+fn watch(_hbse: &Arc<HandlebarsEngine>) {}
+
 fn main() {
     let mut args = env::args();
     args.next();
@@ -157,6 +167,8 @@ fn main() {
     if let Err(r) = hbse.reload() {
         panic!("{}", r);
     }
+    let hbse = Arc::new(hbse);
+    watch(&hbse);
 
     let limiter = RequestLimit::new(5000, 5000);
 
