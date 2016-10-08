@@ -57,7 +57,7 @@
         {{#each factorizations}}
           <li>
             {{#each this}}
-              {{@key}}<sup>{{this}}</sup>
+              <a href="/?q=units+for+{{@key}}">{{@key}}</a><sup>{{this}}</sup>
             {{/each}}
           </li>
           {{else}}
