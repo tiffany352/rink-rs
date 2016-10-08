@@ -702,11 +702,26 @@ impl Context {
                     which, base)))
             },
             Query::Factorize(ref expr) => {
-                let val = try!(self.eval(expr));
+                let mut val = None;
+                if let Expr::Unit(ref name) = *expr {
+                    for (u, k) in &self.quantities {
+                        if name == k {
+                            val = Some(Number(Num::one(), u.clone()));
+                            break
+                        }
+                    }
+                }
                 let val = match val {
-                    Value::Number(val) => val,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Cannot find derivatives of <{}>", val.show(self))),)
+                    None => {
+                        let val = try!(self.eval(expr));
+                        let val = match val {
+                            Value::Number(val) => val,
+                            _ => return Err(QueryError::Generic(format!(
+                                "Cannot find derivatives of <{}>", val.show(self))),)
+                        };
+                        val
+                    },
+                    Some(val) => val
                 };
                 let quantities = self.quantities.iter()
                     .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
@@ -726,11 +741,26 @@ impl Context {
                 }))
             },
             Query::UnitsFor(ref expr) => {
-                let val = try!(self.eval(expr));
+                let mut val = None;
+                if let Expr::Unit(ref name) = *expr {
+                    for (u, k) in &self.quantities {
+                        if name == k {
+                            val = Some(Number(Num::one(), u.clone()));
+                            break
+                        }
+                    }
+                }
                 let val = match val {
-                    Value::Number(val) => val,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Cannot find units for <{}>", val.show(self)))),
+                    None => {
+                        let val = try!(self.eval(expr));
+                        let val = match val {
+                            Value::Number(val) => val,
+                            _ => return Err(QueryError::Generic(format!(
+                                "Cannot find units for <{}>", val.show(self)))),
+                        };
+                        val
+                    },
+                    Some(val) => val
                 };
                 let mut out = vec![];
                 for (name, unit) in self.units.iter() {
