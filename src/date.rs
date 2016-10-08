@@ -293,14 +293,14 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime<Fixe
 }
 
 pub fn to_duration(num: &Number) -> Result<Duration, String> {
-    if num.1.len() != 1 || num.1.get("s") != Some(&1) {
+    if num.unit.len() != 1 || num.unit.get("s") != Some(&1) {
         return Err(format!("Expected seconds"))
     }
     let max = Num::from(i64::max_value() / 1000);
-    if num.0.abs() > max {
+    if num.value.abs() > max {
         return Err(format!("Implementation error: Number is out of range ({:?})", max))
     }
-    let ms = &num.0 * &Num::from(1000);
+    let ms = &num.value * &Num::from(1000);
     let (ms, rem) = ms.div_rem(&Num::from(1));
     let ns = &rem * &Num::from(1_000_000_000);
     Ok(Duration::milliseconds(ms.to_int().unwrap()) +

@@ -28,13 +28,16 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
     'outer: for (unit, name) in quantities.iter() {
         // make sure we aren't doing something weird like introducing new base units
         for (dim, pow) in unit {
-            let vpow = value.1.get(dim).cloned().unwrap_or(0);
+            let vpow = value.unit.get(dim).cloned().unwrap_or(0);
             let snum = (vpow - pow).signum();
             if snum != 0 && snum != vpow.signum() {
                 continue 'outer
             }
         }
-        let num = Number(Num::one(), unit.clone());
+        let num = Number {
+            value: Num::one(),
+            unit: unit.clone(),
+        };
         for &i in [-1, 1, 2].into_iter() {
             let res = (value / &num.powi(i)).unwrap();
             let score = res.complexity_score();
@@ -46,17 +49,21 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
     }
     if let Some((name, unit, pow, score)) = best {
         if score < value.complexity_score() {
-            let mut res = (value / &Number(Num::one(), unit.clone()).powi(pow)).unwrap().1;
+            let num = Number {
+                value: Num::one(),
+                unit: unit.clone(),
+            };
+            let mut res = (value / &num.powi(pow)).unwrap().unit;
             res.insert(Dim::new(&**name), pow as i64);
             return res
         }
     }
-    value.1.clone()
+    value.unit.clone()
 }
 
 pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>)
                  -> BinaryHeap<Factors> {
-    if value.1.len() == 0 {
+    if value.dimless() {
         let mut map = BinaryHeap::new();
         map.push(Factors(0, vec![]));
         return map;
@@ -64,8 +71,12 @@ pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>)
     let mut candidates: BinaryHeap<Factors> = BinaryHeap::new();
     let value_score = value.complexity_score();
     for (unit, name) in quantities.iter().rev() {
-        let res = (value / &Number(Num::one(), unit.clone())).unwrap();
-        //if res.1.len() >= value.1.len() {
+        let num = Number {
+            value: Num::one(),
+            unit: unit.clone(),
+        };
+        let res = (value / &num).unwrap();
+        //if res.unit.len() >= value.unit.len() {
         let score = res.complexity_score();
         // we are not making the unit any simpler
         if score >= value_score {

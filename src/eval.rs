@@ -49,7 +49,7 @@ impl Context {
                         left.show(self), stringify!($name)
                     )))
                 };
-                if left.1 != BTreeMap::new() {
+                if left.unit != BTreeMap::new() {
                     Err(QueryError::Generic(format!(
                         "Expected dimensionless, got: <{}>",
                         left.show(self)
@@ -196,118 +196,140 @@ impl Context {
                         num.root(2).map(Value::Number)
                     }),
                     "exp" => func!(fn exp(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().exp()), num.1.clone())))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().exp()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "ln" => func!(fn ln(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().ln()), num.1.clone())))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().ln()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "log" => func!(fn log(num: Number, base: Number) {
-                        if base.1.len() > 0 {
+                        if base.unit.len() > 0 {
                             Err(format!(
                                 "Base must be dimensionless"
                             ))
                         } else {
-                            Ok(Value::Number(Number(
-                                Num::Float(num.0.to_f64().log(base.0.to_f64())),
-                                num.1.clone()
-                            )))
+                            Ok(Value::Number(Number {
+                                value: Num::Float(num.value.to_f64()
+                                                  .log(base.value.to_f64())),
+                                unit: num.unit.clone(),
+                            }))
                         }
                     }),
                     "log2" => func!(fn log2(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().log2()), num.1.clone())))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().log2()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "log10" => func!(fn ln(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().log10()), num.1.clone())))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().log10()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "hypot" => func!(fn hypot(x: Number, y: Number) {
-                        if x.1 != y.1 {
+                        if x.unit != y.unit {
                             Err(format!(
                                 "Arguments to hypot must have matching \
                                  dimensionality"
                             ))
                         } else {
-                            Ok(Value::Number(Number(
-                                Num::Float(x.0.to_f64().hypot(y.0.to_f64())),
-                                x.1.clone()
-                            )))
+                            Ok(Value::Number(Number {
+                                value: Num::Float(x.value.to_f64().hypot(y.value.to_f64())),
+                                unit: x.unit.clone(),
+                            }))
                         }
                     }),
                     "sin" => func!(fn sin(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().sin()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().sin()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "cos" => func!(fn cos(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().cos()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().cos()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "tan" => func!(fn tan(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().tan()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().tan()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "asin" => func!(fn asin(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().asin()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().asin()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "acos" => func!(fn acos(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().acos()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().acos()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "atan" => func!(fn atan(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().atan()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().atan()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "atan2" => func!(fn atan2(x: Number, y: Number) {
-                        if x.1 != y.1 {
+                        if x.unit != y.unit {
                             Err(format!(
                                 "Arguments to atan2 must have matching \
                                  dimensionality"
                             ))
                         } else {
-                            Ok(Value::Number(Number(
-                                Num::Float(x.0.to_f64().atan2(y.0.to_f64())),
-                                x.1.clone()
-                            )))
+                            Ok(Value::Number(Number {
+                                value: Num::Float(x.value.to_f64()
+                                                  .atan2(y.value.to_f64())),
+                                unit: x.unit.clone(),
+                            }))
                         }
                     }),
                     "sinh" => func!(fn sinh(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().sinh()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().sinh()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "cosh" => func!(fn cosh(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().cosh()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().cosh()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "tanh" => func!(fn tanh(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().tanh()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().tanh()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "asinh" => func!(fn asinh(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().asinh()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().asinh()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "acosh" => func!(fn acosh(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().acosh()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().acosh()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     "atanh" => func!(fn atanh(num: Number) {
-                        Ok(Value::Number(Number(Num::Float(
-                            num.0.to_f64().atanh()), num.1.clone()
-                        )))
+                        Ok(Value::Number(Number {
+                            value: Num::Float(num.value.to_f64().atanh()),
+                            unit: num.unit.clone(),
+                        }))
                     }),
                     _ => Err(QueryError::Generic(format!(
                         "Function not found: {}", name
@@ -371,12 +393,12 @@ impl Context {
                         "Exponents must be numbers"
                     )))
                 };
-                if res.1.len() > 0 {
+                if !res.dimless() {
                     return Err(QueryError::Generic(format!(
                         "Exponents must be dimensionless"
                     )))
                 }
-                let res = res.0.to_f64();
+                let res = res.value.to_f64();
                 let (left, lv) = try!(self.eval_unit_name(left));
                 Ok((left.into_iter()
                    .filter_map(|(k, v)| {
@@ -439,12 +461,12 @@ impl Context {
 
     fn conformance_err(&self, top: &Number, bottom: &Number) -> ConformanceError {
         let mut topu = top.clone();
-        topu.0 = Num::one();
+        topu.value = Num::one();
         let mut bottomu = bottom.clone();
-        bottomu.0 = Num::one();
+        bottomu.value = Num::one();
         let mut suggestions = vec![];
         let diff = (&topu * &bottomu).unwrap();
-        if diff.1.len() == 0 {
+        if diff.dimless() {
             suggestions.push(format!("Reciprocal conversion, invert one side"));
         } else {
             let diff = (&topu / &bottomu).unwrap();
@@ -512,7 +534,7 @@ impl Context {
             let first = try!(units.first().ok_or(
                 format!("Expected non-empty unit list")));
             try!(units.iter().skip(1).map(|x| {
-                if first.1 != x.1 {
+                if first.unit != x.unit {
                     Err(format!(
                         "Units in unit list must conform: <{}> ; <{}>",
                         first.show(self), x.show(self)))
@@ -520,26 +542,29 @@ impl Context {
                     Ok(())
                 }
             }).collect::<Result<Vec<()>, _>>());
-            if top.1 != first.1 {
+            if top.unit != first.unit {
                 return Err(QueryError::Conformance(
                     self.conformance_err(&top, &first)))
             }
         }
-        let mut value = top.0.clone();
+        let mut value = top.value.clone();
         let mut out = vec![];
         let len = units.len();
         for (i, unit) in units.into_iter().enumerate() {
             if i == len-1 {
-                out.push(&value / &unit.0);
+                out.push(&value / &unit.value);
             } else {
-                let (div, rem) = value.div_rem(&unit.0);
+                let (div, rem) = value.div_rem(&unit.value);
                 out.push(div);
                 value = rem;
             }
         }
         Ok(list.into_iter().zip(out.into_iter()).map(|(name, value)| {
-            let pretty = Number(value, Number::one_unit(Dim::new(name)).1).to_parts(self);
-            let unit = pretty.unit.or(pretty.dimensions)
+            let pretty = Number {
+                value: value,
+                unit: Number::one_unit(Dim::new(name)).unit
+            }.to_parts(self);
+            let unit: String = pretty.unit.or(pretty.dimensions)
                 .map(|x| self.canonicalize(&*x).unwrap_or(x))
                 .expect("to_parts returned no dimensions");
             let mut raw = BTreeMap::new();
@@ -649,7 +674,7 @@ impl Context {
             {
                 (Ok(Value::Number(top)), Ok(Value::Number(bottom)),
                  Ok((bottom_name, bottom_const))) => {
-                    if top.1 == bottom.1 {
+                    if top.unit == bottom.unit {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
                             None => return Err(QueryError::Generic(format!(
@@ -717,7 +742,7 @@ impl Context {
                 ).map(|list| {
                     QueryReply::UnitList(UnitListReply {
                         rest: NumberParts {
-                            quantity: self.quantities.get(&top.1).cloned(),
+                            quantity: self.quantities.get(&top.unit).cloned(),
                             ..Default::default()
                         },
                         list: list,
@@ -752,7 +777,7 @@ impl Context {
                         };
                         let bottom = self.lookup($scale)
                             .expect(&*format!("Unit {} missing", $scale));
-                        if top.1 != bottom.1 {
+                        if top.unit != bottom.unit {
                             Err(QueryError::Conformance(
                                 self.conformance_err(&top, &bottom)))
                         } else {
@@ -789,7 +814,10 @@ impl Context {
                 if let Expr::Unit(ref name) = *expr {
                     for (u, k) in &self.quantities {
                         if name == k {
-                            val = Some(Number(Num::one(), u.clone()));
+                            val = Some(Number {
+                                value: Num::one(),
+                                unit: u.clone()
+                            });
                             break
                         }
                     }
@@ -828,7 +856,10 @@ impl Context {
                 if let Expr::Unit(ref name) = *expr {
                     for (u, k) in &self.quantities {
                         if name == k {
-                            val = Some(Number(Num::one(), u.clone()));
+                            val = Some(Number {
+                                value: Num::one(),
+                                unit: u.clone()
+                            });
                             break
                         }
                     }
@@ -850,7 +881,7 @@ impl Context {
                     if let Some(&Expr::Unit(_)) = self.definitions.get(name) {
                         continue
                     }
-                    if val.1 == unit.1 {
+                    if val.unit == unit.unit {
                         out.push(name);
                     }
                 }
@@ -897,7 +928,7 @@ impl Context {
             Query::Convert(ref expr, Conversion::None, None) => {
                 let val = try!(self.eval(expr));
                 match val {
-                    Value::Number(ref n) if n.1 == Number::one_unit(Dim::new("s")).1 => {
+                    Value::Number(ref n) if n.unit == Number::one_unit(Dim::new("s")).unit => {
                         let units = &["year", "week", "day", "hour", "minute", "second"];
                         let list = try!(self.to_list(&n, units));
                         let mut list = list.into_iter();

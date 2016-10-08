@@ -50,7 +50,7 @@ impl Substance {
     }
 
     pub fn get(&self, name: &str) -> Result<Number, SubstanceGetError> {
-        if self.amount.1.len() == 0 {
+        if self.amount.dimless() {
             self.properties.properties.get(name)
                 .ok_or_else(|| SubstanceGetError::Generic(format!(
                     "No such property {} of {}",
@@ -66,7 +66,7 @@ impl Substance {
                         (&prop.input / &self.amount).ok_or_else(
                             || SubstanceGetError::Generic(
                                 "Division by zero".to_owned())));
-                    if input.1.len() == 0 {
+                    if input.dimless() {
                         let res = try!((&prop.output / &input).ok_or_else(
                             || SubstanceGetError::Generic(
                                 "Division by zero".to_owned())));
@@ -80,7 +80,7 @@ impl Substance {
                         (&prop.output / &self.amount).ok_or_else(
                             || SubstanceGetError::Generic(
                                 "Division by zero".to_owned())));
-                    if output.1.len() == 0 {
+                    if output.dimless() {
                         let res = try!((&prop.input / &output).ok_or_else(
                             || SubstanceGetError::Generic(
                                 "Division by zero".to_owned())));
@@ -93,7 +93,8 @@ impl Substance {
             }
             Err(SubstanceGetError::Generic(format!(
                 "No such property {} of {}",
-                name, self.properties.name)))
+                name, self.properties.name
+            )))
         }
     }
 
@@ -106,13 +107,13 @@ impl Substance {
         bottom_const: Num,
         base: u8,
     ) -> Result<SubstanceReply, String> {
-        if self.amount.1.len() == 0 {
+        if self.amount.dimless() {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: try!(self.properties.properties.iter().map(|(k, v)| {
-                    let (input, output) = if v.input.1.len() == 0 {
+                    let (input, output) = if v.input.dimless() {
                         let res = (&v.output * &self.amount).unwrap();
                         (None, try!((&res / &v.input)
                          .ok_or_else(|| format!(
@@ -123,9 +124,9 @@ impl Substance {
                     } else {
                         (Some(v.input.clone()), v.output.clone())
                     };
-                    let (input, output) = if output.1 != unit.1 {
+                    let (input, output) = if output.unit != unit.unit {
                         if let Some(input) = input {
-                            if input.1 == unit.1 {
+                            if input.unit == unit.unit {
                                 (Some(output), input)
                             } else {
                                 return Ok(None)
@@ -170,7 +171,7 @@ impl Substance {
                     v.output.show(context),
                     self.amount.show(context)
                 )));
-                let (name, input, output) = if input.1.len() == 0 {
+                let (name, input, output) = if input.dimless() {
                     let div = try!(
                         (&v.output / &input).ok_or_else(|| format!(
                             "Division by zero: <{}> / <{}>",
@@ -179,7 +180,7 @@ impl Substance {
                         ))
                     );
                     (v.output_name.clone(), None, div)
-                } else if output.1.len() == 0 {
+                } else if output.dimless() {
                     let div = try!(
                         (&v.input / &output).ok_or_else(|| format!(
                             "Division by zero: <{}> / <{}>",
@@ -233,13 +234,13 @@ impl Substance {
     }
 
     pub fn to_reply(&self, context: &Context) -> Result<SubstanceReply, String> {
-        if self.amount.1.len() == 0 {
+        if self.amount.dimless() {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: try!(self.properties.properties.iter().map(|(k, v)| {
-                    let (input, output) = if v.input.1.len() == 0 {
+                    let (input, output) = if v.input.dimless() {
                         let res = (&v.output * &self.amount).unwrap();
                         (None, try!((&res / &v.input)
                          .ok_or_else(|| format!(
@@ -270,7 +271,7 @@ impl Substance {
                     v.output.show(context),
                     self.amount.show(context)
                 )));
-                let (name, input, output) = if input.1.len() == 0 {
+                let (name, input, output) = if input.dimless() {
                     let div = try!(
                         (&v.output / &input).ok_or_else(|| format!(
                             "Division by zero: <{}> / <{}>",
@@ -279,7 +280,7 @@ impl Substance {
                         ))
                     );
                     (v.output_name.clone(), None, div.to_parts(context))
-                } else if output.1.len() == 0 {
+                } else if output.dimless() {
                     let div = try!(
                         (&v.input / &output).ok_or_else(|| format!(
                             "Division by zero: <{}> / <{}>",
@@ -374,8 +375,8 @@ impl<'a, 'b> Add<&'b Substance> for &'a Substance {
                     if
                         prop1.input_name != prop2.input_name ||
                         prop1.output_name != prop2.output_name ||
-                        prop1.input.1 != prop2.input.1 ||
-                        prop1.output.1 != prop2.output.1 ||
+                        prop1.input.unit != prop2.input.unit ||
+                        prop1.output.unit != prop2.output.unit ||
                         prop1.output != mol ||
                         prop2.output != mol
                     {

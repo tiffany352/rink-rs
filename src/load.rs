@@ -240,8 +240,8 @@ impl Context {
                 },
                 Def::Unit(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        if v.0 == Num::one() && reverse.contains(&*name) {
-                            self.reverse.insert(v.1.clone(), name.clone());
+                        if v.value == Num::one() && reverse.contains(&*name) {
+                            self.reverse.insert(v.unit.clone(), name.clone());
                         }
                         self.definitions.insert(name.clone(), expr.clone());
                         self.units.insert(name.clone(), v);
@@ -276,7 +276,7 @@ impl Context {
                 },
                 Def::Quantity(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        let res = self.quantities.insert(v.1, name.clone());
+                        let res = self.quantities.insert(v.unit, name.clone());
                         if !self.definitions.contains_key(&name) {
                             self.definitions.insert(name.clone(), expr.clone());
                         }
@@ -314,7 +314,7 @@ impl Context {
                         unique.insert(&*prop.output_name);
                         let unit = (&input / &output)
                             .expect("Non-zero property")
-                            .1;
+                            .unit;
                         let mut existing = prev.entry(unit).or_insert(BTreeSet::new());
                         for conflict in existing.intersection(&unique) {
                             println!(

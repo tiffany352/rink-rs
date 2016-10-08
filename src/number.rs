@@ -33,7 +33,10 @@ impl ::serde::ser::Serialize for Dim {
 
 /// The basic representation of a number with a unit.
 #[derive(Clone, PartialEq)]
-pub struct Number(pub Num, pub Unit);
+pub struct Number {
+    pub value: Num,
+    pub unit: Unit,
+}
 
 impl Borrow<str> for Dim {
     fn borrow(&self) -> &str {
@@ -335,7 +338,10 @@ impl fmt::Display for NumberParts {
 
 impl Number {
     pub fn one() -> Number {
-        Number(Num::one(), Unit::new())
+        Number {
+            value: Num::one(),
+            unit: Unit::new(),
+        }
     }
 
     pub fn one_unit(unit: Dim) -> Number {
@@ -343,22 +349,33 @@ impl Number {
     }
 
     pub fn zero() -> Number {
-        Number(Num::zero(), Unit::new())
+        Number {
+            value: Num::zero(),
+            unit: Unit::new(),
+        }
     }
 
     /// Creates a dimensionless value.
     pub fn new(num: Num) -> Number {
-        Number(num, Unit::new())
+        Number {
+            value: num,
+            unit: Unit::new(),
+        }
     }
 
     /// Creates a value with a single dimension.
     pub fn new_unit(num: Num, unit: Dim) -> Number {
         let mut map = Unit::new();
         map.insert(unit, 1);
-        Number(num, map)
+        Number {
+            value: num,
+            unit: map,
+        }
     }
 
-    pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Num, String> {
+    pub fn from_parts(
+        integer: &str, frac: Option<&str>, exp: Option<&str>
+    ) -> Result<Num, String> {
         use std::str::FromStr;
 
         let num = Mpz::from_str_radix(integer, 10).unwrap();
@@ -391,28 +408,33 @@ impl Number {
 
     /// Computes the reciprocal (1/x) of the value.
     pub fn invert(&self) -> Number {
-        Number(&Num::one() / &self.0,
-               self.1.iter()
-               .map(|(k, &power)| (k.clone(), -power))
-               .collect::<Unit>())
+        Number {
+            value: &Num::one() / &self.value,
+            unit: self.unit.iter()
+                .map(|(k, &power)| (k.clone(), -power))
+                .collect::<Unit>(),
+        }
     }
 
     /// Raises a value to a dimensionless integer power.
     pub fn powi(&self, exp: i32) -> Number {
-        let unit = self.1.iter()
+        let unit = self.unit.iter()
             .map(|(k, &power)| (k.clone(), power * exp as i64))
             .collect::<Unit>();
-        Number(pow(&self.0, exp), unit)
+        Number {
+            value: pow(&self.value, exp),
+            unit: unit
+        }
     }
 
     /// Computes the nth root of a value iff all of its units have
     /// powers divisible by n.
     pub fn root(&self, exp: i32) -> Result<Number, String> {
-        if self.0 < Num::zero() {
+        if self.value < Num::zero() {
             return Err(format!("Complex numbers are not implemented"))
         }
         let mut res = Unit::new();
-        for (dim, &power) in &self.1 {
+        for (dim, &power) in &self.unit {
             if power % exp as i64 != 0 {
                 return Err(format!(
                     "Result must have integer dimensions"))
@@ -420,19 +442,22 @@ impl Number {
                 res.insert(dim.clone(), power / exp as i64);
             }
         }
-        Ok(Number(Num::Float(self.0.to_f64().powf(1.0 / exp as f64)), res))
+        Ok(Number {
+            value: Num::Float(self.value.to_f64().powf(1.0 / exp as f64)),
+            unit: res
+        })
     }
 
     pub fn pow(&self, exp: &Number) -> Result<Number, String> {
         use std::convert::Into;
 
-        if exp.1.len() != 0 {
+        if !exp.dimless() {
             return Err(format!("Exponent must be dimensionless"))
         }
-        if exp.0.abs() >= Num::from(1 << 31) {
+        if exp.value.abs() >= Num::from(1 << 31) {
             return Err(format!("Exponent is too large"))
         }
-        let (num, den) = exp.0.to_rational();
+        let (num, den) = exp.value.to_rational();
         let one = Int::one();
         if den == one {
             let exp: Option<i64> = (&num).into();
@@ -441,25 +466,28 @@ impl Number {
             let exp: Option<i64> = (&den).into();
             self.root(exp.unwrap() as i32)
         } else {
-            if self.1.len() > 0 {
+            if !self.dimless() {
                 Err(format!(
                     "Exponentiation must result in integer dimensions"))
             } else {
-                let exp = exp.0.to_f64();
-                Ok(Number(Num::Float(
-                    self.0.to_f64().powf(exp)),
-                    self.1.clone()))
+                let exp = exp.value.to_f64();
+                Ok(Number {
+                    value: Num::Float(
+                        self.value.to_f64().powf(exp)
+                    ),
+                    unit: self.unit.clone()
+                })
             }
         }
     }
 
     pub fn numeric_value(&self, base: u8) -> (Option<String>, Option<String>) {
-        match self.0 {
+        match self.value {
             Num::Mpq(ref mpq) => {
                 let num = mpq.get_num();
                 let den = mpq.get_den();
 
-                match to_string(&self.0, base) {
+                match to_string(&self.value, base) {
                     (true, v) => (Some(v), None),
                     (false, v) => if {den > Mpz::from(1_000) ||
                                       num > Mpz::from(1_000_000u64)} {
@@ -470,7 +498,7 @@ impl Number {
                 }
             },
             Num::Float(_f) => {
-                (None, Some(to_string(&self.0, base).1))
+                (None, Some(to_string(&self.value, base).1))
             },
         }
     }
@@ -480,7 +508,7 @@ impl Number {
         NumberParts {
             exact_value: exact,
             approx_value: approx,
-            dimensions: Some(Number::unit_to_string(&self.1)),
+            dimensions: Some(Number::unit_to_string(&self.unit)),
             ..Default::default()
         }
     }
@@ -498,20 +526,20 @@ impl Number {
             let orig = unit.iter().next().unwrap();
             // kg special case
             let (val, orig) = if &**(orig.0).0 == "kg" || &**(orig.0).0 == "kilogram" {
-                (&self.0 * &pow(&Num::from(1000), (*orig.1) as i32),
+                (&self.value * &pow(&Num::from(1000), (*orig.1) as i32),
                  (Dim::new("gram"), orig.1))
             } else {
-                (self.0.clone(), (orig.0.clone(), orig.1))
+                (self.value.clone(), (orig.0.clone(), orig.1))
             };
             for &(ref p, ref v) in &context.prefixes {
                 if !prefixes.contains(&**p) {
                     continue;
                 }
                 let abs = val.abs();
-                if { abs >= pow(&v.0, (*orig.1) as i32) &&
-                     abs < pow(&(&v.0 * &Num::from(1000)),
+                if { abs >= pow(&v.value, (*orig.1) as i32) &&
+                     abs < pow(&(&v.value * &Num::from(1000)),
                                (*orig.1) as i32) } {
-                    let res = &val / &pow(&v.0, (*orig.1) as i32);
+                    let res = &val / &pow(&v.value, (*orig.1) as i32);
                     // tonne special case
                     let unit = if &**(orig.0).0 == "gram" && p == "mega" {
                         format!("tonne")
@@ -520,14 +548,23 @@ impl Number {
                     };
                     let mut map = BTreeMap::new();
                     map.insert(Dim::new(&*unit), *orig.1);
-                    return Number(res, map)
+                    return Number {
+                        value: res,
+                        unit: map,
+                    }
                 }
             }
             let mut map = BTreeMap::new();
             map.insert(orig.0.clone(), orig.1.clone());
-            Number(val, map)
+            Number {
+                value: val,
+                unit: map,
+            }
         } else {
-            Number(self.0.clone(), unit)
+            Number {
+                value: self.value.clone(),
+                unit: unit,
+            }
         }
     }
 
@@ -535,9 +572,9 @@ impl Number {
         let value = self.prettify(context);
         let (exact, approx) = value.numeric_value(10);
 
-        let quantity = context.quantities.get(&self.1).cloned().or_else(|| {
-            if self.1.len() == 1 {
-                let e = self.1.iter().next().unwrap();
+        let quantity = context.quantities.get(&self.unit).cloned().or_else(|| {
+            if self.unit.len() == 1 {
+                let e = self.unit.iter().next().unwrap();
                 let ref n = *e.0;
                 if *e.1 == 1 {
                     Some((&*n.0).clone())
@@ -552,10 +589,10 @@ impl Number {
         NumberParts {
             exact_value: exact,
             approx_value: approx,
-            unit: if value.1 != self.1 { Some(Number::unit_to_string(&value.1)) } else { None },
-            raw_unit: if value.1 != self.1 { Some(value.1) } else { None },
+            unit: if value.unit != self.unit { Some(Number::unit_to_string(&value.unit)) } else { None },
+            raw_unit: if value.unit != self.unit { Some(value.unit) } else { None },
             quantity: quantity,
-            dimensions: Some(Number::unit_to_string(&self.1)),
+            dimensions: Some(Number::unit_to_string(&self.unit)),
             ..Default::default()
         }
     }
@@ -602,7 +639,11 @@ impl Number {
     }
 
     pub fn complexity_score(&self) -> i64 {
-        self.1.iter().map(|(_, p)| 1 + p.abs()).fold(0, |a,x| a+x)
+        self.unit.iter().map(|(_, p)| 1 + p.abs()).fold(0, |a,x| a+x)
+    }
+
+    pub fn dimless(&self) -> bool {
+        self.unit.len() == 0
     }
 }
 
@@ -624,10 +665,13 @@ impl<'a, 'b> Add<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
     fn add(self, other: &Number) -> Self::Output {
-        if self.1 != other.1 {
+        if self.unit != other.unit {
             return None
         }
-        Some(Number(&self.0 + &other.0, self.1.clone()))
+        Some(Number {
+            value: &self.value + &other.value,
+            unit: self.unit.clone(),
+        })
     }
 }
 
@@ -635,10 +679,13 @@ impl<'a, 'b> Sub<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
     fn sub(self, other: &Number) -> Self::Output {
-        if self.1 != other.1 {
+        if self.unit != other.unit {
             return None
         }
-        Some(Number(&self.0 - &other.0, self.1.clone()))
+        Some(Number {
+            value: &self.value - &other.value,
+            unit: self.unit.clone(),
+        })
     }
 }
 
@@ -646,7 +693,10 @@ impl<'a> Neg for &'a Number {
     type Output = Option<Number>;
 
     fn neg(self) -> Self::Output {
-        Some(Number(-&self.0, self.1.clone()))
+        Some(Number {
+            value: -&self.value,
+            unit: self.unit.clone(),
+        })
     }
 }
 
@@ -654,8 +704,11 @@ impl<'a, 'b> Mul<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
     fn mul(self, other: &Number) -> Self::Output {
-        let val = ::btree_merge(&self.1, &other.1, |a, b| if a+b != 0 { Some(a + b) } else { None });
-        Some(Number(&self.0 * &other.0, val))
+        let val = ::btree_merge(&self.unit, &other.unit, |a, b| if a+b != 0 { Some(a + b) } else { None });
+        Some(Number {
+            value: &self.value * &other.value,
+            unit: val,
+        })
     }
 }
 
@@ -663,7 +716,7 @@ impl<'a, 'b> Div<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
     fn div(self, other: &Number) -> Self::Output {
-        if other.0 == Num::zero() {
+        if other.value == Num::zero() {
             None
         } else {
             self * &other.invert()

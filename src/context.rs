@@ -67,7 +67,10 @@ impl Context {
             }
             for (unit, quantity) in &ctx.quantities {
                 if name == quantity {
-                    return Some(Number(Number::one().0, unit.clone()))
+                    return Some(Number {
+                        value: Num::one(),
+                        unit: unit.clone()
+                    })
                 }
             }
             None
@@ -168,19 +171,25 @@ impl Context {
 
         let mut buf = vec![];
         let mut recip = false;
-        let square = Number(Num::one(), value.1.clone()).root(2).ok();
-        let inverse = (&Number::one() / &Number(Num::one(), value.1.clone())).unwrap();
-        if let Some(name) = self.quantities.get(&value.1) {
+        let square = Number {
+            value: Num::one(),
+            unit: value.unit.clone()
+        }.root(2).ok();
+        let inverse = (&Number::one() / &Number {
+            value: Num::one(),
+            unit: value.unit.clone()
+        }).unwrap();
+        if let Some(name) = self.quantities.get(&value.unit) {
             write!(buf, "{}", name).unwrap();
-        } else if let Some(name) = square.and_then(|square| self.quantities.get(&square.1)) {
+        } else if let Some(name) = square.and_then(|square| self.quantities.get(&square.unit)) {
             write!(buf, "{}^2", name).unwrap();
-        } else if let Some(name) = self.quantities.get(&inverse.1) {
+        } else if let Some(name) = self.quantities.get(&inverse.unit) {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
             let mut frac = vec![];
             let mut found = false;
-            for (dim, &pow) in &value.1 {
+            for (dim, &pow) in &value.unit {
                 if pow < 0 {
                     frac.push((dim, -pow));
                 } else {

@@ -146,7 +146,7 @@ fn main() {
                 } else if k.starts_with(name) {
                     out.insert(0, Completion {
                         completion: k.clone(),
-                        display: Some(format!("{} ({:?} prefix)", k, v.0)),
+                        display: Some(format!("{} ({:?} prefix)", k, v.value)),
                         suffix: None,
                     });
                 }
