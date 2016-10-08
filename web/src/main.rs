@@ -19,6 +19,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate limiter;
 extern crate logger;
+extern crate url;
 #[macro_use]
 extern crate serde_derive;
 
@@ -127,6 +128,34 @@ fn ifnot1helper(
     }
 }
 
+fn urlescapehelper(
+    c: &handlebars::Context,
+    h: &handlebars::Helper,
+    r: &Handlebars,
+    rc: &mut handlebars::RenderContext
+) -> Result<(), handlebars::RenderError> {
+    use handlebars::RenderError;
+    use handlebars::Renderable;
+    use url::percent_encoding::{utf8_percent_encode, QUERY_ENCODE_SET};
+
+    let tmpl = h.template();
+    let mut res = vec![];
+    match tmpl {
+        Some(ref t) => {
+            let mut new_rc = rc.with_writer(&mut res);
+            try!(t.render(c, r, &mut new_rc))
+        },
+        None => return Err(RenderError::new("urlescape is a block helper")),
+    }
+    let res = String::from_utf8_lossy(&res);
+    let res = res.split_whitespace().collect::<Vec<_>>().join(" ");
+    let res = utf8_percent_encode(&res, QUERY_ENCODE_SET).collect::<String>();
+    let res = res.split("%20").collect::<Vec<_>>().join("+");
+    try!(rc.writer.write_all(res.as_bytes()).map_err(
+        |e| RenderError::new(&format!("{}", e))));
+    Ok(())
+}
+
 #[cfg(feature = "watch")]
 fn watch(hbse: &Arc<HandlebarsEngine>) {
     use handlebars_iron::Watchable;
@@ -161,6 +190,7 @@ fn main() {
 
     let mut hb = Handlebars::new();
     hb.register_helper("ifnot1", Box::new(ifnot1helper));
+    hb.register_helper("urlescape", Box::new(urlescapehelper));
     let mut hbse = HandlebarsEngine::from(hb);
     hbse.add(Box::new(DirectorySource::new("./templates/", ".hbs")));
     // load templates from all registered sources

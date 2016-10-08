@@ -1,0 +1,19 @@
+{{#if Literal}}
+  {{Literal}}
+{{/if}}
+{{#if Unit}}
+  <a href="/?q={{Unit}}">{{Unit}}</a>
+{{/if}}
+{{#if Property}}
+  <a href="/?q={{#urlescape}}
+    {{Property[0]}}
+    of
+    {{#each Property[1]}}
+    {{> expr-nolinks}}
+    {{/each}}
+  {{/urlescape}}">{{Property[0]}}</a>
+  of
+  {{#each Property[1]}}
+  {{> expr}}
+  {{/each}}
+{{/if}}

@@ -6,12 +6,29 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use chrono::{DateTime, FixedOffset};
 use std::iter::once;
+use ast::Expr;
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+pub enum ExprParts {
+    Literal(String),
+    Unit(String),
+    Property(String, Vec<ExprParts>),
+    Error(String),
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+pub struct ExprReply {
+    exprs: Vec<ExprParts>,
+}
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct DefReply {
     pub canon_name: String,
     pub def: Option<String>,
+    pub def_expr: Option<ExprReply>,
     pub value: Option<NumberParts>,
     pub doc: Option<String>,
 }
@@ -116,6 +133,113 @@ pub enum QueryReply {
     UnitsFor(UnitsForReply),
     UnitList(UnitListReply),
     Search(SearchReply),
+}
+
+impl ExprReply {
+    pub fn from(expr: &Expr) -> ExprReply {
+        let mut parts = vec![];
+
+        #[derive(PartialOrd, Ord, PartialEq, Eq)]
+        enum Prec {
+            Term, Plus, Pow, Mul, Div, Add, Equals
+        }
+
+        fn recurse(expr: &Expr, parts: &mut Vec<ExprParts>, prec: Prec) {
+            macro_rules! literal {
+                ($e:expr) => {{
+                    parts.push(ExprParts::Literal($e.to_owned()))
+                }}
+            }
+            macro_rules! binop {
+                ($left:expr, $right:expr, $prec:expr, $succ:expr, $sym:expr) => {{
+                    if prec < $prec {
+                        literal!("(");
+                    }
+                    recurse($left, parts, $succ);
+                    literal!($sym);
+                    recurse($right, parts, $prec);
+                    if prec < $prec {
+                        literal!(")");
+                    }
+                }}
+            }
+            match *expr {
+                Expr::Unit(ref name) => parts.push(ExprParts::Unit(name.clone())),
+                Expr::Quote(ref name) => literal!(format!("'{}'", name)),
+                Expr::Const(ref num) => {
+                    let (_exact, val) = ::number::to_string(num, 10);
+                    literal!(format!("{}", val))
+                },
+                Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
+                Expr::Mul(ref exprs) => {
+                    if prec < Prec::Mul {
+                        literal!("(");
+                    }
+                    for expr in exprs.iter() {
+                        recurse(expr, parts, Prec::Pow);
+                    }
+                    if prec < Prec::Mul {
+                        literal!(")");
+                    }
+                },
+                Expr::Call(ref name, ref args) => {
+                    literal!(format!("{}(", name));
+                    if let Some(first) = args.first() {
+                        recurse(first, parts, Prec::Equals);
+                    }
+                    for arg in args.iter().skip(1) {
+                        literal!(",");
+                        recurse(arg, parts, Prec::Equals);
+                    }
+                    literal!(")")
+                },
+                Expr::Pow(ref left, ref right) => binop!(left, right, Prec::Pow, Prec::Term, "^"),
+                Expr::Frac(ref left, ref right) => binop!(left, right, Prec::Div, Prec::Mul, " / "),
+                Expr::Add(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " + "),
+                Expr::Sub(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " - "),
+                Expr::Plus(ref expr) => {
+                    literal!("+");
+                    recurse(expr, parts, Prec::Plus)
+                },
+                Expr::Neg(ref expr) => {
+                    literal!("-");
+                    recurse(expr, parts, Prec::Plus)
+                },
+                Expr::Equals(ref left, ref right) => binop!(left, right, Prec::Equals, Prec::Add, " = "),
+                Expr::Suffix(ref op, ref expr) => {
+                    if prec < Prec::Mul {
+                        literal!("(");
+                    }
+                    recurse(expr, parts, Prec::Mul);
+                    literal!(format!("{}", op));
+                    if prec < Prec::Mul {
+                        literal!(")");
+                    }
+                },
+                Expr::Of(ref field, ref expr) => {
+                    if prec < Prec::Add {
+                        literal!("(");
+                    }
+                    let mut sub = vec![];
+                    recurse(expr, &mut sub, Prec::Div);
+                    parts.push(ExprParts::Property(
+                        field.to_owned(),
+                        sub
+                    ));
+                    if prec < Prec::Add {
+                        literal!(")");
+                    }
+                },
+                Expr::Error(ref err) => parts.push(ExprParts::Error(err.to_owned()))
+            }
+        }
+
+        recurse(expr, &mut parts, Prec::Equals);
+
+        ExprReply {
+            exprs: parts
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

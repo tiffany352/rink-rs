@@ -1,0 +1,13 @@
+{{#if Literal}}
+  {{Literal}}
+{{/if}}
+{{#if Unit}}
+  {{Unit}}
+{{/if}}
+{{#if Property}}
+  {{Property[0]}}
+  of
+  {{#each Property[1]}}
+  {{> expr-nolinks}}
+  {{/each}}
+{{/if}}

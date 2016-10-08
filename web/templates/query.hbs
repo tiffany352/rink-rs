@@ -22,7 +22,17 @@
         <h3 class="panel-title">Definition of {{canon_name}}</h3>
       </div>
       <ul class="list-group">
-        <li class="list-group-item"><p>{{def}}</p></li>
+        {{#if def_expr}}
+          <li class="list-group-item">
+            {{#each def_expr.exprs}}
+              {{> expr}}
+            {{/each}}
+          </li>
+          {{else}}
+          {{#if def}}
+            <li class="list-group-item"><p>{{def}}</p></li>
+          {{/if}}
+        {{/if}}
         {{#with value}}
           <li class="list-group-item">
             {{> number}}

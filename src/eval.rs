@@ -12,7 +12,7 @@ use value::{Value, Show};
 use reply::{
     DefReply, ConversionReply, FactorizeReply, UnitsForReply,
     QueryReply, ConformanceError, QueryError, UnitListReply,
-    DurationReply, SearchReply, DateReply
+    DurationReply, SearchReply, DateReply, ExprReply
 };
 use search;
 use context::Context;
@@ -523,7 +523,7 @@ impl Context {
                         canon = unit_canon.clone();
                     }
                 }
-                let (def, res) = if self.dimensions.contains(&*name) {
+                let (def, def_expr, res) = if self.dimensions.contains(&*name) {
                     let parts = self.lookup(&name)
                         .expect("Lookup of base unit failed")
                         .to_parts(self);
@@ -532,14 +532,17 @@ impl Context {
                     } else {
                         format!("base unit")
                     };
-                    (Some(def), None)
+                    (Some(def), None, None)
                 } else {
-                    (self.definitions.get(&name).map(|x| format!("{}", x)),
+                    let def = self.definitions.get(&name);
+                    (def.as_ref().map(|x| format!("{}", x)),
+                     def,
                      self.lookup(&name).map(|x| x.to_parts(self)))
                 };
                 Ok(QueryReply::Def(DefReply {
                     canon_name: canon,
                     def: def,
+                    def_expr: def_expr.as_ref().map(|x| ExprReply::from(*x)),
                     value: res,
                     doc: self.docs.get(&name).cloned(),
                 }))
