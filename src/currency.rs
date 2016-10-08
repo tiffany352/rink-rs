@@ -8,7 +8,7 @@ use xml::EventReader;
 use xml::reader::XmlEvent;
 use ast::{Defs, Def, Expr};
 use std::rc::Rc;
-use number::Num;
+use num::Num;
 
 static URL: &'static str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 

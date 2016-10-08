@@ -7,7 +7,7 @@ use std::iter::Peekable;
 use ast::*;
 use gmp::mpz::Mpz;
 use gmp::mpq::Mpq;
-use number::Num;
+use num::Num;
 
 #[derive(Debug, Clone)]
 pub enum Token {

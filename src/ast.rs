@@ -4,7 +4,7 @@
 
 use std::rc::Rc;
 use std::fmt;
-use number::Num;
+use num::Num;
 
 #[derive(Debug, Clone)]
 pub enum SuffixOp {

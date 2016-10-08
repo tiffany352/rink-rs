@@ -56,6 +56,7 @@ extern crate serde_derive;
 pub mod text_query;
 pub mod context;
 pub mod eval;
+pub mod num;
 pub mod number;
 pub mod date;
 pub mod factorize;

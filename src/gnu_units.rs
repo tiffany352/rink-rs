@@ -6,7 +6,7 @@ use std::str::Chars;
 use std::iter::Peekable;
 use std::rc::Rc;
 use ast::*;
-use number::Num;
+use num::Num;
 
 #[derive(Debug, Clone)]
 pub enum Token {

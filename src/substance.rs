@@ -3,7 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use context::Context;
-use number::{Number, Num, Dim};
+use number::{Number, Dim};
+use num::Num;
 use value::Show;
 use std::collections::BTreeMap;
 use reply::{PropertyReply, SubstanceReply};

@@ -4,7 +4,8 @@
 
 use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;
-use number::{Number, Num, Unit, Dim};
+use number::{Number, Unit, Dim};
+use num::Num;
 use std::cmp;
 
 #[derive(PartialEq, Eq, Debug)]

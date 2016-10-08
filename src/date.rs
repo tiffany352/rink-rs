@@ -6,7 +6,8 @@ use ast::{DatePattern, DateToken, show_datepattern};
 use chrono::format::Parsed;
 use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration, Date};
 use context::Context;
-use number::{Number, Num, Dim};
+use number::{Number, Dim};
+use num::Num;
 use std::iter::Peekable;
 
 pub fn parse_date<I>(

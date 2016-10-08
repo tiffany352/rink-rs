@@ -3,7 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::{BTreeMap, BTreeSet};
-use number::{Number, Dim, Num};
+use number::{Number, Dim};
+use num::Num;
 use ast::{Expr, Def, Defs};
 use substance::{Substance, Property, Properties};
 use std::rc::Rc;
