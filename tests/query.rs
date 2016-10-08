@@ -157,7 +157,7 @@ fn test_bases() {
 
 #[test]
 fn test_typos() {
-    test("rsi", "Unknown unit rsi, did you mean RSI?");
+    test("rsi", "No such unit rsi, did you mean RSI?");
 }
 
 #[test]
