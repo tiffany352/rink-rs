@@ -253,6 +253,13 @@
       </div>
     {{/with}}
 
+    {{!-- Not found errors -----------------------------------}}
+    {{#with NotFound}}
+      Unknown unit {{got}}{{#if suggestion}},
+        did you mean <a href="/?q={{suggestion}}">{{suggestion}}</a>?
+      {{/if}}
+    {{/with}}
+
     {{!-- Generic errors -------------------------------------}}
     {{#with Generic}}
       <div class="panel panel-danger">

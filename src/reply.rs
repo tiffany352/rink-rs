@@ -55,14 +55,6 @@ pub struct UnitsForReply {
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
-pub struct ConformanceError {
-    pub left: NumberParts,
-    pub right: NumberParts,
-    pub suggestions: Vec<String>,
-}
-
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct UnitListReply {
     pub rest: NumberParts,
     pub list: Vec<NumberParts>,
@@ -133,6 +125,29 @@ pub enum QueryReply {
     UnitsFor(UnitsForReply),
     UnitList(UnitListReply),
     Search(SearchReply),
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+pub struct ConformanceError {
+    pub left: NumberParts,
+    pub right: NumberParts,
+    pub suggestions: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+pub struct NotFoundError {
+    pub got: String,
+    pub suggestion: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+pub enum QueryError {
+    Conformance(ConformanceError),
+    NotFound(NotFoundError),
+    Generic(String),
 }
 
 impl ExprReply {
@@ -242,11 +257,10 @@ impl ExprReply {
     }
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
-pub enum QueryError {
-    Conformance(ConformanceError),
-    Generic(String),
+impl From<NotFoundError> for QueryError {
+    fn from(v: NotFoundError) -> Self {
+        QueryError::NotFound(v)
+    }
 }
 
 impl From<String> for QueryError {
@@ -277,6 +291,18 @@ impl Display for QueryError {
         match *self {
             QueryError::Generic(ref v) => write!(fmt, "{}", v),
             QueryError::Conformance(ref v) => write!(fmt, "{}", v),
+            QueryError::NotFound(ref v) => write!(fmt, "{}", v),
+        }
+    }
+}
+
+impl Display for NotFoundError {
+    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+        match self.suggestion.as_ref() {
+            Some(ref s) => write!(
+                fmt, "No such unit {}, did you mean {}?", self.got, s),
+            None => write!(
+                fmt, "No such unit {}", self.got)
         }
     }
 }

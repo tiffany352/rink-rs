@@ -7,6 +7,7 @@ use number::{Dim, Number, Unit, Num};
 use ast::{Expr, DatePattern};
 use search;
 use substance::Substance;
+use reply::NotFoundError;
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
@@ -236,10 +237,10 @@ impl Context {
         search::search(self, what, 1).into_iter().next()
     }
 
-    pub fn unknown_unit_err(&self, name: &str) -> String {
-        match self.typo_dym(name) {
-            Some(x) => format!("Unknown unit {}, did you mean {}?", name, x),
-            None => format!("Unknown unit {}", name)
+    pub fn unknown_unit_err(&self, name: &str) -> NotFoundError {
+        NotFoundError {
+            got: name.to_owned(),
+            suggestion: self.typo_dym(name).map(|x| x.to_owned()),
         }
     }
 }
