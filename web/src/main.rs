@@ -39,10 +39,9 @@ use std::env;
 use worker::{eval_text, eval_json};
 use limiter::RequestLimit;
 use logger::Logger;
+use rustc_serialize::json::ToJson;
 
 fn root(req: &mut Request) -> IronResult<Response> {
-    use rustc_serialize::json::ToJson;
-
     let mut data = BTreeMap::new();
 
     let map = req.get_ref::<Params>().unwrap();
@@ -53,6 +52,7 @@ fn root(req: &mut Request) -> IronResult<Response> {
             reply.as_object_mut().unwrap().insert("input".to_owned(), query.to_json());
             println!("{}", reply.pretty());
             data.insert("queries".to_owned(), vec![reply].to_json());
+            data.insert("title".to_owned(), query.to_json());
         },
         _ => (),
     };
@@ -72,9 +72,10 @@ impl AfterMiddleware for ErrorMiddleware {
         let mut error = BTreeMap::new();
         if let Some(status) = err.response.status {
             error.insert("status".to_owned(), format!("{}", status));
+            data.insert("title".to_owned(), format!("{}", status).to_json());
         }
         error.insert("message".to_owned(), format!("{}", err.error));
-        data.insert("error".to_owned(), error);
+        data.insert("error".to_owned(), error.to_json());
         println!("{:#?}", data);
         Ok(err.response.set(Template::new("index", data)))
     }
