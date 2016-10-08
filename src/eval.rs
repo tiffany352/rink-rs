@@ -459,10 +459,14 @@ impl Context {
         }
         Ok(list.into_iter().zip(out.into_iter()).map(|(name, value)| {
             let pretty = Number(value, Number::one_unit(Dim::new(name)).1).to_parts(self);
+            let unit = pretty.unit.or(pretty.dimensions)
+                .map(|x| self.canonicalize(&*x).unwrap_or(x))
+                .expect("to_parts returned no dimensions");
+            let mut raw = BTreeMap::new();
+            raw.insert(Dim::new(&unit), 1);
             NumberParts {
-                unit: Some(pretty.unit.or(pretty.dimensions)
-                           .map(|x| self.canonicalize(&*x).unwrap_or(x))
-                           .expect("to_parts returned no dimensions")),
+                unit: Some(unit),
+                raw_unit: Some(raw),
                 exact_value: Some(pretty.approx_value.or(pretty.exact_value)
                                   .expect("to_parts returned neither exact nor approx value")),
                 ..Default::default()
@@ -791,6 +795,11 @@ impl Context {
                             months: NumberParts {
                                 exact_value: Some("0".to_owned()),
                                 unit: Some("month".to_owned()),
+                                raw_unit: Some({
+                                    let mut raw = BTreeMap::new();
+                                    raw.insert(Dim::new("month"), 1);
+                                    raw
+                                }),
                                 ..Default::default()
                             },
                             weeks: list.next().expect("Unexpected end of iterator"),
