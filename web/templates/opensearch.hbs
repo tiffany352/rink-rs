@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>Rink</ShortName>
+  <Description>Perform a Rink calculation</Description>
+  <Url type="text/html" method="get" template="{{config.baseurl}}/?q={searchTerms}"/>
+  <moz:SearchForm>{{config.baseurl}}/</moz:SearchForm>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Url type="application/opensearchdescription+xml"
+       rel="self"
+       template="{{config.baseurl}}/opensearch.xml"/>
+</OpenSearchDescription>

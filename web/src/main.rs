@@ -20,6 +20,7 @@ extern crate serde_json;
 extern crate limiter;
 extern crate logger;
 extern crate url;
+extern crate toml;
 #[macro_use]
 extern crate serde_derive;
 
@@ -41,10 +42,15 @@ use std::env;
 use worker::{eval_text, eval_json};
 use limiter::RequestLimit;
 use logger::Logger;
-use rustc_serialize::json::ToJson;
+use rustc_serialize::json::{ToJson, Json};
 use std::sync::Arc;
+use std::fs::File;
 
-fn root(req: &mut Request) -> IronResult<Response> {
+struct Rink {
+    config: Json,
+}
+
+fn root(rink: &Rink, req: &mut Request) -> IronResult<Response> {
     let mut data = BTreeMap::new();
 
     let map = req.get_ref::<Params>().unwrap();
@@ -64,10 +70,12 @@ fn root(req: &mut Request) -> IronResult<Response> {
         data.insert("main-page".to_owned(), true.to_json());
     }
 
+    data.insert("config".to_owned(), rink.config.to_json());
+
     Ok(Response::with((status::Ok, Template::new("index", data))))
 }
 
-struct ErrorMiddleware;
+struct ErrorMiddleware(Arc<Rink>);
 
 impl AfterMiddleware for ErrorMiddleware {
     fn catch(&self, _req: &mut Request, err: IronError) -> IronResult<Response> {
@@ -79,12 +87,13 @@ impl AfterMiddleware for ErrorMiddleware {
         }
         error.insert("message".to_owned(), format!("{}", err.error));
         data.insert("error".to_owned(), error.to_json());
+        data.insert("config".to_owned(), self.0.config.to_json());
         println!("{:#?}", data);
         Ok(err.response.set(Template::new("index", data)))
     }
 }
 
-fn api(req: &mut Request) -> IronResult<Response> {
+fn api(_rink: &Rink, req: &mut Request) -> IronResult<Response> {
     let acao = Header(headers::AccessControlAllowOrigin::Any);
 
     let map = req.get_ref::<Params>().unwrap();
@@ -96,6 +105,13 @@ fn api(req: &mut Request) -> IronResult<Response> {
     let reply = eval_text(query);
 
     Ok(Response::with((acao, status::Ok, reply)))
+}
+
+fn opensearch(rink: &Rink, _req: &mut Request) -> IronResult<Response> {
+    let mut data = BTreeMap::new();
+    data.insert("config".to_owned(), rink.config.to_json());
+
+    Ok(Response::with((status::Ok, Template::new("opensearch", data))))
 }
 
 fn ifnot1helper(
@@ -175,13 +191,35 @@ fn main() {
         worker::worker(&server, &query);
     }
 
+    let config = {
+        use std::io::Read;
+
+        let mut file = File::open("rink-web.toml").expect(
+            "Config file rink-web.toml does not exist. You \
+             must create it with the keys specified in the \
+             sample."
+        );
+        let mut buf = String::new();
+        file.read_to_string(&mut buf).unwrap();
+        let res = toml::Parser::new(&buf).parse().unwrap();
+        rustc_serialize::json::Json::from_str(
+            &serde_json::ser::to_string(&res).unwrap()
+        ).unwrap()
+    };
+    let rink = Arc::new(Rink {
+        config: config,
+    });
     let (logger_before, logger_after) = Logger::new(None);
 
     let mut mount = Mount::new();
 
     let mut router = Router::new();
-    router.get("/", root, "root");
-    router.get("/api", api, "api");
+    let rink2 = rink.clone();
+    router.get("/", move |req: &mut Request| root(&rink2, req), "root");
+    let rink2 = rink.clone();
+    router.get("/api", move |req: &mut Request| api(&rink2, req), "api");
+    let rink2 = rink.clone();
+    router.get("/opensearch.xml", move |req: &mut Request| opensearch(&rink2, req), "opensearch.xml");
     mount.mount("/", router);
 
     mount.mount("/static", Static::new("./static/"));
@@ -204,7 +242,7 @@ fn main() {
 
     chain.link_before(logger_before);
     chain.link_before(limiter);
-    chain.link_after(ErrorMiddleware);
+    chain.link_after(ErrorMiddleware(rink.clone()));
     chain.link_after(hbse);
     chain.link_after(logger_after);
     let addr = first.as_ref().map(|x| &**x).unwrap_or("localhost:8000");

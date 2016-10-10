@@ -33,3 +33,4 @@ serde = "0.8"
 limiter = "0.2"
 logger = "0.1.0"
 url = "1.2.0"
+toml = { version = "0.2", features = ["serde"] }

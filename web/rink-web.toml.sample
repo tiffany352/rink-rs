@@ -1,0 +1,6 @@
+# The absolute URL of the place this instance will be hosted. It may
+# have an explicit protocol, but usually you'll want the // prefix
+# instead. It should not have a trailing slash. Note that rink-web
+# does not currently support being placed under a directory, it must
+# have a subdomain to itself.
+baseurl = "//rink.tiffnix.com"
