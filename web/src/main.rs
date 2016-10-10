@@ -32,6 +32,7 @@ use router::Router;
 use iron::AfterMiddleware;
 use iron::headers;
 use iron::modifiers::Header;
+use iron::mime::Mime;
 use handlebars::Handlebars;
 use handlebars_iron::{HandlebarsEngine, DirectorySource, Template};
 use mount::Mount;
@@ -108,10 +109,11 @@ fn api(_rink: &Rink, req: &mut Request) -> IronResult<Response> {
 }
 
 fn opensearch(rink: &Rink, _req: &mut Request) -> IronResult<Response> {
+    let mime: Mime = "application/opensearchdescription+xml".parse().unwrap();
     let mut data = BTreeMap::new();
     data.insert("config".to_owned(), rink.config.to_json());
 
-    Ok(Response::with((status::Ok, Template::new("opensearch", data))))
+    Ok(Response::with((status::Ok, mime, Template::new("opensearch", data))))
 }
 
 fn ifnot1helper(
