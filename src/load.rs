@@ -108,9 +108,7 @@ impl Context {
                 match *expr {
                     Expr::Unit(ref name) => {
                         let name = self.intern(name);
-                        if self.lookup(&name).is_none() {
-                            println!("Lookup failed: {}", name);
-                        }
+                        let _ = self.lookup(&name);
                     },
                     Expr::Frac(ref left, ref right) |
                     Expr::Pow(ref left, ref right) |
