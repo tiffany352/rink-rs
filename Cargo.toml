@@ -35,4 +35,4 @@ name = "rink"
 doc = false
 
 [workspace]
-members = ["web", "irc"]
+members = ["web", "irc", "importer"]

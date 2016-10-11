@@ -211,11 +211,24 @@ pub fn load() -> Result<Context, String> {
             defs: defs
         }
     };
+    let food = || -> Result<_, String> {
+        let defs = try!(
+            load(Path::new("food.units").to_path_buf())
+                .or_else(|_| load(path.join("food.units")))
+                .map_err(|e| format!("Failed to load food data: {}", e))
+        );
+        let mut iter = gnu_units::TokenIterator::new(&*defs).peekable();
+        let food = gnu_units::parse(&mut iter);
+        Ok(food)
+    };
 
     let mut ctx = context::Context::new();
     ctx.load(units);
     ctx.load_dates(dates);
     ctx.load(currency);
+    if let Ok(food) = food() {
+        ctx.load(food);
+    }
     Ok(ctx)
 }
 
