@@ -156,6 +156,21 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Number(integer, frac, exp)
             },
+            '"' => {
+                let mut buf = String::new();
+                while let Some(c) = self.0.next() {
+                    if c == '\\' {
+                        if let Some(c) = self.0.next() {
+                            buf.push(c);
+                        }
+                    } else if c == '"' {
+                        break;
+                    } else {
+                        buf.push(c);
+                    }
+                }
+                Token::Ident(buf)
+            },
             x if is_ident(x) => {
                 let mut buf = String::new();
                 buf.push(x);

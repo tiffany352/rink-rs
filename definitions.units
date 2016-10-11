@@ -679,8 +679,8 @@ arcminute               arcmin
 '                       arcmin
 arcsec                  1|60 arcmin
 arcsecond               arcsec
-"                       arcsec
-''                      "
+#"                       arcsec
+#''                      "
 rightangle              90 degrees
 quadrant                1|4 circle
 quintant                1|5 circle
@@ -5364,8 +5364,8 @@ röntgen                 roentgen
 ħ                       hbar
 ‰                       1|1000
 ‱                       1|10000
-′                       '        # U+2032
-″                       "        # U+2033
+#′                       '        # U+2032
+#″                       "        # U+2033
 
 #
 # Square unicode symbols starting at U+3371
