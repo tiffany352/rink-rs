@@ -5,6 +5,7 @@
 extern crate rink;
 extern crate clap;
 extern crate encoding;
+extern crate lmdb_zero as lmdb;
 
 use clap::{Arg, App};
 use std::fs::File;
@@ -12,13 +13,13 @@ use std::io::Read;
 use std::path::PathBuf;
 use encoding::{Encoding, DecoderTrap};
 use encoding::all::ISO_8859_1;
-use std::io::BufWriter;
 use std::io;
 use std::cmp::Ordering;
 use std::str::FromStr;
 use std::fmt;
 use std::io::Write;
 use std::collections::BTreeMap;
+use lmdb::{Database, DatabaseOptions, WriteTransaction, EnvBuilder, put, db};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 struct Rat(i32, i32);
@@ -81,15 +82,27 @@ fn main() {
              .help("Sets the path to a directory containing the files.")
              .required(true)
              .index(1))
-        .arg(Arg::with_name("OUTPUT")
-             .long("output")
-             .value_name("OUTPUT")
-             .help("Sets the output path")
+        .arg(Arg::with_name("DB")
+             .long("db")
+             .value_name("DB")
+             .help("Sets the database path")
              .required(true)
              .takes_value(true))
         .get_matches();
     let dir = PathBuf::from(matches.value_of("INPUTDIR").unwrap());
-    let output = matches.value_of("OUTPUT").unwrap();
+    let db_path = matches.value_of("DB").unwrap();
+
+    let env = unsafe {
+        let mut b = EnvBuilder::new().expect("Creating builder");
+        b.set_mapsize(1024*1024*100).expect("Setting mapsize");
+        b.set_maxdbs(10).expect("Setting maxdbs");
+        b.open(
+            db_path, lmdb::open::Flags::empty(), 0o600
+        ).expect("Opening env")
+    };
+    let db = Database::open(
+        &env, Some("substances"), &DatabaseOptions::new(db::CREATE)
+    ).expect("Creating database");
 
     macro_rules! field_type {
         (A) => { Option<String> };
@@ -169,8 +182,6 @@ fn main() {
             records
         }}
     }
-
-    let mut output = BufWriter::new(File::create(output).expect("Failed to create output file"));
 
     let food_des = table! {
         file: "FOOD_DES.txt",
@@ -255,85 +266,97 @@ fn main() {
     properties.insert("Sugars",   ("sugars", "by_sugars", "mass"));
     properties.insert("Alcohol",  ("alcohol", "by_alcohol", "mass"));
 
-    for (&ndb, des_record) in &food_des {
-        for (_, fn_rec) in &footnote {
-            if fn_rec.NDB_No == Some(ndb) && fn_rec.Footnt_Typ.as_ref().map(|x| x == "D").unwrap_or(false) {
-                if let Some(ref txt) = fn_rec.Footnt_Txt {
-                    writeln!(output, "?? {}", txt).unwrap();
-                } else {
-                    println!("{}: Footnote with missing text: {:?}", ndb, fn_rec);
-                }
-            }
-        }
-        if let Some(ref desc) = des_record.Long_Desc {
-            writeln!(output, "\"{}\" {{", desc.chars().map(|c| c.escape_default().collect::<String>()).collect::<String>()).unwrap();
-        } else {
-            println!("{}: Missing description", ndb);
-            continue;
-        }
-        for (&nutr, nutr_record) in &nutr_def {
-            if let Some(nut) = nut_data.get(&(ndb, nutr)) {
-                let (desc, val, units) = match (nutr_record.NutrDesc.as_ref(), nut.Nutr_Val.as_ref(), nutr_record.Units.as_ref()) {
-                    (Some(a), Some(b), Some(c)) => (a,b,c),
-                    (None, _, _) => {
-                        println!("{}: {} missing description", ndb, nutr);
-                        continue
-                    },
-                    (_, None, _) => {
-                        println!("{}: {} missing value", ndb, nutr);
-                        continue
-                    },
-                    (_, _, None) => {
-                        println!("{}: {} missing units", ndb, nutr);
-                        continue
-                    },
-                };
-                let (property, input, out) = match properties.get(&**desc) {
-                    Some(x) => *x,
-                    None => continue
-                };
-                for (_, fn_rec) in &footnote {
-                    if {
-                        fn_rec.NDB_No == Some(ndb) &&
-                            fn_rec.Footnt_Typ.as_ref().map(|x| x == "N").unwrap_or(false) &&
-                            fn_rec.Nutr_No == Some(nutr)
-                    } {
-                        if let Some(ref txt) = fn_rec.Footnt_Txt {
-                            writeln!(output, "  ?? {}", txt).unwrap();
-                        } else {
-                            println!("{}: Footnote for nutr {} missing text: {:?}", ndb, nutr, fn_rec);
-                        }
+    let txn = WriteTransaction::new(&env).expect("Transaction");
+    {
+        let mut access = txn.access();
+        for (&ndb, des_record) in &food_des {
+            let mut output = vec![];
+            for (_, fn_rec) in &footnote {
+                if fn_rec.NDB_No == Some(ndb) && fn_rec.Footnt_Typ.as_ref().map(|x| x == "D").unwrap_or(false) {
+                    if let Some(ref txt) = fn_rec.Footnt_Txt {
+                        writeln!(output, "?? {}", txt).unwrap();
+                    } else {
+                        println!("{}: Footnote with missing text: {:?}", ndb, fn_rec);
                     }
                 }
-                writeln!(
-                    output, "  {} {} {} {} / {} 100 g",
-                    property, input, val, units, out
-                ).unwrap();
             }
-        }
-        for (&(weight_ndb, _seq), wrec) in &weight {
-            if weight_ndb != ndb {
-                continue
-            }
-            let mut mapping = BTreeMap::new();
-            mapping.insert("cup", "cup");
-            mapping.insert("tbsp", "tbsp");
-            mapping.insert("oz", "floz");
-            mapping.insert("cubic inch", "inch^3");
-            let measure = match wrec.Msre_Desc.as_ref().and_then(|x| mapping.get(&**x)) {
-                Some(&x) => x,
-                None => continue
+            let name = if let Some(ref desc) = des_record.Long_Desc {
+                desc.chars().map(|c| {
+                    c.escape_default().collect::<String>()
+                }).collect::<String>()
+            } else {
+                println!("{}: Missing description", ndb);
+                continue;
             };
-            writeln!(
-                output, "  density mass {} g / volume {} {}",
-                wrec.Amount.unwrap(),
-                measure,
-                wrec.Gm_Wgt.unwrap()
-            ).unwrap();
-            break;
+            writeln!(output, "\"{}\" {{", name).unwrap();
+            for (&nutr, nutr_record) in &nutr_def {
+                if let Some(nut) = nut_data.get(&(ndb, nutr)) {
+                    let (desc, val, units) = match (nutr_record.NutrDesc.as_ref(), nut.Nutr_Val.as_ref(), nutr_record.Units.as_ref()) {
+                        (Some(a), Some(b), Some(c)) => (a,b,c),
+                        (None, _, _) => {
+                            println!("{}: {} missing description", ndb, nutr);
+                            continue
+                        },
+                        (_, None, _) => {
+                            println!("{}: {} missing value", ndb, nutr);
+                            continue
+                        },
+                        (_, _, None) => {
+                            println!("{}: {} missing units", ndb, nutr);
+                            continue
+                        },
+                    };
+                    let (property, input, out) = match properties.get(&**desc) {
+                        Some(x) => *x,
+                        None => continue
+                    };
+                    for (_, fn_rec) in &footnote {
+                        if {
+                            fn_rec.NDB_No == Some(ndb) &&
+                                fn_rec.Footnt_Typ.as_ref().map(|x| x == "N").unwrap_or(false) &&
+                                fn_rec.Nutr_No == Some(nutr)
+                        } {
+                            if let Some(ref txt) = fn_rec.Footnt_Txt {
+                                writeln!(output, "  ?? {}", txt).unwrap();
+                            } else {
+                                println!("{}: Footnote for nutr {} missing text: {:?}", ndb, nutr, fn_rec);
+                            }
+                        }
+                    }
+                    writeln!(
+                        output, "  {} {} {} {} / {} 100 g",
+                        property, input, val, units, out
+                    ).unwrap();
+                }
+            }
+            for (&(weight_ndb, _seq), wrec) in &weight {
+                if weight_ndb != ndb {
+                    continue
+                }
+                let mut mapping = BTreeMap::new();
+                mapping.insert("cup", "cup");
+                mapping.insert("tbsp", "tbsp");
+                mapping.insert("oz", "floz");
+                mapping.insert("cubic inch", "inch^3");
+                let measure = match wrec.Msre_Desc.as_ref().and_then(|x| mapping.get(&**x)) {
+                    Some(&x) => x,
+                    None => continue
+                };
+                writeln!(
+                    output, "  density mass {} g / volume {} {}",
+                    wrec.Amount.unwrap(),
+                    measure,
+                    wrec.Gm_Wgt.unwrap()
+                ).unwrap();
+                break;
+            }
+            writeln!(output, "}}").unwrap();
+            writeln!(output, "").unwrap();
+
+            access.put(&db, &*name, &output, put::Flags::empty())
+                .expect("Put");
         }
-        writeln!(output, "}}").unwrap();
-        writeln!(output, "").unwrap();
     }
 
+    txn.commit().expect("Commit");
 }

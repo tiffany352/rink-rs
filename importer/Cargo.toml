@@ -12,6 +12,7 @@ license = "MPL-2.0"
 rink = { path = "../" }
 clap = "2.14.0"
 encoding = "0.2"
+lmdb-zero = "0.2.2"
 
 [[bin]]
 name = "rink-import-usda"
