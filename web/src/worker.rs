@@ -47,10 +47,15 @@ pub fn worker(server_name: &str, query: &str) -> ! {
     tx.send(Err(QueryError::Generic("".to_owned()))).unwrap();
 
     unsafe {
+        let limit = if cfg!(feature = "lmdb") {
+            // lmdb uses a lot of vmem
+            200_000_000
+        } else {
+            100_000_000
+        };
         let limit = libc::rlimit {
-            // 100 megabytes
-            rlim_cur: 100_000_000,
-            rlim_max: 100_000_000,
+            rlim_cur: limit,
+            rlim_max: limit,
         };
         let res = libc::setrlimit(libc::RLIMIT_AS, &limit);
         if res == -1 {
