@@ -29,6 +29,7 @@ xml-rs = { version = "0.3.4", optional = true }
 json = { version = "0.10.2", optional = true }
 serde = { version = "0.8", optional = true }
 serde_derive = { version = "0.8", optional = true }
+lmdb-zero = { version = "0.2.2", optional = true }
 
 [[bin]]
 name = "rink"

@@ -9,6 +9,13 @@ use ast::{Expr, DatePattern};
 use search;
 use substance::Substance;
 use reply::NotFoundError;
+use std::cell::RefCell;
+
+#[cfg(feature = "lmdb-zero")]
+pub type Lmdb = ::lmdb::Environment;
+
+#[cfg(not(feature = "lmdb-zero"))]
+pub type Lmdb = ();
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
@@ -23,9 +30,10 @@ pub struct Context {
     pub docs: BTreeMap<String, String>,
     pub datepatterns: Vec<Vec<DatePattern>>,
     pub substances: BTreeMap<String, Substance>,
-    pub temporaries: BTreeMap<String, Number>,
+    pub temporaries: RefCell<BTreeMap<String, Number>>,
     pub short_output: bool,
     pub use_humanize: bool,
+    pub lmdb: Option<Lmdb>,
 }
 
 impl Context {
@@ -42,9 +50,10 @@ impl Context {
             docs: BTreeMap::new(),
             datepatterns: Vec::new(),
             substances: BTreeMap::new(),
-            temporaries: BTreeMap::new(),
+            temporaries: RefCell::new(BTreeMap::new()),
             short_output: false,
             use_humanize: true,
+            lmdb: None,
         }
     }
 
@@ -56,7 +65,7 @@ impl Context {
     /// prefixes, plurals, bare dimensions like length, and quantities.
     pub fn lookup(&self, name: &str) -> Option<Number> {
         fn inner(ctx: &Context, name: &str) -> Option<Number> {
-            if let Some(v) = ctx.temporaries.get(name).cloned() {
+            if let Some(v) = ctx.temporaries.borrow().get(name).cloned() {
                 return Some(v)
             }
             if let Some(k) = ctx.dimensions.get(name) {
@@ -252,5 +261,59 @@ impl Context {
             got: name.to_owned(),
             suggestion: self.typo_dym(name).map(|x| x.to_owned()),
         }
+    }
+
+    #[cfg(feature = "lmdb-zero")]
+    pub fn substance(
+        &self, name: &str
+    ) -> Result<Option<Substance>, String> {
+        use lmdb::{Database, DatabaseOptions, ReadTransaction};
+        use gnu_units;
+        use ast;
+
+        let lmdb = match self.lmdb {
+            Some(ref lmdb) => lmdb,
+            None => return Ok(None)
+        };
+        let db = match Database::open(lmdb, Some("substances"), &DatabaseOptions::defaults()) {
+            Ok(db) => db,
+            Err(e) => return Err(format!(
+                "Failed to open substances database: {}", e
+            )),
+        };
+        let tx = match ReadTransaction::new(lmdb) {
+            Ok(tx) => tx,
+            Err(e) => return Err(format!(
+                "Failed to create read transaction: {}", e
+            )),
+        };
+        let access = tx.access();
+        let res: &str = match access.get(&db, name) {
+            Ok(res) => res,
+            Err(_) => return Ok(None)
+        };
+        let mut iter = gnu_units::TokenIterator::new(res).peekable();
+        let defs = gnu_units::parse(&mut iter);
+        if defs.defs.len() != 1 {
+            return Err(format!(
+                "Record contains more than one substance"
+            ))
+        }
+        let (name, def, _doc) = defs.defs.into_iter().next().unwrap();
+        let props = match *def {
+            ast::Def::Substance(ref props) => props,
+            _ => return Err(format!(
+                "Record is not a substance"
+            ))
+        };
+        let sub = try!(self.eval_substance(props, name));
+        Ok(Some(sub))
+    }
+
+    #[cfg(not(feature = "lmdb-zero"))]
+    pub fn substance(
+        &self, _name: &str
+    ) -> Result<Option<Substance>, String> {
+        Ok(None)
     }
 }

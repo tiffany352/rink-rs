@@ -47,6 +47,8 @@ extern crate hyper;
 extern crate xml;
 #[cfg(feature = "currency")]
 extern crate json;
+#[cfg(feature = "lmdb-zero")]
+extern crate lmdb_zero as lmdb;
 #[cfg(feature = "nightly")]
 extern crate serde;
 #[cfg(feature = "nightly")]
@@ -145,6 +147,33 @@ static DEFAULT_FILE: Option<&'static str> = None;
 static DATES_FILE: &'static str = include_str!("../datepatterns.txt");
 static CURRENCY_FILE: &'static str = include_str!("../currency.units");
 
+#[cfg(feature = "lmdb-zero")]
+fn load_db(context: &mut Context) -> Result<(), String> {
+    let env = unsafe {
+        let mut b = try!(lmdb::EnvBuilder::new().map_err(|e| format!(
+            "Creating builder failed: {}", e
+        )));
+        try!(b.set_mapsize(1024*1024*100).map_err(|e| format!(
+            "Setting mapsize failed: {}", e
+        )));
+        try!(b.set_maxdbs(10).map_err(|e| format!(
+            "Setting maxdbs failed: {}", e
+        )));
+        try!(b.open(
+            "lmdb", lmdb::open::Flags::empty(), 0o600
+        ).map_err(|e| format!(
+            "Opening env failed: {}", e
+        )))
+    };
+    context.lmdb = Some(env);
+    Ok(())
+}
+
+#[cfg(not(feature = "lmdb-zero"))]
+fn load_db(_context: &mut Context) -> Result<(), String> {
+    Ok(())
+}
+
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
     use std::io::Read;
@@ -229,6 +258,10 @@ pub fn load() -> Result<Context, String> {
     if let Ok(food) = food() {
         ctx.load(food);
     }
+    if let Err(e) = load_db(&mut ctx) {
+        println!("Failed to load lmdb: {}", e);
+    }
+
     Ok(ctx)
 }
 

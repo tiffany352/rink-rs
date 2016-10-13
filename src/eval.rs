@@ -72,7 +72,14 @@ impl Context {
                 )
                 .ok_or_else(|| QueryError::NotFound(
                     self.unknown_unit_err(name)
-                )),
+                ))
+                .or_else(|e| {
+                    self.substance(name)
+                        .map_err(QueryError::Generic)
+                        .and_then(|x| {
+                            x.map(Value::Substance).ok_or(e)
+                        })
+                }),
             Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dim::new(&**name)))),
             Expr::Const(ref num) =>
                 Ok(Value::Number(Number::new(num.clone()))),
