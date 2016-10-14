@@ -368,7 +368,7 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                                     break
                                 },
                             };
-                            let input_name = match iter.next().unwrap() {
+                            let output_name = match iter.next().unwrap() {
                                 Token::Ident(ref s) if s == "const" => {
                                     let input_name = match iter.next().unwrap() {
                                         Token::Ident(name) => name,
@@ -395,7 +395,7 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                                     break
                                 },
                             };
-                            let input = parse_mul(iter);
+                            let output = parse_mul(iter);
                             match iter.next().unwrap() {
                                 Token::Slash => (),
                                 x => {
@@ -403,14 +403,14 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                                     break
                                 }
                             }
-                            let output_name = match iter.next().unwrap() {
+                            let input_name = match iter.next().unwrap() {
                                 Token::Ident(name) => name,
                                 x => {
                                     println!("Expected property input name, got {:?}", x);
                                     break
                                 },
                             };
-                            let output = parse_mul(iter);
+                            let input = parse_mul(iter);
                             props.push(Property {
                                 name: name,
                                 input: input,

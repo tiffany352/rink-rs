@@ -377,18 +377,18 @@ impl<'a, 'b> Add<&'b Substance> for &'a Substance {
                         prop1.output_name != prop2.output_name ||
                         prop1.input.unit != prop2.input.unit ||
                         prop1.output.unit != prop2.output.unit ||
-                        prop1.output != mol ||
-                        prop2.output != mol
+                        prop1.input != mol ||
+                        prop2.input != mol
                     {
                         return None
                     }
                     Some((k.clone(), Property {
-                        input: (
-                            &(&self.amount * &prop1.input).unwrap() +
-                                &(&other.amount * &prop2.input).unwrap()
+                        output: (
+                            &(&self.amount * &prop1.output).unwrap() +
+                                &(&other.amount * &prop2.output).unwrap()
                         ).expect("Add"),
                         input_name: prop1.input_name.clone(),
-                        output: mol,
+                        input: mol,
                         output_name: prop1.output_name.clone(),
                         doc: None,
                     }))

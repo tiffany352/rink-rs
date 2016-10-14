@@ -163,7 +163,7 @@ fn test_typos() {
 #[test]
 fn test_convert_from_substances() {
     test("density of water",
-         "0.001 meter^3 / kilogram (specific_volume)");
+         "1000 kilogram / meter^3 (density)");
     test("mass of ml water",
          "1 gram (mass)");
     test("volume of g water",
@@ -191,7 +191,7 @@ fn test_convert_to_substances() {
 fn test_substance_add() {
     test("air",
          "air: Average molecular weight of air. \
-          molar_mass = approx. 28.96790 gram -> 1 mole");
+          molar_mass = 1 mole -> approx. 28.96790 gram");
 }
 
 #[test]
