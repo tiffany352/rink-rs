@@ -278,23 +278,26 @@ impl Context {
             Some(ref lmdb) => lmdb,
             None => return Ok(None)
         };
-        let tx = try!(lmdb.env.begin_ro_txn().map_err(|e| format!(
-            "Failed to create read transaction: {}", e
-        )));
-        let res = match tx.get(lmdb.substances, &name) {
-            Ok(res) => res,
-            Err(_) => return Ok(None)
+        let defs = {
+            let tx = try!(lmdb.env.begin_ro_txn().map_err(|e| format!(
+                "Failed to create read transaction: {}", e
+            )));
+            let res = match tx.get(lmdb.substances, &name) {
+                Ok(res) => res,
+                Err(_) => return Ok(None)
+            };
+            let res = try!(from_utf8(res).map_err(|e| format!(
+                "Record is invalid utf-8: {}", e
+            )));
+            let mut iter = gnu_units::TokenIterator::new(res).peekable();
+            let defs = gnu_units::parse(&mut iter);
+            if defs.defs.len() != 1 {
+                return Err(format!(
+                    "Record contains more than one substance"
+                ))
+            }
+            defs
         };
-        let res = try!(from_utf8(res).map_err(|e| format!(
-            "Record is invalid utf-8: {}", e
-        )));
-        let mut iter = gnu_units::TokenIterator::new(res).peekable();
-        let defs = gnu_units::parse(&mut iter);
-        if defs.defs.len() != 1 {
-            return Err(format!(
-                "Record contains more than one substance"
-            ))
-        }
         let (name, def, _doc) = defs.defs.into_iter().next().unwrap();
         let props = match *def {
             ast::Def::Substance(ref props) => props,
