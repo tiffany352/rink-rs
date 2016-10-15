@@ -505,8 +505,8 @@ impl Context {
                     "Expected number for input of \
                      property {}, got {:?}", name, x)),
                 Err(e) => return Err(format!(
-                    "Malformed property input for {}: {}",
-                    name, e)),
+                    "Malformed property input for {} of {}: {}",
+                    prop.name, name, e)),
             };
             let output = match self.eval(&prop.output) {
                 Ok(Value::Number(v)) => v,
@@ -514,14 +514,22 @@ impl Context {
                     "Expected number for output of \
                      property {}, got {:?}", name, x)),
                 Err(e) => return Err(format!(
-                    "Malformed property output for {}: {}",
-                    name, e)),
+                    "Malformed property output for {} of {}: {}",
+                    prop.name, name, e)),
+            };
+            let input_one = Number {
+                value: Num::one(),
+                unit: input.unit.clone()
+            };
+            let output_one = Number {
+                value: Num::one(),
+                unit: output.unit.clone()
             };
             let mut unique = BTreeSet::new();
             unique.insert(&*prop.name);
             unique.insert(&*prop.input_name);
             unique.insert(&*prop.output_name);
-            let unit = (&input / &output)
+            let unit = (&output_one / &input_one)
                 .expect("Non-zero property")
                 .unit;
             let mut existing = prev.entry(unit).or_insert(BTreeSet::new());
@@ -533,11 +541,12 @@ impl Context {
                 );
             }
             existing.append(&mut unique);
-            self.temporaries.borrow_mut().insert(
-                prop.name.clone(),
-                (&input / &output)
-                    .expect("Non-zero property")
-            );
+            if let Some(res) = &output / &input {
+                self.temporaries.borrow_mut().insert(
+                    prop.name.clone(),
+                    res
+                );
+            }
             if output == Number::one() {
                 self.temporaries.borrow_mut().insert(
                     prop.input_name.clone(),

@@ -71,6 +71,12 @@ impl fmt::Display for Rat {
     }
 }
 
+impl Rat {
+    fn to_int(&self) -> i32 {
+        self.0 / self.1
+    }
+}
+
 fn main() {
     let matches = App::new("rink-import-usda")
         .version("0.3.2")
@@ -258,12 +264,49 @@ fn main() {
     };
 
     let mut properties = BTreeMap::new();
-    properties.insert("Energy",   ("food_energy", "by_energy", "mass"));
-    properties.insert("Protein",  ("protein", "by_protein", "mass"));
-    properties.insert("Water",    ("water", "by_water", "mass"));
-    properties.insert("Caffeine", ("caffeine", "by_caffeine", "mass"));
-    properties.insert("Sugars",   ("sugars", "by_sugars", "mass"));
-    properties.insert("Alcohol",  ("alcohol", "by_alcohol", "mass"));
+    properties.insert(203, ("protein_concentration", "protein", "mass_by_protein"));
+    properties.insert(204, ("fat_concentration", "fat", "mass_by_fat"));
+    properties.insert(205, ("carbohydrate_concentration", "carbohydrates", "mass_by_carbohydrates"));
+    properties.insert(207, ("ash_concentration", "ash", "mass_by_ash"));
+    properties.insert(208, ("food_energy_density", "food_energy", "mass_by_food_energy"));
+    properties.insert(221, ("alcohol_concentration", "alcohol", "mass_by_alcohol"));
+    properties.insert(255, ("water_concentration", "water", "mass_by_water"));
+    properties.insert(262, ("caffeine_concentration", "caffeine", "mass_by_caffeine"));
+    properties.insert(263, ("theobromine_concentration", "theobromine", "mass_by_theobromine"));
+    properties.insert(269, ("sugars_concentration", "sugars", "mass_by_sugars"));
+    properties.insert(291, ("fiber_concentration", "fiber", "mass_by_fiber"));
+    properties.insert(301, ("calcium_concentration", "calcium", "mass_by_calcium"));
+    properties.insert(303, ("iron_concentration", "iron", "mass_by_iron"));
+    properties.insert(304, ("magnesium_concentration", "magnesium", "mass_by_magnesium"));
+    properties.insert(305, ("phosphorus_concentration", "phosphorus", "mass_by_phosphorus"));
+    properties.insert(306, ("potassium_concentration", "potassium", "mass_by_potassium"));
+    properties.insert(307, ("sodium_concentration", "sodium", "mass_by_sodium"));
+    properties.insert(309, ("zinc_concentration", "zinc", "mass_by_zinc"));
+    properties.insert(312, ("copper_concentration", "copper", "mass_by_copper"));
+    properties.insert(315, ("manganese_concentration", "manganese", "mass_by_manganese"));
+    properties.insert(317, ("selenium_concentration", "selenium", "mass_by_selenium"));
+    properties.insert(319, ("retinol_concentration", "retinol", "mass_by_retinol"));
+    properties.insert(320, ("vitaminA_concentration", "vitaminA", "mass_by_vitaminA"));
+    properties.insert(321, ("carotene_beta_concentration", "carotene_beta", "mass_by_carotene_beta"));
+    properties.insert(322, ("carotene_alpha_concentration", "carotene_alpha", "mass_by_carotene_alpha"));
+    properties.insert(323, ("vitaminE_concentration", "vitaminE", "mass_by_vitaminE"));
+    // Measured in IU, which is not useful to us
+    //properties.insert(324, ("vitaminD_concentration", "vitaminD", "mass_by_vitaminD"));
+    properties.insert(334, ("cryptoxanthin_beta_concentration", "cryptoxanthin_beta", "mass_by_cryptoxanthin_beta"));
+    properties.insert(401, ("vitaminC_concentration", "vitaminC", "mass_by_vitaminC"));
+    properties.insert(404, ("thiamin_concentration", "thiamin", "mass_by_thiamin"));
+    properties.insert(405, ("riboflavin_concentration", "riboflavin", "mass_by_riboflavin"));
+    properties.insert(406, ("niacin_concentration", "niacin", "mass_by_niacin"));
+    properties.insert(412, ("choline_concentration", "choline", "mass_by_choline"));
+    properties.insert(415, ("vitaminB6_concentration", "vitaminB6", "mass_by_vitaminB6"));
+    properties.insert(417, ("folate_concentration", "folate", "mass_by_folate"));
+    properties.insert(418, ("vitaminB12_concentration", "vitaminB12", "mass_by_vitaminB12"));
+    properties.insert(430, ("vitaminK_concentration", "vitaminK", "mass_by_vitaminK"));
+    properties.insert(431, ("folic_acid_concentration", "folic_acid", "mass_by_folic_acid"));
+    properties.insert(601, ("cholesterol_concentration", "cholesterol", "mass_by_cholesterol"));
+    properties.insert(606, ("saturated_fatty_acids_concentration", "saturated_fatty_acids", "mass_by_saturated_fatty_acids"));
+    properties.insert(645, ("monounsaturated_fatty_acids_concentration", "monounsaturated_fatty_acids", "mass_by_monounsaturated_fatty_acids"));
+    properties.insert(646, ("polyunsaturated_fatty_acids_concentration", "polyunsaturated_fatty_acids", "mass_by_polyunsaturated_fatty_acids"));
 
     let mut txn = env.begin_rw_txn().expect("Failed to start transaction");
     {
@@ -289,22 +332,18 @@ fn main() {
             writeln!(output, "\"{}\" {{", name).unwrap();
             for (&nutr, nutr_record) in &nutr_def {
                 if let Some(nut) = nut_data.get(&(ndb, nutr)) {
-                    let (desc, val, units) = match (nutr_record.NutrDesc.as_ref(), nut.Nutr_Val.as_ref(), nutr_record.Units.as_ref()) {
-                        (Some(a), Some(b), Some(c)) => (a,b,c),
-                        (None, _, _) => {
-                            println!("{}: {} missing description", ndb, nutr);
-                            continue
-                        },
-                        (_, None, _) => {
+                    let (val, units) = match (nut.Nutr_Val.as_ref(), nutr_record.Units.as_ref()) {
+                        (Some(a), Some(b)) => (a,b),
+                        (None, _) => {
                             println!("{}: {} missing value", ndb, nutr);
                             continue
                         },
-                        (_, _, None) => {
+                        (_, None) => {
                             println!("{}: {} missing units", ndb, nutr);
                             continue
                         },
                     };
-                    let (property, input, out) = match properties.get(&**desc) {
+                    let (property, input, out) = match properties.get(&nutr.to_int()) {
                         Some(x) => *x,
                         None => continue
                     };
