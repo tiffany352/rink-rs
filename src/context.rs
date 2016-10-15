@@ -11,14 +11,16 @@ use substance::Substance;
 use reply::NotFoundError;
 use std::cell::RefCell;
 
-#[cfg(feature = "lmdb-zero")]
-pub type Lmdb = ::lmdb::Environment;
+#[cfg(feature = "lmdb")]
+pub struct Lmdb {
+    pub env: ::lmdb::Environment,
+    pub substances: ::lmdb::Database,
+}
 
-#[cfg(not(feature = "lmdb-zero"))]
+#[cfg(not(feature = "lmdb"))]
 pub type Lmdb = ();
 
 /// The evaluation context that contains unit definitions.
-#[derive(Debug)]
 pub struct Context {
     pub dimensions: BTreeSet<Dim>,
     pub canonicalizations: BTreeMap<String, String>,
@@ -263,35 +265,29 @@ impl Context {
         }
     }
 
-    #[cfg(feature = "lmdb-zero")]
+    #[cfg(feature = "lmdb")]
     pub fn substance(
         &self, name: &str
     ) -> Result<Option<Substance>, String> {
-        use lmdb::{Database, DatabaseOptions, ReadTransaction};
+        use lmdb::Transaction;
         use gnu_units;
         use ast;
+        use std::str::from_utf8;
 
         let lmdb = match self.lmdb {
             Some(ref lmdb) => lmdb,
             None => return Ok(None)
         };
-        let db = match Database::open(lmdb, Some("substances"), &DatabaseOptions::defaults()) {
-            Ok(db) => db,
-            Err(e) => return Err(format!(
-                "Failed to open substances database: {}", e
-            )),
-        };
-        let tx = match ReadTransaction::new(lmdb) {
-            Ok(tx) => tx,
-            Err(e) => return Err(format!(
-                "Failed to create read transaction: {}", e
-            )),
-        };
-        let access = tx.access();
-        let res: &str = match access.get(&db, name) {
+        let tx = try!(lmdb.env.begin_ro_txn().map_err(|e| format!(
+            "Failed to create read transaction: {}", e
+        )));
+        let res = match tx.get(lmdb.substances, &name) {
             Ok(res) => res,
             Err(_) => return Ok(None)
         };
+        let res = try!(from_utf8(res).map_err(|e| format!(
+            "Record is invalid utf-8: {}", e
+        )));
         let mut iter = gnu_units::TokenIterator::new(res).peekable();
         let defs = gnu_units::parse(&mut iter);
         if defs.defs.len() != 1 {
@@ -310,7 +306,7 @@ impl Context {
         Ok(Some(sub))
     }
 
-    #[cfg(not(feature = "lmdb-zero"))]
+    #[cfg(not(feature = "lmdb"))]
     pub fn substance(
         &self, _name: &str
     ) -> Result<Option<Substance>, String> {

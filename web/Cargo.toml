@@ -10,7 +10,7 @@ license = "MPL-2.0"
 
 [features]
 watch = ["handlebars-iron/watch"]
-lmdb = ["rink/lmdb-zero"]
+lmdb = ["rink/lmdb"]
 
 [dependencies.rink]
 path = "../"

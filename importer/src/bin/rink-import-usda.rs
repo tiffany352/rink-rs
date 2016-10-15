@@ -5,7 +5,7 @@
 extern crate rink;
 extern crate clap;
 extern crate encoding;
-extern crate lmdb_zero as lmdb;
+extern crate lmdb;
 
 use clap::{Arg, App};
 use std::fs::File;
@@ -19,7 +19,8 @@ use std::str::FromStr;
 use std::fmt;
 use std::io::Write;
 use std::collections::BTreeMap;
-use lmdb::{Database, DatabaseOptions, WriteTransaction, EnvBuilder, put, db};
+use lmdb::{Environment, Transaction, DatabaseFlags, WriteFlags};
+use std::path::Path;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 struct Rat(i32, i32);
@@ -92,16 +93,14 @@ fn main() {
     let dir = PathBuf::from(matches.value_of("INPUTDIR").unwrap());
     let db_path = matches.value_of("DB").unwrap();
 
-    let env = unsafe {
-        let mut b = EnvBuilder::new().expect("Creating builder");
-        b.set_mapsize(1024*1024*100).expect("Setting mapsize");
-        b.set_maxdbs(10).expect("Setting maxdbs");
-        b.open(
-            db_path, lmdb::open::Flags::empty(), 0o600
-        ).expect("Opening env")
-    };
-    let db = Database::open(
-        &env, Some("substances"), &DatabaseOptions::new(db::CREATE)
+    let env = Environment::new()
+        .set_map_size(1024*1024*100)
+        .set_max_dbs(10)
+        .open(Path::new(&db_path))
+        .expect("Opening database");
+    let db = env.create_db(
+        Some("substances"),
+        DatabaseFlags::empty()
     ).expect("Creating database");
 
     macro_rules! field_type {
@@ -266,9 +265,8 @@ fn main() {
     properties.insert("Sugars",   ("sugars", "by_sugars", "mass"));
     properties.insert("Alcohol",  ("alcohol", "by_alcohol", "mass"));
 
-    let txn = WriteTransaction::new(&env).expect("Transaction");
+    let mut txn = env.begin_rw_txn().expect("Failed to start transaction");
     {
-        let mut access = txn.access();
         for (&ndb, des_record) in &food_des {
             let mut output = vec![];
             for (_, fn_rec) in &footnote {
@@ -353,7 +351,7 @@ fn main() {
             writeln!(output, "}}").unwrap();
             writeln!(output, "").unwrap();
 
-            access.put(&db, &*name, &output, put::Flags::empty())
+            txn.put(db, &&*name, &output, WriteFlags::empty())
                 .expect("Put");
         }
     }
