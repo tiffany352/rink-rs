@@ -173,26 +173,14 @@
           <thead>
             <tr>
               <th>Name</th>
-              <th>Input</th>
-              <th>Output</th>
+              <th>Value</th>
               <th>Notes</th>
             </tr>
           </thead>
           {{#each properties}}
             <tr>
               <td>{{name}}</td>
-              <td>
-                {{#with input}}
-                  {{> number}}
-                  {{else}}
-                  N/A
-                {{/with}}
-              </td>
-              <td>
-                {{#with output}}
-                  {{> number}}
-                {{/with}}
-              </td>
+              <td>{{> number value}}</td>
               <td>{{doc}}</td>
             </tr>
           {{/each}}

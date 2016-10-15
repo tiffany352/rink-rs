@@ -83,8 +83,7 @@ pub struct SearchReply {
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct PropertyReply {
     pub name: String,
-    pub input: Option<NumberParts>,
-    pub output: NumberParts,
+    pub value: NumberParts,
     pub doc: Option<String>,
 }
 
@@ -348,12 +347,9 @@ impl Display for SubstanceReply {
             self.name,
             self.doc.as_ref().map(|x| format!("{} ", x)).unwrap_or_default(),
             self.properties.iter().map(|prop| format!(
-                "{} = {}{}{}",
+                "{} = {}{}",
                 prop.name,
-                prop.input.as_ref()
-                    .map(|x| format!("{} -> ", x.format("n u")))
-                    .unwrap_or_else(|| "".to_owned()),
-                prop.output.format("n u"),
+                prop.value.format("n u"),
                 prop.doc.as_ref()
                     .map(|x| format!(" ({})", x))
                     .unwrap_or_else(|| "".to_owned())

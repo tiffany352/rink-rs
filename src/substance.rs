@@ -137,22 +137,48 @@ impl Substance {
                     } else {
                         (input, output)
                     };
+                    let output_show = context.show(
+                        &try!((
+                            &output / &unit
+                        ).ok_or_else(|| format!(
+                            "Division by zero: <{}> / <{}>",
+                            output.show(context),
+                            unit.show(context)
+                        ))),
+                        &unit,
+                        bottom_name.clone(),
+                        bottom_const.clone(),
+                        base
+                    ).value;
+                    let output = try!((
+                        &output / &unit
+                    ).ok_or_else(|| format!(
+                        "Division by zero: <{}> / <{}>",
+                        output.show(context),
+                        unit.show(context)
+                    )));
+                    let input: Option<Number> = input;
                     Ok(Some(PropertyReply {
                         name: k.clone(),
-                        input: input.map(|x| x.to_parts(context)),
-                        output: context.show(
-                            &try!((
-                                &output / &unit
+                        value: if let Some(input) = input.as_ref() {
+                            let input_pretty = input.prettify(context);
+                            let mut output_pretty = output.clone();
+                            output_pretty.unit = bottom_name.iter()
+                                .map(|(k,v)| (Dim::new(&k), *v as i64)).collect();
+                            let mut res = try!((
+                                &output_pretty / &input_pretty
                             ).ok_or_else(|| format!(
                                 "Division by zero: <{}> / <{}>",
                                 output.show(context),
-                                unit.show(context)
-                            ))),
-                            &unit,
-                            bottom_name.clone(),
-                            bottom_const.clone(),
-                            base
-                        ).value,
+                                input.show(context)
+                            ))).to_parts(context);
+                            let value = (&unit / &input)
+                                .expect("Already known safe").to_parts(context);
+                            res.quantity = value.quantity;
+                            res
+                        } else {
+                            output_show.clone()
+                        },
                         doc: v.doc.clone()
                     }))
                 }).filter_map(
@@ -172,6 +198,9 @@ impl Substance {
                     self.amount.show(context)
                 )));
                 let (name, input, output) = if input.dimless() {
+                    if v.output.unit != unit.unit {
+                        return Ok(None)
+                    }
                     let div = try!(
                         (&v.output / &input).ok_or_else(|| format!(
                             "Division by zero: <{}> / <{}>",
@@ -181,6 +210,9 @@ impl Substance {
                     );
                     (v.output_name.clone(), None, div)
                 } else if output.dimless() {
+                    if v.input.unit != unit.unit {
+                        return Ok(None)
+                    }
                     let div = try!(
                         (&v.input / &output).ok_or_else(|| format!(
                             "Division by zero: <{}> / <{}>",
@@ -192,30 +224,55 @@ impl Substance {
                 } else {
                     return Ok(None)
                 };
+                let output_show = context.show(
+                    &try!((
+                        &output / &unit
+                    ).ok_or_else(|| format!(
+                        "Division by zero: <{}> / <{}>",
+                        output.show(context),
+                        unit.show(context)
+                    ))),
+                    &unit,
+                    bottom_name.clone(),
+                    bottom_const.clone(),
+                    base
+                ).value;
+                let output = try!((
+                    &output / &unit
+                ).ok_or_else(|| format!(
+                    "Division by zero: <{}> / <{}>",
+                    output.show(context),
+                    unit.show(context)
+                )));
+                let input: Option<Number> = input;
                 Ok(Some(PropertyReply {
                     name: name,
-                    input: input.map(|x: Number| x.to_parts(context)),
-                    output: context.show(
-                        &try!((
-                            &output / &unit
+                    value: if let Some(input) = input.as_ref() {
+                        let input_pretty = input.prettify(context);
+                        let mut output_pretty = output.clone();
+                        output_pretty.unit = bottom_name.iter()
+                            .map(|(k,v)| (Dim::new(&k), *v as i64)).collect();
+                        let mut res = try!((
+                            &output_pretty / &input_pretty
                         ).ok_or_else(|| format!(
                             "Division by zero: <{}> / <{}>",
                             output.show(context),
-                            unit.show(context)
-                        ))),
-                        &unit,
-                        bottom_name.clone(),
-                        bottom_const.clone(),
-                        base
-                    ).value,
+                            input.show(context)
+                        ))).to_parts(context);
+                        let value = (&unit / &input)
+                            .expect("Already known safe").to_parts(context);
+                        res.quantity = value.quantity;
+                        res
+                    } else {
+                        output_show.clone()
+                    },
                     doc: v.doc.clone(),
                 }))
             };
             let amount = PropertyReply {
                 name: self.amount.to_parts(context).quantity
                     .unwrap_or_else(|| "amount".to_owned()),
-                input: None,
-                output: self.amount.to_parts(context),
+                value: self.amount.to_parts(context),
                 doc: None,
             };
             Ok(SubstanceReply {
@@ -253,8 +310,23 @@ impl Substance {
                     };
                     Ok(PropertyReply {
                         name: k.clone(),
-                        input: input.map(|x| x.to_parts(context)),
-                        output: output.to_parts(context),
+                        value: if let Some(input) = input.as_ref() {
+                            let input_pretty = input.prettify(context);
+                            let output_pretty = output.prettify(context);
+                            let mut res = try!((
+                                &output_pretty / &input_pretty
+                            ).ok_or_else(|| format!(
+                                "Division by zero: <{}> / <{}>",
+                                output.show(context),
+                                input.show(context)
+                            ))).to_parts(context);
+                            let value = (&output / &input)
+                                .expect("Already known safe").to_parts(context);
+                            res.quantity = value.quantity;
+                            res
+                        } else {
+                            output.to_parts(context)
+                        },
                         doc: v.doc.clone()
                     })
                 }).collect::<Result<Vec<PropertyReply>, String>>()),
@@ -279,7 +351,7 @@ impl Substance {
                             input.show(context)
                         ))
                     );
-                    (v.output_name.clone(), None, div.to_parts(context))
+                    (v.output_name.clone(), None, div)
                 } else if output.dimless() {
                     let div = try!(
                         (&v.input / &output).ok_or_else(|| format!(
@@ -288,22 +360,37 @@ impl Substance {
                             output.show(context)
                         ))
                     );
-                    (v.input_name.clone(), None, div.to_parts(context))
+                    (v.input_name.clone(), None, div)
                 } else {
                     return Ok(None)
                 };
+                let input: Option<Number> = input;
                 Ok(Some(PropertyReply {
                     name: name,
-                    input: input,
-                    output: output,
+                    value: if let Some(input) = input.as_ref() {
+                        let input_pretty = input.prettify(context);
+                        let output_pretty = output.prettify(context);
+                        let mut res = try!((
+                            &output_pretty / &input_pretty
+                        ).ok_or_else(|| format!(
+                            "Division by zero: <{}> / <{}>",
+                            output.show(context),
+                            input.show(context)
+                        ))).to_parts(context);
+                        let value = (&output / &input)
+                            .expect("Already known safe").to_parts(context);
+                        res.quantity = value.quantity;
+                        res
+                    } else {
+                        output.to_parts(context)
+                    },
                     doc: v.doc.clone(),
                 }))
             };
             let amount = PropertyReply {
                 name: self.amount.to_parts(context).quantity
                     .unwrap_or_else(|| "amount".to_owned()),
-                input: None,
-                output: self.amount.to_parts(context),
+                value: self.amount.to_parts(context),
                 doc: None,
             };
             Ok(SubstanceReply {

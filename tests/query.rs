@@ -172,9 +172,7 @@ fn test_convert_from_substances() {
          "water: volume = 1000 millimeter^3; mass = 1 gram");
     test("g water -> ml",
          "water: mass = 1 gram; \
-          volume = 1 milliliter; \
-          fusion_energy = 334106640 milliliter; \
-          vaporization_energy = 1.16e9 milliliter");
+          volume = 1 milliliter");
 }
 
 #[test]
@@ -191,7 +189,7 @@ fn test_convert_to_substances() {
 fn test_substance_add() {
     test("air",
          "air: Average molecular weight of air. \
-          molar_mass = 1 mole -> approx. 28.96790 gram");
+          molar_mass = approx. 28.96790 gram / mole");
 }
 
 #[test]
