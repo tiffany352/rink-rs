@@ -10,6 +10,7 @@ use search;
 use substance::Substance;
 use reply::NotFoundError;
 use std::cell::RefCell;
+use std::borrow::Cow;
 
 #[cfg(feature = "lmdb")]
 pub struct Lmdb {
@@ -254,14 +255,14 @@ impl Context {
         (recip, String::from_utf8(buf).unwrap())
     }
 
-    pub fn typo_dym<'a>(&'a self, what: &str) -> Option<&'a str> {
+    pub fn typo_dym<'a>(&'a self, what: &str) -> Option<Cow<'a, str>> {
         search::search(self, what, 1).into_iter().next()
     }
 
     pub fn unknown_unit_err(&self, name: &str) -> NotFoundError {
         NotFoundError {
             got: name.to_owned(),
-            suggestion: self.typo_dym(name).map(|x| x.to_owned()),
+            suggestion: self.typo_dym(name).map(|x| x.into_owned()),
         }
     }
 

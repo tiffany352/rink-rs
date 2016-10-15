@@ -6,11 +6,12 @@ use context::Context;
 use std::cmp::{PartialOrd, Ord, Ordering};
 use strsim::jaro_winkler;
 use std::collections::BinaryHeap;
+use std::borrow::Cow;
 
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct SearchResult<'a> {
     score: i32,
-    value: &'a str,
+    value: Cow<'a, str>,
 }
 
 impl<'a> PartialOrd for SearchResult<'a> {
@@ -25,13 +26,41 @@ impl<'a> Ord for SearchResult<'a> {
     }
 }
 
-pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a str> {
+#[cfg(feature = "lmdb")]
+pub fn search_db<'a, F: FnMut(Cow<'a, str>)>(
+    ctx: &'a Context, test: &mut F
+) -> Result<(), String> {
+    use lmdb::{Transaction, Cursor};
+    use std::str::from_utf8;
+
+    let lmdb = match ctx.lmdb {
+        Some(ref lmdb) => lmdb,
+        None => return Ok(())
+    };
+    let tx = try!(lmdb.env.begin_ro_txn().map_err(|e| format!(
+        "Failed to create read transaction: {}", e
+    )));
+    let mut cursor = try!(tx.open_ro_cursor(lmdb.substances).map_err(|e| format!(
+        "Failed to create read cursor: {}", e
+    )));
+    for (k, _v) in cursor.iter() {
+        if let Ok(k) = from_utf8(k) {
+            test(Cow::Owned(k.to_owned()))
+        }
+    }
+    Ok(())
+}
+
+#[cfg(not(feature = "lmdb"))]
+pub fn search_db<'a, F: FnMut(Cow<'a, str>)>(_ctx: &'a Context, _test: &mut F) {}
+
+pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<Cow<'a, str>> {
     let mut results = BinaryHeap::new();
     let query = query.to_lowercase();
     {
-        let mut try = |x: &'a str| {
+        let mut try = |x: Cow<'a, str>| {
             let borrow = x;
-            let x = x.to_lowercase();
+            let x = borrow.to_lowercase();
             let modifier = if x == query {
                 4_000
             } else if x.starts_with(&query) {
@@ -57,16 +86,20 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         };
 
         for k in &ctx.dimensions {
-            try(&**k.0);
+            try(Cow::Borrowed(&**k.0));
         }
         for (k, _v) in &ctx.units {
-            try(&**k);
+            try(Cow::Borrowed(&**k));
         }
         for (_u, k) in &ctx.quantities {
-            try(&**k);
+            try(Cow::Borrowed(&**k));
         }
         for (k, _sub) in &ctx.substances {
-            try(&**k);
+            try(Cow::Borrowed(&**k));
+        }
+        match search_db(ctx, &mut try) {
+            Ok(()) => (),
+            Err(e) => println!("Searching database failed: {}", e)
         }
     }
     results.into_sorted_vec()

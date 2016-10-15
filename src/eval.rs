@@ -908,23 +908,22 @@ impl Context {
                     results: search::search(self, &**string, 5)
                         .into_iter()
                         .map(|x| {
-                            let parts = self.lookup(x)
+                            let parts = self.lookup(&x)
                                 .map(|x| x.to_parts(self))
-                                .or_else(|| if self.substances.get(x).is_some() {
+                                .or_else(|| if self.substances.get(&*x).is_some() {
                                     Some(NumberParts {
                                         quantity: Some("substance".to_owned()),
                                         .. Default::default()
                                     })
                                 } else {
                                     None
-                                })
-                                .expect("Search returned non-existent result");
+                                });
                             let mut raw = BTreeMap::new();
-                            raw.insert(Dim::new(x), 1);
+                            raw.insert(Dim::new(&x), 1);
                             NumberParts {
-                                unit: Some(x.to_owned()),
+                                unit: Some(x.into_owned()),
                                 raw_unit: Some(raw),
-                                quantity: parts.quantity,
+                                quantity: parts.and_then(|parts| parts.quantity),
                                 ..Default::default()
                             }
                         })
