@@ -160,11 +160,18 @@ pub fn parse_date<I>(
                     DateToken::Plus => 1, DateToken::Dash => -1, _ => panic!()
                 };
                 let h = take!(DateToken::Number(s, None), s);
-                let h = i32::from_str_radix(&*h, 10).unwrap();
-                take!(DateToken::Colon);
-                let m = take!(DateToken::Number(s, None), s);
-                let m = i32::from_str_radix(&*m, 10).unwrap();
-                out.offset = Some(s * (h*3600 + m*60));
+                if h.len() == 4 {
+                    let h = i32::from_str_radix(&*h, 10).unwrap();
+                    let m = h % 100;
+                    let h = h / 100;
+                    out.offset = Some(s * (h*3600 + m*60));
+                } else {
+                    let h = i32::from_str_radix(&*h, 10).unwrap();
+                    take!(DateToken::Colon);
+                    let m = take!(DateToken::Number(s, None), s);
+                    let m = i32::from_str_radix(&*m, 10).unwrap();
+                    out.offset = Some(s * (h*3600 + m*60));
+                }
                 Ok(())
             },
             "monthname" => match tok {
