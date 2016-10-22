@@ -101,7 +101,11 @@ pub fn to_string(rational: &Num, base: u8) -> (bool, String) {
     let mut placed_decimal = false;
     loop {
         let exact = cursor == zero;
-        let use_sci = intdigits+zeros > 9;
+        let use_sci = if den == one && (base == 2 || base == 8 || base == 16 || base == 32) {
+            false
+        } else {
+            intdigits+zeros > 9 * 10 / base as u32
+        };
         let placed_ints = n >= intdigits;
         let bail =
             (exact && (placed_ints || use_sci)) ||
