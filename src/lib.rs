@@ -30,7 +30,7 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 ```
 */
 
-#![cfg_attr(feature = "nightly", feature(rustc_macro))]
+#![cfg_attr(feature = "nightly", feature(proc_macro))]
 
 extern crate gmp;
 extern crate chrono;

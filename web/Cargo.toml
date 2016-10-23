@@ -29,7 +29,7 @@ chrono = { version = "*", features = ["serde"] }
 rustc-serialize = "*"
 serde_json = "0.8"
 serde_derive = "0.8"
-serde = "0.8"
+serde = "0.8.16"
 limiter = "0.2"
 logger = "0.1.0"
 url = "1.2.0"
