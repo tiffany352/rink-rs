@@ -5,6 +5,7 @@
 use std::rc::Rc;
 use std::fmt;
 use num::Num;
+use chrono_tz::Tz;
 
 #[derive(Debug, Clone)]
 pub enum SuffixOp {
@@ -59,6 +60,7 @@ pub enum Conversion {
     DegN,
     List(Vec<String>),
     Offset(i64),
+    Timezone(Tz),
 }
 
 #[derive(Debug, Clone)]
@@ -129,6 +131,8 @@ impl fmt::Display for Conversion {
             },
             Conversion::Offset(off) =>
                 write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
+            Conversion::Timezone(ref tz) =>
+                write!(fmt, "{:?}", tz),
         }
     }
 }

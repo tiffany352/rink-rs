@@ -8,6 +8,7 @@ use ast::*;
 use gmp::mpz::Mpz;
 use gmp::mpq::Mpq;
 use num::Num;
+use chrono_tz::Tz;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -745,6 +746,7 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
     let left = parse_eq(iter);
     match iter.peek().cloned().unwrap() {
         Token::DashArrow => {
+            use std::str::FromStr;
             iter.next();
             let mut copy = iter.clone();
             if let Some(res) = parse_unitlist(&mut copy) {
@@ -799,6 +801,11 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
                     } else {
                         Conversion::Expr(parse_eq(&mut old))
                     }
+                },
+                Token::Ident(ref s) if Tz::from_str(s).is_ok() => {
+                    Conversion::Timezone(Tz::from_str(s).expect(
+                        "Running from_str a second time failed"
+                    ))
                 },
                 _ => Conversion::Expr(parse_eq(iter))
             };

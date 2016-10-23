@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, TimeZone};
 use std::iter::once;
 use ast::Expr;
 
@@ -314,10 +314,10 @@ impl Display for ConformanceError {
 }
 
 impl DateReply {
-    pub fn new(ctx: &::context::Context, date: DateTime<FixedOffset>) -> DateReply {
+    pub fn new<Tz>(ctx: &::context::Context, date: DateTime<Tz>) -> DateReply
+    where Tz: TimeZone, Tz::Offset: Display {
         use chrono::{Datelike, Timelike};
         DateReply {
-            human: ctx.humanize(date),
             string: format!("{}", date),
             year: date.year(),
             month: date.month() as i32,
@@ -326,6 +326,7 @@ impl DateReply {
             minute: date.minute() as i32,
             second: date.second() as i32,
             nanosecond: date.nanosecond() as i32,
+            human: ctx.humanize(date),
         }
     }
 }

@@ -4,14 +4,17 @@
 
 use ast::{DatePattern, DateToken, show_datepattern};
 use chrono::format::Parsed;
-use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration, Date};
+use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration, Date, TimeZone};
 use context::Context;
 use number::{Number, Dim};
 use num::Num;
 use std::iter::Peekable;
+use chrono_tz::Tz;
+use std::str::FromStr;
 
 pub fn parse_date<I>(
     out: &mut Parsed,
+    out_tz: &mut Option<Tz>,
     date: &mut Peekable<I>,
     pat: &[DatePattern]
 ) -> Result<(), String>
@@ -156,23 +159,33 @@ pub fn parse_date<I>(
             },
             "offset" => {
                 advance = false;
-                let s = match take!(DateToken::Plus | DateToken::Dash) {
-                    DateToken::Plus => 1, DateToken::Dash => -1, _ => panic!()
-                };
-                let h = take!(DateToken::Number(s, None), s);
-                if h.len() == 4 {
-                    let h = i32::from_str_radix(&*h, 10).unwrap();
-                    let m = h % 100;
-                    let h = h / 100;
-                    out.offset = Some(s * (h*3600 + m*60));
+                if let Some(DateToken::Literal(ref s)) = date.peek().cloned() {
+                    date.next();
+                    if let Ok(tz) = Tz::from_str(s) {
+                        *out_tz = Some(tz);
+                        Ok(())
+                    } else {
+                        Err(format!("Invalid timezone {}", s))
+                    }
                 } else {
-                    let h = i32::from_str_radix(&*h, 10).unwrap();
-                    take!(DateToken::Colon);
-                    let m = take!(DateToken::Number(s, None), s);
-                    let m = i32::from_str_radix(&*m, 10).unwrap();
-                    out.offset = Some(s * (h*3600 + m*60));
+                    let s = match take!(DateToken::Plus | DateToken::Dash) {
+                        DateToken::Plus => 1, DateToken::Dash => -1, _ => panic!()
+                    };
+                    let h = take!(DateToken::Number(s, None), s);
+                    if h.len() == 4 {
+                        let h = i32::from_str_radix(&*h, 10).unwrap();
+                        let m = h % 100;
+                        let h = h / 100;
+                        out.offset = Some(s * (h*3600 + m*60));
+                    } else {
+                        let h = i32::from_str_radix(&*h, 10).unwrap();
+                        take!(DateToken::Colon);
+                        let m = take!(DateToken::Number(s, None), s);
+                        let m = i32::from_str_radix(&*m, 10).unwrap();
+                        out.offset = Some(s * (h*3600 + m*60));
+                    }
+                    Ok(())
                 }
-                Ok(())
             },
             "monthname" => match tok {
                 Some(DateToken::Literal(ref s)) => {
@@ -218,7 +231,7 @@ pub fn parse_date<I>(
         Some(&DatePattern::Optional(ref pats)) => {
             advance = false;
             let mut iter = date.clone();
-            match parse_date(out, &mut iter, &pats[..]) {
+            match parse_date(out, out_tz, &mut iter, &pats[..]) {
                 Ok(()) => *date = iter,
                 Err(_) => ()
             };
@@ -241,19 +254,35 @@ pub fn parse_date<I>(
         date.next();
     }
     match res {
-        Ok(()) => parse_date(out, date, &pat[1..]),
+        Ok(()) => parse_date(out, out_tz, date, &pat[1..]),
         Err(e) => Err(e)
     }
 }
 
-pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime<FixedOffset>, String> {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GenericDateTime {
+    Fixed(DateTime<FixedOffset>),
+    Timezone(DateTime<Tz>),
+}
+
+impl GenericDateTime {
+    pub fn with_timezone<Tz: TimeZone>(&self, tz: &Tz) -> DateTime<Tz> {
+        match *self {
+            GenericDateTime::Fixed(ref d) => d.with_timezone(tz),
+            GenericDateTime::Timezone(ref d) => d.with_timezone(tz),
+        }
+    }
+}
+
+pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTime, String> {
     let mut best = None;
     for pat in &context.datepatterns {
         //println!("Tring {:?} against {}", date, show_datepattern(pat));
-        let attempt = || {
+        let attempt = || -> Result<GenericDateTime, (String, usize)> {
             let mut parsed = Parsed::new();
+            let mut tz = None;
             let mut iter = date.iter().cloned().peekable();
-            let res = parse_date(&mut parsed, &mut iter, &pat[..]);
+            let res = parse_date(&mut parsed, &mut tz, &mut iter, &pat[..]);
             let count = iter.count();
             let res = if count > 0 && res.is_ok() {
                 Err(format!("Expected eof, got {}",
@@ -264,17 +293,40 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime<Fixe
                 res
             };
             try!(res.map_err(|e| (e, count)));
-            let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
             let time = parsed.to_naive_time();
             let date = parsed.to_naive_date();
-            match (time, date) {
-                (Ok(time), Ok(date)) =>
-                    Ok(DateTime::<FixedOffset>::from_utc(date.and_time(time), offset)),
-                (Ok(time), Err(_)) =>
-                    Ok(UTC::now().with_timezone(&offset).date().and_time(time).unwrap()),
-                (Err(_), Ok(date)) =>
-                    Ok(Date::<FixedOffset>::from_utc(date, offset).and_hms(0, 0, 0)),
-                _ => Err((format!("Failed to construct a useful datetime"), count))
+            if let Some(tz) = tz {
+                match (time, date) {
+                    (Ok(time), Ok(date)) =>
+                        tz.from_local_datetime(&date.and_time(time)).earliest().ok_or_else(|| (format!(
+                            "Datetime does not represent a valid moment in time"
+                        ), count)).map(GenericDateTime::Timezone),
+                    (Ok(time), Err(_)) =>
+                        Ok(UTC::now().with_timezone(&tz).date().and_time(time).unwrap()).map(
+                            GenericDateTime::Timezone),
+                    (Err(_), Ok(date)) =>
+                        tz.from_local_date(&date).earliest().map(|x| x.and_hms(0, 0, 0)).ok_or_else(|| (format!(
+                            "Datetime does not represent a valid moment in time"
+                        ), count)).map(GenericDateTime::Timezone),
+                    _ => Err((format!("Failed to construct a useful datetime"), count))
+                }
+            } else {
+                let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
+                match (time, date) {
+                    (Ok(time), Ok(date)) =>
+                        Ok(GenericDateTime::Fixed(DateTime::<FixedOffset>::from_utc(
+                            date.and_time(time), offset
+                        ))),
+                    (Ok(time), Err(_)) =>
+                        Ok(GenericDateTime::Fixed(UTC::now().with_timezone(
+                            &offset
+                        ).date().and_time(time).unwrap())),
+                    (Err(_), Ok(date)) =>
+                        Ok(GenericDateTime::Fixed(Date::<FixedOffset>::from_utc(
+                            date, offset
+                        ).and_hms(0, 0, 0))),
+                    _ => Err((format!("Failed to construct a useful datetime"), count))
+                }
             }
         };
         match attempt() {
@@ -408,7 +460,7 @@ pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
 
 impl Context {
     #[cfg(feature = "chrono-humanize")]
-    pub fn humanize(&self, date: DateTime<FixedOffset>) -> Option<String> {
+    pub fn humanize<Tz: TimeZone>(&self, date: DateTime<Tz>) -> Option<String> {
         if self.use_humanize {
             use chrono_humanize::HumanTime;
             Some(format!("{}", HumanTime::from(date)))
@@ -418,7 +470,7 @@ impl Context {
     }
 
     #[cfg(not(feature = "chrono-humanize"))]
-    pub fn humanize(&self, _date: DateTime<FixedOffset>) -> Option<String> {
+    pub fn humanize<Tz: TimeZone>(&self, _date: DateTime<Tz>) -> Option<String> {
         None
     }
 }

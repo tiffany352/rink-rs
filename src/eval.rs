@@ -64,7 +64,8 @@ impl Context {
         }
 
         match *expr {
-            Expr::Unit(ref name) if name == "now" => Ok(Value::DateTime(date::now())),
+            Expr::Unit(ref name) if name == "now" =>
+                Ok(Value::DateTime(date::GenericDateTime::Fixed(date::now()))),
             Expr::Unit(ref name) =>
                 self.lookup(name).map(Value::Number)
                 .or_else(|| self.substances.get(name)
@@ -76,9 +77,10 @@ impl Context {
             Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dim::new(&**name)))),
             Expr::Const(ref num) =>
                 Ok(Value::Number(Number::new(num.clone()))),
-            Expr::Date(ref date) => date::try_decode(date, self)
-                .map(Value::DateTime)
-                .map_err(QueryError::Generic),
+            Expr::Date(ref date) => match date::try_decode(date, self) {
+                Ok(date) => Ok(Value::DateTime(date)),
+                Err(e) => Err(QueryError::Generic(e))
+            },
             Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| (-&v).map_err(|e| {
                 QueryError::Generic(format!("{}: - <{}>", e, v.show(self)))
             })),
@@ -761,6 +763,16 @@ impl Context {
                 let top = top.with_timezone(&FixedOffset::east(off as i32));
                 Ok(QueryReply::Date(DateReply::new(self, top)))
             },
+            Query::Convert(ref top, Conversion::Timezone(tz), None) => {
+                let top = try!(self.eval(top));
+                let top = match top {
+                    Value::DateTime(date) => date,
+                    _ => return Err(QueryError::Generic(format!(
+                        "Cannot convert <{}> to timezone {:?}", top.show(self), tz)))
+                };
+                let top = top.with_timezone(&tz);
+                Ok(QueryReply::Date(DateReply::new(self, top)))
+            },
             Query::Convert(ref top, ref which @ Conversion::DegC, None) |
             Query::Convert(ref top, ref which @ Conversion::DegF, None) |
             Query::Convert(ref top, ref which @ Conversion::DegN, None) |
@@ -954,7 +966,10 @@ impl Context {
                         }))
                     },
                     Value::Number(n) => Ok(QueryReply::Number(n.to_parts(self))),
-                    Value::DateTime(d) => Ok(QueryReply::Date(DateReply::new(self, d))),
+                    Value::DateTime(d) => match d {
+                        date::GenericDateTime::Fixed(d) => Ok(QueryReply::Date(DateReply::new(self, d))),
+                        date::GenericDateTime::Timezone(d) => Ok(QueryReply::Date(DateReply::new(self, d))),
+                    },
                     Value::Substance(s) => Ok(QueryReply::Substance(
                         try!(s.to_reply(self).map_err(QueryError::Generic))
                     )),
