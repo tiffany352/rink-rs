@@ -632,15 +632,14 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
 }
 
 fn parse_div(mut iter: &mut Iter) -> Expr {
-    let mut left = parse_mul(iter);
-    loop { match *iter.peek().unwrap() {
+    let left = parse_mul(iter);
+    match iter.peek().cloned().unwrap() {
         Token::Slash => {
             iter.next();
-            let right = parse_mul(iter);
-            left = Expr::Frac(Box::new(left), Box::new(right));
+            return Expr::Frac(Box::new(left), Box::new(parse_div(iter)))
         },
         _ => return left
-    }}
+    }
 }
 
 fn parse_add(mut iter: &mut Iter) -> Expr {
@@ -838,11 +837,11 @@ mod test {
     #[test]
     fn mul_assoc() {
         assert_eq!(parse("a b * c / d / e f g"),
-                   "(a b c / d) / e f g");
+                   "a b c / d / e f g");
         assert_eq!(parse("a|b c / g e|f"),
                    "(a / b) c / g (e / f)");
         assert_eq!(parse("a / b / c"),
-                   "(a / b) / c");
+                   "a / b / c");
     }
 
     #[test]
