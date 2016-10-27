@@ -523,7 +523,7 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
         Token::Ident(name) => match iter.peek().cloned().unwrap() {
             Token::Ident(ref s) if s == "of" => {
                 iter.next();
-                Expr::Of(name.clone(), Box::new(parse_mul(iter)))
+                Expr::Of(name.clone(), Box::new(parse_juxt(iter)))
             },
             _ => Expr::Unit(name)
         },
@@ -588,10 +588,10 @@ fn parse_frac(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_mul(mut iter: &mut Iter) -> Expr {
+fn parse_juxt(mut iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_frac(iter)];
     loop { match iter.peek().cloned().unwrap() {
-        Token::Slash | Token::Comma | Token::Equals |
+        Token::Asterisk | Token::Slash | Token::Comma | Token::Equals |
         Token::Plus | Token::Minus | Token::DashArrow |
         Token::RPar | Token::Newline |
         Token::Comment(_) | Token::Eof => break,
@@ -619,9 +619,6 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
             iter.next();
             terms = vec![Expr::Suffix(SuffixOp::Newton, Box::new(Expr::Mul(terms)))]
         },
-        Token::Asterisk => {
-            iter.next();
-        },
         _ => terms.push(parse_frac(iter))
     }}
     if terms.len() == 1 {
@@ -632,13 +629,27 @@ fn parse_mul(mut iter: &mut Iter) -> Expr {
 }
 
 fn parse_div(mut iter: &mut Iter) -> Expr {
-    let left = parse_mul(iter);
-    match iter.peek().cloned().unwrap() {
+    let mut terms = vec![parse_juxt(iter)];
+    loop { match iter.peek().cloned().unwrap() {
         Token::Slash => {
             iter.next();
-            return Expr::Frac(Box::new(left), Box::new(parse_div(iter)))
+            let left = if terms.len() == 1 {
+                terms.pop().unwrap()
+            } else {
+                Expr::Mul(terms.drain(..).collect())
+            };
+            terms = vec![Expr::Frac(Box::new(left), Box::new(parse_juxt(iter)))];
         },
-        _ => return left
+        Token::Asterisk => {
+            iter.next();
+            terms.push(parse_juxt(iter));
+        },
+        _ => break
+    }}
+    if terms.len() == 1 {
+        terms.pop().unwrap()
+    } else {
+        Expr::Mul(terms)
     }
 }
 
@@ -836,12 +847,12 @@ mod test {
 
     #[test]
     fn mul_assoc() {
-        assert_eq!(parse("a b * c / d / e f g"),
-                   "a b c / d / e f g");
+        assert_eq!(parse("a b * c / d / e f * g h"),
+                   "(((a b) c / d) / e f) (g h)");
         assert_eq!(parse("a|b c / g e|f"),
                    "(a / b) c / g (e / f)");
         assert_eq!(parse("a / b / c"),
-                   "a / b / c");
+                   "(a / b) / c");
     }
 
     #[test]
