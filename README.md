@@ -63,7 +63,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rink = "0.3"
+rink = "0.4"
 ```
 
 and this to your crate root:
@@ -87,6 +87,26 @@ submitted for inclusion in the work will grant the rights lined out in
 the MPL, including larger works with secondary licenses.
 
 ## Changelog
+
+### 0.4.0
+- Rewritten web interface
+- Add a notion of substances
+- Add tzdb support
+- Base conversions
+- Change to precedence rules: multiplication by juxtaposition now has
+  higher precedence than `/` and `*`, both of which now have the same
+  precedence and are left associative
+- Unit documentation
+- Show definitions
+- `_` and unicode thin space as digit separators
+- `search` command
+- Add float-based implementations of trig functions
+- Fix root calculations
+- Fix caching behavior with downloaded data
+- Make `in` an alias for `->`
+- Make Gb gigabits, not gilberts
+- Make seconds optional in date literals
+- Make colon optional in time offsets
 
 ### 0.3.2
 - Time quantities now automatically display in human units (year,
