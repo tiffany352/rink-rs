@@ -6,10 +6,48 @@ extern crate rink;
 #[cfg(feature = "linefeed")]
 extern crate linefeed;
 
+use std::fs::File;
+use std::io::{BufRead, BufReader, stdin};
+
 use rink::*;
 
+fn main_noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
+    use std::io::{stdout, Write};
+
+    let mut ctx = match load() {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            println!("{}", e);
+            return
+        }
+    };
+    let mut line = String::new();
+    loop {
+        if show_prompt {
+            print!("> ");
+        }
+        stdout().flush().unwrap();
+        match f.read_line(&mut line) {
+            Ok(_) => (),
+            Err(_) => return
+        };
+        // the underlying file object has hit an EOF if we try to read a
+        // line but do not find the newline at the end, so let's break
+        // out of the loop
+        match line.find('\n') {
+            Some(_) => (),
+            None => return
+        }
+        match one_line(&mut ctx, &*line) {
+            Ok(v) => println!("{}", v),
+            Err(e) => println!("{}", e)
+        };
+        line.clear();
+    }
+}
+
 #[cfg(feature = "linefeed")]
-fn main() {
+fn main_interactive() {
     use linefeed::{Reader, Terminal, Completer, Completion};
     use std::rc::Rc;
     use std::cell::RefCell;
@@ -198,30 +236,31 @@ fn main() {
     }
 }
 
+// If we aren't compiling with linefeed support we should just call the
+// noninteractive version
 #[cfg(not(feature = "linefeed"))]
-fn main() {
-    use std::io::{stdin, stdout, Write};
+fn main_interactive() {
+    main_noninteractive(stdin(), true);
+}
 
-    let mut ctx = match load() {
-        Ok(ctx) => ctx,
-        Err(e) => {
-            println!("{}", e);
-            return
-        }
+fn main() {
+    use std::env::args;
+
+    // Specify the file to parse commands from as a shell argument
+    // i.e. "rink <file>"
+    let input_file_name = args().nth(1);
+    match input_file_name {
+        // if we have an input, buffer it and call main_noninteractive
+        Some(name) => {
+            match name.as_ref() {
+                "-" => {
+                    let stdin_handle = stdin();
+                    main_noninteractive(stdin_handle.lock(), false);
+                },
+                _ => main_noninteractive(BufReader::new(File::open(name).unwrap()), false)
+            };
+        },
+        // else call the interactive version
+        None => main_interactive()
     };
-    let f = stdin();
-    let mut line = String::new();
-    loop {
-        print!("> ");
-        stdout().flush().unwrap();
-        match f.read_line(&mut line) {
-            Ok(_) => (),
-            Err(_) => return
-        };
-        match one_line(&mut ctx, &*line) {
-            Ok(v) => println!("{}", v),
-            Err(e) => println!("{}", e)
-        };
-        line.clear();
-    }
 }
