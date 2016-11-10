@@ -6,7 +6,7 @@ use std::fs::File;
 use std::time::Duration;
 use xml::EventReader;
 use xml::reader::XmlEvent;
-use ast::{Defs, Def, Expr};
+use ast::{Defs, Def, Expr, DefEntry};
 use std::rc::Rc;
 use num::Num;
 
@@ -38,12 +38,17 @@ pub fn parse(f: File) -> Result<Defs, String> {
                     let integer = iter.next().unwrap();
                     let frac = iter.next();
                     if let Ok(num) = ::number::Number::from_parts(integer, frac, None) {
-                        out.push((currency.to_owned(), Rc::new(Def::Unit(
-                            Expr::Mul(vec![
-                                Expr::Frac(Box::new(Expr::Const(Num::one())),
-                                           Box::new(Expr::Const(num))),
-                                Expr::Unit("EUR".to_string())
-                            ]))), Some(format!("Sourced from European Central Bank."))));
+                        out.push(DefEntry {
+                            name: currency.to_owned(),
+                            def: Rc::new(Def::Unit(
+                                Expr::Mul(vec![
+                                    Expr::Frac(Box::new(Expr::Const(Num::one())),
+                                               Box::new(Expr::Const(num))),
+                                    Expr::Unit("EUR".to_string())
+                                ]))),
+                            doc: Some(format!("Sourced from European Central Bank.")),
+                            category: Some("currencies".to_owned()),
+                        });
                     }
                 }
             },

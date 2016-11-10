@@ -13,7 +13,8 @@ use value::{Value, Show};
 use reply::{
     DefReply, ConversionReply, FactorizeReply, UnitsForReply,
     QueryReply, ConformanceError, QueryError, UnitListReply,
-    DurationReply, SearchReply, DateReply, ExprReply
+    DurationReply, SearchReply, DateReply, ExprReply,
+    UnitsInCategory
 };
 use search;
 use context::Context;
@@ -888,19 +889,58 @@ impl Context {
                     },
                     Some(val) => val
                 };
+                let dim_name;
                 let mut out = vec![];
                 for (name, unit) in self.units.iter() {
                     if let Some(&Expr::Unit(_)) = self.definitions.get(name) {
                         continue
                     }
+                    let category = self.categories.get(name);
                     if val.unit == unit.unit {
-                        out.push(name);
+                        out.push((category, name));
                     }
                 }
-                out.sort();
+                if val.unit.len() == 1 {
+                    let ref n = *val.unit.iter().next().unwrap().0 .0;
+                    dim_name = self.canonicalize(n).unwrap_or_else(|| n.to_owned());
+                    let category = self.categories.get(&dim_name);
+                    out.push((category, &dim_name));
+                }
+                out.sort_by(|&(ref c1, ref n1), &(ref c2, ref n2)| {
+                    use std::cmp::Ordering;
+                    match (c1, c2) {
+                        (&None, &None) => Ordering::Equal,
+                        (&Some(_), &None) => Ordering::Less,
+                        (&None, &Some(_)) => Ordering::Greater,
+                        (&Some(ref a), &Some(ref b)) => (a, n1).cmp(&(b, n2)),
+                    }
+                });
+                let mut categories = vec![];
+                let mut cur = vec![];
+                let mut cur_cat = None;
+                for (category, name) in out {
+                    if category != cur_cat {
+                        if cur.len() > 0 {
+                            let cat_name = cur_cat.and_then(|x| self.category_names.get(x));
+                            categories.push(UnitsInCategory {
+                                category: cat_name.map(ToOwned::to_owned),
+                                units: cur.drain(..).collect(),
+                            });
+                        }
+                        cur_cat = category;
+                    }
+                    cur.push(name.clone());
+                }
+                if cur.len() > 0 {
+                    let cat_name = cur_cat.and_then(|x| self.category_names.get(x));
+                    categories.push(UnitsInCategory {
+                        category: cat_name.map(ToOwned::to_owned),
+                        units: cur
+                    });
+                }
                 let parts = val.to_parts(self);
                 Ok(QueryReply::UnitsFor(UnitsForReply {
-                    units: out.into_iter().cloned().collect(),
+                    units: categories,
                     of: NumberParts {
                         dimensions: parts.dimensions,
                         quantity: parts.quantity,

@@ -47,8 +47,15 @@ pub struct FactorizeReply {
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
-pub struct UnitsForReply {
+pub struct UnitsInCategory {
+    pub category: Option<String>,
     pub units: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+pub struct UnitsForReply {
+    pub units: Vec<UnitsInCategory>,
     /// Dimensions and quantity are set.
     pub of: NumberParts,
 }
@@ -394,7 +401,13 @@ impl Display for FactorizeReply {
 
 impl Display for UnitsForReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        write!(fmt, "Units for {}: {}", self.of.format("D w"), self.units.join(", "))
+        write!(fmt, "Units for {}: {}", self.of.format("D w"), self.units.iter().map(|cat| {
+            if let Some(ref category) = cat.category {
+                format!("{}: {}", category, cat.units.join(", "))
+            } else {
+                cat.units.join(", ")
+            }
+        }).collect::<Vec<_>>().join("; "))
     }
 }
 

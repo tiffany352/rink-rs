@@ -1,3 +1,5 @@
+!category currencies "Currencies"
+
 EUR                     !euro
 money                 ? EUR
 
@@ -281,3 +283,5 @@ slovakiakoruna          1|30.1260 euro
 #USquarterweight         USD 0.25 / (20 USD / lb)   # Since 1965
 #UShalfdollarweight      USD 0.50 / (20 USD / lb)   # Since 1971
 #USdollarmass            8.1 grams
+
+!endcategory

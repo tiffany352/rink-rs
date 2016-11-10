@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use number::{Number, Dim};
 use num::Num;
-use ast::{Expr, Def, Defs};
+use ast::{Expr, Def, Defs, DefEntry};
 use substance::{Substance, Property, Properties};
 use std::rc::Rc;
 use value::Value;
@@ -20,6 +20,7 @@ impl Context {
             Unit(Rc<String>),
             Prefix(Rc<String>),
             Quantity(Rc<String>),
+            Category(Rc<String>),
         }
 
         struct Resolver {
@@ -29,6 +30,7 @@ impl Context {
             unmarked: BTreeSet<Name>,
             temp_marks: BTreeSet<Name>,
             docs: BTreeMap<Name, String>,
+            categories: BTreeMap<Name, String>,
         }
 
         impl Resolver {
@@ -165,24 +167,32 @@ impl Context {
             unmarked: BTreeSet::new(),
             temp_marks: BTreeSet::new(),
             docs: BTreeMap::new(),
+            categories: BTreeMap::new(),
         };
-        for (name, def, doc) in defs.defs.into_iter() {
+        for DefEntry { name, def, doc, category } in defs.defs.into_iter() {
             let name = resolver.intern(&name);
             let unit = match *def {
                 Def::Prefix(_) | Def::SPrefix(_) => Name::Prefix(name),
                 Def::Quantity(_) => Name::Quantity(name),
+                Def::Category(_) => Name::Category(name),
                 _ => Name::Unit(name)
             };
             if let Some(doc) = doc {
                 resolver.docs.insert(unit.clone(), doc);
+            }
+            if let Some(category) = category {
+                resolver.categories.insert(unit.clone(), category);
             }
             if resolver.input.insert(unit.clone(), def).is_some() {
                 let (ty, name) = match unit {
                     Name::Prefix(ref name) => ("prefixes", name),
                     Name::Quantity(ref name) => ("quantities", name),
                     Name::Unit(ref name) => ("units", name),
+                    Name::Category(ref name) => ("category", name),
                 };
-                println!("warning: multiple {} named {}", ty, name);
+                if ty != "category" {
+                    println!("warning: multiple {} named {}", ty, name);
+                }
             }
             resolver.unmarked.insert(unit);
         }
@@ -221,6 +231,7 @@ impl Context {
                 Name::Unit(name) => (*name).clone(),
                 Name::Prefix(name) => (*name).clone(),
                 Name::Quantity(name) => (*name).clone(),
+                Name::Category(name) => (*name).clone(),
             };
             match *def {
                 Def::Dimension => {
@@ -361,6 +372,9 @@ impl Context {
                         Err(e) => println!("Substance {} is malformed: {}", name, e),
                     }
                 },
+                Def::Category(ref desc) => {
+                    self.category_names.insert(name.clone(), desc.clone());
+                },
                 Def::Error(ref err) => println!("Def {}: {}", name, err),
             };
         }
@@ -370,9 +384,22 @@ impl Context {
                 Name::Unit(name) => (*name).clone(),
                 Name::Prefix(name) => (*name).clone(),
                 Name::Quantity(name) => (*name).clone(),
+                Name::Category(name) => (*name).clone(),
             };
             if self.docs.insert(name.clone(), val).is_some() {
                 println!("Doc conflict for {}", name);
+            }
+        }
+
+        for (name, val) in resolver.categories {
+            let name = match name {
+                Name::Unit(name) => (*name).clone(),
+                Name::Prefix(name) => (*name).clone(),
+                Name::Quantity(name) => (*name).clone(),
+                Name::Category(name) => (*name).clone(),
+            };
+            if self.categories.insert(name.clone(), val).is_some() {
+                println!("Category conflict for {}", name);
             }
         }
     }

@@ -102,12 +102,21 @@ pub enum Def {
     Unit(Expr),
     Quantity(Expr),
     Substance(Vec<Property>),
+    Category(String),
     Error(String),
 }
 
 #[derive(Debug)]
+pub struct DefEntry {
+    pub name: String,
+    pub def: Rc<Def>,
+    pub doc: Option<String>,
+    pub category: Option<String>,
+}
+
+#[derive(Debug)]
 pub struct Defs {
-    pub defs: Vec<(String, Rc<Def>, Option<String>)>,
+    pub defs: Vec<DefEntry>,
 }
 
 impl fmt::Display for Conversion {

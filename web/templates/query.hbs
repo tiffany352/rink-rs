@@ -87,11 +87,18 @@
       </div>
       <div class="panel-body">
         {{#if units}}
-          <ul>
-            {{#each units}}
-              <li><a href="/?q={{this}}">{{this}}</a></li>
-            {{/each}}
-          </ul>
+          {{#each units}}
+            {{#if category}}
+              <h5>{{category}}</h5>
+              {{else}}
+              <h4>Uncategorized</h4>
+            {{/if}}
+            <ul>
+              {{#each units}}
+                <li><a href="/?q={{this}}">{{this}}</a></li>
+              {{/each}}
+            </ul>
+          {{/each}}
           {{else}}
           <p>No units found.</p>
         {{/if}}

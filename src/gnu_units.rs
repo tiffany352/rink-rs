@@ -294,14 +294,41 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut map = vec![];
     let mut line = 1;
     let mut doc = None;
+    let mut category = None;
     loop {
         match iter.next().unwrap() {
             Token::Newline => line += 1,
             Token::Eof => break,
-            Token::Bang => loop {
+            Token::Bang => {
                 match iter.next().unwrap() {
-                    Token::Eof | Token::Newline => break,
-                    _ => ()
+                    Token::Ident(ref s) if s == "category" => {
+                        match (iter.next().unwrap(), iter.next().unwrap()) {
+                            (Token::Ident(s), Token::Ident(d)) => {
+                                map.push(DefEntry {
+                                    name: s.clone(),
+                                    def: Rc::new(Def::Category(d)),
+                                    doc: None,
+                                    category: None
+                                });
+                                category = Some(s);
+                            },
+                            _ => println!("Malformed category directive"),
+                        }
+                    },
+                    Token::Ident(ref s) if s == "endcategory" => {
+                        if category.is_none() {
+                            println!("Stray endcategory directive");
+                        }
+                        category = None
+                    },
+                    _ => loop {
+                        match iter.peek().cloned().unwrap() {
+                            Token::Newline | Token::Eof => break,
+                            _ => {
+                                iter.next();
+                            }
+                        }
+                    },
                 }
             },
             Token::Doc(line) => {
@@ -318,9 +345,19 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                     name.pop();
                     if name.ends_with("-") {
                         name.pop();
-                        map.push((name, Rc::new(Def::Prefix(expr)), doc.take()));
+                        map.push(DefEntry {
+                            name: name,
+                            def: Rc::new(Def::Prefix(expr)),
+                            doc: doc.take(),
+                            category: category.clone(),
+                        });
                     } else {
-                        map.push((name, Rc::new(Def::SPrefix(expr)), doc.take()));
+                        map.push(DefEntry {
+                            name: name,
+                            def: Rc::new(Def::SPrefix(expr)),
+                            doc: doc.take(),
+                            category: category.clone(),
+                        });
                     }
                 } else {
                     // unit
@@ -329,17 +366,36 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                         iter.next();
                         if let Some(Token::Ident(ref long)) = iter.peek().cloned() {
                             iter.next();
-                            map.push((name.clone(), Rc::new(Def::Dimension), doc.take()));
-                            map.push((long.clone(), Rc::new(Def::Canonicalization(name.clone())),
-                                      doc.take()));
+                            map.push(DefEntry {
+                                name: name.clone(),
+                                def: Rc::new(Def::Dimension),
+                                doc: doc.take(),
+                                category: category.clone(),
+                            });
+                            map.push(DefEntry {
+                                name: long.clone(),
+                                def: Rc::new(Def::Canonicalization(name.clone())),
+                                doc: doc.take(),
+                                category: category.clone(),
+                            });
                         } else {
-                            map.push((name.clone(), Rc::new(Def::Dimension), doc.take()));
+                            map.push(DefEntry {
+                                name: name.clone(),
+                                def: Rc::new(Def::Dimension),
+                                doc: doc.take(),
+                                category: category.clone(),
+                            });
                         }
                     } else if let Some(&Token::Question) = iter.peek() {
                         // quantity
                         iter.next();
                         let expr = parse_expr(iter);
-                        map.push((name, Rc::new(Def::Quantity(expr)), doc.take()));
+                        map.push(DefEntry {
+                            name: name,
+                            def: Rc::new(Def::Quantity(expr)),
+                            doc: doc.take(),
+                            category: category.clone(),
+                        });
                     } else if let Some(&Token::LeftBrace) = iter.peek() {
                         // substance
                         iter.next();
@@ -420,14 +476,21 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                                 doc: prop_doc.take()
                             });
                         }
-                        map.push((
-                            name,
-                            Rc::new(Def::Substance(props)),
-                            doc.take()));
+                        map.push(DefEntry {
+                            name: name,
+                            def: Rc::new(Def::Substance(props)),
+                            doc: doc.take(),
+                            category: category.clone(),
+                        });
                     } else {
                         // derived
                         let expr = parse_expr(iter);
-                        map.push((name, Rc::new(Def::Unit(expr)), doc.take()));
+                        map.push(DefEntry {
+                            name: name,
+                            def: Rc::new(Def::Unit(expr)),
+                            doc: doc.take(),
+                            category: category.clone(),
+                        });
                     }
                 }
             },

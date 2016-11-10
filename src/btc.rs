@@ -4,7 +4,7 @@
 
 use std::fs::File;
 use std::time::Duration;
-use ast::{Defs, Def, Expr};
+use ast::{Defs, Def, Expr, DefEntry};
 use std::io::Read;
 use std::rc::Rc;
 use json;
@@ -24,11 +24,16 @@ pub fn parse(mut f: File) -> Result<Defs, String> {
                 let (sign, mantissa, exp) = avg.as_parts();
                 let integer = format!("{}{}", if sign { "" } else { "-" }, mantissa);
                 if let Ok(num) = ::Number::from_parts(&*integer, None, Some(&*format!("{}", exp))) {
-                    out.push((name, Rc::new(Def::Unit(
-                        Expr::Mul(vec![
-                            Expr::Const(num),
-                            Expr::Unit("USD".to_owned())
-                        ]))), Some(format!("Sourced from BTC-E exchange."))));
+                    out.push(DefEntry {
+                        name: name,
+                        def: Rc::new(Def::Unit(
+                            Expr::Mul(vec![
+                                Expr::Const(num),
+                                Expr::Unit("USD".to_owned())
+                            ]))),
+                        doc: Some(format!("Sourced from BTC-E exchange.")),
+                        category: Some("currencies".to_owned()),
+                    });
                 }
             }
         }
