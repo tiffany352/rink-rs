@@ -4800,12 +4800,12 @@ chou_area            10 tan_area
 # http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement
 ping                 tsubo     # http://zh.wikipedia.org/wiki/坪
 jia                  2934 ping # http://zh.wikipedia.org/wiki/甲_(单位)
-fen                  1|10 jia  # http://zh.wikipedia.org/wiki/分
+#fen                  1|10 jia  # http://zh.wikipedia.org/wiki/分
 fen_area             1|10 jia  # Protection against future collisions
 !utf8
 坪                   ping      # via Hanyu Pinyin romanizations
 甲                   jia
-分                   fen
+#分                   fen
 分地                 fen_area  # Protection against future collisions
 !endutf8
 
