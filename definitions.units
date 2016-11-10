@@ -928,8 +928,8 @@ tempK                   K         # For consistency
 pi                      π
 τ                       2 pi
 tau                     τ
-c                       2.99792458e8 m/s # speed of light in vacuum (exact)
-light                   c
+c                       speed of light   # speed of light in vacuum (exact)
+#light                   c
 mu0                     4 pi 1e-7 H/m    # permeability of vacuum (exact)
 epsilon0                1/mu0 c^2        # permittivity of vacuum (exact)
 mass_energy             c^2              # convert mass to energy
@@ -5949,6 +5949,10 @@ alphaparticle {
 triton {
     mass                const triton_mass           3.01550071632 u
     magnetic_moment     const triton_moment         1.504609503e-26 J/T
+}
+
+light {
+    speed               const light_speed           2.99792458e8 m/s
 }
 
 #
