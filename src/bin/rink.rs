@@ -206,6 +206,22 @@ fn main_interactive() {
     let mut rl = Reader::new("rink").unwrap();
     rl.set_prompt("> ");
     rl.set_completer(Rc::new(completer));
+
+    let mut hpath = rink::config_dir();
+    if let Ok(ref mut path) = hpath {
+        path.push("rink/history.txt");
+    }
+    let hfile = hpath.clone().and_then(|hpath| File::open(hpath).map_err(|x| x.to_string()));
+    let hfile = hfile.map(BufReader::new);
+    if let Ok(hfile) = hfile {
+        for line in hfile.lines() {
+            let line = match line {
+                Ok(line) => line,
+                Err(_e) => break
+            };
+            rl.add_history(line);
+        }
+    }
     loop {
         let readline = rl.read_line();
         match readline {
@@ -226,6 +242,13 @@ fn main_interactive() {
             },
             Ok(None) => {
                 println!("");
+                let hfile = hpath.and_then(|hpath| File::create(hpath).map_err(|x| x.to_string()));
+                if let Ok(mut hfile) = hfile {
+                    for line in rl.history() {
+                        use std::io::Write;
+                        let _ = writeln!(hfile, "{}", line);
+                    }
+                }
                 break
             },
             Err(err) => {

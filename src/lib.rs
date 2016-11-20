@@ -87,7 +87,7 @@ use std::time::Duration;
 const DATA_FILE_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
 
 #[cfg(target_os = "linux")]
-fn config_dir() -> Result<PathBuf, String> {
+pub fn config_dir() -> Result<PathBuf, String> {
     env::var("XDG_CONFIG_HOME")
         .map(From::from)
         .or_else(|_| {
@@ -99,7 +99,7 @@ fn config_dir() -> Result<PathBuf, String> {
 }
 
 #[cfg(target_os = "windows")]
-fn config_dir() -> Result<PathBuf, String> {
+pub fn config_dir() -> Result<PathBuf, String> {
     env::var("APPDATA")
         .map(From::from)
         .ok_or_else(|_| {
@@ -111,7 +111,7 @@ fn config_dir() -> Result<PathBuf, String> {
 }
 
 #[cfg(target_os = "macos")]
-fn config_dir() -> Result<PathBuf, String> {
+pub fn config_dir() -> Result<PathBuf, String> {
     env::home_dir()
         .ok_or("Home dir not present".to_owned())
         .map(From::from)
