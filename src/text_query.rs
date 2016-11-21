@@ -787,12 +787,12 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
                 Token::Ident(ref s) if s == "base" => {
                     iter.next();
                     match iter.next() {
-                        Some(Token::Decimal(int, None, None)) => match u8::from_str_radix(&*int, 10) {
-                            Ok(v) if v >= 2 && v <= 62 => {
-                                Some(v)
+                        Some(Token::Decimal(int, None, None)) => match u64::from_str_radix(&*int, 10) {
+                            Ok(v) if v >= 2 && v <= 36 => {
+                                Some(v as u8)
                             },
                             Ok(v) => return Query::Error(format!(
-                                "Unsupported base {}, must be from 2 to 62", v)),
+                                "Unsupported base {}, must be from 2 to 36", v)),
                             Err(e) => return Query::Error(format!(
                                 "Failed to parse base: {}", e))
                         },
