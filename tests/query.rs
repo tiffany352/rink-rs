@@ -95,7 +95,7 @@ fn negative_conversion() {
 fn test_units_for() {
     test("units for electrical_potential",
          "Units for kg m^2 / A s^3 (electrical_potential): \
-          abvolt, daniell, intvolt, statvolt, volt");
+          CGS Units: abvolt, daniell, intvolt, statvolt; SI Derived Units: volt");
 }
 
 #[test]

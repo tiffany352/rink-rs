@@ -899,7 +899,7 @@ mod test {
     fn mono_unit_list() {
         use ast::*;
         match parse_query(&mut TokenIterator::new("foo -> bar").peekable()) {
-            Query::Convert(_, Conversion::Expr(_), _) => (),
+            Query::Convert(_, Conversion::Expr(_), _, _) => (),
             x => panic!("Expected Convert(_, Expr(_), _), got {:?}", x),
         }
     }
