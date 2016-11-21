@@ -761,8 +761,28 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
             let mut copy = iter.clone();
             if let Some(res) = parse_unitlist(&mut copy) {
                 *iter = copy;
-                return Query::Convert(left, Conversion::List(res), None)
+                return Query::Convert(
+                    left, Conversion::List(res), None, Digits::Default
+                )
             }
+            let digits = match iter.peek().cloned().unwrap() {
+                Token::Ident(ref s) if s == "digits" => {
+                    iter.next();
+                    match iter.peek().cloned() {
+                        Some(Token::Decimal(int, None, None)) => {
+                            iter.next();
+                            match u64::from_str_radix(&*int, 10) {
+                                Ok(v) => Digits::Digits(v),
+                                Err(e) => return Query::Error(format!(
+                                    "Failed to parse digits: {}", e
+                                ))
+                            }
+                        },
+                        _ => Digits::FullInt,
+                    }
+                },
+                _ => Digits::Default
+            };
             let base = match iter.peek().cloned().unwrap() {
                 Token::Ident(ref s) if s == "base" => {
                     iter.next();
@@ -819,7 +839,7 @@ pub fn parse_query(mut iter: &mut Iter) -> Query {
                 },
                 _ => Conversion::Expr(parse_eq(iter))
             };
-            Query::Convert(left, right, base)
+            Query::Convert(left, right, base, digits)
         },
         _ => Query::Expr(left)
     }

@@ -12,6 +12,7 @@ use std::fmt;
 use std::borrow::Borrow;
 use context::Context;
 use num::*;
+use ast::Digits;
 
 /// Alias for the primary representation of dimensionality.
 pub type Unit = BTreeMap<Dim, i64>;
@@ -70,7 +71,7 @@ pub fn pow(left: &Num, exp: i32) -> Num {
     }
 }
 
-pub fn to_string(rational: &Num, base: u8) -> (bool, String) {
+pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
     use std::char::from_digit;
 
     let sign = *rational < Num::zero();
@@ -101,16 +102,20 @@ pub fn to_string(rational: &Num, base: u8) -> (bool, String) {
     let mut placed_decimal = false;
     loop {
         let exact = cursor == zero;
-        let use_sci = if den == one && (base == 2 || base == 8 || base == 16 || base == 32) {
+        let use_sci = if digits != Digits::Default || den == one && (base == 2 || base == 8 || base == 16 || base == 32) {
             false
         } else {
             intdigits+zeros > 9 * 10 / base as u32
         };
         let placed_ints = n >= intdigits;
+        let ndigits = match digits {
+            Digits::Default | Digits::FullInt => 6,
+            Digits::Digits(n) => intdigits as i32 + n as i32
+        };
         let bail =
             (exact && (placed_ints || use_sci)) ||
-            (n as i32 - zeros as i32 > 6 && use_sci) ||
-            n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, 6);
+            (n as i32 - zeros as i32 > ndigits && use_sci) ||
+            n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, ndigits);
         if bail && use_sci {
             // scientific notation
             let off = if n < intdigits { 0 } else { zeros };
@@ -485,13 +490,13 @@ impl Number {
         }
     }
 
-    pub fn numeric_value(&self, base: u8) -> (Option<String>, Option<String>) {
+    pub fn numeric_value(&self, base: u8, digits: Digits) -> (Option<String>, Option<String>) {
         match self.value {
             Num::Mpq(ref mpq) => {
                 let num = mpq.get_num();
                 let den = mpq.get_den();
 
-                match to_string(&self.value, base) {
+                match to_string(&self.value, base, digits) {
                     (true, v) => (Some(v), None),
                     (false, v) => if {den > Mpz::from(1_000) ||
                                       num > Mpz::from(1_000_000u64)} {
@@ -502,13 +507,13 @@ impl Number {
                 }
             },
             Num::Float(_f) => {
-                (None, Some(to_string(&self.value, base).1))
+                (None, Some(to_string(&self.value, base, digits).1))
             },
         }
     }
 
     pub fn to_parts_simple(&self) -> NumberParts {
-        let (exact, approx) = self.numeric_value(10);
+        let (exact, approx) = self.numeric_value(10, Digits::Default);
         NumberParts {
             exact_value: exact,
             approx_value: approx,
@@ -574,7 +579,7 @@ impl Number {
 
     pub fn to_parts(&self, context: &Context) -> NumberParts {
         let value = self.prettify(context);
-        let (exact, approx) = value.numeric_value(10);
+        let (exact, approx) = value.numeric_value(10, Digits::Default);
 
         let quantity = context.quantities.get(&self.unit).cloned().or_else(|| {
             if self.unit.len() == 1 {

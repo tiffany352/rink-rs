@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use number::{Number, Dim, NumberParts, pow};
 use num::{Num, Int};
 use date;
-use ast::{Expr, SuffixOp, Query, Conversion};
+use ast::{Expr, SuffixOp, Query, Conversion, Digits};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
 use value::{Value, Show};
@@ -500,9 +500,10 @@ impl Context {
         bottom: &Number,
         bottom_name: BTreeMap<String, isize>,
         bottom_const: Num,
-        base: u8
+        base: u8,
+        digits: Digits,
     ) -> ConversionReply {
-        let (exact, approx) = raw.numeric_value(base);
+        let (exact, approx) = raw.numeric_value(base, digits);
         let bottom_name = bottom_name.into_iter().map(
             |(a,b)| (Dim::new(&*a), b as i64)).collect();
         let (num, den) = bottom_const.to_rational();
@@ -655,14 +656,14 @@ impl Context {
                     doc: self.docs.get(&name).cloned(),
                 }))
             },
-            Query::Convert(ref top, Conversion::None, Some(base)) => {
+            Query::Convert(ref top, Conversion::None, Some(base), digits) => {
                 let top = try!(self.eval(top));
                 let top = match top {
                     Value::Number(top) => top,
                     _ => return Err(QueryError::Generic(format!(
                         "<{}> in base {} is not defined", top.show(self), base)))
                 };
-                let (exact, approx) = top.numeric_value(base);
+                let (exact, approx) = top.numeric_value(base, digits);
                 let parts = NumberParts {
                     exact_value: exact,
                     approx_value: approx,
@@ -672,7 +673,34 @@ impl Context {
                     value: parts
                 }))
             },
-            Query::Convert(ref top, Conversion::Expr(ref bottom), base) => match
+            Query::Convert(ref top, Conversion::None, base, digits @ Digits::Digits(_)) |
+            Query::Convert(ref top, Conversion::None, base, digits @ Digits::FullInt) => {
+                let top = try!(self.eval(top));
+                let top = match top {
+                    Value::Number(top) => top,
+                    _ => return Err(QueryError::Generic(format!(
+                        "<{}> to {} is not defined",
+                        top.show(self),
+                        match digits {
+                            Digits::Default => panic!(),
+                            Digits::FullInt => "digits".to_owned(),
+                            Digits::Digits(n) => format!("{} digits", n)
+                        }
+                    )))
+                };
+                let (exact, approx) = top.numeric_value(
+                    base.unwrap_or(10), digits
+                );
+                let parts = NumberParts {
+                    exact_value: exact,
+                    approx_value: approx,
+                    .. top.to_parts(self)
+                };
+                Ok(QueryReply::Conversion(ConversionReply {
+                    value: parts
+                }))
+            },
+            Query::Convert(ref top, Conversion::Expr(ref bottom), base, digits) => match
                 (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom))
             {
                 (Ok(Value::Number(top)), Ok(Value::Number(bottom)),
@@ -687,7 +715,9 @@ impl Context {
                         Ok(QueryReply::Conversion(self.show(
                             &raw, &bottom,
                             bottom_name, bottom_const,
-                            base.unwrap_or(10))))
+                            base.unwrap_or(10),
+                            digits
+                        )))
                     } else {
                         Err(QueryError::Conformance(self.conformance_err(
                             &top, &bottom)))
@@ -700,7 +730,8 @@ impl Context {
                         self,
                         bottom_name,
                         bottom_const,
-                        base.unwrap_or(10)
+                        base.unwrap_or(10),
+                        digits
                     ).map_err(
                         QueryError::Generic
                     ).map(
@@ -730,7 +761,7 @@ impl Context {
                 (_, Err(e), _) => Err(e),
                 (_, _, Err(e)) => Err(e),
             },
-            Query::Convert(ref top, Conversion::List(ref list), None) => {
+            Query::Convert(ref top, Conversion::List(ref list), None, Digits::Default) => {
                 let top = try!(self.eval(top));
                 let top = match top {
                     Value::Number(num) => num,
@@ -752,7 +783,7 @@ impl Context {
                     })
                 })
             },
-            Query::Convert(ref top, Conversion::Offset(off), None) => {
+            Query::Convert(ref top, Conversion::Offset(off), None, Digits::Default) => {
                 use chrono::FixedOffset;
 
                 let top = try!(self.eval(top));
@@ -764,7 +795,7 @@ impl Context {
                 let top = top.with_timezone(&FixedOffset::east(off as i32));
                 Ok(QueryReply::Date(DateReply::new(self, top)))
             },
-            Query::Convert(ref top, Conversion::Timezone(tz), None) => {
+            Query::Convert(ref top, Conversion::Timezone(tz), None, Digits::Default) => {
                 let top = try!(self.eval(top));
                 let top = match top {
                     Value::DateTime(date) => date,
@@ -774,12 +805,12 @@ impl Context {
                 let top = top.with_timezone(&tz);
                 Ok(QueryReply::Date(DateReply::new(self, top)))
             },
-            Query::Convert(ref top, ref which @ Conversion::DegC, None) |
-            Query::Convert(ref top, ref which @ Conversion::DegF, None) |
-            Query::Convert(ref top, ref which @ Conversion::DegN, None) |
-            Query::Convert(ref top, ref which @ Conversion::DegRe, None) |
-            Query::Convert(ref top, ref which @ Conversion::DegRo, None) |
-            Query::Convert(ref top, ref which @ Conversion::DegDe, None) => {
+            Query::Convert(ref top, ref which @ Conversion::DegC, None, digits) |
+            Query::Convert(ref top, ref which @ Conversion::DegF, None, digits) |
+            Query::Convert(ref top, ref which @ Conversion::DegN, None, digits) |
+            Query::Convert(ref top, ref which @ Conversion::DegRe, None, digits) |
+            Query::Convert(ref top, ref which @ Conversion::DegRo, None, digits) |
+            Query::Convert(ref top, ref which @ Conversion::DegDe, None, digits) => {
                 let top = try!(self.eval(top));
                 macro_rules! temperature {
                     ($name:expr, $base:expr, $scale:expr) => {{
@@ -802,7 +833,9 @@ impl Context {
                             Ok(QueryReply::Conversion(self.show(
                                 &res, &bottom,
                                 name, Num::one(),
-                                10)))
+                                10,
+                                digits
+                            )))
                         }
                     }}
                 }
@@ -817,10 +850,22 @@ impl Context {
                     _ => panic!()
                 }
             },
-            Query::Convert(ref _expr, ref which, Some(base)) => {
+            Query::Convert(ref _expr, ref which, Some(base), _digits) => {
                 Err(QueryError::Generic(format!(
                     "Conversion to {} is not defined in base {}",
                     which, base)))
+            },
+            Query::Convert(ref _expr, ref which, _base, Digits::Digits(digits)) => {
+                Err(QueryError::Generic(format!(
+                    "Conversion to {} is not defined to {} digits",
+                    which, digits
+                )))
+            },
+            Query::Convert(ref _expr, ref which, _base, Digits::FullInt) => {
+                Err(QueryError::Generic(format!(
+                    "Conversion to digits of {} is not defined",
+                    which
+                )))
             },
             Query::Factorize(ref expr) => {
                 let mut val = None;
@@ -977,7 +1022,7 @@ impl Context {
                 }))
             },
             Query::Expr(ref expr) |
-            Query::Convert(ref expr, Conversion::None, None) => {
+            Query::Convert(ref expr, Conversion::None, None, Digits::Default) => {
                 let val = try!(self.eval(expr));
                 match val {
                     Value::Number(ref n) if n.unit == Number::one_unit(Dim::new("s")).unit => {

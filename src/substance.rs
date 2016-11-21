@@ -11,6 +11,7 @@ use reply::{PropertyReply, SubstanceReply};
 use std::ops::{Mul, Div, Add};
 use std::iter::once;
 use std::rc::Rc;
+use ast::Digits;
 
 #[derive(Debug, Clone)]
 pub struct Property {
@@ -106,6 +107,7 @@ impl Substance {
         bottom_name: BTreeMap<String, isize>,
         bottom_const: Num,
         base: u8,
+        digits: Digits,
     ) -> Result<SubstanceReply, String> {
         if self.amount.dimless() {
             Ok(SubstanceReply {
@@ -148,7 +150,8 @@ impl Substance {
                         &unit,
                         bottom_name.clone(),
                         bottom_const.clone(),
-                        base
+                        base,
+                        digits
                     ).value;
                     let output = try!((
                         &output / &unit
@@ -235,7 +238,8 @@ impl Substance {
                     &unit,
                     bottom_name.clone(),
                     bottom_const.clone(),
-                    base
+                    base,
+                    digits
                 ).value;
                 let output = try!((
                     &output / &unit

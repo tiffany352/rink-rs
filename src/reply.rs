@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use chrono::{DateTime, TimeZone};
 use std::iter::once;
-use ast::Expr;
+use ast::{Expr, Digits};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
@@ -188,7 +188,7 @@ impl ExprReply {
                 Expr::Unit(ref name) => parts.push(ExprParts::Unit(name.clone())),
                 Expr::Quote(ref name) => literal!(format!("'{}'", name)),
                 Expr::Const(ref num) => {
-                    let (_exact, val) = ::number::to_string(num, 10);
+                    let (_exact, val) = ::number::to_string(num, 10, Digits::Default);
                     literal!(format!("{}", val))
                 },
                 Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),

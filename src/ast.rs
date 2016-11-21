@@ -63,10 +63,17 @@ pub enum Conversion {
     Timezone(Tz),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Digits {
+    Default,
+    FullInt,
+    Digits(u64),
+}
+
 #[derive(Debug, Clone)]
 pub enum Query {
     Expr(Expr),
-    Convert(Expr, Conversion, Option<u8>),
+    Convert(Expr, Conversion, Option<u8>, Digits),
     Factorize(Expr),
     UnitsFor(Expr),
     Search(String),
@@ -185,7 +192,7 @@ impl fmt::Display for Expr {
                 Expr::Unit(ref name) => write!(fmt, "{}", name),
                 Expr::Quote(ref name) => write!(fmt, "'{}'", name),
                 Expr::Const(ref num) => {
-                    let (_exact, val) = ::number::to_string(num, 10);
+                    let (_exact, val) = ::number::to_string(num, 10, Digits::Default);
                     write!(fmt, "{}", val)
                 },
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),
