@@ -180,9 +180,9 @@ fn test_convert_to_substances() {
     test("kg -> egg",
          "egg: USA large egg. \
           mass = 1 kilogram; \
-          egg_shelled = 20; \
-          egg_white = 100/3, approx. 33.33333; \
-          egg_yolk = 5000/93, approx. 53.76344");
+          egg_shelled = 20 egg; \
+          egg_white = 100/3, approx. 33.33333 egg; \
+          egg_yolk = 5000/93, approx. 53.76344 egg");
 }
 
 #[test]

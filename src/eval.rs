@@ -738,14 +738,17 @@ impl Context {
                         QueryReply::Substance
                     )
                 },
-                (Ok(Value::Number(top)), Ok(Value::Substance(mut sub)), _) => {
-                    sub.amount = try!((&top / &sub.amount).ok_or_else(|| format!(
-                        "Division by zero: <{}> / <{}>",
-                        top.show(self),
-                        sub.amount.show(self)
-                    )));
-                    sub.to_reply(
-                        self
+                (Ok(Value::Number(top)), Ok(Value::Substance(mut sub)),
+                 Ok((bottom_name, bottom_const))) => {
+                    let unit = sub.amount.clone();
+                    sub.amount = top;
+                    sub.get_in_unit(
+                        unit,
+                        self,
+                        bottom_name,
+                        bottom_const,
+                        base.unwrap_or(10),
+                        digits
                     ).map_err(
                         QueryError::Generic
                     ).map(
