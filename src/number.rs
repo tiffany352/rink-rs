@@ -725,7 +725,7 @@ impl<'a, 'b> Div<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
     fn div(self, other: &Number) -> Self::Output {
-        if other.value == Num::zero() {
+        if other.value == Num::zero() || other.value == Num::Float(0.0) {
             None
         } else {
             self * &other.invert()
