@@ -50,7 +50,7 @@ fn main() {
                     let reply = eval(line);
                     for reply_line in reply.lines() {
                         if reply_line.trim().len() > 0 {
-                            server.send_privmsg(reply_to, &format!("\x0310> {} = {}", line, reply_line)).unwrap();
+                            server.send_privmsg(reply_to, &format!("\x0310> {}", reply_line)).unwrap();
                             i += 1;
                         }
                         // cut off early

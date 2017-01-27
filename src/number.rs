@@ -219,19 +219,19 @@ impl NumberParts {
         for c in pat.chars() {
             match c {
                 'e' => if let Some(ex) = self.exact_value.as_ref() {
-                    write!(out, "{}", ex).unwrap();
+                    write!(out, "\x0f{}", ex).unwrap();
                 } else {
                     continue
                 },
                 'a' => if let Some(ap) = self.approx_value.as_ref() {
-                    write!(out, "{}", ap).unwrap();
+                    write!(out, "\x0f{}", ap).unwrap();
                 } else {
                     continue
                 },
                 'n' => match (self.exact_value.as_ref(), self.approx_value.as_ref()) {
-                    (Some(ex), Some(ap)) => write!(out, "{}, approx. {}", ex, ap).unwrap(),
-                    (Some(ex), None) => write!(out, "{}", ex).unwrap(),
-                    (None, Some(ap)) => write!(out, "approx. {}", ap).unwrap(),
+                    (Some(ex), Some(ap)) => write!(out, "\x0f{}\x0310, approx.\x0f {}", ex, ap).unwrap(),
+                    (Some(ex), None) => write!(out, "\x0f{}", ex).unwrap(),
+                    (None, Some(ap)) => write!(out, "\x0310approx.\x0f {}", ap).unwrap(),
                     (None, None) => continue,
                 },
                 'u' => if let Some(unit) = self.raw_unit.as_ref() {
@@ -296,7 +296,7 @@ impl NumberParts {
                     continue
                 },
                 'w' => if let Some(q) = self.quantity.as_ref() {
-                    write!(out, "({})", q).unwrap();
+                    write!(out, "\x0310(\x0f{}\x0310)", q).unwrap();
                 } else {
                     continue
                 },
@@ -319,9 +319,9 @@ impl NumberParts {
                         None
                     }
                 })) {
-                    (Some(q), Some(d)) => write!(out, "({}; {})", q, d).unwrap(),
-                    (Some(q), None) => write!(out, "({})", q).unwrap(),
-                    (None, Some(d)) => write!(out, "({})", d).unwrap(),
+                    (Some(q), Some(d)) => write!(out, "\x0310(\x0f{}\x0310; \x0f{}\x0310)", q, d).unwrap(),
+                    (Some(q), None) => write!(out, "\x0310(\x0f{}\x0310)", q).unwrap(),
+                    (None, Some(d)) => write!(out, "\x0310(\x0f{}\x0310)", d).unwrap(),
                     (None, None) => continue
                 },
                 ' ' if in_ws => continue,

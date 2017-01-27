@@ -306,17 +306,17 @@ impl Display for NotFoundError {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match self.suggestion.as_ref() {
             Some(ref s) => write!(
-                fmt, "No such unit {}, did you mean {}?", self.got, s),
+                fmt, "No such unit\x0f {}\x0310, did you mean\x0f {}\x0310?", self.got, s),
             None => write!(
-                fmt, "No such unit {}", self.got)
+                fmt, "No such unit\x0f {}\x0310", self.got)
         }
     }
 }
 
 impl Display for ConformanceError {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        try!(writeln!(fmt, "Conformance error: {} != {}", self.left, self.right));
-        write!(fmt, "Suggestions: {}", self.suggestions.join(", "))
+        try!(writeln!(fmt, "Conformance error: {}\x0310 !=\x0f {}", self.left, self.right));
+        write!(fmt, "Suggestions:\x0f {}", self.suggestions.join("\x0310,\x0f "))
     }
 }
 
@@ -342,7 +342,7 @@ impl Display for DateReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         try!(write!(fmt, "{}", self.string));
         if let Some(ref human) = self.human {
-            try!(write!(fmt, " ({})", human));
+            try!(write!(fmt, " (\x0f{}\x0310)", human));
         }
         Ok(())
     }
@@ -368,15 +368,15 @@ impl Display for SubstanceReply {
 
 impl Display for DefReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        try!(write!(fmt, "Definition: {}", self.canon_name));
+        try!(write!(fmt, "Definition:\x0f {}", self.canon_name));
         if let Some(ref def) = self.def {
-            try!(write!(fmt, " = {}", def));
+            try!(write!(fmt, "\x0310 =\x0f {}", def));
         }
         if let Some(ref value) = self.value {
-            try!(write!(fmt, " = {}", value.format("n u p")));
+            try!(write!(fmt, "\x0310 =\x0f {}", value.format("n u p")));
         }
         if let Some(ref doc) = self.doc {
-            try!(write!(fmt, ". {}", doc));
+            try!(write!(fmt, "\x0310. {}", doc));
         }
         Ok(())
     }
