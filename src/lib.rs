@@ -45,6 +45,8 @@ extern crate ipc_channel;
 #[cfg(feature = "currency")]
 extern crate hyper;
 #[cfg(feature = "currency")]
+extern crate hyper_native_tls;
+#[cfg(feature = "currency")]
 extern crate xml;
 #[cfg(feature = "currency")]
 extern crate json;
@@ -370,6 +372,8 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
     use std::io::{Read, Write};
     use hyper::Client;
     use hyper::status::StatusCode;
+    use hyper::net::HttpsConnector;
+    use hyper_native_tls::NativeTlsClient;
 
     fn ts<T:Display>(x: T) -> String {
         format!("{}", x)
@@ -398,7 +402,9 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             try!(fs::create_dir_all(path.parent().unwrap()).map_err(|x| format!("{}", x)));
             let mut f = try!(File::create(tmppath.clone()).map_err(|x| format!("{}", x)));
 
-            let client = Client::new();
+            let ssl = NativeTlsClient::new().unwrap();
+            let connector = HttpsConnector::new(ssl);
+            let client = Client::with_connector(connector);
             let mut res = try!(client.get(url).send().map_err(|x| format!("{}", x)));
             if res.status != StatusCode::Ok {
                 return Err(format!("Request failed with status code {}", res.status))
