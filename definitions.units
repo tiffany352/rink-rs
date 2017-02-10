@@ -444,7 +444,7 @@ novemdecillion          shortnovemdecillion
 vigintillion            shortvigintillion
 
 #
-# Numbers used in India 
+# Numbers used in India
 #
 
 lakh                    1e5
@@ -685,9 +685,9 @@ bell                    1|8 watch  # Bell would be sounded every 30 minutes.
 # on.  In 1998 Swatch defined a time measurement called ".beat" and
 # sold some watches that displayed time in this unit.
 
-decimalhour             1|10 day            
-decimalminute           1|100 decimalhour   
-decimalsecond           1|100 decimalminute 
+decimalhour             1|10 day
+decimalminute           1|100 decimalhour
+decimalsecond           1|100 decimalminute
 beat                    decimalminute          # Swatch Internet Time
 
 #
@@ -991,7 +991,7 @@ K_J   483597.8525 GHz/V #   recently, laboratories kept Weston cadmium cells as
                         #   constant K_J, which is equal to 2e/h, relates the
                         #   measured frequency to the potential.  Two values
                         #   given, the conventional (exact) value from 1990 and
-                        #   the current CODATA measured value.  
+                        #   the current CODATA measured value.
 R_K90 25812.807 ohm     # Measurement of the ohm also presents difficulties.
 R_K   25812.8074555 ohm #   The old approach involved maintaining resistances
                         #   that were subject to drift.  The new standard is
@@ -1242,19 +1242,19 @@ siemensunit             0.9534 ohm    # Resistance of a meter long column of
 !endcategory
 
 #
-# Printed circuit board units.  
+# Printed circuit board units.
 #
-# http://www.ndt-ed.org/GeneralResources/IACS/IACS.htm.  
+# http://www.ndt-ed.org/GeneralResources/IACS/IACS.htm.
 #
 # Conductivity is often expressed as a percentage of IACS.  A copper wire a
-# meter long with a 1 mm^2 cross section has a resistance of 1|58 ohm at 
-# 20 deg C.  Copper density is also standarized at that temperature. 
+# meter long with a 1 mm^2 cross section has a resistance of 1|58 ohm at
+# 20 deg C.  Copper density is also standarized at that temperature.
 #
 
 copperconductivity      58 siemens m / mm^2     # A wire a meter long with
 IACS                    copperconductivity      #   a 1 mm^2 cross section
-copperdensity           8.89 g/cm^3             # The "ounce" measures the     
-ouncecopper             oz / ft^2 copperdensity #   thickness of copper used   
+copperdensity           8.89 g/cm^3             # The "ounce" measures the
+ouncecopper             oz / ft^2 copperdensity #   thickness of copper used
 ozcu                    ouncecopper             #   in circuitboard fabrication
 
 #
@@ -1426,7 +1426,7 @@ c250                    250 lx / lx s         # flat-disc receptor
 #iv100(x) units=[1;lx] range=(0,) 2^x c250 / s100; log2(iv100 s100 / c250)
 
 # Other Photographic Exposure Conversions
-# 
+#
 # As part of APEX, ASA PH2.5-1960 proposed several logarithmic quantities
 # related by
 #
@@ -1457,13 +1457,13 @@ c250                    250 lx / lx s         # flat-disc receptor
 
 #N_apex         2^-1.75 lx s    # precise value implied in ASA PH2.12-1961,
                                 # derived from ASA PH2.5-1960.
-#N_apex         0.30 lx s       # rounded value in ASA PH2.5-1960, 
+#N_apex         0.30 lx s       # rounded value in ASA PH2.5-1960,
                                 # ASA PH2.12-1961, and ANSI PH2.7-1986
 #N_apex         0.3162 lx s     # value in ANSI PH2.7-1973
 N_exif          1|3.125 lx s    # value in Exif 2.3 (2010), making Sv(5) = 100
 K_apex1961      11.4 (cd/m^2) / lx s    # value in ASA PH2.12-1961
 K_apex1971      12.5 (cd/m^2) / lx s    # value in ANSI PH3.49-1971; more common
-C_apex1961      224 lx / lx s   # value in PH2.12-1961 (20.83 for I in 
+C_apex1961      224 lx / lx s   # value in PH2.12-1961 (20.83 for I in
                                 #   footcandles; flat sensor?)
 C_apex1971      322 lx / lx s   # mean value in PH3.49-1971 (30 +/- 5 for I in
                                 # footcandles; hemispherical sensor?)
@@ -1493,7 +1493,7 @@ C_illum         C_apex1961
 # '60 s' will result in Tv of -5.9068906.
 #
 # Exposure Value from f-number and Exposure Time
-# 
+#
 # Because nonlinear unit conversions only accept a single quantity,
 # there is no direct conversion from f-number and exposure time to
 # exposure value EV.  But the EV can be obtained from a combination of
@@ -1530,7 +1530,7 @@ C_illum         C_apex1961
 #Iv(x)           units=[1;lx] range=(0,) \
 #                2^x C_illum N_speed ; log2(Iv / (C_illum N_speed))
 
-# convert ASA/ISO arithmetic speed Sx to ASA logarithmic speed in 
+# convert ASA/ISO arithmetic speed Sx to ASA logarithmic speed in
 # ASA PH2.5-1960; make arithmetic speed dimensionless
 #Sx(S)           units=[1;1] domain=(0,) \
 #                log2((N_speed/lx s) S); 2^Sx / (N_speed/lx s)
@@ -3203,7 +3203,7 @@ Dpaper                  22 inch 34 inch
 Epaper                  34 inch 44 inch
 
 # Correspondence envelope sizes.  #10 is the standard business
-# envelope in the USA. 
+# envelope in the USA.
 
 envelope6_25size        3.5 inch 6 inch
 envelope6_75size        3.625 inch 6.5 inch
@@ -3223,7 +3223,7 @@ envelopeA1size          3.625 inch 5.125 inch  # same as 4bar
 envelopeA2size          4.375 inch 5.75 inch
 envelopeA6size          4.75 inch 6.5 inch
 envelopeA7size          5.25 inch 7.25 inch
-envelopeA8size          5.5 inch 8.125 inch   
+envelopeA8size          5.5 inch 8.125 inch
 envelopeA9size          5.75 inch 8.75 inch
 envelopeA10size         6 inch 9.5 inch
 
@@ -4663,7 +4663,7 @@ percapita               /capita
 
 !category dozenal "Dozenal Units"
 
-Tim                     12^-4 hour         # Time 
+Tim                     12^-4 hour         # Time
 Grafut                  gravity Tim^2      # Length based on gravity
 Surf                    Grafut^2           # area
 Volm                    Grafut^3           # volume
