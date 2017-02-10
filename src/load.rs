@@ -144,8 +144,8 @@ impl Context {
                             Def::Canonicalization(ref e) => {
                                 self.lookup(&Rc::new(e.clone()));
                             },
-                            Def::Substance(ref props) => {
-                                for prop in props {
+                            Def::Substance { ref properties, .. } => {
+                                for prop in properties {
                                     self.eval(&prop.input);
                                     self.eval(&prop.output);
                                 }
@@ -296,9 +296,9 @@ impl Context {
                     Ok(_) => println!("Quantity {} is not a number", name),
                     Err(e) => println!("Quantity {} is malformed: {}", name, e)
                 },
-                Def::Substance(ref props) => {
+                Def::Substance { ref properties, ref symbol } => {
                     let mut prev = BTreeMap::new();
-                    let res = props.iter().map(|prop| {
+                    let res = properties.iter().map(|prop| {
                         let input = match self.eval(&prop.input) {
                             Ok(Value::Number(v)) => v,
                             Ok(x) => return Err(format!(
@@ -364,10 +364,13 @@ impl Context {
                             self.substances.insert(name.clone(), Substance {
                                 amount: Number::one(),
                                 properties: Rc::new(Properties {
-                                    name: name,
+                                    name: name.clone(),
                                     properties: res,
                                 }),
                             });
+                            if let &Some(ref symbol) = symbol {
+                                self.substance_symbols.insert(symbol.clone(), name.clone());
+                            }
                         },
                         Err(e) => println!("Substance {} is malformed: {}", name, e),
                     }

@@ -68,6 +68,7 @@ pub mod reply;
 pub mod search;
 pub mod load;
 pub mod substance;
+pub mod formula;
 #[cfg(feature = "currency")]
 pub mod currency;
 #[cfg(feature = "currency")]

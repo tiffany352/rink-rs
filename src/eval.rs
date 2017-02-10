@@ -19,6 +19,7 @@ use reply::{
 use search;
 use context::Context;
 use substance::SubstanceGetError;
+use formula::substance_from_formula;
 
 impl Context {
     /// Evaluates an expression to compute its value, *excluding* `->`
@@ -69,8 +70,13 @@ impl Context {
                 Ok(Value::DateTime(date::GenericDateTime::Fixed(date::now()))),
             Expr::Unit(ref name) =>
                 self.lookup(name).map(Value::Number)
-                .or_else(|| self.substances.get(name)
-                         .cloned().map(Value::Substance)
+                .or_else(||
+                    self.substances.get(name)
+                        .cloned().map(Value::Substance)
+                )
+                .or_else(||
+                    substance_from_formula(name, &self.substance_symbols, &self.substances)
+                        .map(Value::Substance)
                 )
                 .ok_or_else(|| QueryError::NotFound(
                     self.unknown_unit_err(name)

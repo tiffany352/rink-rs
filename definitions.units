@@ -5789,7 +5789,7 @@ wc                      pressure_column of water
 mmH2O                   pressure of mm water
 inH2O                   pressure of inch water
 
-
+!symbol mercury Hg
 mercury {
     density             mass 13.5951 gram / volume cm^3
     pressure_column     pressure 13.5951 gram force cm^-2 / column cm
@@ -5815,6 +5815,8 @@ inHg                    pressure of inch mercury
 ammonia {
     specific_heat       specific_energy 4.6 J g^-1 / temperature K
 }
+
+NH3                     ammonia
 
 freon {
     ?? R-12 at 0 degrees Fahrenheit.
@@ -6369,6 +6371,7 @@ actinium {
     molar_mass      mass 227.0278 g / amount mol
 }
 
+!symbol aluminum Al
 aluminum {
     molar_mass      mass 26.981539 g / amount mol
     specific_heat   specific_energy 0.91 J g^-1 / temperature K
@@ -6379,16 +6382,19 @@ americium {
     molar_mass      mass 243.0614 g / amount mol
 }
 
+!symbol antimony Sb
 antimony {
     molar_mass      mass 121.760 g / amount mol
     specific_heat   specific_energy 0.21 J g^-1 / temperature K
 }
 
+!symbol argon Ar
 argon {
     molar_mass      mass 39.948 g / amount mol
     specific_heat   specific_energy 0.5203 J g^-1 / temperature K
 }
 
+!symbol arsenic As
 arsenic {
     molar_mass      mass 74.92159 g / amount mol
 }
@@ -6398,6 +6404,7 @@ astatine {
     molar_mass      mass 209.9871 g / amount mol
 }
 
+!symbol barium Ba
 barium {
     molar_mass      mass 137.327 g / amount mol
     specific_heat   specific_energy 0.20 J g^-1 / temperature K
@@ -6408,11 +6415,13 @@ berkelium {
     molar_mass      mass 247.0703 g / amount mol
 }
 
+!symbol beryllium Be
 beryllium {
     molar_mass      mass 9.012182 g / amount mol
     specific_heat   specific_energy 1.83 J g^-1 / temperature K
 }
 
+!symbol bismuth Bi
 bismuth {
     molar_mass      mass 208.98037 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
@@ -6422,19 +6431,23 @@ bohrium {
     molar_mass      mass 272.13826 g / amount mol
 }
 
+!symbol boron B
 boron {
     molar_mass      mass 10.811 g / amount mol
 }
 
+!symbol bromine Br
 bromine {
     molar_mass      mass 79.904 g / amount mol
 }
 
+!symbol cadmium Cd
 cadmium {
     molar_mass      mass 112.411 g / amount mol
     specific_heat   specific_energy 0.23 J g^-1 / temperature K
 }
 
+!symbol calcium Ca
 calcium {
     molar_mass      mass 40.078 g / amount mol
 }
@@ -6444,28 +6457,34 @@ californium {
     molar_mass      mass 251.0796 g / amount mol
 }
 
+!symbol carbon C
 carbon {
     molar_mass      mass 12.011 g / amount mol
 }
 
+!symbol cerium Ce
 cerium {
     molar_mass      mass 140.115 g / amount mol
 }
 
+!symbol cesium Cs
 cesium {
     molar_mass      mass 132.90543 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
 }
 
+!symbol chlorine Cl
 chlorine {
     molar_mass      mass 35.4527 g / amount mol
 }
 
+!symbol chromium Cr
 chromium {
     molar_mass      mass 51.9961 g / amount mol
     specific_heat   specific_energy 0.46 J g^-1 / temperature K
 }
 
+!symbol cobalt Co
 cobalt {
     molar_mass      mass 58.93320 g / amount mol
     specific_heat   specific_energy 0.42 J g^-1 / temperature K
@@ -6475,6 +6494,7 @@ copernicium {
     molar_mass      mass 285.17712 g / amount mol
 }
 
+!symbol copper Cu
 copper {
     molar_mass      mass 63.546 g / amount mol
     specific_heat   specific_energy 0.39 J g^-1 / temperature K
@@ -6488,6 +6508,7 @@ darmstadtium {
     molar_mass      mass 281.16451 g / amount mol
 }
 
+!symbol deuterium D
 deuterium {
     molar_mass      mass 2.0141017778 g / amount mol
 }
@@ -6496,6 +6517,7 @@ dubnium {
     molar_mass      mass 268.12567 g / amount mol
 }
 
+!symbol dysprosium Dy
 dysprosium {
     molar_mass      mass 162.50 g / amount mol
 }
@@ -6505,10 +6527,12 @@ einsteinium {
     molar_mass      mass 252.083 g / amount mol
 }
 
+!symbol erbium Er
 erbium {
     molar_mass      mass 167.26 g / amount mol
 }
 
+!symbol europium Eu
 europium {
     molar_mass      mass 151.965 g / amount mol
 }
@@ -6522,6 +6546,7 @@ flerovium {
     molar_mass      mass 289.19042 g / amount mol
 }
 
+!symbol fluorine F
 fluorine {
     molar_mass      mass 18.9984032 g / amount mol
 }
@@ -6531,25 +6556,30 @@ francium {
     molar_mass      mass 223.0197 g / amount mol
 }
 
+!symbol gadolinium Gd
 gadolinium {
     molar_mass      mass 157.25 g / amount mol
 }
 
+!symbol gallium Ga
 gallium {
     molar_mass      mass 69.723 g / amount mol
     specific_heat   specific_energy 0.37 J g^-1 / temperature K
 }
 
+!symbol germanium Ge
 germanium {
     molar_mass      mass 72.61 g / amount mol
     specific_heat   specific_energy 0.32 J g^-1 / temperature K
 }
 
+!symbol gold Au
 gold {
     molar_mass      mass 196.96654 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
+!symbol hafnium Hf
 hafnium {
     molar_mass      mass 178.49 g / amount mol
     specific_heat   specific_energy 0.14 J g^-1 / temperature K
@@ -6559,44 +6589,53 @@ hassium {
     molar_mass      mass 270.13429 g / amount mol
 }
 
+!symbol helium He
 helium {
     molar_mass      mass 4.002602 g / amount mol
 }
 
+!symbol holmium Ho
 holmium {
     molar_mass      mass 164.93032 g / amount mol
     specific_heat   specific_energy 5.1932 J g^-1 / temperature K
 }
 
+!symbol hydrogen H
 hydrogen {
     molar_mass      mass 1.00794 g / amount mol
     specific_heat   specific_energy 14.3 J g^-1 / temperature K
 }
 
+!symbol indium In
 indium {
     molar_mass      mass 114.818 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
 }
 
+!symbol iodine I
 iodine {
     molar_mass      mass 126.90447 g / amount mol
     specific_heat   specific_energy 2.15 J g^-1 / temperature K
 }
 
+!symbol iridium Ir
 iridium {
     molar_mass      mass 192.217 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
+!symbol iron Fe
 iron {
     molar_mass      mass 55.845 g / amount mol
     specific_heat   specific_energy 0.45 J g^-1 / temperature K
 }
 
+!symbol krypton Kr
 krypton {
     molar_mass      mass 83.80 g / amount mol
 }
 
+!symbol lanthanum La
 lanthanum {
     molar_mass      mass 138.9055 g / amount mol
     specific_heat   specific_energy 0.195 J g^-1 / temperature K
@@ -6607,11 +6646,13 @@ lawrencium {
     molar_mass      mass 262.11 g / amount mol
 }
 
+!symbol lead Pb
 lead {
     molar_mass      mass 207.2 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
+!symbol lithium Li
 lithium {
     molar_mass      mass 6.941 g / amount mol
     specific_heat   specific_energy 3.57 J g^-1 / temperature K
@@ -6621,16 +6662,19 @@ livermorium {
     molar_mass      mass 293.20449 g / amount mol
 }
 
+!symbol lutetium Lu
 lutetium {
     molar_mass      mass 174.967 g / amount mol
     specific_heat   specific_energy 0.15 J g^-1 / temperature K
 }
 
+!symbol magnesium Mg
 magnesium {
     molar_mass      mass 24.3050 g / amount mol
     specific_heat   specific_energy 1.05 J g^-1 / temperature K
 }
 
+!symbol manganese Mn
 manganese {
     molar_mass      mass 54.93805 g / amount mol
     specific_heat   specific_energy 0.48 J g^-1 / temperature K
@@ -6645,15 +6689,18 @@ mendelevium {
     molar_mass      mass 258.10 g / amount mol
 }
 
+!symbol molybdenum Mo
 molybdenum {
     molar_mass      mass 95.94 g / amount mol
     specific_heat   specific_energy 0.25 J g^-1 / temperature K
 }
 
+!symbol neodymium Nd
 neodymium {
     molar_mass      mass 144.24 g / amount mol
 }
 
+!symbol neon Ne
 neon {
     molar_mass      mass 20.1797 g / amount mol
 }
@@ -6662,15 +6709,18 @@ neptunium {
     molar_mass      mass 237.0482 g / amount mol
 }
 
+!symbol nickel Ni
 nickel {
     molar_mass      mass 58.6934 g / amount mol
     specific_heat   specific_energy 0.44 J g^-1 / temperature K
 }
 
+!symbol niobium Nb
 niobium {
     molar_mass      mass 92.90638 g / amount mol
 }
 
+!symbol nitrogen N
 nitrogen {
     molar_mass      mass 14.00674 g / amount mol
 }
@@ -6680,29 +6730,35 @@ nobelium {
     molar_mass      mass 259.1009 g / amount mol
 }
 
+!symbol osmium Os
 osmium {
     molar_mass      mass 190.23 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
+!symbol oxygen O
 oxygen {
     molar_mass      mass 15.9994 g / amount mol
 }
 
+!symbol palladium Pa
 palladium {
     molar_mass      mass 106.42 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
 }
 
+!symbol phosphorus P
 phosphorus {
     molar_mass      mass 30.973762 g / amount mol
 }
 
+!symbol platinum Pt
 platinum {
     molar_mass      mass 195.08 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
+!symbol plutonium Pu
 plutonium {
     ?? Longest lived. 239.05
     molar_mass      mass 244.0642 g / amount mol
@@ -6714,11 +6770,13 @@ polonium {
     molar_mass      mass 208.9824 g / amount mol
 }
 
+!symbol potassium K
 potassium {
     molar_mass      mass 39.0983 g / amount mol
     specific_heat   specific_energy 0.75 J g^-1 / temperature K
 }
 
+!symbol praseodymium Pr
 praseodymium {
     molar_mass      mass 140.90765 g / amount mol
 }
@@ -6741,11 +6799,13 @@ radon {
     molar_mass      mass 222.0176 g / amount mol
 }
 
+!symbol rhenium Re
 rhenium {
     molar_mass      mass 186.207 g / amount mol
     specific_heat   specific_energy 0.14 J g^-1 / temperature K
 }
 
+!symbol rhodium Rh
 rhodium {
     molar_mass      mass 102.90550 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
@@ -6755,11 +6815,13 @@ roentgenium {
     molar_mass      mass 280.16514 g / amount mol
 }
 
+!symbol rubidium Rb
 rubidium {
     molar_mass      mass 85.4678 g / amount mol
     specific_heat   specific_energy 0.36 J g^-1 / temperature K
 }
 
+!symbol ruthenium Ru
 ruthenium {
     molar_mass      mass 101.07 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
@@ -6769,10 +6831,12 @@ rutherfordium {
     molar_mass      mass 267.12179 g / amount mol
 }
 
+!symbol samarium Sm
 samarium {
     molar_mass      mass 150.36 g / amount mol
 }
 
+!symbol scandium Sc
 scandium {
     molar_mass      mass 44.955910 g / amount mol
     specific_heat   specific_energy 0.57  J g^-1 / temperature K
@@ -6782,35 +6846,42 @@ seaborgium {
     molar_mass      mass 271.13393 g / amount mol
 }
 
+!symbol selenium Se
 selenium {
     molar_mass      mass 78.96 g / amount mol
     specific_heat   specific_energy 0.32 J g^-1 / temperature K
 }
 
+!symbol silicon Si
 silicon {
     molar_mass      mass 28.0855 g / amount mol
     specific_heat   specific_energy 0.71 J g^-1 / temperature K
 }
 
+!symbol silver Ag
 silver {
     molar_mass      mass 107.8682 g / amount mol
     specific_heat   specific_energy 0.23 J g^-1 / temperature K
 }
 
+!symbol sodium Na
 sodium {
     molar_mass      mass 22.989768 g / amount mol
     specific_heat   specific_energy 1.21 J g^-1 / temperature K
 }
 
+!symbol strontium Sr
 strontium {
     molar_mass      mass 87.62 g / amount mol
     specific_heat   specific_energy 0.30 J g^-1 / temperature K
 }
 
+!symbol sulfur S
 sulfur {
     molar_mass      mass 32.066 g / amount mol
 }
 
+!symbol tantalum Ta
 tantalum {
     molar_mass      mass 180.9479 g / amount mol
     specific_heat   specific_energy 0.14 J g^-1 / temperature K
@@ -6821,38 +6892,46 @@ technetium {
     molar_mass      mass 97.9072 g / amount mol
 }
 
+!symbol tellurium Te
 tellurium {
     molar_mass      mass 127.60 g / amount mol
 }
 
+!symbol terbium Tb
 terbium {
     molar_mass      mass 158.92534 g / amount mol
 }
 
+!symbol thallium Tl
 thallium {
     molar_mass      mass 204.3833 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
+!symbol thorium Th
 thorium {
     molar_mass      mass 232.0381 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
+!symbol thullium Tm
 thullium {
     molar_mass      mass 168.93421 g / amount mol
 }
 
+!symbol tin Sn
 tin {
     molar_mass      mass 118.710 g / amount mol
     specific_heat   specific_energy 0.21 J g^-1 / temperature K
 }
 
+!symbol titanium Ti
 titanium {
     molar_mass      mass 47.867 g / amount mol
     specific_heat   specific_energy 0.54 J g^-1 / temperature K
 }
 
+!symbol tungsten W
 tungsten {
     molar_mass      mass 183.84 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
@@ -6874,6 +6953,7 @@ ununtrium {
     molar_mass      mass 284.17873 g / amount mol
 }
 
+!symbol uranium U
 uranium {
     molar_mass      mass 238.0289 g / amount mol
     specific_heat   specific_energy 0.12 J g^-1 / temperature K
@@ -6888,29 +6968,35 @@ uranium {
     specific_energy_235_fission fission_energy 200 MeV / mass ((235.0439299 g/mol) / avogadro)
 }
 
+!symbol vanadium V
 vanadium {
     molar_mass      mass 50.9415 g / amount mol
     specific_heat   specific_energy 0.39 J g^-1 / temperature K
 }
 
+!symbol xenon Xe
 xenon {
     molar_mass      mass 131.29 g / amount mol
 }
 
+!symbol ytterbium Yb
 ytterbium {
     molar_mass      mass 173.04 g / amount mol
 }
 
+!symbol yttrium Y
 yttrium {
     molar_mass      mass 88.90585 g / amount mol
     specific_heat   specific_energy 0.30 J g^-1 / temperature K
 }
 
+!symbol zinc Zn
 zinc {
     molar_mass      mass 65.39 g / amount mol
     specific_heat   specific_energy 0.39 J g^-1 / temperature K
 }
 
+!symbol zirconium Zr
 zirconium {
     molar_mass      mass 91.224 g / amount mol
     specific_heat   specific_energy 0.27 J g^-1 / temperature K
@@ -6932,6 +7018,28 @@ air               78.08   % nitrogen 2 \
               +    1.7  ppm (carbon + 4 hydrogen) \
               +    1.14 ppm krypton \
               +    0.55 ppm hydrogen 2
+
+# Various abbreviations used in organic chemistry.
+
+!symbol methyl Me
+methyl {
+    molar_mass      mass 15.03482 g / amount mol
+}
+
+!symbol ethyl Et
+ethyl {
+    molar_mass      mass 29.0617 g / amount mol
+}
+
+!symbol acetyl Ac
+acetyl {
+    molar_mass      mass 43.04522 g / amount mol
+}
+
+!symbol phenyl Ph
+phenyl {
+    molar_mass      mass 77.1057 g / amount mol
+}
 
 !endcategory
 
