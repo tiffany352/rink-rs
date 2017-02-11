@@ -21,7 +21,6 @@ extern crate limiter;
 extern crate logger;
 extern crate url;
 extern crate toml;
-#[macro_use]
 extern crate serde_derive;
 
 pub mod worker;
@@ -117,7 +116,6 @@ fn opensearch(rink: &Rink, _req: &mut Request) -> IronResult<Response> {
 }
 
 fn ifnot1helper(
-    c: &handlebars::Context,
     h: &handlebars::Helper,
     r: &Handlebars,
     rc: &mut handlebars::RenderContext
@@ -141,13 +139,12 @@ fn ifnot1helper(
         h.inverse()
     };
     match tmpl {
-        Some(ref t) => t.render(c, r, rc),
+        Some(ref t) => t.render(r, rc),
         None => Ok(()),
     }
 }
 
 fn urlescapehelper(
-    c: &handlebars::Context,
     h: &handlebars::Helper,
     r: &Handlebars,
     rc: &mut handlebars::RenderContext
@@ -157,15 +154,10 @@ fn urlescapehelper(
     use url::percent_encoding::{utf8_percent_encode, QUERY_ENCODE_SET};
 
     let tmpl = h.template();
-    let mut res = vec![];
-    match tmpl {
-        Some(ref t) => {
-            let mut new_rc = rc.with_writer(&mut res);
-            try!(t.render(c, r, &mut new_rc))
-        },
+    let res = match tmpl {
+        Some(ref t) => try!(t.renders(r, rc)),
         None => return Err(RenderError::new("urlescape is a block helper")),
-    }
-    let res = String::from_utf8_lossy(&res);
+    };
     let res = res.split_whitespace().collect::<Vec<_>>().join(" ");
     let res = utf8_percent_encode(&res, QUERY_ENCODE_SET).collect::<String>();
     let res = res.split("%20").collect::<Vec<_>>().join("+");
@@ -240,7 +232,9 @@ fn main() {
     let hbse = Arc::new(hbse);
     watch(&hbse);
 
-    let limiter = RequestLimit::new(5000, 5000);
+    let mut limiter = RequestLimit::default();
+    limiter.set_max_body_size(5000);
+    limiter.set_max_url_length(5000);
 
     chain.link_before(logger_before);
     chain.link_before(limiter);
