@@ -16,13 +16,6 @@ path = "../"
 features = ["nightly"]
 
 [dependencies]
-iron = "0.4.0"
-router = "0.4.0"
-params = "0.4.0"
-handlebars = "0.20.0"
-handlebars-iron = "0.18.0"
-staticfile = "0.3.0"
-mount = "0.2.1"
 ipc-channel = "0.5.1"
 libc = "0.2.14"
 chrono = { version = "*", features = ["serde"] }
@@ -30,7 +23,15 @@ rustc-serialize = "*"
 serde_json = "0.8"
 serde_derive = "0.8"
 serde = "0.8.16"
-limiter = "0.2"
-logger = "0.1.0"
 url = "1.2.0"
 toml = { version = "0.2", features = ["serde"] }
+# iron crates
+iron = "0.5"
+router = "0.5"
+mount = "0.3"
+params = "0.6"
+handlebars = "0.25"
+handlebars-iron = "0.23"
+staticfile = "0.4"
+limiter = "0.3"
+logger = "0.3"
