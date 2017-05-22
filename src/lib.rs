@@ -105,11 +105,11 @@ pub fn config_dir() -> Result<PathBuf, String> {
 pub fn config_dir() -> Result<PathBuf, String> {
     env::var("APPDATA")
         .map(From::from)
-        .ok_or_else(|_| {
+        .or_else(|_| {
             env::home_dir()
                 .ok_or("Home dir not present".to_owned())
                 .map(From::from)
-                .map(|mut x: PathBuf| { x.push("AppData\\Roaming"); x})
+                .map(|mut x: PathBuf| { x.push("AppData\\Roaming"); x })
         })
 }
 
