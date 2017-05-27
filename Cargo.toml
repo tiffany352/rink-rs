@@ -23,7 +23,7 @@ strsim = "0.5.1"
 chrono-tz = "0.2.2"
 chrono-humanize = { version = "0.0.6", optional = true }
 linefeed = { version = "0.1.4", optional = true }
-hyper = { version = "0.10.4", optional = true }
+hyper = { version = "0.10.10", optional = true }
 hyper-native-tls = { version = "0.2.2", optional = true }
 libc = { version = "0.2.14", optional = true }
 ipc-channel = { version = "0.5.1", optional = true }

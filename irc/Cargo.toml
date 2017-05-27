@@ -14,5 +14,9 @@ sandbox = ["rink/sandbox"]
 path = "../"
 
 [dependencies]
-irc = "0.11.3"
 glob = "0.2.11"
+
+[dependencies.irc]
+version = "0.11.8"
+default-features = false
+features = ["ctcp", "encode"]
