@@ -44,7 +44,7 @@ fn is_ident(c: char) -> bool {
     match c {
         //c if c.is_alphabetic() => true,
         //'_' | '$' | '-' | '\'' | '"' | '%' | ',' => true,
-        ' ' | '\t' | '\n' | '(' | ')' | '/' | '|' | '^' | '+' | '*' | '\\' | '#' => false,
+        ' ' | '\t' | '\n' | '\r' | '(' | ')' | '/' | '|' | '^' | '+' | '*' | '\\' | '#' => false,
         _ => true
     }
 }
@@ -58,6 +58,12 @@ impl<'a> Iterator for TokenIterator<'a> {
         }
         let res = match self.0.next().unwrap() {
             ' ' | '\t' => return self.next(),
+            '\r' => if self.0.peek() == Some(&'\n') {
+                self.0.next();
+                Token::Newline
+            } else {
+                Token::Newline
+            },
             '\n' => Token::Newline,
             '!' => Token::Bang,
             '(' => Token::LPar,
@@ -82,6 +88,10 @@ impl<'a> Iterator for TokenIterator<'a> {
                 Token::Question
             },
             '\\' => match self.0.next() {
+                Some('\r') => match self.0.next() {
+                    Some('\n') => self.next().unwrap(),
+                    _ => Token::Error(format!("Expected LF or CRLF line endings"))
+                },
                 Some('\n') => self.next().unwrap(),
                 Some(x) => Token::Error(format!("Invalid escape: \\{}", x)),
                 None => Token::Error(format!("Unexpected EOF")),
