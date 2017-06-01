@@ -88,6 +88,9 @@ the MPL, including larger works with secondary licenses.
 
 ## Changelog
 
+### 0.4.2
+- Add support for CRLF definitions.units, fixing 0.4.1 being broken
+
 ### 0.4.1
 - Add unit categories
 - Add `speed of light`
