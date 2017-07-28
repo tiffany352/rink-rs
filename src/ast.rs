@@ -108,7 +108,10 @@ pub enum Def {
     SPrefix(Expr),
     Unit(Expr),
     Quantity(Expr),
-    Substance(Vec<Property>),
+    Substance {
+        symbol: Option<String>,
+        properties: Vec<Property>
+    },
     Category(String),
     Error(String),
 }

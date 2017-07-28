@@ -94,7 +94,10 @@ pub fn eval(query: &str) -> Result<QueryReply, Error> {
     let rx: IpcReceiver<Result<QueryReply, QueryError>> = rx;
 
     match rx.recv() {
-        Ok(s) => s.map_err(Error::Rink),
+        Ok(s) => {
+            try!(child.wait_with_output());
+            s.map_err(Error::Rink)
+        },
         Err(e) => {
             let output = try!(child.wait_with_output());
             match output.status.signal() {

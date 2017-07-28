@@ -5,6 +5,7 @@
 use std::str::Chars;
 use std::iter::Peekable;
 use std::rc::Rc;
+use std::collections::BTreeMap;
 use ast::*;
 use num::Num;
 
@@ -43,7 +44,7 @@ fn is_ident(c: char) -> bool {
     match c {
         //c if c.is_alphabetic() => true,
         //'_' | '$' | '-' | '\'' | '"' | '%' | ',' => true,
-        ' ' | '\t' | '\n' | '(' | ')' | '/' | '|' | '^' | '+' | '*' | '\\' | '#' => false,
+        ' ' | '\t' | '\n' | '\r' | '(' | ')' | '/' | '|' | '^' | '+' | '*' | '\\' | '#' => false,
         _ => true
     }
 }
@@ -57,6 +58,12 @@ impl<'a> Iterator for TokenIterator<'a> {
         }
         let res = match self.0.next().unwrap() {
             ' ' | '\t' => return self.next(),
+            '\r' => if self.0.peek() == Some(&'\n') {
+                self.0.next();
+                Token::Newline
+            } else {
+                Token::Newline
+            },
             '\n' => Token::Newline,
             '!' => Token::Bang,
             '(' => Token::LPar,
@@ -81,6 +88,10 @@ impl<'a> Iterator for TokenIterator<'a> {
                 Token::Question
             },
             '\\' => match self.0.next() {
+                Some('\r') => match self.0.next() {
+                    Some('\n') => self.next().unwrap(),
+                    _ => Token::Error(format!("Expected LF or CRLF line endings"))
+                },
                 Some('\n') => self.next().unwrap(),
                 Some(x) => Token::Error(format!("Invalid escape: \\{}", x)),
                 None => Token::Error(format!("Unexpected EOF")),
@@ -295,6 +306,7 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
     let mut line = 1;
     let mut doc = None;
     let mut category = None;
+    let mut symbols = BTreeMap::new();
     loop {
         match iter.next().unwrap() {
             Token::Newline => line += 1,
@@ -321,6 +333,14 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                         }
                         category = None
                     },
+                    Token::Ident(ref s) if s == "symbol" => {
+                        match (iter.next().unwrap(), iter.next().unwrap()) {
+                            (Token::Ident(subst), Token::Ident(sym)) => {
+                                symbols.insert(subst, sym);
+                            }
+                            _ => println!("Malformed symbol directive"),
+                        }
+                    }
                     _ => loop {
                         match iter.peek().cloned().unwrap() {
                             Token::Newline | Token::Eof => break,
@@ -478,7 +498,10 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
                         }
                         map.push(DefEntry {
                             name: name,
-                            def: Rc::new(Def::Substance(props)),
+                            def: Rc::new(Def::Substance {
+                                symbol: None,
+                                properties: props
+                            }),
                             doc: doc.take(),
                             category: category.clone(),
                         });
@@ -497,8 +520,18 @@ pub fn parse(mut iter: &mut Iter) -> Defs {
             x => println!("Expected definition on line {}, got {:?}", line, x),
         };
     }
+
+    for entry in map.iter_mut() {
+        match Rc::get_mut(&mut entry.def).unwrap() {
+            &mut Def::Substance { ref mut symbol, .. } => {
+                *symbol = symbols.get(&entry.name).map(|x| x.to_owned())
+            }
+            _ => ()
+        }
+    }
+
     Defs {
-        defs: map,
+        defs: map
     }
 }
 

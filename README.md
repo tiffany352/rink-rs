@@ -88,6 +88,18 @@ the MPL, including larger works with secondary licenses.
 
 ## Changelog
 
+### 0.4.2
+- Add support for CRLF definitions.units, fixing 0.4.1 being broken
+
+### 0.4.1
+- Add unit categories
+- Add `speed of light`
+- Add CLI history
+- Add `-> digits` and `-> digits N`
+- Fix conversion to substance
+- Fix division by float zero not throwing an error
+- Automatically derive molar mass from formulas
+
 ### 0.4.0
 - Rewritten web interface
 - Add a notion of substances
