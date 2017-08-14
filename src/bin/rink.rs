@@ -48,7 +48,7 @@ fn main_noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
 
 #[cfg(feature = "linefeed")]
 fn main_interactive() {
-    use linefeed::{Reader, Terminal, Completer, Completion};
+    use linefeed::{Reader, ReadResult, Suffix, Terminal, Completer, Completion};
     use std::rc::Rc;
     use std::cell::RefCell;
 
@@ -64,7 +64,7 @@ fn main_interactive() {
                         out.push(Completion {
                             completion: (*k.0).clone(),
                             display: Some(format!("{} (base unit)", k.0)),
-                            suffix: None,
+                            suffix: Suffix::Default,
                         });
                     }
                 }
@@ -80,7 +80,7 @@ fn main_interactive() {
                         out.push(Completion {
                             completion: (*k).clone(),
                             display: Some(format!("{} ({}{})", k, def, parts.format("n u p"))),
-                            suffix: None,
+                            suffix: Suffix::Default,
                         });
                     }
                 }
@@ -95,7 +95,7 @@ fn main_interactive() {
                                     .map(|x| format!(", {}", x))
                                     .unwrap_or_default()
                             )),
-                            suffix: None,
+                            suffix: Suffix::Default,
                         });
                     }
                     for (pk, prop) in &sub.properties.properties {
@@ -115,7 +115,7 @@ fn main_interactive() {
                                         .map(|x| format!("; {}", x))
                                         .unwrap_or_default(),
                                 )),
-                                suffix: None,
+                                suffix: Suffix::Default,
                             });
                         }
                         if prop.input_name.starts_with(name) {
@@ -134,7 +134,7 @@ fn main_interactive() {
                                         .map(|x| format!("; {}", x))
                                         .unwrap_or_default(),
                                 )),
-                                suffix: None,
+                                suffix: Suffix::Default,
                             });
                         }
                         if prop.output_name.starts_with(name) {
@@ -153,7 +153,7 @@ fn main_interactive() {
                                         .map(|x| format!("; {}", x))
                                         .unwrap_or_default(),
                                 )),
-                                suffix: None,
+                                suffix: Suffix::Default,
                             });
                         }
                     }
@@ -164,7 +164,7 @@ fn main_interactive() {
                             completion: (*k).clone(),
                             display: Some(format!("{} (quantity; {})",
                                                   k, Number::unit_to_string(unit))),
-                            suffix: None,
+                            suffix: Suffix::Default,
                         });
                     }
                 }
@@ -179,13 +179,13 @@ fn main_interactive() {
                                .into_iter().map(|x| Completion {
                                    completion: format!("{}{}", k, x.completion),
                                    display: Some(format!("{} {}", k, x.display.unwrap())),
-                                   suffix: None,
+                                   suffix: Suffix::Default,
                                }).collect());
                 } else if k.starts_with(name) {
                     out.insert(0, Completion {
                         completion: k.clone(),
                         display: Some(format!("{} ({:?} prefix)", k, v.value)),
-                        suffix: None,
+                        suffix: Suffix::Default,
                     });
                 }
             }
@@ -225,22 +225,22 @@ fn main_interactive() {
     loop {
         let readline = rl.read_line();
         match readline {
-            Ok(Some(ref line)) if line == "quit" => {
+            Ok(ReadResult::Input(ref line)) if line == "quit" => {
                 println!("");
                 break
             },
-            Ok(Some(ref line)) if line == "help" => {
+            Ok(ReadResult::Input(ref line)) if line == "help" => {
                 println!("For information on how to use Rink, see the manual: \
                           https://github.com/tiffany352/rink-rs/wiki/Rink-Manual");
             },
-            Ok(Some(line)) => {
+            Ok(ReadResult::Input(line)) => {
                 rl.add_history(line.clone());
                 match one_line(&mut *ctx.borrow_mut(), &*line) {
                     Ok(v) => println!("{}", v),
                     Err(e) => println!("{}", e)
                 };
             },
-            Ok(None) => {
+            Ok(ReadResult::Eof) => {
                 println!("");
                 let hfile = hpath.and_then(|hpath| File::create(hpath).map_err(|x| x.to_string()));
                 if let Ok(mut hfile) = hfile {
@@ -251,6 +251,7 @@ fn main_interactive() {
                 }
                 break
             },
+            Ok(ReadResult::Signal(_)) => (),
             Err(err) => {
                 println!("Readline: {:?}", err);
                 break
