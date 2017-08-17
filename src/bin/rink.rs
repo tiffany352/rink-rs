@@ -52,6 +52,18 @@ fn main_interactive() {
     use std::rc::Rc;
     use std::cell::RefCell;
 
+    let mut rl = match Reader::new("rink") {
+        Err(_) => {
+            // If we can't initialize linefeed on this terminal for some reason,
+            // e.g. it being a pipe instead of a tty, use the noninteractive version
+            // with prompt instead.
+            let stdin_handle = stdin();
+            return main_noninteractive(stdin_handle.lock(), true);
+        },
+        Ok(rl) => rl
+    };
+    rl.set_prompt("> ");
+
     struct RinkCompleter(Rc<RefCell<Context>>);
 
     impl<Term: Terminal> Completer<Term> for RinkCompleter {
@@ -203,8 +215,6 @@ fn main_interactive() {
     };
     let ctx = Rc::new(RefCell::new(ctx));
     let completer = RinkCompleter(ctx.clone());
-    let mut rl = Reader::new("rink").unwrap();
-    rl.set_prompt("> ");
     rl.set_completer(Rc::new(completer));
 
     let mut hpath = rink::config_dir();
