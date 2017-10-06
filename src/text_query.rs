@@ -41,6 +41,7 @@ pub enum Token {
     DegRo,
     DegDe,
     DegN,
+    Percent,
     Error(String),
 }
 
@@ -74,6 +75,7 @@ fn describe(token: &Token) -> String {
         Token::DegRo => "`°Rø`".to_owned(),
         Token::DegDe => "`°De`".to_owned(),
         Token::DegN => "`°N`".to_owned(),
+        Token::Percent => "%".to_owned(),
         Token::Error(ref e) => format!("<{}>", e)
     }
 }
@@ -101,7 +103,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             ')' => Token::RPar,
             '+' => Token::Plus,
             ';' => Token::Semicolon,
-            '%' => Token::Ident("percent".to_owned()),
+            '%' => Token::Percent,
             '=' => Token::Equals,
             '^' => Token::Caret,
             ',' => Token::Comma,
@@ -559,13 +561,29 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                 x => Expr::Error(format!("Expected `)`, got {}", describe(&x)))
             }
         },
+        Token::Percent => Expr::Unit("percent".to_owned()),
         Token::Date(toks) => Expr::Date(toks),
         x => Expr::Error(format!("Expected term, got {}", describe(&x)))
     }
 }
 
-fn parse_pow(mut iter: &mut Iter) -> Expr {
+fn parse_suffix(mut iter: &mut Iter) -> Expr {
     let left = parse_term(iter);
+    match *iter.peek().unwrap() {
+        Token::Percent => {
+            let mut left = left;
+            while let Some(&Token::Percent) = iter.peek() {
+                iter.next();
+                left = Expr::Mul(vec![left, Expr::Unit("percent".to_owned())]);
+            }
+            left
+        },
+        _ => left
+    }
+}
+
+fn parse_pow(mut iter: &mut Iter) -> Expr {
+    let left = parse_suffix(iter);
     match *iter.peek().unwrap() {
         Token::Caret => {
             iter.next();

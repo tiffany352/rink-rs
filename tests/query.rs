@@ -212,3 +212,12 @@ fn right_hand_property() {
     test("nauticalmile -> arcmin radius of earth / radian",
          "approx. 0.9993245 arcmin earth_radius / radian (length)");
 }
+
+#[test]
+fn percent_operator() {
+    test("100%", "1 (dimensionless)");
+    test("100%%", "0.01 (dimensionless)");
+    test("200% ** 2", "4 (dimensionless)");
+    test("120% 2", "2.4 (dimensionless)");
+    test("% 1", "0.01 (dimensionless)");
+}
