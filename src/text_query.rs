@@ -484,7 +484,7 @@ fn is_attr(name: &str) -> Option<&'static str> {
     }
 }
 
-fn parse_term(mut iter: &mut Iter) -> Expr {
+fn parse_term(iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(ref name) if is_func(name) => {
             match iter.peek().cloned().unwrap() {
@@ -567,7 +567,7 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_suffix(mut iter: &mut Iter) -> Expr {
+fn parse_suffix(iter: &mut Iter) -> Expr {
     let left = parse_term(iter);
     match *iter.peek().unwrap() {
         Token::Percent => {
@@ -582,7 +582,7 @@ fn parse_suffix(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_pow(mut iter: &mut Iter) -> Expr {
+fn parse_pow(iter: &mut Iter) -> Expr {
     let left = parse_suffix(iter);
     match *iter.peek().unwrap() {
         Token::Caret => {
@@ -594,7 +594,7 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_frac(mut iter: &mut Iter) -> Expr {
+fn parse_frac(iter: &mut Iter) -> Expr {
     let left = parse_pow(iter);
     match *iter.peek().unwrap() {
         Token::Pipe => {
@@ -606,7 +606,7 @@ fn parse_frac(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_juxt(mut iter: &mut Iter) -> Expr {
+fn parse_juxt(iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_frac(iter)];
     loop { match iter.peek().cloned().unwrap() {
         Token::Asterisk | Token::Slash | Token::Comma | Token::Equals |
@@ -646,7 +646,7 @@ fn parse_juxt(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_div(mut iter: &mut Iter) -> Expr {
+fn parse_div(iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_juxt(iter)];
     loop { match iter.peek().cloned().unwrap() {
         Token::Slash => {
@@ -671,7 +671,7 @@ fn parse_div(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_add(mut iter: &mut Iter) -> Expr {
+fn parse_add(iter: &mut Iter) -> Expr {
     let mut left = parse_div(iter);
     loop { match *iter.peek().unwrap() {
         Token::Plus => {
@@ -688,7 +688,7 @@ fn parse_add(mut iter: &mut Iter) -> Expr {
     }}
 }
 
-fn parse_eq(mut iter: &mut Iter) -> Expr {
+fn parse_eq(iter: &mut Iter) -> Expr {
     let left = parse_add(iter);
     match iter.peek().cloned().unwrap() {
         Token::Equals => {
@@ -704,7 +704,7 @@ pub fn parse_expr(iter: &mut Iter) -> Expr {
     parse_eq(iter)
 }
 
-pub fn parse_unitlist(mut iter: &mut Iter) -> Option<Vec<String>> {
+pub fn parse_unitlist(iter: &mut Iter) -> Option<Vec<String>> {
     let mut expecting_term = true;
     let mut res = vec![];
     loop { match iter.next().unwrap() {
@@ -725,7 +725,7 @@ pub fn parse_unitlist(mut iter: &mut Iter) -> Option<Vec<String>> {
     }
 }
 
-pub fn parse_offset(mut iter: &mut Iter) -> Option<i64> {
+pub fn parse_offset(iter: &mut Iter) -> Option<i64> {
     use std::str::FromStr;
 
     let sign = match iter.next().unwrap() {
@@ -748,7 +748,7 @@ pub fn parse_offset(mut iter: &mut Iter) -> Option<i64> {
     Some(sign * (i64::from_str(&*hour).unwrap() * 3600 + i64::from_str(&*min).unwrap() * 60))
 }
 
-pub fn parse_query(mut iter: &mut Iter) -> Query {
+pub fn parse_query(iter: &mut Iter) -> Query {
     match iter.peek().cloned() {
         Some(Token::Ident(ref s)) if s == "factorize" => {
             iter.next();

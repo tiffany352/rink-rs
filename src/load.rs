@@ -324,7 +324,7 @@ impl Context {
                         let unit = (&input / &output)
                             .expect("Non-zero property")
                             .unit;
-                        let mut existing = prev.entry(unit).or_insert(BTreeSet::new());
+                        let existing = prev.entry(unit).or_insert(BTreeSet::new());
                         for conflict in existing.intersection(&unique) {
                             println!(
                                 "Warning: conflicting \
