@@ -383,7 +383,7 @@ pub fn now() -> DateTime<FixedOffset> {
     UTC::now().with_timezone(&FixedOffset::east(0))
 }
 
-pub fn parse_datepattern<I>(mut iter: &mut Peekable<I>)
+pub fn parse_datepattern<I>(iter: &mut Peekable<I>)
                             -> Result<Vec<DatePattern>, String> where I: Iterator<Item=char> {
     let mut out = vec![];
     while iter.peek().is_some() {
