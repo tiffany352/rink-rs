@@ -88,6 +88,13 @@ the MPL, including larger works with secondary licenses.
 
 ## Changelog
 
+### 0.4.3
+- Replace BTC-e because its creator was arrested, we use blockchain.info now
+- Update linefeed to non-ancient version
+- Make % an operator with higher precedence than pow
+- Add fallback to CLI to a non-interactive prompt
+- Fix unused mut warnings
+
 ### 0.4.2
 - Add support for CRLF definitions.units, fixing 0.4.1 being broken
 
