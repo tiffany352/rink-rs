@@ -274,7 +274,8 @@ fn main_interactive() {
 // noninteractive version
 #[cfg(not(feature = "linefeed"))]
 fn main_interactive() {
-    main_noninteractive(stdin(), true);
+    let stdin = stdin();
+    main_noninteractive(stdin.lock(), true);
 }
 
 fn main() {
