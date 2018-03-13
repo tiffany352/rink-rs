@@ -89,7 +89,7 @@ use std::time::Duration;
 
 const DATA_FILE_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_family = "unix", not(target_os = "macos")))]
 pub fn config_dir() -> Result<PathBuf, String> {
     env::var("XDG_CONFIG_HOME")
         .map(From::from)
