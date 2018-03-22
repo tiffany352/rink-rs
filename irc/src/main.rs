@@ -32,37 +32,39 @@ fn main() {
         server.identify().unwrap();
         let nick = server.config().nickname.clone().unwrap();
         let prefix = ".c ";
-        for message in server.iter() {
-            if let Ok(Message { command: Command::PRIVMSG(ref chan, ref message_str), ..}) = message {
-                let prefixed = message_str.starts_with(&*prefix);
-                if prefixed || &*chan == &*nick {
-                    let reply_to = if &*chan == &*nick {
-                        message.as_ref().unwrap().source_nickname().unwrap()
-                    } else {
-                        &*chan
-                    };
-                    let line = if prefixed {
-                        message_str[prefix.len()..].trim()
-                    } else {
-                        &message_str[..]
-                    };
-                    let mut i = 0;
-                    let reply = eval(line);
-                    for reply_line in reply.lines() {
-                        if reply_line.trim().len() > 0 {
-                            server.send_privmsg(reply_to, &format!("\x0310> {}", reply_line)).unwrap();
-                            i += 1;
-                        }
-                        // cut off early
-                        if i > 4 {
-                            break;
+        server.for_each_incoming(|message| {
+            match message.command {
+                Command::PRIVMSG(ref chan, ref message_str) => {
+                    let prefixed = message_str.starts_with(&*prefix);
+
+                    if prefixed || &*chan == &*nick {
+                        let reply_to = if &*chan == &*nick {
+                            message.source_nickname().unwrap()
+                        } else {
+                            &*chan
+                        };
+                        let line = if prefixed {
+                            message_str[prefix.len()..].trim()
+                        } else {
+                            &message_str[..]
+                        };
+                        let mut i = 0;
+                        let reply = eval(line);
+                        for reply_line in reply.lines() {
+                            if reply_line.trim().len() > 0 {
+                                server.send_privmsg(reply_to, &format!("\x0310> {}", reply_line)).unwrap();
+                                i += 1;
+                            }
+                            // cut off early
+                            if i > 4 {
+                                break;
+                            }
                         }
                     }
                 }
-            } else if let Err(e) = message {
-                println!("{}: {}", config, e);
+                _ => (),
             }
-        }
+        }).unwrap();
         println!("Thread {} exiting", config);
     }
 

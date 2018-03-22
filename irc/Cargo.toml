@@ -17,6 +17,4 @@ path = "../"
 glob = "0.2.11"
 
 [dependencies.irc]
-version = "0.11.8"
-default-features = false
-features = ["ctcp", "encode"]
+version = "0.12.3"
