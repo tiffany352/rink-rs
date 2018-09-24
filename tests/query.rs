@@ -153,6 +153,7 @@ fn test_bases() {
     test("pi m -> bin m", "approx. 11.00100 meter (length)");
     test("100K -> hex °C", "Conversion to °C is not defined in base 16");
     test("now -> hex +00:00", "Conversion to 00:00 is not defined in base 16");
+    test("256 -> base 16", "100 (dimensionless)");
 }
 
 #[test]
