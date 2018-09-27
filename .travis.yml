@@ -2,14 +2,11 @@ language: rust
 sudo: required
 rust:
   - nightly
-before_script:
-  - rustup component add clippy-preview
 cache: cargo
 
 script:
   - cargo build --verbose
   - cargo test --verbose
-  - cargo clippy --verbose
 
 addons:
   apt:
