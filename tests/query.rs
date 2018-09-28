@@ -222,3 +222,19 @@ fn percent_operator() {
     test("120% 2", "2.4 (dimensionless)");
     test("% 1", "0.01 (dimensionless)");
 }
+
+#[test]
+fn test_kilosecond() {
+    test("1ks", "16 minute, 40 second (time)");
+    test("1kss", "16 minute, 40 second (time)");
+}
+
+#[test]
+#[should_panic]
+fn test_second_double_prefix() {
+    let mut iter = text_query::TokenIterator::new("mks").peekable();
+    let expr = text_query::parse_query(&mut iter);
+    CONTEXT.with(|ctx| {
+        ctx.eval_outer(&expr).unwrap();
+    });
+}
