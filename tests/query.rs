@@ -108,9 +108,17 @@ fn test_factorize() {
 
 #[test]
 fn test_conformance() {
-    test("W -> J",
-         "Conformance error: 1 watt (power) != 1 joule (energy)\n\
-          Suggestions: multiply left side by time, multiply right side by frequency");
+    test(
+        "W -> J",
+        "Conformance error: 1 watt (power) != 1 joule (energy)\n\
+         Suggestions: multiply left side by time, multiply right side by frequency",
+    );
+
+    test(
+        "W/s -> J^2",
+        "Conformance error: 1 newton^2 / kilogram != 1 joule^2\n\
+         Suggestions: multiply left side by moment_of_inertia, divide right side by moment_of_inertia",
+    );
 }
 
 #[test]
