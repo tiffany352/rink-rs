@@ -113,11 +113,25 @@ fn test_conformance() {
         "Conformance error: 1 watt (power) != 1 joule (energy)\n\
          Suggestions: multiply left side by time, multiply right side by frequency",
     );
-
     test(
         "W/s -> J^2",
         "Conformance error: 1 newton^2 / kilogram != 1 joule^2\n\
          Suggestions: multiply left side by moment_of_inertia, divide right side by moment_of_inertia",
+    );
+    test(
+        "m^2 -> kg^2",
+        "Conformance error: 1 meter^2 (area) != 1 kilogram^2 (kg^2)\n\
+         Suggestions: multiply left side by linear_density^2, multiply right side by area / mass^2",
+    );
+    test(
+        "c -> kg",
+        "Conformance error: 299792458 meter / second (velocity) != 1 kilogram (mass)\n\
+         Suggestions: multiply left side by mass time / length, multiply right side by length / mass time"
+    );
+    test(
+        "1/m -> 'abc'",
+        "Conformance error: 1 / meter (m^-1) != 1 abc (abc)\n\
+         Suggestions: multiply left side by 'abc' length, divide right side by 'abc' length",
     );
 }
 
