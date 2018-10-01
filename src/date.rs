@@ -479,10 +479,15 @@ impl Context {
 mod tests {
     use super::*;
 
-    fn parse(date: Vec<DateToken>, pat: &[DatePattern]) -> (Result<(), String>, Parsed) {
+    fn pattern(s: &str) -> Vec<DatePattern> {
+        parse_datepattern(&mut s.chars().peekable()).unwrap()
+    }
+
+    fn parse(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Parsed) {
         let mut parsed = Parsed::new();
         let mut tz = None;
-        let res = parse_date(&mut parsed, &mut tz, &mut date.into_iter().peekable(), pat);
+        let pat = pattern(pat);
+        let res = parse_date(&mut parsed, &mut tz, &mut date.into_iter().peekable(), &pat);
 
         (res, parsed)
     }
@@ -490,13 +495,11 @@ mod tests {
     #[test]
     fn test_literal() {
         let date = vec![DateToken::Literal("abc".into())];
-        let pat = &[DatePattern::Literal("abc".into())];
-        let (res, parsed) = parse(date.clone(), pat);
+        let (res, parsed) = parse(date.clone(), "'abc'");
         assert_eq!(parsed, Parsed::new());
         assert!(res.is_ok());
 
-        let pat = &[DatePattern::Literal("def".into())];
-        let (res, parsed) = parse(date, pat);
+        let (res, parsed) = parse(date, "'def'");
         assert_eq!(parsed, Parsed::new());
         assert_eq!(res, Err("Expected `def`, got `abc`".into()));
     }
@@ -510,9 +513,7 @@ mod tests {
             DateToken::Plus,
             DateToken::Number(format!("{}", expected.year.unwrap()), None),
         ];
-        let pat = &[DatePattern::Match("year".into())];
-        let (res, parsed) = parse(date.clone(), pat);
-
+        let (res, parsed) = parse(date.clone(), "year");
         assert_eq!(parsed, expected);
         assert!(res.is_ok());
     }
