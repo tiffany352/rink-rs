@@ -119,8 +119,8 @@ pub fn parse_date<I>(
                     let value = u32::from_str_radix(&**s, 10).unwrap();
                     out.hour_mod_12 = Some(value % 12);
                     Ok(())
-                },
-                x => Err(format!("Expected 2-digit hour24, got {}", ts(x)))
+                }
+                x => Err(format!("Expected 2-digit hour12, got {}", ts(x))),
             },
             "hour24" => match tok {
                 Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
