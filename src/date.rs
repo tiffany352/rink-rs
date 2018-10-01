@@ -525,4 +525,35 @@ mod tests {
         assert!(res.is_ok());
         assert_eq!(parsed2, parsed);
     }
+
+    #[test]
+    fn test_complicated_date_input() {
+        let mut expected = Parsed::new();
+        expected.set_year(123).unwrap();
+        expected.set_month(5).unwrap();
+        expected.set_day(2).unwrap();
+        expected.set_ampm(true).unwrap();
+        expected.set_hour(13).unwrap();
+        expected.set_minute(57).unwrap();
+
+        let date = vec![
+            DateToken::Number(format!("{}", expected.day.unwrap()), None),
+            DateToken::Space,
+            DateToken::Literal("Pm".into()),
+            DateToken::Dash,
+            DateToken::Number(format!("{:02}", expected.month.unwrap()), None),
+            DateToken::Colon,
+            DateToken::Number(format!("{}", expected.year.unwrap()), None),
+            DateToken::Space,
+            DateToken::Number(format!("{:02}", expected.hour_mod_12.unwrap()), None),
+            DateToken::Dash,
+            DateToken::Number(format!("{:02}", expected.minute.unwrap()), None),
+            DateToken::Space,
+            DateToken::Literal("May".into()),
+        ];
+
+        let (res, parsed) = parse(date, "day meridiem-monthnum:year hour12-min monthname");
+        res.unwrap();
+        assert_eq!(parsed, expected);
+    }
 }
