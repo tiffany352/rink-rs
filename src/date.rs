@@ -608,4 +608,22 @@ mod tests {
         assert!(res.is_ok());
         assert_eq!(parsed, expected);
     }
+
+    #[test]
+    fn test_offset() {
+        let date = vec![DateToken::Plus, DateToken::Number("0200".into(), None)];
+        let (res, parsed) = parse(date, "offset");
+        assert!(res.is_ok());
+        assert_eq!(parsed.offset, Some(2 * 3600));
+
+        let date = vec![
+            DateToken::Dash,
+            DateToken::Number("01".into(), None),
+            DateToken::Colon,
+            DateToken::Number("23".into(), None),
+        ];
+        let (res, parsed) = parse(date, "offset");
+        assert!(res.is_ok());
+        assert_eq!(parsed.offset, Some(-(1 * 60 + 23) * 60));
+    }
 }
