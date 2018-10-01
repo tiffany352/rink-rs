@@ -551,10 +551,14 @@ mod tests {
     use super::*;
     use ast::Expr;
 
+    fn do_parse(s: &str) -> Expr {
+        let mut iter = TokenIterator::new(s).peekable();
+        parse_term(&mut iter)
+    }
+
     #[test]
     fn test_parse_term_plus() {
-        let mut iter = TokenIterator::new("+1").peekable();
-        let expr = parse_term(&mut iter);
+        let expr = do_parse("+1");
 
         if let Expr::Plus(x) = expr {
             if let Expr::Const(x) = *x {
@@ -571,9 +575,7 @@ mod tests {
 
     #[test]
     fn test_missing_bracket() {
-        let mut iter = TokenIterator::new("(").peekable();
-        let expr = parse_term(&mut iter);
-        match expr {
+        match do_parse("(") {
             Expr::Error(ref s) => assert_eq!(s, "Expected ), got Eof"),
             x => panic!("Wrong result: {}", x),
         }
