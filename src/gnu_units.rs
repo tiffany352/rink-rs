@@ -610,4 +610,13 @@ mod tests {
             "Expected term, got Error(\"Unexpected EOF\")"
         );
     }
+
+    #[test]
+    fn test_float_leading_dot() {
+        use gmp::mpq::Mpq;
+        use gmp::mpz::Mpz;
+        let num = Mpz::from(123);
+        let den = Mpz::from(1000);
+        expect!(".123", Expr::Const, Num::Mpq(Mpq::ratio(&num, &den)));
+    }
 }
