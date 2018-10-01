@@ -603,6 +603,14 @@ mod tests {
     }
 
     #[test]
+    fn test_24h() {
+        let (res, parsed) = parse(vec![DateToken::Number("23".into(), None)], "hour24");
+        assert!(res.is_ok());
+        assert_eq!(parsed.hour_div_12, Some(1));
+        assert_eq!(parsed.hour_mod_12, Some(11));
+    }
+
+    #[test]
     fn seconds() {
         let mut expected = Parsed::new();
         expected.set_second(27).unwrap();
@@ -611,6 +619,12 @@ mod tests {
         let date = vec![DateToken::Number("27".into(), Some("000012345".into()))];
         let (res, parsed) = parse(date, "sec");
         assert!(res.is_ok());
+        assert_eq!(parsed, expected);
+
+        let date = vec![DateToken::Number("27".into(), None)];
+        let (res, parsed) = parse(date, "sec");
+        assert!(res.is_ok());
+        expected.nanosecond = None;
         assert_eq!(parsed, expected);
     }
 
