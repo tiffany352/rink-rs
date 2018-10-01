@@ -474,3 +474,29 @@ impl Context {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn match_literal(s: &str, expected: &str) -> (Result<(), String>, Parsed) {
+        let mut parsed = Parsed::new();
+        let mut tz = None;
+        let mut date = vec![DateToken::Literal(s.into())].into_iter().peekable();
+        let pat = &[DatePattern::Literal(expected.into())];
+        let res = parse_date(&mut parsed, &mut tz, &mut date, pat);
+
+        (res, parsed)
+    }
+
+    #[test]
+    fn test_literal() {
+        let (res, parsed) = match_literal("abc", "abc");
+        assert_eq!(parsed, Parsed::new());
+        assert!(res.is_ok());
+
+        let (res, parsed) = match_literal("abc", "def");
+        assert_eq!(parsed, Parsed::new());
+        assert_eq!(res, Err("Expected `def`, got `abc`".into()));
+    }
+}
