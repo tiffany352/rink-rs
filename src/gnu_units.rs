@@ -574,7 +574,7 @@ mod tests {
         let mut iter = TokenIterator::new("(").peekable();
         let expr = parse_term(&mut iter);
         match expr {
-            Expr::Error(ref s) if s == "Expected ), got eof" => (),
+            Expr::Error(ref s) => assert_eq!(s, "Expected ), got Eof"),
             x => panic!("Wrong result: {}", x),
         }
     }
