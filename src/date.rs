@@ -626,4 +626,12 @@ mod tests {
         assert!(res.is_ok());
         assert_eq!(parsed.offset, Some(-(1 * 60 + 23) * 60));
     }
+
+    #[test]
+    fn test_weekday() {
+        let date = vec![DateToken::Literal("saturday".into())];
+        let (res, parsed, _) = parse(date, "weekday");
+        assert!(res.is_ok());
+        assert_eq!(parsed.weekday, Some(Weekday::Sat));
+    }
 }
