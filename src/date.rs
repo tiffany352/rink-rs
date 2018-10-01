@@ -580,9 +580,32 @@ mod tests {
     }
 
     #[test]
+    fn ad_bc_wrong() {
+        for date in vec![
+            vec![DateToken::Literal("foo".into())],
+            vec![DateToken::Plus],
+        ] {
+            let (res, _) = parse(date, "adbc");
+            assert!(res.is_err());
+        }
+    }
+
+    #[test]
     fn wrong_length_24h() {
         let date = vec![DateToken::Number("7".into(), None)];
         let (res, _) = parse(date, "hour24");
         assert_eq!(res, Err(format!("Expected 2-digit hour24, got `{}`", 7)));
+    }
+
+    #[test]
+    fn seconds() {
+        let mut expected = Parsed::new();
+        expected.set_second(27).unwrap();
+        expected.set_nanosecond(12345).unwrap();
+
+        let date = vec![DateToken::Number("27".into(), Some("000012345".into()))];
+        let (res, parsed) = parse(date, "sec");
+        assert!(res.is_ok());
+        assert_eq!(parsed, expected);
     }
 }
