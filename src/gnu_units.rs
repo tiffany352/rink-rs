@@ -597,7 +597,17 @@ mod tests {
             Expr::Error,
             "Expected term, got Error(\"Expected LF or CRLF line endings\")"
         );
+        expect!("\\\r\n1", Expr::Const, 1.into());
 
-        expect!("\\\r\n1", Expr::Const, 1.into())
+        expect!(
+            "\\a",
+            Expr::Error,
+            "Expected term, got Error(\"Invalid escape: \\\\a\")"
+        );
+        expect!(
+            "\\",
+            Expr::Error,
+            "Expected term, got Error(\"Unexpected EOF\")"
+        );
     }
 }
