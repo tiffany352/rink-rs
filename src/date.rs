@@ -514,7 +514,15 @@ mod tests {
             DateToken::Number(format!("{}", expected.year.unwrap()), None),
         ];
         let (res, parsed) = parse(date.clone(), "year");
-        assert_eq!(parsed, expected);
         assert!(res.is_ok());
+        assert_eq!(parsed, expected);
+
+        let date = vec![DateToken::Number(
+            format!("{}", expected.year.unwrap()),
+            None,
+        )];
+        let (res, parsed2) = parse(date.clone(), "year");
+        assert!(res.is_ok());
+        assert_eq!(parsed2, parsed);
     }
 }
