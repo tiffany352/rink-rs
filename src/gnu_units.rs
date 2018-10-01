@@ -619,4 +619,9 @@ mod tests {
         let den = Mpz::from(1000);
         expect!(".123", Expr::Const, Num::Mpq(Mpq::ratio(&num, &den)));
     }
+
+    #[test]
+    fn test_escaped_quotes() {
+        expect!("\"ab\\\"\"", Expr::Unit, "ab\"")
+    }
 }
