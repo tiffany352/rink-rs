@@ -553,7 +553,36 @@ mod tests {
         ];
 
         let (res, parsed) = parse(date, "day meridiem-monthnum:year hour12-min monthname");
-        res.unwrap();
+        assert!(res.is_ok());
         assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn ad_bc() {
+        let year = -100;
+        let mut expected = Parsed::new();
+        expected.set_year(year + 1).unwrap();
+        expected.set_hour(7).unwrap();
+
+        let date = vec![
+            DateToken::Number(format!("{}", year.abs()), None),
+            DateToken::Space,
+            DateToken::Literal("bce".into()),
+            DateToken::Space,
+            DateToken::Number(format!("{:02}", expected.hour_mod_12.unwrap()), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+
+        let (res, parsed) = parse(date, "year adbc hour12 meridiem");
+        assert!(res.is_ok(), res.unwrap_err());
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn wrong_length_24h() {
+        let date = vec![DateToken::Number("7".into(), None)];
+        let (res, _) = parse(date, "hour24");
+        assert_eq!(res, Err(format!("Expected 2-digit hour24, got `{}`", 7)));
     }
 }
