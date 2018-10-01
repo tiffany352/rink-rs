@@ -556,6 +556,15 @@ mod tests {
         parse_term(&mut iter)
     }
 
+    macro_rules! expect {
+        ($expr:expr, $pattern:path, $expected:expr) => {
+            match do_parse($expr) {
+                $pattern(s) => assert_eq!(s, $expected),
+                x => panic!("{}", x),
+            }
+        };
+    }
+
     #[test]
     fn test_parse_term_plus() {
         let expr = do_parse("+1");
@@ -579,5 +588,16 @@ mod tests {
             Expr::Error(ref s) => assert_eq!(s, "Expected ), got Eof"),
             x => panic!("Wrong result: {}", x),
         }
+    }
+
+    #[test]
+    fn test_escapes() {
+        expect!(
+            "\\\r",
+            Expr::Error,
+            "Expected term, got Error(\"Expected LF or CRLF line endings\")"
+        );
+
+        expect!("\\\r\n1", Expr::Const, 1.into())
     }
 }
