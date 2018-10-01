@@ -545,3 +545,37 @@ pub fn tokens(iter: &mut Iter) -> Vec<Token> {
     }
     out
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ast::Expr;
+
+    #[test]
+    fn test_parse_term_plus() {
+        let mut iter = TokenIterator::new("+1").peekable();
+        let expr = parse_term(&mut iter);
+
+        if let Expr::Plus(x) = expr {
+            if let Expr::Const(x) = *x {
+                if x != 1.into() {
+                    panic!("number != 1");
+                }
+            } else {
+                panic!("argument of x is not Expr::Const");
+            }
+        } else {
+            panic!("missing plus");
+        }
+    }
+
+    #[test]
+    fn test_missing_bracket() {
+        let mut iter = TokenIterator::new("(").peekable();
+        let expr = parse_term(&mut iter);
+        match expr {
+            Expr::Error(ref s) if s == "Expected ), got eof" => (),
+            x => panic!("Wrong result: {}", x),
+        }
+    }
+}
