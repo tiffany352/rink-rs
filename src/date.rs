@@ -483,12 +483,17 @@ mod tests {
         parse_datepattern(&mut s.chars().peekable()).unwrap()
     }
 
-    fn parse(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Parsed) {
+    fn parse_with_tz(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Parsed, Option<Tz>) {
         let mut parsed = Parsed::new();
         let mut tz = None;
         let pat = pattern(pat);
         let res = parse_date(&mut parsed, &mut tz, &mut date.into_iter().peekable(), &pat);
 
+        (res, parsed, tz)
+    }
+
+    fn parse(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Parsed) {
+        let (res, parsed, _) = parse_with_tz(date, pat);
         (res, parsed)
     }
 
@@ -625,12 +630,18 @@ mod tests {
         let (res, parsed) = parse(date, "offset");
         assert!(res.is_ok());
         assert_eq!(parsed.offset, Some(-(1 * 60 + 23) * 60));
+
+        let date = vec![DateToken::Literal("Europe/London".into())];
+        let (res, parsed, tz) = parse_with_tz(date, "offset");
+        assert!(res.is_ok(), res.unwrap_err());
+        assert_eq!(tz.unwrap(), Tz::Europe__London);
+        assert_eq!(parsed.offset, None);
     }
 
     #[test]
     fn test_weekday() {
         let date = vec![DateToken::Literal("saturday".into())];
-        let (res, parsed, _) = parse(date, "weekday");
+        let (res, parsed) = parse(date, "weekday");
         assert!(res.is_ok());
         assert_eq!(parsed.weekday, Some(Weekday::Sat));
     }
