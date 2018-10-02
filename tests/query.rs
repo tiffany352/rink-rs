@@ -343,3 +343,25 @@ fn test_functions() {
     test("hypot(3 m, 4 m)", "approx. 5 meter (length)");
     test("atan2(7, 6)", "approx. 0.8621700 (dimensionless)");
 }
+
+#[test]
+fn test_equal_rhs() {
+    test("1 -> a=3", "1/3, approx. 0.3333333 a (dimensionless)");
+}
+
+#[test]
+fn test_pow_with_dimension() {
+    test(
+        "2^m",
+        "Exponent must be dimensionless: <2 (dimensionless)> ^ <1 meter (length)>",
+    );
+}
+
+#[test]
+fn test_reciprocal_conversion() {
+    test(
+        "miles / gallon -> l / 100km",
+        "Conformance error: approx. 425143.7 / meter^2 (fuel_efficiency) != 10000 micrometer^2 (area)\n\
+        Suggestions: Reciprocal conversion, invert one side",
+    );
+}
