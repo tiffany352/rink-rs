@@ -260,3 +260,40 @@ fn test_second_double_prefix() {
         ctx.eval_outer(&expr).unwrap();
     });
 }
+
+#[test]
+fn test_missing_substance() {
+    test(
+        "density of flubber",
+        "No such unit flubber, did you mean flour?",
+    );
+}
+
+#[test]
+fn test_missing_property() {
+    test("mass of flour", "No such property mass of flour");
+}
+
+#[test]
+fn test_unary_operators() {
+    test("+--+42", "42 (dimensionless)");
+    test("++-+42", "-42 (dimensionless)");
+}
+
+#[test]
+fn test_equals() {
+    test("a = kg N / W^2", "1 second^2 / gray meter");
+    test(
+        "1 = kg",
+        "= is currently only used for inline unit definitions: expected unit, got 1",
+    );
+}
+
+#[test]
+fn mismatched_units() {
+    test(
+        "W - kg",
+        "Subtraction of units with mismatched units is not meaningful: \
+         <1 watt (power)> - <1 kilogram (mass)>",
+    );
+}
