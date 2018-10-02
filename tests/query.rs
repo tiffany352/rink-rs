@@ -319,3 +319,27 @@ fn mismatched_units() {
          <1 watt (power)> - <1 kilogram (mass)>",
     );
 }
+
+#[test]
+fn temperature_with_dimension() {
+    test("kg °C", "Expected dimensionless, got: <1 kilogram (mass)>");
+}
+
+#[test]
+fn test_functions() {
+    test("exp(ln(10))", "approx. 10.00000 (dimensionless)");
+    test("log2(65536)", "approx. 16 (dimensionless)");
+    test("10^log10(123)", "approx. 123.0000 (dimensionless)");
+    test("log(27, 3)", "approx. 3 (dimensionless)");
+
+    test("sin(pi/2)", "approx. 1 (dimensionless)");
+    test("cos(asin(0.5) - pi/2)", "approx. 0.5000000 (dimensionless)");
+    test("atan(tan(0.42))", "approx. 0.4199999 (dimensionless)");
+    test("acos(1)", "approx. 0 (dimensionless)");
+    test("acosh(cosh(1))", "approx. 1 (dimensionless)");
+    test("asinh(sinh(0.123))", "approx. 0.1230000 (dimensionless)");
+    test("atanh(tanh(1.23))", "approx. 1.230000 (dimensionless)");
+
+    test("hypot(3 m, 4 m)", "approx. 5 meter (length)");
+    test("atan2(7, 6)", "approx. 0.8621700 (dimensionless)");
+}
