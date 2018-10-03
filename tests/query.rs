@@ -361,3 +361,20 @@ fn test_mul_not_defined() {
         "Operation is not defined: <1 (dimensionless)> * <2018-10-03 00:00:00 +00:00>",
     );
 }
+
+#[test]
+fn test_log_base_with_dimension() {
+    test(
+        "log(10, 5m)",
+        "Base must be dimensionless: log(10 (dimensionless), 5 meter (length))",
+    );
+}
+
+#[test]
+fn test_hypot_dimension_mismatch() {
+    test(
+        "hypot(3s, 4m)",
+        "Arguments to hypot must have matching dimensionality: \
+         hypot(3 second (time), 4 meter (length))",
+    );
+}
