@@ -388,3 +388,9 @@ fn test_radix() {
     );
     test("0b101010", "42 (dimensionless)");
 }
+
+#[test]
+fn test_comments() {
+    test("1 // *3", "1 (dimensionless)");
+    test("1 + /*2*/ 3", "4 (dimensionless)");
+}
