@@ -393,4 +393,15 @@ fn test_radix() {
 fn test_comments() {
     test("1 // *3", "1 (dimensionless)");
     test("1 + /*2*/ 3", "4 (dimensionless)");
+    test("1 + /*2", "Expected `*/`, got EOF");
+}
+
+#[test]
+fn test_leading_dot() {
+    test(".12345Ee3", "123.45 (dimensionless)");
+}
+
+#[test]
+fn test_underscores_in_number() {
+    test("123_456\u{2009}789", "123456789 (dimensionless)");
 }
