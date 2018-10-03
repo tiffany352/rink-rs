@@ -375,3 +375,11 @@ fn test_non_conversion_input() {
 fn test_of_non_substance() {
     test("mass of 1kg", "Not defined: mass of <1 kilogram (mass)>");
 }
+
+#[test]
+fn test_mul_not_defined() {
+    test(
+        "#2018-10-03# * kg",
+        "Operation is not defined: <1 (dimensionless)> * <2018-10-03 00:00:00 +00:00>",
+    );
+}
