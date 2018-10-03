@@ -400,3 +400,13 @@ fn test_hypot_dimension_mismatch() {
          hypot(3 second (time), 4 meter (length))",
     );
 }
+
+#[test]
+fn test_radix() {
+    test("0xff", "255 (dimensionless)");
+    test(
+        "0off",
+        "Expected term, got <Malformed octal literal: No digits after 0o>",
+    );
+    test("0b101010", "42 (dimensionless)");
+}
