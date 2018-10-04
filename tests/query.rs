@@ -408,8 +408,8 @@ fn test_underscores_in_number() {
 
 #[test]
 fn test_date_input() {
-    let input = "#2018-10-04T09:13:25   +2:00#";
-    let expected = "2018-10-04 11:13:25 +02:00";
+    let input = "#2018-10-04T09:13:25.123   +2:00#";
+    let expected = "2018-10-04 11:13:25.123 +02:00";
 
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
