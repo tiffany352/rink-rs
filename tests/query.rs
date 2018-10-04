@@ -409,6 +409,7 @@ fn test_radix() {
         "Expected term, got <Malformed octal literal: No digits after 0o>",
     );
     test("0b101010", "42 (dimensionless)");
+    test("0o10lux", "8 lux (illuminance)");
 }
 
 #[test]
@@ -446,4 +447,42 @@ fn test_date_input() {
             format!("\n'{}' !=\n'{}'", res, expected)
         );
     });
+}
+
+#[test]
+fn test_unicode_arrow() {
+    test("pound → kg", "approx. 0.4535923 kilogram (mass)");
+}
+
+#[test]
+fn test_attributes() {
+    test(
+        "roman mile",
+        "Definition: romanmile = 8 stadia = 1.48 kilometer (length; m)",
+    );
+    test(
+        "romanmile",
+        "Definition: romanmile = 8 stadia = 1.48 kilometer (length; m)",
+    );
+    test(
+        "international",
+        "Attribute must be followed by ident, got eof",
+    );
+}
+
+#[test]
+fn test_search() {
+    test(
+        "search cm",
+        "Search results: CM¥ (money), cmil (area), cminv (energy), \
+         cmcapacitance (capacitance), sccm (power)",
+    );
+}
+
+#[test]
+fn test_digits() {
+    test(
+        "ln(1234) -> digits 100",
+        "approx. 7.11801620446533345187845043255947530269622802734375 (dimensionless)",
+    );
 }
