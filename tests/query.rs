@@ -470,3 +470,9 @@ fn test_digits() {
         "approx. 7.11801620446533345187845043255947530269622802734375 (dimensionless)",
     );
 }
+
+#[test]
+fn test_escapes() {
+    test("'ab\\'cd\\n\\t'", "1 ab'cd\n\t (ab'cd\n\t)");
+    test("'x\\a'", "Expected term, got <Invalid escape sequence \\a>");
+}
