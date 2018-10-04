@@ -176,6 +176,12 @@ fn test_bases() {
     test("100K -> hex °C", "Conversion to °C is not defined in base 16");
     test("now -> hex +00:00", "Conversion to 00:00 is not defined in base 16");
     test("256 -> base 16", "100 (dimensionless)");
+
+    test(
+        "123 -> base 37",
+        "Unsupported base 37, must be from 2 to 36",
+    );
+    test("123 -> base 0xf", "Expected decimal base, got hex");
 }
 
 #[test]
