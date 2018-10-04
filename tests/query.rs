@@ -493,3 +493,8 @@ fn test_to_timezone() {
         "2000-01-01 03:46:00 GMT",
     );
 }
+
+#[test]
+fn test_missing_base() {
+    test("3 -> base", "Expected decimal base, got eof");
+}
