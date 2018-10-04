@@ -476,3 +476,12 @@ fn test_escapes() {
     test("'ab\\'cd\\n\\t'", "1 ab'cd\n\t (ab'cd\n\t)");
     test("'x\\a'", "Expected term, got <Invalid escape sequence \\a>");
 }
+
+#[test]
+fn test_unicode_escape() {
+    test(
+        "\\u9999999",
+        "Expected term, got <Invalid unicode scalar: 9999999>",
+    );
+    test("0\\u2103", "273.15 kelvin (temperature)");
+}
