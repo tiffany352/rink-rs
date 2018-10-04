@@ -81,6 +81,7 @@ pub enum Query {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum DatePattern {
     Literal(String),
     Match(String),

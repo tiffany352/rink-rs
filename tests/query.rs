@@ -415,7 +415,7 @@ fn test_radix() {
 fn test_comments() {
     test("1 // *3", "1 (dimensionless)");
     test("1 + /*2*/ 3", "4 (dimensionless)");
-    test("1 + /*2", "Expected `*/`, got EOF");
+    test("1 + /*2", "Expected term, got <Expected `*/`, got EOF>");
 }
 
 #[test]
@@ -426,4 +426,24 @@ fn test_leading_dot() {
 #[test]
 fn test_underscores_in_number() {
     test("123_456\u{2009}789", "123456789 (dimensionless)");
+}
+
+#[test]
+fn test_date_input() {
+    let input = "#2018-10-04T09:13:25   +2:00#";
+    let expected = "2018-10-04 11:13:25 +02:00";
+
+    let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
+    let expr = text_query::parse_query(&mut iter);
+    CONTEXT.with(|ctx| {
+        let res = ctx.eval_outer(&expr);
+        let res = match res {
+            Ok(v) => v.to_string(),
+            Err(v) => v.to_string(),
+        };
+        assert!(
+            res.starts_with(expected),
+            format!("\n'{}' !=\n'{}'", res, expected)
+        );
+    });
 }

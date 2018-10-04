@@ -274,62 +274,63 @@ impl GenericDateTime {
     }
 }
 
+fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (String, usize)> {
+    let mut parsed = Parsed::new();
+    let mut tz = None;
+    let mut iter = date.iter().cloned().peekable();
+    let res = parse_date(&mut parsed, &mut tz, &mut iter, pat);
+    let count = iter.count();
+    let res = if count > 0 && res.is_ok() {
+        Err(format!("Expected eof, got {}",
+                    date[date.len()-count..].iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>().join("")))
+    } else {
+        res
+    };
+    try!(res.map_err(|e| (e, count)));
+    let time = parsed.to_naive_time();
+    let date = parsed.to_naive_date();
+    if let Some(tz) = tz {
+        match (time, date) {
+            (Ok(time), Ok(date)) =>
+                tz.from_local_datetime(&date.and_time(time)).earliest().ok_or_else(|| (format!(
+                    "Datetime does not represent a valid moment in time"
+                ), count)).map(GenericDateTime::Timezone),
+            (Ok(time), Err(_)) =>
+                Ok(UTC::now().with_timezone(&tz).date().and_time(time).unwrap()).map(
+                    GenericDateTime::Timezone),
+            (Err(_), Ok(date)) =>
+                tz.from_local_date(&date).earliest().map(|x| x.and_hms(0, 0, 0)).ok_or_else(|| (format!(
+                    "Datetime does not represent a valid moment in time"
+                ), count)).map(GenericDateTime::Timezone),
+            _ => Err((format!("Failed to construct a useful datetime"), count))
+        }
+    } else {
+        let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
+        match (time, date) {
+            (Ok(time), Ok(date)) =>
+                Ok(GenericDateTime::Fixed(DateTime::<FixedOffset>::from_utc(
+                    date.and_time(time), offset
+                ))),
+            (Ok(time), Err(_)) =>
+                Ok(GenericDateTime::Fixed(UTC::now().with_timezone(
+                    &offset
+                ).date().and_time(time).unwrap())),
+            (Err(_), Ok(date)) =>
+                Ok(GenericDateTime::Fixed(Date::<FixedOffset>::from_utc(
+                    date, offset
+                ).and_hms(0, 0, 0))),
+            _ => Err((format!("Failed to construct a useful datetime"), count))
+        }
+    }
+}
+
 pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTime, String> {
     let mut best = None;
     for pat in &context.datepatterns {
         //println!("Tring {:?} against {}", date, show_datepattern(pat));
-        let attempt = || -> Result<GenericDateTime, (String, usize)> {
-            let mut parsed = Parsed::new();
-            let mut tz = None;
-            let mut iter = date.iter().cloned().peekable();
-            let res = parse_date(&mut parsed, &mut tz, &mut iter, &pat[..]);
-            let count = iter.count();
-            let res = if count > 0 && res.is_ok() {
-                Err(format!("Expected eof, got {}",
-                            date[date.len()-count..].iter()
-                            .map(ToString::to_string)
-                            .collect::<Vec<_>>().join("")))
-            } else {
-                res
-            };
-            try!(res.map_err(|e| (e, count)));
-            let time = parsed.to_naive_time();
-            let date = parsed.to_naive_date();
-            if let Some(tz) = tz {
-                match (time, date) {
-                    (Ok(time), Ok(date)) =>
-                        tz.from_local_datetime(&date.and_time(time)).earliest().ok_or_else(|| (format!(
-                            "Datetime does not represent a valid moment in time"
-                        ), count)).map(GenericDateTime::Timezone),
-                    (Ok(time), Err(_)) =>
-                        Ok(UTC::now().with_timezone(&tz).date().and_time(time).unwrap()).map(
-                            GenericDateTime::Timezone),
-                    (Err(_), Ok(date)) =>
-                        tz.from_local_date(&date).earliest().map(|x| x.and_hms(0, 0, 0)).ok_or_else(|| (format!(
-                            "Datetime does not represent a valid moment in time"
-                        ), count)).map(GenericDateTime::Timezone),
-                    _ => Err((format!("Failed to construct a useful datetime"), count))
-                }
-            } else {
-                let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
-                match (time, date) {
-                    (Ok(time), Ok(date)) =>
-                        Ok(GenericDateTime::Fixed(DateTime::<FixedOffset>::from_utc(
-                            date.and_time(time), offset
-                        ))),
-                    (Ok(time), Err(_)) =>
-                        Ok(GenericDateTime::Fixed(UTC::now().with_timezone(
-                            &offset
-                        ).date().and_time(time).unwrap())),
-                    (Err(_), Ok(date)) =>
-                        Ok(GenericDateTime::Fixed(Date::<FixedOffset>::from_utc(
-                            date, offset
-                        ).and_hms(0, 0, 0))),
-                    _ => Err((format!("Failed to construct a useful datetime"), count))
-                }
-            }
-        };
-        match attempt() {
+        match attempt(date, pat) {
             Ok(datetime) => return Ok(datetime),
             Err((e, c)) => {
                 //println!("{}", e);
