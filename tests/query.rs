@@ -431,22 +431,10 @@ fn test_underscores_in_number() {
 
 #[test]
 fn test_date_input() {
-    let input = "#2018-10-04T09:13:25.123   +2:00#";
-    let expected = "2018-10-04 11:13:25.123 +02:00";
-
-    let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
-    let expr = text_query::parse_query(&mut iter);
-    CONTEXT.with(|ctx| {
-        let res = ctx.eval_outer(&expr);
-        let res = match res {
-            Ok(v) => v.to_string(),
-            Err(v) => v.to_string(),
-        };
-        assert!(
-            res.starts_with(expected),
-            format!("\n'{}' !=\n'{}'", res, expected)
-        );
-    });
+    test_starts_with(
+        "#2018-10-04T09:13:25.123   +2:00#",
+        "2018-10-04 11:13:25.123 +02:00",
+    );
 }
 
 #[test]
@@ -491,4 +479,17 @@ fn test_digits() {
 fn test_escapes() {
     test("'ab\\'cd\\n\\t'", "1 ab'cd\n\t (ab'cd\n\t)");
     test("'x\\a'", "Expected term, got <Invalid escape sequence \\a>");
+}
+
+#[test]
+fn test_missing_bracket() {
+    test("(1+2", "Expected `)`, got eof");
+}
+
+#[test]
+fn test_to_timezone() {
+    test_starts_with(
+        "#2000-01-01 12:46 Asia/Tokyo# -> GMT",
+        "2000-01-01 03:46:00 GMT",
+    );
 }
