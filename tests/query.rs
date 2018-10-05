@@ -543,3 +543,15 @@ fn test_conversion_to_list() {
          Suggestions: divide left side by linear_density, multiply right side by linear_density",
     );
 }
+
+#[test]
+fn test_formula() {
+    test(
+        "methane=CH4",
+        "CH4: molar_mass = 0.01604276 kilogram / mole",
+    );
+    test(
+        "NaCl",
+        "NaCl: molar_mass = approx. 0.05844246 kilogram / mole",
+    );
+}
