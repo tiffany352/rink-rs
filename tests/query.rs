@@ -498,3 +498,8 @@ fn test_to_timezone() {
 fn test_missing_base() {
     test("3 -> base", "Expected decimal base, got eof");
 }
+
+#[test]
+fn test_date_difference() {
+    test_starts_with("now - (now - 3days)", "2 day, 23 hour, 59 minute, 59.99");
+}
