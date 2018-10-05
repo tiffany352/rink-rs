@@ -509,3 +509,11 @@ fn test_date_time_formats() {
     test_starts_with("#1970-01-01 10:30 GMT#", "1970-01-01 10:30:00 GMT");
     test_starts_with("(now-#10:30#) - (now-#11:30#)", "59 minute, 59.99");
 }
+
+#[test]
+fn test_no_calls_on_rhs() {
+    test(
+        "1 -> sin(2)",
+        "Calls are not allowed in the right hand side of conversions",
+    );
+}
