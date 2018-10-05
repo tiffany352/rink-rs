@@ -526,3 +526,20 @@ fn test_no_calls_on_rhs() {
         "Calls are not allowed in the right hand side of conversions",
     );
 }
+
+#[test]
+fn test_conversion_to_list() {
+    test(
+        "ly -> teram,Gm,Mm,km,m",
+        "9.46 kiloteram, 730 gigameter, 472 megameter, 580 kilometer, 800 meter (length)",
+    );
+    test(
+        "1 -> m, hour",
+        "Units in unit list must conform: <1 meter (length)> ; <3.6 kilosecond (time)>",
+    );
+    test(
+        "1g -> m, cm",
+        "Conformance error: 1 gram (mass) != 1 meter (length)\n\
+         Suggestions: divide left side by linear_density, multiply right side by linear_density",
+    );
+}
