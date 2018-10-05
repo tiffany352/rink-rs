@@ -563,4 +563,9 @@ fn test_formula() {
         "NaCl",
         "NaCl: molar_mass = approx. 0.05844246 kilogram / mole",
     );
+    test(
+        "C8H10N4O2",
+        "C8H10N4O2: molar_mass = approx. 0.1941931 kilogram / mole",
+    );
+    test("C60", "C60: molar_mass = 0.72066 kilogram / mole");
 }
