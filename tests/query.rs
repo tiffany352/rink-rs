@@ -550,5 +550,17 @@ fn test_try_decode_fail() {
         "#abc#",
         "Most likely pattern `--monthnum-day[ hour24:min[:sec][ offset]]` failed: \
          Expected `-`, got `abc`",
+         )
+}
+
+#[test]
+fn test_formula() {
+    test(
+        "methane=CH4",
+        "CH4: molar_mass = 0.01604276 kilogram / mole",
+    );
+    test(
+        "NaCl",
+        "NaCl: molar_mass = approx. 0.05844246 kilogram / mole",
     );
 }
