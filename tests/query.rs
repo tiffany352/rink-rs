@@ -512,3 +512,9 @@ fn test_missing_base() {
 fn test_date_difference() {
     test_starts_with("now - (now - 3days)", "2 day, 23 hour, 59 minute, 59.99");
 }
+
+#[test]
+fn test_date_time_formats() {
+    test_starts_with("#1970-01-01 10:30 GMT#", "1970-01-01 10:30:00 GMT");
+    test_starts_with("(now-#10:30#) - (now-#11:30#)", "59 minute, 59.99");
+}
