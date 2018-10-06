@@ -534,3 +534,12 @@ fn test_conversion_to_list() {
          Suggestions: divide left side by linear_density, multiply right side by linear_density",
     );
 }
+
+#[test]
+fn test_definition_with_doc() {
+    test(
+        "mass",
+        "Definition: kilogram = base unit of mass. Equal to the mass of the \
+         international prototype of the kilogram. 3rd CGPM (1901, CR, 70).",
+    );
+}
