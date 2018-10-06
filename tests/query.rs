@@ -560,3 +560,12 @@ fn test_formula() {
     );
     test("C60", "C60: molar_mass = 0.72066 kilogram / mole");
 }
+
+#[test]
+fn test_definition() {
+    test(
+        "mass",
+        "Definition: kilogram = base unit of mass. Equal to the mass of the \
+         international prototype of the kilogram. 3rd CGPM (1901, CR, 70).",
+    );
+}
