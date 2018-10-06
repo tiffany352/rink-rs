@@ -562,7 +562,7 @@ fn test_formula() {
 }
 
 #[test]
-fn test_definition() {
+fn test_definition_with_doc() {
     test(
         "mass",
         "Definition: kilogram = base unit of mass. Equal to the mass of the \
