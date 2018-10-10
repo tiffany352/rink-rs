@@ -659,5 +659,32 @@ mod tests {
         let (res, parsed) = parse(date, "weekday");
         assert!(res.is_ok());
         assert_eq!(parsed.weekday, Some(Weekday::Sat));
+
+        let date = vec![DateToken::Literal("sun".into())];
+        assert!(parse(date, "weekday").0.is_ok());
+
+        let date = vec![DateToken::Literal("snu".into())];
+        assert_eq!(parse(date, "weekday").0, Err("Unknown weekday: snu".into()));
+    }
+
+    #[test]
+    fn test_monthname() {
+        for (i, &s) in [
+            "jan", "feb", "mar", "apr", "may", "june", "jul", "AUGUST", "SEp", "Oct", "novemBer",
+            "dec",
+        ]
+            .into_iter()
+            .enumerate()
+        {
+            let date = vec![DateToken::Literal(s.into())];
+            let (res, parsed) = parse(date, "monthname");
+            assert!(res.is_ok());
+            assert_eq!(parsed.month, Some(i as u32 + 1));
+        }
+
+        let date = vec![DateToken::Literal("foobar".into())];
+        let (res, parsed) = parse(date, "monthname");
+        assert_eq!(res, Err("Unknown month name: foobar".into()));
+        assert_eq!(parsed.month, None);
     }
 }
