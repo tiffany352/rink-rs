@@ -703,4 +703,36 @@ mod tests {
         assert!(parse("-:['abc'").is_err());
         assert!(parse("*").is_err());
     }
+
+    #[test]
+    fn test_attempt() {
+        use self::DateToken::*;
+        fn n(x: &str) -> DateToken {
+            Number(x.into(), None)
+        }
+
+        macro_rules! check_attempt {
+            ($date:expr, $pat:expr) => {{
+                let pat = parse_datepattern(&mut $pat.chars().peekable()).unwrap();
+                attempt($date, pat.as_ref())
+            }};
+        }
+
+        let tz = Literal("Europe/London".into());
+
+        let date = &[n("23"), Space, n("05"), Space, tz.clone()];
+        let res = check_attempt!(date, "hour24 min offset");
+        assert!(res.is_ok(), "{:?}", res);
+
+        let date = &[n("23"), Space, tz.clone()];
+        let res = check_attempt!(date, "hour24 offset");
+        assert_eq!(
+            res,
+            Err(("Failed to construct a useful datetime".into(), 0))
+        );
+
+        let date = &[n("2018"), Space, n("01"), Space, n("01"), Space, tz.clone()];
+        let res = check_attempt!(date, "year monthnum day offset");
+        assert!(res.is_ok(), "{:?}", res);
+    }
 }
