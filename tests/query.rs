@@ -569,3 +569,12 @@ fn test_definition_with_doc() {
          international prototype of the kilogram. 3rd CGPM (1901, CR, 70).",
     );
 }
+
+#[test]
+fn test_try_decode_fail() {
+    test(
+        "#abc#",
+        "Most likely pattern `--monthnum-day[ hour24:min[:sec][ offset]]` failed: \
+         Expected `-`, got `abc`",
+    );
+}
