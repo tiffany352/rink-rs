@@ -687,4 +687,20 @@ mod tests {
         assert_eq!(res, Err("Unknown month name: foobar".into()));
         assert_eq!(parsed.month, None);
     }
+
+    #[test]
+    fn test_parse_datepattern() {
+        use self::DatePattern::*;
+
+        fn parse(s: &str) -> Result<Vec<DatePattern>, String> {
+            parse_datepattern(&mut s.chars().peekable())
+        }
+
+        assert_eq!(
+            parse("-:['abc']"),
+            Ok(vec![Dash, Colon, Optional(vec![Literal("abc".into())])])
+        );
+        assert!(parse("-:['abc'").is_err());
+        assert!(parse("*").is_err());
+    }
 }
