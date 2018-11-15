@@ -358,7 +358,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                                 let mut frac = String::new();
                                 self.0.next();
                                 while let Some(c) = self.0.peek().cloned() {
-                                    if x.is_digit(10) {
+                                    if c.is_digit(10) {
                                         self.0.next();
                                         frac.push(c);
                                     } else {
