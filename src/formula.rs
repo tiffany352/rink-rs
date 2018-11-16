@@ -56,6 +56,9 @@ impl<'a> Iterator for TokenIterator<'a> {
     }
 }
 
+/**
+ * Compute the molar mass of a compound given its chemical formula.
+ */
 pub fn substance_from_formula(formula: &str,
                               symbols: &BTreeMap<String, String>,
                               substances: &BTreeMap<String, Substance>) -> Option<Substance> {

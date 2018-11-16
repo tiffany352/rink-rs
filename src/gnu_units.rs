@@ -545,3 +545,83 @@ pub fn tokens(iter: &mut Iter) -> Vec<Token> {
     }
     out
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ast::Expr;
+
+    fn do_parse(s: &str) -> Expr {
+        let mut iter = TokenIterator::new(s).peekable();
+        parse_term(&mut iter)
+    }
+
+    macro_rules! expect {
+        ($expr:expr, $pattern:path, $expected:expr) => {
+            match do_parse($expr) {
+                $pattern(s) => assert_eq!(s, $expected),
+                x => panic!("{}", x),
+            }
+        };
+    }
+
+    #[test]
+    fn test_parse_term_plus() {
+        let expr = do_parse("+1");
+
+        if let Expr::Plus(x) = expr {
+            if let Expr::Const(x) = *x {
+                if x != 1.into() {
+                    panic!("number != 1");
+                }
+            } else {
+                panic!("argument of x is not Expr::Const");
+            }
+        } else {
+            panic!("missing plus");
+        }
+    }
+
+    #[test]
+    fn test_missing_bracket() {
+        match do_parse("(") {
+            Expr::Error(ref s) => assert_eq!(s, "Expected ), got Eof"),
+            x => panic!("Wrong result: {}", x),
+        }
+    }
+
+    #[test]
+    fn test_escapes() {
+        expect!(
+            "\\\r",
+            Expr::Error,
+            "Expected term, got Error(\"Expected LF or CRLF line endings\")"
+        );
+        expect!("\\\r\n1", Expr::Const, 1.into());
+
+        expect!(
+            "\\a",
+            Expr::Error,
+            "Expected term, got Error(\"Invalid escape: \\\\a\")"
+        );
+        expect!(
+            "\\",
+            Expr::Error,
+            "Expected term, got Error(\"Unexpected EOF\")"
+        );
+    }
+
+    #[test]
+    fn test_float_leading_dot() {
+        use gmp::mpq::Mpq;
+        use gmp::mpz::Mpz;
+        let num = Mpz::from(123);
+        let den = Mpz::from(1000);
+        expect!(".123", Expr::Const, Num::Mpq(Mpq::ratio(&num, &den)));
+    }
+
+    #[test]
+    fn test_escaped_quotes() {
+        expect!("\"ab\\\"\"", Expr::Unit, "ab\"")
+    }
+}

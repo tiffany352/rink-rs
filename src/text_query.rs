@@ -138,6 +138,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                         }
                         if let Some('*') = self.0.next() {
                             if let Some(&'/') = self.0.peek() {
+                                self.0.next();
                                 return Some(Token::Comment(lines))
                             }
                         }
@@ -357,7 +358,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                                 let mut frac = String::new();
                                 self.0.next();
                                 while let Some(c) = self.0.peek().cloned() {
-                                    if x.is_digit(10) {
+                                    if c.is_digit(10) {
                                         self.0.next();
                                         frac.push(c);
                                     } else {
@@ -563,7 +564,8 @@ fn parse_term(iter: &mut Iter) -> Expr {
         },
         Token::Percent => Expr::Unit("percent".to_owned()),
         Token::Date(toks) => Expr::Date(toks),
-        x => Expr::Error(format!("Expected term, got {}", describe(&x)))
+        Token::Comment(_) => parse_term(iter),
+        x => Expr::Error(format!("Expected term, got {}", describe(&x))),
     }
 }
 
