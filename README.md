@@ -1,5 +1,8 @@
 # Rink
 
+[![Build Status](https://travis-ci.org/tiffany352/rink-rs.svg?branch=master)](https://travis-ci.org/tiffany352/rink-rs)
+[![codecov](https://codecov.io/gh/tiffany352/rink-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/tiffany352/rink-rs)
+
 Rink is a unit-aware calculator. It can be used for physics and
 engineering calculations, as well as dimensionality analysis.
 
