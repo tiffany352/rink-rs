@@ -325,7 +325,13 @@ fn main() {
                     let stdin_handle = stdin();
                     main_noninteractive(stdin_handle.lock(), false);
                 },
-                _ => main_noninteractive(BufReader::new(File::open(name).unwrap()), false)
+                _ => {
+                    let file = File::open(&name).unwrap_or_else(|e| {
+                        eprintln!("Could not open input file '{}': {}", name, e);
+                        std::process::exit(1);
+                    });
+                    main_noninteractive(BufReader::new(file), false);
+                }
             };
         },
         // else call the interactive version
