@@ -278,8 +278,28 @@ fn main_interactive() {
     main_noninteractive(stdin.lock(), true);
 }
 
+fn usage() {
+    let name = env!("CARGO_PKG_NAME");
+    println!(
+        "{} {}\n{}\n{}\n\n\
+        USAGE:\n    {0} [input file]\n\n\
+        FLAGS:\n    -h, --help      Prints help information\n\n\
+        ARGS:\n    <input file>    Evaluate queries from this file",
+        name,
+        env!("CARGO_PKG_VERSION"),
+        env!("CARGO_PKG_AUTHORS"),
+        env!("CARGO_PKG_DESCRIPTION"),
+    );
+}
+
 fn main() {
     use std::env::args;
+
+    let help = args().any(|arg| arg == "-h" || arg == "--help");
+    if args().len() > 2 || help {
+        usage();
+        std::process::exit(if help { 0 } else { 1 });
+    }
 
     // Specify the file to parse commands from as a shell argument
     // i.e. "rink <file>"
