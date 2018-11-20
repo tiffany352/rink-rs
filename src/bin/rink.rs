@@ -279,26 +279,39 @@ fn main_interactive() {
 }
 
 fn usage() {
-    let name = env!("CARGO_PKG_NAME");
     println!(
         "{} {}\n{}\n{}\n\n\
         USAGE:\n    {0} [input file]\n\n\
-        FLAGS:\n    -h, --help      Prints help information\n\n\
+        FLAGS:\n    -h, --help      Prints help information\n    \
+        -V, --version   Prints version information\n\n\
         ARGS:\n    <input file>    Evaluate queries from this file",
-        name,
+        env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION"),
         env!("CARGO_PKG_AUTHORS"),
         env!("CARGO_PKG_DESCRIPTION"),
     );
 }
 
+fn version() {
+    println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+}
+
 fn main() {
     use std::env::args;
 
-    let help = args().any(|arg| arg == "-h" || arg == "--help");
-    if args().len() > 2 || help {
+    if args().any(|arg| arg == "-h" || arg == "--help") {
         usage();
-        std::process::exit(if help { 0 } else { 1 });
+        return;
+    }
+
+    if args().any(|arg| arg == "-V" || arg == "--version") {
+        version();
+        return;
+    }
+
+    if args().len() > 2 {
+        usage();
+        std::process::exit(1);
     }
 
     // Specify the file to parse commands from as a shell argument
