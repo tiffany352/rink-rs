@@ -23,6 +23,17 @@ impl Context {
             Category(Rc<String>),
         }
 
+        impl Name {
+            fn name(&self) -> String {
+                match &self {
+                    Name::Unit(ref name) |
+                    Name::Prefix(ref name) |
+                    Name::Quantity(ref name) |
+                    Name::Category(ref name) => (**name).clone(),
+                }
+            }
+        }
+
         struct Resolver {
             interned: BTreeSet<Rc<String>>,
             input: BTreeMap<Name, Rc<Def>>,
@@ -203,12 +214,7 @@ impl Context {
         reverse.insert("katal");
 
         for (name, def) in udefs {
-            let name = match name {
-                Name::Unit(name) => (*name).clone(),
-                Name::Prefix(name) => (*name).clone(),
-                Name::Quantity(name) => (*name).clone(),
-                Name::Category(name) => (*name).clone(),
-            };
+            let name = name.name();
             match *def {
                 Def::Dimension => {
                     self.dimensions.insert(Dim::new(&*name));
@@ -359,24 +365,14 @@ impl Context {
         }
 
         for (name, val) in resolver.docs {
-            let name = match name {
-                Name::Unit(name) => (*name).clone(),
-                Name::Prefix(name) => (*name).clone(),
-                Name::Quantity(name) => (*name).clone(),
-                Name::Category(name) => (*name).clone(),
-            };
+            let name = name.name();
             if self.docs.insert(name.clone(), val).is_some() {
                 println!("Doc conflict for {}", name);
             }
         }
 
         for (name, val) in resolver.categories {
-            let name = match name {
-                Name::Unit(name) => (*name).clone(),
-                Name::Prefix(name) => (*name).clone(),
-                Name::Quantity(name) => (*name).clone(),
-                Name::Category(name) => (*name).clone(),
-            };
+            let name = name.name();
             if self.categories.insert(name.clone(), val).is_some() {
                 println!("Category conflict for {}", name);
             }
