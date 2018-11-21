@@ -68,19 +68,8 @@ impl Context {
             }
             None
         }
-        if let Some(v) = inner(self, name) {
-            return Some(v)
-        }
-        for &(ref pre, ref value) in &self.prefixes {
-            if name.starts_with(pre) {
-                if let Some(v) = inner(self, &name[pre.len()..]) {
-                    return Some((&v * value).unwrap())
-                }
-            }
-        }
-        // after so that "ks" is kiloseconds
-        if name.ends_with('s') {
-            let name = &name[0..name.len()-1];
+
+        let outer = |name: &str| -> Option<Number> {
             if let Some(v) = inner(self, name) {
                 return Some(v)
             }
@@ -91,8 +80,21 @@ impl Context {
                     }
                 }
             }
+            None
+        };
+
+        let res = outer(name);
+        if res.is_some() {
+            return res;
         }
-        None
+
+        // after so that "ks" is kiloseconds
+        if name.ends_with('s') {
+            let name = &name[0..name.len()-1];
+            outer(name)
+        } else {
+            None
+        }
     }
 
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
@@ -118,24 +120,8 @@ impl Context {
             }
             None
         }
-        if let Some(v) = inner(self, name) {
-            return Some(v)
-        }
-        for &(ref pre, ref val) in &self.prefixes {
-            if name.starts_with(pre) {
-                if let Some(v) = inner(self, &name[pre.len()..]) {
-                    let mut pre = pre;
-                    for &(ref other, ref otherval) in &self.prefixes {
-                        if other.len() > pre.len() && val == otherval {
-                            pre = other;
-                        }
-                    }
-                    return Some(format!("{}{}", pre, v))
-                }
-            }
-        }
-        if name.ends_with('s') {
-            let name = &name[0..name.len()-1];
+
+        let outer = |name: &str| -> Option<String> {
             if let Some(v) = inner(self, name) {
                 return Some(v)
             }
@@ -152,8 +138,20 @@ impl Context {
                     }
                 }
             }
+            None
+        };
+
+        let res = outer(name);
+        if res.is_some() {
+            return res;
         }
-        None
+
+        if name.ends_with('s') {
+            let name = &name[0..name.len()-1];
+            outer(name)
+        } else {
+            None
+        }
     }
 
     /// Describes a value's unit, gives true if the unit is reciprocal
