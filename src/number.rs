@@ -246,12 +246,10 @@ impl NumberParts {
                     for (dim, &exp) in unit {
                         if exp < 0 {
                             frac.push((dim, exp));
+                        } else if exp == 1 {
+                            toks.push(dim.to_string())
                         } else {
-                            if exp == 1 {
-                                toks.push(dim.to_string())
-                            } else {
-                                toks.push(format!("{}^{}", dim, exp))
-                            }
+                            toks.push(format!("{}^{}", dim, exp))
                         }
                     }
                     if !frac.is_empty() {
