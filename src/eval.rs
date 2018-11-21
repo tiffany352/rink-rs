@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use number::{Number, Dim, NumberParts, pow};
 use num::{Num, Int};
 use date;
-use ast::{Degree, Expr, Query, Conversion, Digits};
+use ast::{Expr, Query, Conversion, Digits};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
 use value::{Value, Show};
@@ -38,30 +38,6 @@ impl Context {
                         right.show(self)
                     ))
                 })
-            }}
-        }
-
-        macro_rules! temperature {
-            ($left:ident, $name:expr, $base:expr, $scale:expr) => {{
-                let left = try!(self.eval(&**$left));
-                let left = match left {
-                    Value::Number(left) => left,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Expected number, got: <{}> °{}",
-                        left.show(self), stringify!($name)
-                    )))
-                };
-                if left.unit != BTreeMap::new() {
-                    Err(QueryError::Generic(format!(
-                        "Expected dimensionless, got: <{}>",
-                        left.show(self)
-                    )))
-                } else {
-                    let left = (&left * &self.lookup($scale).expect(
-                        &*format!("Missing {} unit", $scale))).unwrap();
-                    Ok(Value::Number((&left + &self.lookup($base)
-                                      .expect(&*format!("Missing {} constant", $base))).unwrap()))
-                }
             }}
         }
 
@@ -98,18 +74,29 @@ impl Context {
             Expr::Sub(ref left, ref right)  => operator!(left sub - right),
             Expr::Pow(ref left, ref right)  => operator!(left pow ^ right),
 
-            Expr::Suffix(Degree::Celsius, ref left) =>
-                temperature!(left, "C", "zerocelsius", "kelvin"),
-            Expr::Suffix(Degree::Fahrenheit, ref left) =>
-                temperature!(left, "F", "zerofahrenheit", "degrankine"),
-            Expr::Suffix(Degree::Reaumur, ref left) =>
-                temperature!(left, "Ré", "zerocelsius", "reaumur_absolute"),
-            Expr::Suffix(Degree::Romer, ref left) =>
-                temperature!(left, "Rø", "zeroromer", "romer_absolute"),
-            Expr::Suffix(Degree::Delisle, ref left) =>
-                temperature!(left, "De", "zerodelisle", "delisle_absolute"),
-            Expr::Suffix(Degree::Newton, ref left) =>
-                temperature!(left, "N", "zerocelsius", "newton_absolute"),
+            Expr::Suffix(ref deg, ref left) => {
+                let (name, base, scale) = deg.name_base_scale();
+
+                let left = try!(self.eval(&**left));
+                let left = match left {
+                    Value::Number(left) => left,
+                    _ => return Err(QueryError::Generic(format!(
+                        "Expected number, got: <{}> °{}",
+                        left.show(self), name
+                    )))
+                };
+                if left.unit != BTreeMap::new() {
+                    Err(QueryError::Generic(format!(
+                        "Expected dimensionless, got: <{}>",
+                        left.show(self)
+                    )))
+                } else {
+                    let left = (&left * &self.lookup(scale).expect(
+                        &*format!("Missing {} unit", scale))).unwrap();
+                    Ok(Value::Number((&left + &self.lookup(base)
+                                      .expect(&*format!("Missing {} constant", base))).unwrap()))
+                }
+            }
 
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
                 a.and_then(|a| {
@@ -815,17 +802,9 @@ impl Context {
                 Ok(QueryReply::Date(DateReply::new(self, top)))
             },
             Query::Convert(ref top, Conversion::Degree(ref deg), None, digits) => {
+                let (name, base, scale) = deg.name_base_scale();
+
                 let top = try!(self.eval(top));
-
-                let (name, base, scale) = match *deg {
-                    Degree::Celsius => ("C", "zerocelsius", "kelvin"),
-                    Degree::Fahrenheit => ("F", "zerofahrenheit", "degrankine"),
-                    Degree::Reaumur => ("Ré", "zerocelsius", "reaumur_absolute"),
-                    Degree::Romer => ("Rø", "zeroromer", "romer_absolute"),
-                    Degree::Delisle => ("De", "zerodelisle", "delisle_absolute"),
-                    Degree::Newton => ("N", "zerocelsius", "newton_absolute"),
-                };
-
                 let top = match top {
                     Value::Number(ref num) => num,
                     _ => return Err(QueryError::Generic(format!(

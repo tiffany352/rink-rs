@@ -160,6 +160,19 @@ impl fmt::Display for Degree {
     }
 }
 
+impl Degree {
+    pub fn name_base_scale(&self) -> (&str, &str, &str) {
+        match *self {
+            Degree::Celsius => ("C", "zerocelsius", "kelvin"),
+            Degree::Fahrenheit => ("F", "zerofahrenheit", "degrankine"),
+            Degree::Reaumur => ("Ré", "zerocelsius", "reaumur_absolute"),
+            Degree::Romer => ("Rø", "zeroromer", "romer_absolute"),
+            Degree::Delisle => ("De", "zerodelisle", "delisle_absolute"),
+            Degree::Newton => ("N", "zerocelsius", "newton_absolute"),
+        }
+    }
+}
+
 impl fmt::Display for Expr {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         #[derive(PartialOrd, Ord, PartialEq, Eq)]
