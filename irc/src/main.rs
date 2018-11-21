@@ -50,7 +50,7 @@ fn main() {
                     let mut i = 0;
                     let reply = eval(line);
                     for line in reply.lines() {
-                        if line.trim().len() > 0 {
+                        if !line.trim().is_empty() {
                             server.send(Command::NOTICE(reply_to.to_owned(), line.to_owned())).unwrap();
                             i += 1;
                         }

@@ -154,7 +154,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if hex.len() == 0 {
+                    if hex.is_empty() {
                         return Some(Token::Error(
                             "Malformed hexadecimal literal: No digits after 0x".to_owned()))
                     }
@@ -175,7 +175,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if oct.len() == 0 {
+                    if oct.is_empty() {
                         return Some(Token::Error(
                             "Malformed octal literal: No digits after 0o".to_owned()))
                     }
@@ -196,7 +196,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if bin.len() == 0 {
+                    if bin.is_empty() {
                         return Some(Token::Error(
                             "Malformed binary literal: No digits after 0b".to_owned()))
                     }
@@ -237,7 +237,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if buf.len() == 0 {
+                    if buf.is_empty() {
                         return Some(Token::Error(
                             "Malformed number literal: No digits after decimal point".to_owned()))
                     }
@@ -270,7 +270,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if buf.len() == 0 {
+                    if buf.is_empty() {
                         return Some(Token::Error(
                             "Malformed number literal: No digits after exponent".to_owned()))
                     }

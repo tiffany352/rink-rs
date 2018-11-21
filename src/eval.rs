@@ -204,7 +204,7 @@ impl Context {
                         }))
                     }),
                     "log" => func!(fn log(num: Number, base: Number) {
-                        if base.unit.len() > 0 {
+                        if !base.unit.is_empty() {
                             Err("Base must be dimensionless".to_string())
                         } else {
                             Ok(Value::Number(Number {
@@ -937,7 +937,7 @@ impl Context {
                 let mut cur_cat = None;
                 for (category, name) in out {
                     if category != cur_cat {
-                        if cur.len() > 0 {
+                        if !cur.is_empty() {
                             let cat_name = cur_cat.and_then(|x| self.category_names.get(x));
                             categories.push(UnitsInCategory {
                                 category: cat_name.map(ToOwned::to_owned),
@@ -948,7 +948,7 @@ impl Context {
                     }
                     cur.push(name.clone());
                 }
-                if cur.len() > 0 {
+                if !cur.is_empty() {
                     let cat_name = cur_cat.and_then(|x| self.category_names.get(x));
                     categories.push(UnitsInCategory {
                         category: cat_name.map(ToOwned::to_owned),

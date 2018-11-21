@@ -235,7 +235,7 @@ impl NumberParts {
                     (None, None) => continue,
                 },
                 'u' => if let Some(unit) = self.raw_unit.as_ref() {
-                    if unit.len() == 0 { continue }
+                    if unit.is_empty() { continue }
                     let mut frac = vec![];
                     let mut toks = vec![];
 
@@ -254,7 +254,7 @@ impl NumberParts {
                             }
                         }
                     }
-                    if frac.len() > 0 {
+                    if !frac.is_empty() {
                         toks.push("/".to_string());
                         if let Some(d) = self.divfactor.as_ref() {
                             toks.push(d.to_string());
@@ -270,7 +270,7 @@ impl NumberParts {
                     }
                     write!(out, "{}", toks.join(" ")).unwrap();
                 } else if let Some(unit) = self.unit.as_ref() {
-                    if unit.len() == 0 { continue }
+                    if unit.is_empty() { continue }
                     if let Some(f) = self.factor.as_ref() {
                         write!(out, "* {} ", f).unwrap();
                     }
@@ -279,7 +279,7 @@ impl NumberParts {
                     }
                     write!(out, "{}", unit).unwrap();
                 } else if let Some(dim) = self.dimensions.as_ref() {
-                    if dim.len() == 0 { continue }
+                    if dim.is_empty() { continue }
                     if let Some(f) = self.factor.as_ref() {
                         write!(out, "* {} ", f).unwrap();
                     }
@@ -301,19 +301,19 @@ impl NumberParts {
                     continue
                 },
                 'd' => if let Some(dim) = self.dimensions.as_ref() {
-                    if self.unit.is_none() || dim.len() == 0 { continue }
+                    if self.unit.is_none() || dim.is_empty() { continue }
                     write!(out, "{}", dim).unwrap();
                 } else {
                     continue
                 },
                 'D' => if let Some(dim) = self.dimensions.as_ref() {
-                    if dim.len() == 0 { continue }
+                    if dim.is_empty() { continue }
                     write!(out, "{}", dim).unwrap();
                 } else {
                     continue
                 },
                 'p' => match (self.quantity.as_ref(), self.dimensions.as_ref().and_then(|x| {
-                    if self.unit.is_some() && x.len() > 0 {
+                    if self.unit.is_some() && !x.is_empty() {
                         Some(x)
                     } else {
                         None

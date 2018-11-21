@@ -134,7 +134,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if buf.len() > 0 {
+                    if !buf.is_empty() {
                         frac = Some(buf)
                     }
                 }
@@ -159,7 +159,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if buf.len() > 0 {
+                    if !buf.is_empty() {
                         exp = Some(buf)
                     }
                 }

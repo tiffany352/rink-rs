@@ -66,7 +66,7 @@ fn root(rink: &Rink, req: &mut Request) -> IronResult<Response> {
         _ => (),
     };
 
-    if data.len() == 0 {
+    if data.is_empty() {
         data.insert("main-page".to_owned(), true.to_json());
     }
 
