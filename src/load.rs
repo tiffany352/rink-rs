@@ -238,7 +238,7 @@ impl Context {
                         self.units.insert(name.clone(), v);
                     },
                     Ok(Value::Substance(sub)) => {
-                        let sub = if sub.properties.name.contains("+") {
+                        let sub = if sub.properties.name.contains('+') {
                             sub.rename(name.clone())
                         } else {
                             sub
@@ -350,7 +350,7 @@ impl Context {
                                     properties: res,
                                 }),
                             });
-                            if let &Some(ref symbol) = symbol {
+                            if let Some(ref symbol) = symbol {
                                 self.substance_symbols.insert(symbol.clone(), name.clone());
                             }
                         },
