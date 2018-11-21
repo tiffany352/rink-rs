@@ -8,7 +8,7 @@ use num::Num;
 use chrono_tz::Tz;
 
 #[derive(Debug, Clone)]
-pub enum SuffixOp {
+pub enum Degree {
     Celsius,
     Fahrenheit,
     Reaumur,
@@ -42,7 +42,7 @@ pub enum Expr {
     Neg(Box<Expr>),
     Plus(Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
-    Suffix(SuffixOp, Box<Expr>),
+    Suffix(Degree, Box<Expr>),
     Of(String, Box<Expr>),
     Call(String, Vec<Expr>),
     Error(String),
@@ -52,12 +52,7 @@ pub enum Expr {
 pub enum Conversion {
     None,
     Expr(Expr),
-    DegC,
-    DegF,
-    DegRe,
-    DegRo,
-    DegDe,
-    DegN,
+    Degree(Degree),
     List(Vec<String>),
     Offset(i64),
     Timezone(Tz),
@@ -135,12 +130,7 @@ impl fmt::Display for Conversion {
         match *self {
             Conversion::None => write!(fmt, "nothing"),
             Conversion::Expr(ref expr) => write!(fmt, "{}", expr),
-            Conversion::DegC => write!(fmt, "°C"),
-            Conversion::DegF => write!(fmt, "°F"),
-            Conversion::DegRe => write!(fmt, "°Ré"),
-            Conversion::DegRo => write!(fmt, "°Rø"),
-            Conversion::DegDe => write!(fmt, "°De"),
-            Conversion::DegN => write!(fmt, "°N"),
+            Conversion::Degree(ref deg) => write!(fmt, "{}", deg),
             Conversion::List(ref list) => {
                 let list = list
                     .iter()
@@ -157,15 +147,15 @@ impl fmt::Display for Conversion {
     }
 }
 
-impl fmt::Display for SuffixOp {
+impl fmt::Display for Degree {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            SuffixOp::Celsius => write!(fmt, "°C"),
-            SuffixOp::Fahrenheit => write!(fmt, "°F"),
-            SuffixOp::Newton => write!(fmt, "°N"),
-            SuffixOp::Reaumur => write!(fmt, "°Ré"),
-            SuffixOp::Romer => write!(fmt, "°Rø"),
-            SuffixOp::Delisle => write!(fmt, "°De"),
+            Degree::Celsius => write!(fmt, "°C"),
+            Degree::Fahrenheit => write!(fmt, "°F"),
+            Degree::Newton => write!(fmt, "°N"),
+            Degree::Reaumur => write!(fmt, "°Ré"),
+            Degree::Romer => write!(fmt, "°Rø"),
+            Degree::Delisle => write!(fmt, "°De"),
         }
     }
 }

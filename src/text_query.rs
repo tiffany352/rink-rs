@@ -35,12 +35,7 @@ pub enum Token {
     Colon,
     Date(Vec<DateToken>),
     Comma,
-    DegC,
-    DegF,
-    DegRe,
-    DegRo,
-    DegDe,
-    DegN,
+    Degree(Degree),
     Percent,
     Error(String),
 }
@@ -69,12 +64,12 @@ fn describe(token: &Token) -> String {
         Token::Colon => "`:`".to_owned(),
         Token::Date(_) => "date literal".to_owned(),
         Token::Comma => "`,`".to_owned(),
-        Token::DegC => "`°C`".to_owned(),
-        Token::DegF => "`°F`".to_owned(),
-        Token::DegRe => "`°Ré`".to_owned(),
-        Token::DegRo => "`°Rø`".to_owned(),
-        Token::DegDe => "`°De`".to_owned(),
-        Token::DegN => "`°N`".to_owned(),
+        Token::Degree(Degree::Celsius) => "`°C`".to_owned(),
+        Token::Degree(Degree::Fahrenheit) => "`°F`".to_owned(),
+        Token::Degree(Degree::Reaumur) => "`°Ré`".to_owned(),
+        Token::Degree(Degree::Romer) => "`°Rø`".to_owned(),
+        Token::Degree(Degree::Delisle) => "`°De`".to_owned(),
+        Token::Degree(Degree::Newton) => "`°N`".to_owned(),
         Token::Percent => "%".to_owned(),
         Token::Error(ref e) => format!("<{}>", e)
     }
@@ -420,12 +415,12 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 }
                 match &*buf {
-                    "degC" | "°C" | "celsius" | "℃" => Token::DegC,
-                    "degF" | "°F" | "fahrenheit" | "℉" => Token::DegF,
-                    "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => Token::DegRe,
-                    "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::DegRo,
-                    "degDe" | "°De" | "delisle" => Token::DegDe,
-                    "degN" | "°N" | "degnewton" => Token::DegN,
+                    "degC" | "°C" | "celsius" | "℃" => Token::Degree(Degree::Celsius),
+                    "degF" | "°F" | "fahrenheit" | "℉" => Token::Degree(Degree::Fahrenheit),
+                    "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => Token::Degree(Degree::Reaumur),
+                    "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::Degree(Degree::Romer),
+                    "degDe" | "°De" | "delisle" => Token::Degree(Degree::Delisle),
+                    "degN" | "°N" | "degnewton" => Token::Degree(Degree::Newton),
                     "per" => Token::Slash,
                     "to" | "in" => Token::DashArrow,
                     _ => Token::Ident(buf)
@@ -613,29 +608,9 @@ fn parse_juxt(iter: &mut Iter) -> Expr {
         Token::Plus | Token::Minus | Token::DashArrow |
         Token::RPar | Token::Newline |
         Token::Comment(_) | Token::Eof => break,
-        Token::DegC => {
+        Token::Degree(deg) => {
             iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Celsius, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegF => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Fahrenheit, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegRe => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Reaumur, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegRo => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Romer, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegDe => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Delisle, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegN => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Newton, Box::new(Expr::Mul(terms)))]
+            terms = vec![Expr::Suffix(deg, Box::new(Expr::Mul(terms)))]
         },
         _ => terms.push(parse_frac(iter))
     }}
@@ -836,12 +811,7 @@ pub fn parse_query(iter: &mut Iter) -> Query {
             };
             let right = match iter.peek().cloned().unwrap() {
                 Token::Eof => Conversion::None,
-                Token::DegC => Conversion::DegC,
-                Token::DegF => Conversion::DegF,
-                Token::DegRe => Conversion::DegRe,
-                Token::DegRo => Conversion::DegRo,
-                Token::DegDe => Conversion::DegDe,
-                Token::DegN => Conversion::DegN,
+                Token::Degree(deg) => Conversion::Degree(deg),
                 Token::Plus | Token::Minus => {
                     let mut old = iter.clone();
                     if let Some(off) = parse_offset(iter) {

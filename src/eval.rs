@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use number::{Number, Dim, NumberParts, pow};
 use num::{Num, Int};
 use date;
-use ast::{Expr, SuffixOp, Query, Conversion, Digits};
+use ast::{Degree, Expr, Query, Conversion, Digits};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
 use value::{Value, Show};
@@ -98,17 +98,17 @@ impl Context {
             Expr::Sub(ref left, ref right)  => operator!(left sub - right),
             Expr::Pow(ref left, ref right)  => operator!(left pow ^ right),
 
-            Expr::Suffix(SuffixOp::Celsius, ref left) =>
+            Expr::Suffix(Degree::Celsius, ref left) =>
                 temperature!(left, "C", "zerocelsius", "kelvin"),
-            Expr::Suffix(SuffixOp::Fahrenheit, ref left) =>
+            Expr::Suffix(Degree::Fahrenheit, ref left) =>
                 temperature!(left, "F", "zerofahrenheit", "degrankine"),
-            Expr::Suffix(SuffixOp::Reaumur, ref left) =>
+            Expr::Suffix(Degree::Reaumur, ref left) =>
                 temperature!(left, "Ré", "zerocelsius", "reaumur_absolute"),
-            Expr::Suffix(SuffixOp::Romer, ref left) =>
+            Expr::Suffix(Degree::Romer, ref left) =>
                 temperature!(left, "Rø", "zeroromer", "romer_absolute"),
-            Expr::Suffix(SuffixOp::Delisle, ref left) =>
+            Expr::Suffix(Degree::Delisle, ref left) =>
                 temperature!(left, "De", "zerodelisle", "delisle_absolute"),
-            Expr::Suffix(SuffixOp::Newton, ref left) =>
+            Expr::Suffix(Degree::Newton, ref left) =>
                 temperature!(left, "N", "zerocelsius", "newton_absolute"),
 
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
@@ -814,12 +814,7 @@ impl Context {
                 let top = top.with_timezone(&tz);
                 Ok(QueryReply::Date(DateReply::new(self, top)))
             },
-            Query::Convert(ref top, ref which @ Conversion::DegC, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegF, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegN, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegRe, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegRo, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegDe, None, digits) => {
+            Query::Convert(ref top, Conversion::Degree(ref deg), None, digits) => {
                 let top = try!(self.eval(top));
                 macro_rules! temperature {
                     ($name:expr, $base:expr, $scale:expr) => {{
@@ -849,14 +844,13 @@ impl Context {
                     }}
                 }
 
-                match *which {
-                    Conversion::DegC => temperature!("C", "zerocelsius", "kelvin"),
-                    Conversion::DegF => temperature!("F", "zerofahrenheit", "degrankine"),
-                    Conversion::DegRe => temperature!("Ré", "zerocelsius", "reaumur_absolute"),
-                    Conversion::DegRo => temperature!("Rø", "zeroromer", "romer_absolute"),
-                    Conversion::DegDe => temperature!("De", "zerodelisle", "delisle_absolute"),
-                    Conversion::DegN => temperature!("N", "zerocelsius", "newton_absolute"),
-                    _ => panic!()
+                match *deg {
+                    Degree::Celsius => temperature!("C", "zerocelsius", "kelvin"),
+                    Degree::Fahrenheit => temperature!("F", "zerofahrenheit", "degrankine"),
+                    Degree::Reaumur => temperature!("Ré", "zerocelsius", "reaumur_absolute"),
+                    Degree::Romer => temperature!("Rø", "zeroromer", "romer_absolute"),
+                    Degree::Delisle => temperature!("De", "zerodelisle", "delisle_absolute"),
+                    Degree::Newton => temperature!("N", "zerocelsius", "newton_absolute"),
                 }
             },
             Query::Convert(ref _expr, ref which, Some(base), _digits) => {
