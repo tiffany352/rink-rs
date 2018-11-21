@@ -178,6 +178,25 @@ impl Context {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
+            let mut helper = |dim: &Dim, pow: i64, buf: &mut Vec<u8>| {
+                let mut map = Unit::new();
+                map.insert(dim.clone(), pow);
+                if let Some(name) = self.quantities.get(&map) {
+                    write!(buf, " {}", name).unwrap();
+                } else {
+                    let mut map = Unit::new();
+                    map.insert(dim.clone(), 1);
+                    if let Some(name) = self.quantities.get(&map) {
+                        write!(buf, " {}", name).unwrap();
+                    } else {
+                        write!(buf, " '{}'", dim).unwrap();
+                    }
+                    if pow != 1 {
+                        write!(buf, "^{}", pow).unwrap();
+                    }
+                }
+            };
+
             let mut frac = vec![];
             let mut found = false;
             for (dim, &pow) in &value.unit {
@@ -185,22 +204,7 @@ impl Context {
                     frac.push((dim, -pow));
                 } else {
                     found = true;
-                    let mut map = Unit::new();
-                    map.insert(dim.clone(), pow);
-                    if let Some(name) = self.quantities.get(&map) {
-                        write!(buf, " {}", name).unwrap();
-                    } else {
-                        let mut map = Unit::new();
-                        map.insert(dim.clone(), 1);
-                        if let Some(name) = self.quantities.get(&map) {
-                            write!(buf, " {}", name).unwrap();
-                        } else {
-                            write!(buf, " '{}'", dim).unwrap();
-                        }
-                        if pow != 1 {
-                            write!(buf, "^{}", pow).unwrap();
-                        }
-                    }
+                    helper(dim, pow, &mut buf);
                 }
             }
             if !frac.is_empty() {
@@ -215,16 +219,7 @@ impl Context {
                     if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();
                     } else {
-                        let mut map = Unit::new();
-                        map.insert(dim.clone(), 1);
-                        if let Some(name) = self.quantities.get(&map) {
-                            write!(buf, " {}", name).unwrap();
-                        } else {
-                            write!(buf, " '{}'", dim).unwrap();
-                        }
-                        if pow != 1 {
-                            write!(buf, "^{}", pow).unwrap();
-                        }
+                        helper(dim, pow, &mut buf);
                     }
                 }
             }
