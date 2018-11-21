@@ -28,7 +28,7 @@ impl Show for DateTime<FixedOffset> {
         if let Some(h) = context.humanize(*self) {
             format!("{} ({})", self, h)
         } else {
-            format!("{}", self)
+            self.to_string()
         }
     }
 }
@@ -38,7 +38,7 @@ impl Show for DateTime<Tz> {
         if let Some(h) = context.humanize(*self) {
             format!("{} ({})", self, h)
         } else {
-            format!("{}", self)
+            self.to_string()
         }
     }
 }
@@ -67,7 +67,7 @@ impl Value {
         match (self, exp) {
             (&Value::Number(ref left), &Value::Number(ref right)) =>
                 left.pow(right).map(Value::Number),
-            (_, _) => Err(format!("Operation is not defined"))
+            (_, _) => Err("Operation is not defined".to_string())
         }
     }
 }
@@ -79,7 +79,7 @@ impl<'a,'b> Add<&'b Value> for &'a Value {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) =>
                 (left + right)
-                .ok_or(format!("Addition of units with mismatched units is not meaningful"))
+                .ok_or("Addition of units with mismatched units is not meaningful".to_string())
                 .map(Value::Number),
             (&Value::DateTime(ref left), &Value::Number(ref right)) |
             (&Value::Number(ref right), &Value::DateTime(ref left)) =>
@@ -91,12 +91,12 @@ impl<'a,'b> Add<&'b Value> for &'a Value {
                         right
                     ))).map(GenericDateTime::Timezone),
                 }
-                .ok_or(format!("Implementation error: value is out of range representable by datetime"))
+                .ok_or("Implementation error: value is out of range representable by datetime".to_string())
                 .map(Value::DateTime),
             (&Value::Substance(ref left), &Value::Substance(ref right)) =>
                 left.add(right)
                 .map(Value::Substance),
-            (_, _) => Err(format!("Operation is not defined"))
+            (_, _) => Err("Operation is not defined".to_string())
         }
     }
 }
@@ -108,7 +108,7 @@ impl<'a,'b> Sub<&'b Value> for &'a Value {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) =>
                 (left - right)
-                .ok_or(format!("Subtraction of units with mismatched units is not meaningful"))
+                .ok_or("Subtraction of units with mismatched units is not meaningful".to_string())
                 .map(Value::Number),
             (&Value::DateTime(ref left), &Value::Number(ref right)) |
             (&Value::Number(ref right), &Value::DateTime(ref left)) =>
@@ -120,7 +120,7 @@ impl<'a,'b> Sub<&'b Value> for &'a Value {
                         right
                     ))).map(GenericDateTime::Timezone),
                 }
-                .ok_or(format!("Implementation error: value is out of range representable by datetime"))
+                .ok_or("Implementation error: value is out of range representable by datetime".to_string())
                 .map(Value::DateTime),
             (&Value::DateTime(ref left), &Value::DateTime(ref right)) =>
                 date::from_duration(&match (left, right) {
@@ -134,7 +134,7 @@ impl<'a,'b> Sub<&'b Value> for &'a Value {
                         *left - *right,
                 })
                 .map(Value::Number),
-            (_, _) => Err(format!("Operation is not defined"))
+            (_, _) => Err("Operation is not defined".to_string())
         }
     }
 }
@@ -145,8 +145,8 @@ impl<'a> Neg for &'a Value {
     fn neg(self) -> Self::Output {
         match *self {
             Value::Number(ref num) =>
-                (-num).ok_or(format!("Bug: Negation should not fail")).map(Value::Number),
-            _ => Err(format!("Operation is not defined"))
+                (-num).ok_or("Bug: Negation should not fail".to_string()).map(Value::Number),
+            _ => Err("Operation is not defined".to_string())
         }
     }
 }
@@ -158,12 +158,12 @@ impl<'a,'b> Mul<&'b Value> for &'a Value {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) =>
                 (left * right)
-                .ok_or(format!("Bug: Mul should not fail"))
+                .ok_or("Bug: Mul should not fail".to_string())
                 .map(Value::Number),
             (&Value::Number(ref co), &Value::Substance(ref sub)) |
             (&Value::Substance(ref sub), &Value::Number(ref co)) =>
                 (sub * co).map(Value::Substance),
-            (_, _) => Err(format!("Operation is not defined"))
+            (_, _) => Err("Operation is not defined".to_string())
         }
     }
 }
@@ -175,11 +175,11 @@ impl<'a,'b> Div<&'b Value> for &'a Value {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) =>
                 (left / right)
-                .ok_or(format!("Division by zero"))
+                .ok_or("Division by zero".to_string())
                 .map(Value::Number),
             (&Value::Substance(ref sub), &Value::Number(ref co)) =>
                 (sub / co).map(Value::Substance),
-            (_, _) => Err(format!("Operation is not defined"))
+            (_, _) => Err("Operation is not defined".to_string())
         }
     }
 }

@@ -59,13 +59,13 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         for k in &ctx.dimensions {
             try(&**k.0);
         }
-        for (k, _v) in &ctx.units {
+        for k in ctx.units.keys() {
             try(&**k);
         }
-        for (_u, k) in &ctx.quantities {
+        for k in ctx.quantities.values() {
             try(&**k);
         }
-        for (k, _sub) in &ctx.substances {
+        for k in ctx.substances.keys() {
             try(&**k);
         }
     }

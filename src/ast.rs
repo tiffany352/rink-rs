@@ -134,7 +134,7 @@ impl fmt::Display for Conversion {
             Conversion::List(ref list) => {
                 let list = list
                     .iter()
-                    .map(|x| format!("{}", x))
+                    .map(|x| x.to_string())
                     .collect::<Vec<_>>()
                     .join(", ");
                 write!(fmt, "{}", list)
@@ -322,7 +322,7 @@ mod test {
     use super::Expr::{self, *};
 
     fn check<T: ::std::fmt::Display>(e: T, expected: &str) {
-        assert_eq!(format!("{}", e), expected);
+        assert_eq!(e.to_string(), expected);
     }
 
     impl From<i64> for Expr {

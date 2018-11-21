@@ -351,9 +351,9 @@ impl Context {
                             );
                         }
                         Ok((prop.name.clone(), Property {
-                            input: input,
+                            input,
                             input_name: prop.input_name.clone(),
-                            output: output,
+                            output,
                             output_name: prop.output_name.clone(),
                             doc: prop.doc.clone(),
                         }))

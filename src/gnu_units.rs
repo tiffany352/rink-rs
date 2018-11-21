@@ -53,7 +53,7 @@ impl<'a> Iterator for TokenIterator<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        if self.0.peek() == None {
+        if self.0.peek().is_none() {
             return Some(Token::Eof)
         }
         let res = match self.0.next().unwrap() {
@@ -90,11 +90,11 @@ impl<'a> Iterator for TokenIterator<'a> {
             '\\' => match self.0.next() {
                 Some('\r') => match self.0.next() {
                     Some('\n') => self.next().unwrap(),
-                    _ => Token::Error(format!("Expected LF or CRLF line endings"))
+                    _ => Token::Error("Expected LF or CRLF line endings".to_string())
                 },
                 Some('\n') => self.next().unwrap(),
                 Some(x) => Token::Error(format!("Invalid escape: \\{}", x)),
-                None => Token::Error(format!("Unexpected EOF")),
+                None => Token::Error("Unexpected EOF".to_string()),
             },
             '#' => {
                 while let Some(c) = self.0.next() {
@@ -214,7 +214,7 @@ fn parse_term(iter: &mut Iter) -> Expr {
         Token::Number(num, frac, exp) =>
             ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
-            .unwrap_or_else(|e| Expr::Error(format!("{}", e))),
+            .unwrap_or_else(|e| Expr::Error(e.to_string())),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
         Token::Slash => Expr::Frac(
@@ -364,14 +364,14 @@ pub fn parse(iter: &mut Iter) -> Defs {
                     if name.ends_with("-") {
                         name.pop();
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::Prefix(expr)),
                             doc: doc.take(),
                             category: category.clone(),
                         });
                     } else {
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::SPrefix(expr)),
                             doc: doc.take(),
                             category: category.clone(),
@@ -409,7 +409,7 @@ pub fn parse(iter: &mut Iter) -> Defs {
                         iter.next();
                         let expr = parse_expr(iter);
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::Quantity(expr)),
                             doc: doc.take(),
                             category: category.clone(),
@@ -455,10 +455,10 @@ pub fn parse(iter: &mut Iter) -> Defs {
                                     let output = parse_div(iter);
                                     props.push(Property {
                                         output_name: name.clone(),
-                                        name: name,
+                                        name,
                                         input: Expr::Const(Num::one()),
-                                        input_name: input_name,
-                                        output: output,
+                                        input_name,
+                                        output,
                                         doc: prop_doc.take()
                                     });
                                     continue
@@ -486,16 +486,16 @@ pub fn parse(iter: &mut Iter) -> Defs {
                             };
                             let input = parse_mul(iter);
                             props.push(Property {
-                                name: name,
-                                input: input,
-                                input_name: input_name,
-                                output: output,
-                                output_name: output_name,
+                                name,
+                                input,
+                                input_name,
+                                output,
+                                output_name,
                                 doc: prop_doc.take()
                             });
                         }
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::Substance {
                                 symbol: None,
                                 properties: props
@@ -507,7 +507,7 @@ pub fn parse(iter: &mut Iter) -> Defs {
                         // derived
                         let expr = parse_expr(iter);
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::Unit(expr)),
                             doc: doc.take(),
                             category: category.clone(),

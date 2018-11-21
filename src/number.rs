@@ -240,29 +240,29 @@ impl NumberParts {
                     let mut toks = vec![];
 
                     if let Some(f) = self.factor.as_ref() {
-                        toks.push(format!("*"));
-                        toks.push(format!("{}", f));
+                        toks.push("*".to_string());
+                        toks.push(f.to_string());
                     }
                     for (dim, &exp) in unit {
                         if exp < 0 {
                             frac.push((dim, exp));
                         } else {
                             if exp == 1 {
-                                toks.push(format!("{}", dim))
+                                toks.push(dim.to_string())
                             } else {
                                 toks.push(format!("{}^{}", dim, exp))
                             }
                         }
                     }
                     if frac.len() > 0 {
-                        toks.push(format!("/"));
+                        toks.push("/".to_string());
                         if let Some(d) = self.divfactor.as_ref() {
-                            toks.push(format!("{}", d));
+                            toks.push(d.to_string());
                         }
                         for (dim, exp) in frac {
                             let exp = -exp;
                             if exp == 1 {
-                                toks.push(format!("{}", dim))
+                                toks.push(dim.to_string())
                             } else {
                                 toks.push(format!("{}^{}", dim, exp))
                             }
@@ -432,7 +432,7 @@ impl Number {
             .collect::<Unit>();
         Number {
             value: pow(&self.value, exp),
-            unit: unit
+            unit,
         }
     }
 
@@ -440,13 +440,12 @@ impl Number {
     /// powers divisible by n.
     pub fn root(&self, exp: i32) -> Result<Number, String> {
         if self.value < Num::zero() {
-            return Err(format!("Complex numbers are not implemented"))
+            return Err("Complex numbers are not implemented".to_string())
         }
         let mut res = Unit::new();
         for (dim, &power) in &self.unit {
             if power % exp as i64 != 0 {
-                return Err(format!(
-                    "Result must have integer dimensions"))
+                return Err("Result must have integer dimensions".to_string())
             } else {
                 res.insert(dim.clone(), power / exp as i64);
             }
@@ -459,10 +458,10 @@ impl Number {
 
     pub fn pow(&self, exp: &Number) -> Result<Number, String> {
         if !exp.dimless() {
-            return Err(format!("Exponent must be dimensionless"))
+            return Err("Exponent must be dimensionless".to_string())
         }
         if exp.value.abs() >= Num::from(1 << 31) {
-            return Err(format!("Exponent is too large"))
+            return Err("Exponent is too large".to_string())
         }
         let (num, den) = exp.value.to_rational();
         let one = Int::one();
@@ -472,19 +471,16 @@ impl Number {
         } else if num == one {
             let exp: Option<i64> = (&den).into();
             self.root(exp.unwrap() as i32)
+        } else if !self.dimless() {
+            Err("Exponentiation must result in integer dimensions".to_string())
         } else {
-            if !self.dimless() {
-                Err(format!(
-                    "Exponentiation must result in integer dimensions"))
-            } else {
-                let exp = exp.value.to_f64();
-                Ok(Number {
-                    value: Num::Float(
-                        self.value.to_f64().powf(exp)
-                    ),
-                    unit: self.unit.clone()
-                })
-            }
+            let exp = exp.value.to_f64();
+            Ok(Number {
+                value: Num::Float(
+                    self.value.to_f64().powf(exp)
+                ),
+                unit: self.unit.clone()
+            })
         }
     }
 
@@ -496,8 +492,8 @@ impl Number {
 
                 match to_string(&self.value, base, digits) {
                     (true, v) => (Some(v), None),
-                    (false, v) => if {den > Mpz::from(1_000) ||
-                                      num > Mpz::from(1_000_000u64)} {
+                    (false, v) => if den > Mpz::from(1_000) ||
+                                      num > Mpz::from(1_000_000u64) {
                         (None, Some(v))
                     } else {
                         (Some(format!("{}/{}", num, den)), Some(v))
@@ -543,13 +539,13 @@ impl Number {
                     continue;
                 }
                 let abs = val.abs();
-                if { abs >= pow(&v.value, (*orig.1) as i32) &&
-                     abs < pow(&(&v.value * &Num::from(1000)),
-                               (*orig.1) as i32) } {
+                if abs >= pow(&v.value, (*orig.1) as i32) &&
+                        abs < pow(&(&v.value * &Num::from(1000)),
+                        (*orig.1) as i32) {
                     let res = &val / &pow(&v.value, (*orig.1) as i32);
                     // tonne special case
                     let unit = if &**(orig.0).0 == "gram" && p == "mega" {
-                        format!("tonne")
+                        "tonne".to_string()
                     } else {
                         format!("{}{}", p, orig.0)
                     };
@@ -570,7 +566,7 @@ impl Number {
         } else {
             Number {
                 value: self.value.clone(),
-                unit: unit,
+                unit,
             }
         }
     }
@@ -598,7 +594,7 @@ impl Number {
             approx_value: approx,
             unit: if value.unit != self.unit { Some(Number::unit_to_string(&value.unit)) } else { None },
             raw_unit: if value.unit != self.unit { Some(value.unit) } else { None },
-            quantity: quantity,
+            quantity,
             dimensions: Some(Number::unit_to_string(&self.unit)),
             ..Default::default()
         }
@@ -620,7 +616,7 @@ impl Number {
                 }
             }
         }
-        if frac.len() > 0 {
+        if !frac.is_empty() {
             write!(out, " /").unwrap();
             for (dim, exp) in frac {
                 let exp = -exp;
@@ -631,7 +627,7 @@ impl Number {
             }
         }
 
-        if out.len() > 0 {
+        if !out.is_empty() {
             out.remove(0);
         }
         String::from_utf8(out).unwrap()
@@ -646,11 +642,11 @@ impl Number {
     }
 
     pub fn complexity_score(&self) -> i64 {
-        self.unit.iter().map(|(_, p)| 1 + p.abs()).fold(0, |a,x| a+x)
+        self.unit.iter().map(|(_, p)| 1 + p.abs()).sum()
     }
 
     pub fn dimless(&self) -> bool {
-        self.unit.len() == 0
+        self.unit.is_empty()
     }
 }
 
@@ -664,7 +660,7 @@ impl fmt::Debug for Number {
 impl Show for Number {
     fn show(&self, context: &Context) -> String {
         let parts = self.to_parts(context);
-        format!("{}", parts)
+        parts.to_string()
     }
 }
 

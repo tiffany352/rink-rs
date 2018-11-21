@@ -83,7 +83,7 @@ impl<'a> Iterator for TokenIterator<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        if self.0.peek() == None {
+        if self.0.peek().is_none() {
             return Some(Token::Eof)
         }
         let res = match self.0.next().unwrap() {
@@ -133,7 +133,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             }
                         }
                         if self.0.peek() == None {
-                            return Some(Token::Error(format!("Expected `*/`, got EOF")))
+                            return Some(Token::Error("Expected `*/`, got EOF".to_string()))
                         }
                     }
                 },
@@ -297,19 +297,19 @@ impl<'a> Iterator for TokenIterator<'a> {
                         Token::Error(format!("Invalid unicode scalar: {:x}", v))
                     }
                 },
-                _ => Token::Error(format!("Unexpected \\"))
+                _ => Token::Error("Unexpected \\".to_string())
             },
             '\'' => {
                 let mut buf = String::new();
                 loop {
                     match self.0.next() {
-                        None | Some('\n') => return Some(Token::Error(format!("Unexpected newline or EOF"))),
+                        None | Some('\n') => return Some(Token::Error("Unexpected newline or EOF".to_string())),
                         Some('\\') => match self.0.next() {
                             Some('\'') => buf.push('\''),
                             Some('n') => buf.push('\n'),
                             Some('t') => buf.push('\t'),
                             Some(c) => return Some(Token::Error(format!("Invalid escape sequence \\{}", c))),
-                            None => return Some(Token::Error(format!("Unexpected EOF"))),
+                            None => return Some(Token::Error("Unexpected EOF".to_string())),
                         },
                         Some('\'') => break,
                         Some(c) => buf.push(c),
@@ -505,25 +505,25 @@ fn parse_term(iter: &mut Iter) -> Expr {
         Token::Decimal(num, frac, exp) =>
             ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
-            .unwrap_or_else(|e| Expr::Error(format!("{}", e))),
+            .unwrap_or_else(|e| Expr::Error(e.to_string())),
         Token::Hex(num) =>
             Mpz::from_str_radix(&*num, 16)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse hex"))),
+            .unwrap_or_else(|_| Expr::Error("Failed to parse hex".to_string())),
         Token::Oct(num) =>
             Mpz::from_str_radix(&*num, 8)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse octal"))),
+            .unwrap_or_else(|_| Expr::Error("Failed to parse octal".to_string())),
         Token::Bin(num) =>
             Mpz::from_str_radix(&*num, 2)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse binary"))),
+            .unwrap_or_else(|_| Expr::Error("Failed to parse binary".to_string())),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         Token::LPar => {
@@ -690,10 +690,10 @@ pub fn parse_offset(iter: &mut Iter) -> Option<i64> {
         Token::Decimal(ref i, None, None) if i.len() == 2 => i.clone(),
         _ => return None
     };
-    let _col = match iter.next().unwrap() {
+    match iter.next().unwrap() {
         Token::Colon => (),
         _ => return None
-    };
+    }
     let min = match iter.next().unwrap() {
         Token::Decimal(ref i, None, None) if i.len() == 2 => i.clone(),
         _ => return None
@@ -769,8 +769,9 @@ pub fn parse_query(iter: &mut Iter) -> Query {
                         },
                         Some(x) => return Query::Error(format!(
                             "Expected decimal base, got {}", describe(&x))),
-                        None => return Query::Error(format!(
-                            "Expected decimal base, got eof"))
+                        None => return Query::Error(
+                            "Expected decimal base, got eof".to_string()
+                        )
                     }
                 },
                 Token::Ident(ref s) if s == "hex" || s == "hexadecimal" || s == "base16" => {

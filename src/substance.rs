@@ -44,7 +44,7 @@ impl Substance {
         Substance {
             amount: self.amount,
             properties: Rc::new(Properties {
-                name: name,
+                name,
                 properties: self.properties.properties.clone()
             })
         }
@@ -61,7 +61,7 @@ impl Substance {
                         .expect("Non-zero property")
                 })
         } else {
-            for (_name, prop) in &self.properties.properties {
+            for prop in self.properties.properties.values() {
                 if name == prop.output_name {
                     let input = try!(
                         (&prop.input / &self.amount).ok_or_else(
@@ -175,7 +175,7 @@ impl Substance {
                                 output.show(context),
                                 input.show(context)
                             ))).to_parts(context);
-                            let value = (&unit / &input)
+                            let value = (&unit / input)
                                 .expect("Already known safe").to_parts(context);
                             res.quantity = value.quantity;
                             res
@@ -250,7 +250,7 @@ impl Substance {
                 )));
                 let input: Option<Number> = input;
                 Ok(Some(PropertyReply {
-                    name: name,
+                    name,
                     value: if let Some(input) = input.as_ref() {
                         let input_pretty = input.prettify(context);
                         let mut output_pretty = output.clone();
@@ -263,7 +263,7 @@ impl Substance {
                             output.show(context),
                             input.show(context)
                         ))).to_parts(context);
-                        let value = (&unit / &input)
+                        let value = (&unit / input)
                             .expect("Already known safe").to_parts(context);
                         res.quantity = value.quantity;
                         res
@@ -324,7 +324,7 @@ impl Substance {
                                 output.show(context),
                                 input.show(context)
                             ))).to_parts(context);
-                            let value = (&output / &input)
+                            let value = (&output / input)
                                 .expect("Already known safe").to_parts(context);
                             res.quantity = value.quantity;
                             res
@@ -370,7 +370,7 @@ impl Substance {
                 };
                 let input: Option<Number> = input;
                 Ok(Some(PropertyReply {
-                    name: name,
+                    name,
                     value: if let Some(input) = input.as_ref() {
                         let input_pretty = input.prettify(context);
                         let output_pretty = output.prettify(context);
@@ -381,7 +381,7 @@ impl Substance {
                             output.show(context),
                             input.show(context)
                         ))).to_parts(context);
-                        let value = (&output / &input)
+                        let value = (&output / input)
                             .expect("Already known safe").to_parts(context);
                         res.quantity = value.quantity;
                         res
@@ -486,8 +486,8 @@ impl<'a, 'b> Add<&'b Substance> for &'a Substance {
                 }).collect()
             })
         };
-        if res.properties.properties.len() == 0 {
-            Err(format!("No shared properties"))
+        if res.properties.properties.is_empty() {
+            Err("No shared properties".to_string())
         } else {
             Ok(res)
         }

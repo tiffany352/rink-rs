@@ -11,7 +11,7 @@ use substance::Substance;
 use reply::NotFoundError;
 
 /// The evaluation context that contains unit definitions.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Context {
     pub dimensions: BTreeSet<Dim>,
     pub canonicalizations: BTreeMap<String, String>,
@@ -35,22 +35,9 @@ impl Context {
     /// Creates a new, empty context
     pub fn new() -> Context {
         Context {
-            dimensions: BTreeSet::new(),
-            canonicalizations: BTreeMap::new(),
-            units: BTreeMap::new(),
-            quantities: BTreeMap::new(),
-            reverse: BTreeMap::new(),
-            prefixes: Vec::new(),
-            definitions: BTreeMap::new(),
-            docs: BTreeMap::new(),
-            categories: BTreeMap::new(),
-            category_names: BTreeMap::new(),
-            datepatterns: Vec::new(),
-            substances: BTreeMap::new(),
-            substance_symbols: BTreeMap::new(),
-            temporaries: BTreeMap::new(),
             short_output: false,
             use_humanize: true,
+            ..Context::default()
         }
     }
 
@@ -87,12 +74,12 @@ impl Context {
         for &(ref pre, ref value) in &self.prefixes {
             if name.starts_with(pre) {
                 if let Some(v) = inner(self, &name[pre.len()..]) {
-                    return Some((&v * &value).unwrap())
+                    return Some((&v * value).unwrap())
                 }
             }
         }
         // after so that "ks" is kiloseconds
-        if name.ends_with("s") {
+        if name.ends_with('s') {
             let name = &name[0..name.len()-1];
             if let Some(v) = inner(self, name) {
                 return Some(v)
@@ -100,7 +87,7 @@ impl Context {
             for &(ref pre, ref value) in &self.prefixes {
                 if name.starts_with(pre) {
                     if let Some(v) = inner(self, &name[pre.len()..]) {
-                        return Some((&v * &value).unwrap())
+                        return Some((&v * value).unwrap())
                     }
                 }
             }
@@ -147,7 +134,7 @@ impl Context {
                 }
             }
         }
-        if name.ends_with("s") {
+        if name.ends_with('s') {
             let name = &name[0..name.len()-1];
             if let Some(v) = inner(self, name) {
                 return Some(v)
@@ -218,7 +205,7 @@ impl Context {
                     }
                 }
             }
-            if frac.len() > 0 {
+            if !frac.is_empty() {
                 if !found {
                     recip = true;
                 } else {

@@ -38,7 +38,7 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
             value: Num::one(),
             unit: unit.clone(),
         };
-        for &i in [-1, 1, 2].into_iter() {
+        for &i in [-1, 1, 2].iter() {
             let res = (value / &num.powi(i)).unwrap();
             let score = res.complexity_score();
             let better = best.as_ref().map(|&(_, _, _, current)| score < current).unwrap_or(true);

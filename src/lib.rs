@@ -167,8 +167,8 @@ pub fn load() -> Result<Context, String> {
     let units =
         load(Path::new("definitions.units").to_path_buf())
         .or_else(|_| load(path.join("definitions.units")))
-        .or_else(|_| DEFAULT_FILE.map(|x| x.to_owned()).ok_or(format!(
-            "Did not exist in search path and binary is not compiled with `gpl` feature")))
+        .or_else(|_| DEFAULT_FILE.map(|x| x.to_owned()).ok_or(
+            "Did not exist in search path and binary is not compiled with `gpl` feature".to_string()))
         .map_err(|e| format!(
             "Failed to open definitions.units: {}\n\
              If you installed with `gpl` disabled, then you need to obtain definitions.units \
@@ -211,7 +211,7 @@ pub fn load() -> Result<Context, String> {
         let mut currency_defs = currency_defs;
         defs.append(&mut currency_defs.defs);
         ast::Defs {
-            defs: defs
+            defs,
         }
     };
 
@@ -314,11 +314,11 @@ pub fn one_line_sandbox(line: &str) -> String {
     let res = match rx.try_recv() {
         Ok(res) => res,
         Err(_) if unsafe { libc::WIFSIGNALED(status) && libc::WTERMSIG(status) == libc::SIGXCPU } =>
-            format!("Calculation timed out"),
+            "Calculation timed out".to_string(),
         // :(
-        Err(ref e) if format!("{}", e) == "IoError: Connection reset by peer (os error 104)" =>
-            format!("Calculation ran out of memory"),
-        Err(e) => format!("{}", e)
+        Err(ref e) if e.to_string() == "IoError: Connection reset by peer (os error 104)" =>
+            "Calculation ran out of memory".to_string(),
+        Err(e) => e.to_string()
     };
 
     println!("Calculation result: {:?}", res);
@@ -376,7 +376,7 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
     use hyper_native_tls::NativeTlsClient;
 
     fn ts<T:Display>(x: T) -> String {
-        format!("{}", x)
+        x.to_string()
     }
     let mut path = try!(config_dir());
     path.push("rink/");
@@ -393,19 +393,19 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             let now = SystemTime::now();
             let elapsed = try!(now.duration_since(mtime).map_err(ts));
             if elapsed > expiration {
-                Err(format!("File is out of date"))
+                Err("File is out of date".to_string())
             } else {
                 Ok(f)
             }
         })
         .or_else(|_| {
-            try!(fs::create_dir_all(path.parent().unwrap()).map_err(|x| format!("{}", x)));
-            let mut f = try!(File::create(tmppath.clone()).map_err(|x| format!("{}", x)));
+            try!(fs::create_dir_all(path.parent().unwrap()).map_err(|x| x.to_string()));
+            let mut f = try!(File::create(tmppath.clone()).map_err(|x| x.to_string()));
 
             let ssl = NativeTlsClient::new().unwrap();
             let connector = HttpsConnector::new(ssl);
             let client = Client::with_connector(connector);
-            let mut res = try!(client.get(url).send().map_err(|x| format!("{}", x)));
+            let mut res = try!(client.get(url).send().map_err(|x| x.to_string()));
             if res.status != StatusCode::Ok {
                 return Err(format!("Request failed with status code {}", res.status))
             }
@@ -414,15 +414,15 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
                 match res.read(&mut buf) {
                     Ok(0) => break,
                     Ok(n) => {
-                        try!(f.write(&buf[..n]).map_err(|x| format!("{}", x)));
+                        try!(f.write(&buf[..n]).map_err(|x| x.to_string()));
                     },
-                    Err(e) => return Err(format!("{}", e))
+                    Err(e) => return Err(e.to_string())
                 }
             }
-            try!(f.sync_all().map_err(|x| format!("{}", x)));
+            try!(f.sync_all().map_err(|x| x.to_string()));
             drop(f);
             try!(fs::rename(tmppath.clone(), path.clone())
-                 .map_err(|x| format!("{}", x)));
-            File::open(path).map_err(|x| format!("{}", x))
+                 .map_err(|x| x.to_string()));
+            File::open(path).map_err(|x| x.to_string())
         })
 }

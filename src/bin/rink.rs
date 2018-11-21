@@ -34,9 +34,8 @@ fn main_noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
         // the underlying file object has hit an EOF if we try to read a
         // line but do not find the newline at the end, so let's break
         // out of the loop
-        match line.find('\n') {
-            Some(_) => (),
-            None => return
+        if line.find('\n').is_none() {
+            return;
         }
         match one_line(&mut ctx, &*line) {
             Ok(v) => println!("{}", v),
@@ -80,13 +79,10 @@ fn main_interactive() {
                         });
                     }
                 }
-                for (ref k, _) in &ctx.units {
+                for k in ctx.units.keys() {
                     if k.starts_with(name) {
-                        let ref def = ctx.definitions.get(&**k);
-                        let def = match def {
-                            &Some(ref def) => format!("{} = ", def),
-                            &None => format!("")
-                        };
+                        let def = &ctx.definitions.get(&**k);
+                        let def = def.map(|def| format!("{} = ", def)).unwrap_or_default();
                         let res = ctx.lookup(k).unwrap();
                         let parts = res.to_parts(ctx);
                         out.push(Completion {
@@ -236,7 +232,7 @@ fn main_interactive() {
         let readline = rl.read_line();
         match readline {
             Ok(ReadResult::Input(ref line)) if line == "quit" => {
-                println!("");
+                println!();
                 break
             },
             Ok(ReadResult::Input(ref line)) if line == "help" => {
@@ -251,7 +247,7 @@ fn main_interactive() {
                 };
             },
             Ok(ReadResult::Eof) => {
-                println!("");
+                println!();
                 let hfile = hpath.and_then(|hpath| File::create(hpath).map_err(|x| x.to_string()));
                 if let Ok(mut hfile) = hfile {
                     for line in rl.history() {

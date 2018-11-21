@@ -29,7 +29,7 @@ impl<'a> Iterator for TokenIterator<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        if self.0.peek() == None {
+        if self.0.peek().is_none() {
             return None
         }
         let res = match self.0.next().unwrap() {

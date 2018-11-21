@@ -189,7 +189,7 @@ impl ExprReply {
                 Expr::Quote(ref name) => literal!(format!("'{}'", name)),
                 Expr::Const(ref num) => {
                     let (_exact, val) = ::number::to_string(num, 10, Digits::Default);
-                    literal!(format!("{}", val))
+                    literal!(val.to_string())
                 },
                 Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
                 Expr::Mul(ref exprs) => {
@@ -232,7 +232,7 @@ impl ExprReply {
                         literal!("(");
                     }
                     recurse(expr, parts, Prec::Mul);
-                    literal!(format!("{}", op));
+                    literal!(op.to_string());
                     if prec < Prec::Mul {
                         literal!(")");
                     }
@@ -325,7 +325,7 @@ impl DateReply {
     where Tz: TimeZone, Tz::Offset: Display {
         use chrono::{Datelike, Timelike};
         DateReply {
-            string: format!("{}", date),
+            string: date.to_string(),
             year: date.year(),
             month: date.month() as i32,
             day: date.day() as i32,
@@ -392,7 +392,7 @@ impl Display for FactorizeReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         write!(fmt, "Factorizations: {}", self.factorizations.iter().map(|x| {
             x.iter().map(|(u, p)| {
-                if *p == 1 { format!("{}", u) }
+                if *p == 1 { u.to_string() }
                 else { format!("{}^{}", u, p) }
             }).collect::<Vec<_>>().join(" ")
         }).collect::<Vec<_>>().join(";  "))
@@ -416,16 +416,10 @@ impl Display for DurationReply {
         let res = [&self.years, &self.months, &self.weeks, &self.days,
                    &self.hours, &self.minutes]
             .iter()
-            .filter_map(|x| {
-                if x.exact_value.as_ref().map(|x| &**x) == Some("0") {
-                    None
-                } else {
-                    Some(x)
-                }
-            })
+            .filter(|x| x.exact_value.as_ref().map(|x| &**x) != Some("0"))
             .chain(once(&&self.seconds))
             .map(|x| {
-                 format!("{}", x)
+                 x.to_string()
             })
             .collect::<Vec<_>>()
             .join(", ");
@@ -442,7 +436,7 @@ impl Display for UnitListReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         try!(write!(fmt, "{}",
                     self.list.iter()
-                    .map(|x| format!("{}", x))
+                    .map(|x| x.to_string())
                     .collect::<Vec<_>>()
                     .join(", ")));
         if let Some(q) = self.rest.quantity.as_ref() {

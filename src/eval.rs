@@ -205,9 +205,7 @@ impl Context {
                     }),
                     "log" => func!(fn log(num: Number, base: Number) {
                         if base.unit.len() > 0 {
-                            Err(format!(
-                                "Base must be dimensionless"
-                            ))
+                            Err("Base must be dimensionless".to_string())
                         } else {
                             Ok(Value::Number(Number {
                                 value: Num::Float(num.value.to_f64()
@@ -230,10 +228,7 @@ impl Context {
                     }),
                     "hypot" => func!(fn hypot(x: Number, y: Number) {
                         if x.unit != y.unit {
-                            Err(format!(
-                                "Arguments to hypot must have matching \
-                                 dimensionality"
-                            ))
+                            Err("Arguments to hypot must have matching dimensionality".to_string())
                         } else {
                             Ok(Value::Number(Number {
                                 value: Num::Float(x.value.to_f64().hypot(y.value.to_f64())),
@@ -279,10 +274,7 @@ impl Context {
                     }),
                     "atan2" => func!(fn atan2(x: Number, y: Number) {
                         if x.unit != y.unit {
-                            Err(format!(
-                                "Arguments to atan2 must have matching \
-                                 dimensionality"
-                            ))
+                            Err("Arguments to atan2 must have matching dimensionality".to_string())
                         } else {
                             Ok(Value::Number(Number {
                                 value: Num::Float(x.value.to_f64()
@@ -348,9 +340,9 @@ impl Context {
                     "Expected identifier, got {:?}", x
                 )))
             },
-            Expr::Call(_, _) => Err(QueryError::Generic(format!(
-                "Calls are not allowed in the right hand side of conversions"
-            ))),
+            Expr::Call(_, _) => Err(QueryError::Generic(
+                "Calls are not allowed in the right hand side of conversions".to_string()
+            )),
             Expr::Unit(ref name) | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(self.canonicalize(&**name)
@@ -385,14 +377,14 @@ impl Context {
                 let res = try!(self.eval(exp));
                 let res = match res {
                     Value::Number(num) => num,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Exponents must be numbers"
-                    )))
+                    _ => return Err(QueryError::Generic(
+                        "Exponents must be numbers".to_string()
+                    ))
                 };
                 if !res.dimless() {
-                    return Err(QueryError::Generic(format!(
-                        "Exponents must be dimensionless"
-                    )))
+                    return Err(QueryError::Generic(
+                        "Exponents must be dimensionless".to_string()
+                    ))
                 }
                 let res = res.value.to_f64();
                 let (left, lv) = try!(self.eval_unit_name(left));
@@ -412,9 +404,9 @@ impl Context {
                 let res = try!(self.eval(expr));
                 let res = match res {
                     Value::Substance(sub) => sub,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Property access on non-substance"
-                    )))
+                    _ => return Err(QueryError::Generic(
+                        "Property access on non-substance".to_string()
+                    ))
                 };
                 let name = if let Some(prop) = res.properties.properties.get(name) {
                     if prop.input == Number::one() {
@@ -435,27 +427,35 @@ impl Context {
                 let left = try!(self.eval_unit_name(left));
                 let right = try!(self.eval_unit_name(right));
                 if left != right {
-                    return Err(QueryError::Generic(format!(
+                    return Err(QueryError::Generic(
                         "Add of values with differing \
-                         dimensions is not meaningful"
-                    )))
+                         dimensions is not meaningful".to_string()
+                    ))
                 }
                 Ok(left)
             },
             Expr::Neg(ref v) => self.eval_unit_name(v).map(|(u, v)| (u, -&v)),
             Expr::Plus(ref v) => self.eval_unit_name(v),
             Expr::Suffix(_, _) =>
-                Err(QueryError::Generic(format!(
-                    "Temperature conversions must not be compound units"
-                ))),
-            Expr::Date(_) => Err(QueryError::Generic(format!(
-                "Dates are not allowed in the right hand side of conversions"
-            ))),
+                Err(QueryError::Generic(
+                    "Temperature conversions must not be compound units".to_string()
+                )),
+            Expr::Date(_) => Err(QueryError::Generic(
+                "Dates are not allowed in the right hand side of conversions".to_string()
+            )),
             Expr::Error(ref e) => Err(QueryError::Generic(e.clone())),
         }
     }
 
     fn conformance_err(&self, top: &Number, bottom: &Number) -> ConformanceError {
+        fn multiply_or_divide(recip: bool) -> &'static str {
+            if recip {
+                "divide"
+            } else {
+                "multiply"
+            }
+        }
+
         let mut topu = top.clone();
         topu.value = Num::one();
         let mut bottomu = bottom.clone();
@@ -463,27 +463,21 @@ impl Context {
         let mut suggestions = vec![];
         let diff = (&topu * &bottomu).unwrap();
         if diff.dimless() {
-            suggestions.push(format!("Reciprocal conversion, invert one side"));
+            suggestions.push("Reciprocal conversion, invert one side".to_string());
         } else {
             let diff = (&topu / &bottomu).unwrap();
             let (recip, desc) = self.describe_unit(&diff.invert());
-            let word = match recip {
-                false => "multiply",
-                true => "divide"
-            };
+            let word = multiply_or_divide(recip);
             suggestions.push(format!("{word} left side by {}", desc.trim(), word=word));
             let (recip, desc) = self.describe_unit(&diff);
-            let word = match recip {
-                false => "multiply",
-                true => "divide"
-            };
+            let word = multiply_or_divide(recip);
             suggestions.push(format!("{word} right side by {}", desc.trim(), word=word));
         }
 
         ConformanceError {
             left: top.to_parts(self),
             right: bottom.to_parts(self),
-            suggestions: suggestions,
+            suggestions,
         }
     }
 
@@ -505,12 +499,12 @@ impl Context {
                 exact_value: exact,
                 approx_value: approx,
                 factor: if num != Int::one() {
-                    Some(format!("{}", num))
+                    Some(num.to_string())
                 } else {
                     None
                 },
                 divfactor: if den != Int::one() {
-                    Some(format!("{}", den))
+                    Some(den.to_string())
                 } else {
                     None
                 },
@@ -529,7 +523,7 @@ impl Context {
         }).collect::<Result<Vec<Number>, _>>());
         {
             let first = try!(units.first().ok_or(
-                format!("Expected non-empty unit list")));
+                "Expected non-empty unit list".to_string()));
             try!(units.iter().skip(1).map(|x| {
                 if first.unit != x.unit {
                     Err(format!(
@@ -558,7 +552,7 @@ impl Context {
         }
         Ok(list.into_iter().zip(out.into_iter()).map(|(name, value)| {
             let pretty = Number {
-                value: value,
+                value,
                 unit: Number::one_unit(Dim::new(name)).unit
             }.to_parts(self);
             let unit: String = pretty.unit.or(pretty.dimensions)
@@ -632,18 +626,18 @@ impl Context {
                     let def = if let Some(ref q) = parts.quantity {
                         format!("base unit of {}", q)
                     } else {
-                        format!("base unit")
+                        "base unit".to_string()
                     };
                     (Some(def), None, None)
                 } else {
                     let def = self.definitions.get(&name);
-                    (def.as_ref().map(|x| format!("{}", x)),
+                    (def.as_ref().map(|x| x.to_string()),
                      def,
                      self.lookup(&name).map(|x| x.to_parts(self)))
                 };
                 Ok(QueryReply::Def(DefReply {
                     canon_name: canon,
-                    def: def,
+                    def,
                     def_expr: def_expr.as_ref().map(|x| ExprReply::from(*x)),
                     value: res,
                     doc: self.docs.get(&name).cloned(),
@@ -775,7 +769,7 @@ impl Context {
                             quantity: self.quantities.get(&top.unit).cloned(),
                             ..Default::default()
                         },
-                        list: list,
+                        list,
                     })
                 })
             },
@@ -862,12 +856,11 @@ impl Context {
                 let val = match val {
                     None => {
                         let val = try!(self.eval(expr));
-                        let val = match val {
+                        match val {
                             Value::Number(val) => val,
                             _ => return Err(QueryError::Generic(format!(
                                 "Cannot find derivatives of <{}>", val.show(self))),)
-                        };
-                        val
+                        }
                     },
                     Some(val) => val
                 };

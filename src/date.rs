@@ -294,17 +294,19 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
     if let Some(tz) = tz {
         match (time, date) {
             (Ok(time), Ok(date)) =>
-                tz.from_local_datetime(&date.and_time(time)).earliest().ok_or_else(|| (format!(
-                    "Datetime does not represent a valid moment in time"
-                ), count)).map(GenericDateTime::Timezone),
+                tz.from_local_datetime(&date.and_time(time)).earliest().ok_or_else(|| (
+                    "Datetime does not represent a valid moment in time".to_string(),
+                    count,
+                )).map(GenericDateTime::Timezone),
             (Ok(time), Err(_)) =>
                 Ok(UTC::now().with_timezone(&tz).date().and_time(time).unwrap()).map(
                     GenericDateTime::Timezone),
             (Err(_), Ok(date)) =>
-                tz.from_local_date(&date).earliest().map(|x| x.and_hms(0, 0, 0)).ok_or_else(|| (format!(
-                    "Datetime does not represent a valid moment in time"
-                ), count)).map(GenericDateTime::Timezone),
-            _ => Err((format!("Failed to construct a useful datetime"), count))
+                tz.from_local_date(&date).earliest().map(|x| x.and_hms(0, 0, 0)).ok_or_else(|| (
+                    "Datetime does not represent a valid moment in time".to_string(),
+                    count,
+                )).map(GenericDateTime::Timezone),
+            _ => Err(("Failed to construct a useful datetime".to_string(), count))
         }
     } else {
         let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
@@ -321,7 +323,7 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
                 Ok(GenericDateTime::Fixed(Date::<FixedOffset>::from_utc(
                     date, offset
                 ).and_hms(0, 0, 0))),
-            _ => Err((format!("Failed to construct a useful datetime"), count))
+            _ => Err(("Failed to construct a useful datetime".to_string(), count))
         }
     }
 }
@@ -348,13 +350,13 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTi
     if let Some((_, pat, err)) = best {
         Err(format!("Most likely pattern `{}` failed: {}", show_datepattern(pat), err))
     } else {
-        Err(format!("Invalid date literal"))
+        Err("Invalid date literal".to_string())
     }
 }
 
 pub fn to_duration(num: &Number) -> Result<Duration, String> {
     if num.unit.len() != 1 || num.unit.get("s") != Some(&1) {
-        return Err(format!("Expected seconds"))
+        return Err("Expected seconds".to_string())
     }
     let max = Num::from(i64::max_value() / 1000);
     if num.value.abs() > max {
@@ -395,7 +397,7 @@ pub fn parse_datepattern<I>(iter: &mut Peekable<I>)
                 iter.next();
                 let res = DatePattern::Optional(try!(parse_datepattern(iter)));
                 if iter.peek().cloned() != Some(']') {
-                    return Err(format!("Expected ]"))
+                    return Err("Expected ]".to_string())
                 } else {
                     res
                 }
@@ -447,7 +449,7 @@ pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
     for (num, line) in file.lines().enumerate() {
         let line = line.split('#').next().unwrap();
         let line = line.trim();
-        if line.len() == 0 {
+        if line.is_empty() {
             continue
         }
         let res = parse_datepattern(&mut line.chars().peekable());
@@ -464,7 +466,7 @@ impl Context {
     pub fn humanize<Tz: TimeZone>(&self, date: DateTime<Tz>) -> Option<String> {
         if self.use_humanize {
             use chrono_humanize::HumanTime;
-            Some(format!("{}", HumanTime::from(date)))
+            Some(HumanTime::from(date).to_string())
         } else {
             None
         }
@@ -517,14 +519,14 @@ mod tests {
 
         let date = vec![
             DateToken::Plus,
-            DateToken::Number(format!("{}", expected.year.unwrap()), None),
+            DateToken::Number(expected.year.unwrap().to_string(), None),
         ];
         let (res, parsed) = parse(date.clone(), "year");
         assert!(res.is_ok());
         assert_eq!(parsed, expected);
 
         let date = vec![DateToken::Number(
-            format!("{}", expected.year.unwrap()),
+            expected.year.unwrap().to_string(),
             None,
         )];
         let (res, parsed2) = parse(date.clone(), "year");
@@ -543,13 +545,13 @@ mod tests {
         expected.set_minute(57).unwrap();
 
         let date = vec![
-            DateToken::Number(format!("{}", expected.day.unwrap()), None),
+            DateToken::Number(expected.day.unwrap().to_string(), None),
             DateToken::Space,
             DateToken::Literal("Pm".into()),
             DateToken::Dash,
             DateToken::Number(format!("{:02}", expected.month.unwrap()), None),
             DateToken::Colon,
-            DateToken::Number(format!("{}", expected.year.unwrap()), None),
+            DateToken::Number(expected.year.unwrap().to_string(), None),
             DateToken::Space,
             DateToken::Number(format!("{:02}", expected.hour_mod_12.unwrap()), None),
             DateToken::Dash,
@@ -571,7 +573,7 @@ mod tests {
         expected.set_hour(7).unwrap();
 
         let date = vec![
-            DateToken::Number(format!("{}", year.abs()), None),
+            DateToken::Number(year.abs().to_string(), None),
             DateToken::Space,
             DateToken::Literal("bce".into()),
             DateToken::Space,
