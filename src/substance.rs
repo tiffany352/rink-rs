@@ -13,6 +13,18 @@ use std::iter::once;
 use std::rc::Rc;
 use ast::Digits;
 
+macro_rules! try_div {
+    ($x:expr, $y:expr, $context:expr) => {
+        (&$x / &$y).ok_or_else(|| {
+            format!(
+                "Division by zero: <{}> / <{}>",
+                $x.show($context),
+                $y.show($context)
+            )
+        })?
+    };
+}
+
 #[derive(Debug, Clone)]
 pub struct Property {
     pub input: Number,
@@ -117,12 +129,7 @@ impl Substance {
                 properties: try!(self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.dimless() {
                         let res = (&v.output * &self.amount).unwrap();
-                        (None, try!((&res / &v.input)
-                         .ok_or_else(|| format!(
-                             "Division by zero: <{}> / <{}>",
-                             res.show(context),
-                             v.input.show(context)
-                         ))))
+                        (None, try_div!(res, v.input, context))
                     } else {
                         (Some(v.input.clone()), v.output.clone())
                     };
@@ -140,26 +147,14 @@ impl Substance {
                         (input, output)
                     };
                     let output_show = context.show(
-                        &try!((
-                            &output / &unit
-                        ).ok_or_else(|| format!(
-                            "Division by zero: <{}> / <{}>",
-                            output.show(context),
-                            unit.show(context)
-                        ))),
+                        &try_div!(output, unit, context),
                         &unit,
                         bottom_name.clone(),
                         bottom_const.clone(),
                         base,
                         digits
                     ).value;
-                    let output = try!((
-                        &output / &unit
-                    ).ok_or_else(|| format!(
-                        "Division by zero: <{}> / <{}>",
-                        output.show(context),
-                        unit.show(context)
-                    )));
+                    let output = try_div!(output, unit, context);
                     let input: Option<Number> = input;
                     Ok(Some(PropertyReply {
                         name: k.clone(),
@@ -168,13 +163,7 @@ impl Substance {
                             let mut output_pretty = output.clone();
                             output_pretty.unit = bottom_name.iter()
                                 .map(|(k,v)| (Dim::new(&k), *v as i64)).collect();
-                            let mut res = try!((
-                                &output_pretty / &input_pretty
-                            ).ok_or_else(|| format!(
-                                "Division by zero: <{}> / <{}>",
-                                output.show(context),
-                                input.show(context)
-                            ))).to_parts(context);
+                            let mut res = try_div!(output_pretty, input_pretty, context).to_parts(context);
                             let value = (&unit / input)
                                 .expect("Already known safe").to_parts(context);
                             res.quantity = value.quantity;
@@ -190,64 +179,32 @@ impl Substance {
             })
         } else {
             let func = |(_k, v): (&String, &Property)| {
-                let input = try!((&v.input / &self.amount).ok_or_else(|| format!(
-                    "Division by zero: <{}> / <{}>",
-                    v.input.show(context),
-                    self.amount.show(context)
-                )));
-                let output = try!((&v.output / &self.amount).ok_or_else(|| format!(
-                    "Division by zero: <{}> / <{}>",
-                    v.output.show(context),
-                    self.amount.show(context)
-                )));
+                let input = try_div!(v.input, self.amount, context);
+                let output = try_div!(v.output, self.amount, context);
                 let (name, input, output) = if input.dimless() {
                     if v.output.unit != unit.unit {
                         return Ok(None)
                     }
-                    let div = try!(
-                        (&v.output / &input).ok_or_else(|| format!(
-                            "Division by zero: <{}> / <{}>",
-                            v.output.show(context),
-                            input.show(context)
-                        ))
-                    );
+                    let div = try_div!(v.output, input, context);
                     (v.output_name.clone(), None, div)
                 } else if output.dimless() {
                     if v.input.unit != unit.unit {
                         return Ok(None)
                     }
-                    let div = try!(
-                        (&v.input / &output).ok_or_else(|| format!(
-                            "Division by zero: <{}> / <{}>",
-                            v.input.show(context),
-                            output.show(context)
-                        ))
-                    );
+                    let div = try_div!(v.input, output, context);
                     (v.input_name.clone(), None, div)
                 } else {
                     return Ok(None)
                 };
                 let output_show = context.show(
-                    &try!((
-                        &output / &unit
-                    ).ok_or_else(|| format!(
-                        "Division by zero: <{}> / <{}>",
-                        output.show(context),
-                        unit.show(context)
-                    ))),
+                    &try_div!(output, unit, context),
                     &unit,
                     bottom_name.clone(),
                     bottom_const.clone(),
                     base,
                     digits
                 ).value;
-                let output = try!((
-                    &output / &unit
-                ).ok_or_else(|| format!(
-                    "Division by zero: <{}> / <{}>",
-                    output.show(context),
-                    unit.show(context)
-                )));
+                let output = try_div!(output, unit, context);
                 let input: Option<Number> = input;
                 Ok(Some(PropertyReply {
                     name,
@@ -256,13 +213,7 @@ impl Substance {
                         let mut output_pretty = output.clone();
                         output_pretty.unit = bottom_name.iter()
                             .map(|(k,v)| (Dim::new(&k), *v as i64)).collect();
-                        let mut res = try!((
-                            &output_pretty / &input_pretty
-                        ).ok_or_else(|| format!(
-                            "Division by zero: <{}> / <{}>",
-                            output.show(context),
-                            input.show(context)
-                        ))).to_parts(context);
+                        let mut res = try_div!(output_pretty, input_pretty, context).to_parts(context);
                         let value = (&unit / input)
                             .expect("Already known safe").to_parts(context);
                         res.quantity = value.quantity;
@@ -303,12 +254,7 @@ impl Substance {
                 properties: try!(self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.dimless() {
                         let res = (&v.output * &self.amount).unwrap();
-                        (None, try!((&res / &v.input)
-                         .ok_or_else(|| format!(
-                             "Division by zero: <{}> / <{}>",
-                             res.show(context),
-                             v.input.show(context)
-                         ))))
+                        (None, try_div!(res, v.input, context))
                     } else {
                         (Some(v.input.clone()), v.output.clone())
                     };
@@ -317,13 +263,7 @@ impl Substance {
                         value: if let Some(input) = input.as_ref() {
                             let input_pretty = input.prettify(context);
                             let output_pretty = output.prettify(context);
-                            let mut res = try!((
-                                &output_pretty / &input_pretty
-                            ).ok_or_else(|| format!(
-                                "Division by zero: <{}> / <{}>",
-                                output.show(context),
-                                input.show(context)
-                            ))).to_parts(context);
+                            let mut res = try_div!(output_pretty, input_pretty, context).to_parts(context);
                             let value = (&output / input)
                                 .expect("Already known safe").to_parts(context);
                             res.quantity = value.quantity;
@@ -337,33 +277,13 @@ impl Substance {
             })
         } else {
             let func = |(_k, v): (&String, &Property)| {
-                let input = try!((&v.input / &self.amount).ok_or_else(|| format!(
-                    "Division by zero: <{}> / <{}>",
-                    v.input.show(context),
-                    self.amount.show(context)
-                )));
-                let output = try!((&v.output / &self.amount).ok_or_else(|| format!(
-                    "Division by zero: <{}> / <{}>",
-                    v.output.show(context),
-                    self.amount.show(context)
-                )));
+                let input = try_div!(v.input, self.amount, context);
+                let output = try_div!(v.output, self.amount, context);
                 let (name, input, output) = if input.dimless() {
-                    let div = try!(
-                        (&v.output / &input).ok_or_else(|| format!(
-                            "Division by zero: <{}> / <{}>",
-                            v.output.show(context),
-                            input.show(context)
-                        ))
-                    );
+                    let div = try_div!(v.output, input, context);
                     (v.output_name.clone(), None, div)
                 } else if output.dimless() {
-                    let div = try!(
-                        (&v.input / &output).ok_or_else(|| format!(
-                            "Division by zero: <{}> / <{}>",
-                            v.input.show(context),
-                            output.show(context)
-                        ))
-                    );
+                    let div = try_div!(v.input, output, context);
                     (v.input_name.clone(), None, div)
                 } else {
                     return Ok(None)
@@ -374,13 +294,7 @@ impl Substance {
                     value: if let Some(input) = input.as_ref() {
                         let input_pretty = input.prettify(context);
                         let output_pretty = output.prettify(context);
-                        let mut res = try!((
-                            &output_pretty / &input_pretty
-                        ).ok_or_else(|| format!(
-                            "Division by zero: <{}> / <{}>",
-                            output.show(context),
-                            input.show(context)
-                        ))).to_parts(context);
+                        let mut res = try_div!(output_pretty, input_pretty, context).to_parts(context);
                         let value = (&output / input)
                             .expect("Already known safe").to_parts(context);
                         res.quantity = value.quantity;
