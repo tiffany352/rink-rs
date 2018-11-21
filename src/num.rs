@@ -91,10 +91,11 @@ impl Num {
                     t = m[1][0] * ai + m[1][1];
                     m[1][1] = m[1][0];
                     m[1][0] = t;
-                    if x == ai as f64 {
+                    let tmp = x - ai as f64;
+                    if tmp == 0.0 {
                         break; // division by zero
                     }
-                    x = 1.0/(x - ai as f64);
+                    x = tmp.recip();
                     if x as i64 > i64::max_value() / 2 {
                         break; // representation failure
                     }
