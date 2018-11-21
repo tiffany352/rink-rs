@@ -816,41 +816,38 @@ impl Context {
             },
             Query::Convert(ref top, Conversion::Degree(ref deg), None, digits) => {
                 let top = try!(self.eval(top));
-                macro_rules! temperature {
-                    ($name:expr, $base:expr, $scale:expr) => {{
-                        let top = match top {
-                            Value::Number(ref num) => num,
-                            _ => return Err(QueryError::Generic(format!(
-                                "Cannot convert <{}> to °{}", top.show(self), $name)))
-                        };
-                        let bottom = self.lookup($scale)
-                            .expect(&*format!("Unit {} missing", $scale));
-                        if top.unit != bottom.unit {
-                            Err(QueryError::Conformance(
-                                self.conformance_err(&top, &bottom)))
-                        } else {
-                            let res = (top - &self.lookup($base)
-                                       .expect(&*format!("Constant {} missing", $base))).unwrap();
-                            let res = (&res / &bottom).unwrap();
-                            let mut name = BTreeMap::new();
-                            name.insert(format!("°{}", $name), 1);
-                            Ok(QueryReply::Conversion(self.show(
-                                &res, &bottom,
-                                name, Num::one(),
-                                10,
-                                digits
-                            )))
-                        }
-                    }}
-                }
 
-                match *deg {
-                    Degree::Celsius => temperature!("C", "zerocelsius", "kelvin"),
-                    Degree::Fahrenheit => temperature!("F", "zerofahrenheit", "degrankine"),
-                    Degree::Reaumur => temperature!("Ré", "zerocelsius", "reaumur_absolute"),
-                    Degree::Romer => temperature!("Rø", "zeroromer", "romer_absolute"),
-                    Degree::Delisle => temperature!("De", "zerodelisle", "delisle_absolute"),
-                    Degree::Newton => temperature!("N", "zerocelsius", "newton_absolute"),
+                let (name, base, scale) = match *deg {
+                    Degree::Celsius => ("C", "zerocelsius", "kelvin"),
+                    Degree::Fahrenheit => ("F", "zerofahrenheit", "degrankine"),
+                    Degree::Reaumur => ("Ré", "zerocelsius", "reaumur_absolute"),
+                    Degree::Romer => ("Rø", "zeroromer", "romer_absolute"),
+                    Degree::Delisle => ("De", "zerodelisle", "delisle_absolute"),
+                    Degree::Newton => ("N", "zerocelsius", "newton_absolute"),
+                };
+
+                let top = match top {
+                    Value::Number(ref num) => num,
+                    _ => return Err(QueryError::Generic(format!(
+                        "Cannot convert <{}> to °{}", top.show(self), name)))
+                };
+                let bottom = self.lookup(scale)
+                    .expect(&*format!("Unit {} missing", scale));
+                if top.unit != bottom.unit {
+                    Err(QueryError::Conformance(
+                        self.conformance_err(&top, &bottom)))
+                } else {
+                    let res = (top - &self.lookup(base)
+                                .expect(&*format!("Constant {} missing", base))).unwrap();
+                    let res = (&res / &bottom).unwrap();
+                    let mut name = BTreeMap::new();
+                    name.insert(deg.to_string(), 1);
+                    Ok(QueryReply::Conversion(self.show(
+                        &res, &bottom,
+                        name, Num::one(),
+                        10,
+                        digits
+                    )))
                 }
             },
             Query::Convert(ref _expr, ref which, Some(base), _digits) => {
