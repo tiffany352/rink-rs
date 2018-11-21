@@ -64,13 +64,8 @@ fn describe(token: &Token) -> String {
         Token::Colon => "`:`".to_owned(),
         Token::Date(_) => "date literal".to_owned(),
         Token::Comma => "`,`".to_owned(),
-        Token::Degree(Degree::Celsius) => "`°C`".to_owned(),
-        Token::Degree(Degree::Fahrenheit) => "`°F`".to_owned(),
-        Token::Degree(Degree::Reaumur) => "`°Ré`".to_owned(),
-        Token::Degree(Degree::Romer) => "`°Rø`".to_owned(),
-        Token::Degree(Degree::Delisle) => "`°De`".to_owned(),
-        Token::Degree(Degree::Newton) => "`°N`".to_owned(),
         Token::Percent => "%".to_owned(),
+        Token::Degree(ref deg) => format!("`{}`", deg),
         Token::Error(ref e) => format!("<{}>", e)
     }
 }
