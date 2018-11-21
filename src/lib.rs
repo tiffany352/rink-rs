@@ -321,7 +321,7 @@ fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
                 res.insert(akey.clone(), aval.clone());
                 a.next();
             },
-            (Some(_), Some(_)) => panic!(),
+            (Some(_), Some(_)) => unreachable!(),
             (None, Some((bkey, bval))) => {
                 res.insert(bkey.clone(), bval.clone());
                 b.next();

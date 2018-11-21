@@ -90,7 +90,7 @@ pub fn parse_date<I>(
                     DateToken::Dash => (-1, None),
                     DateToken::Plus => (1, None),
                     DateToken::Number(i, None) => (1, Some(i)),
-                    _ => panic!()
+                    _ => unreachable!()
                 };
                 let num = match num {
                     Some(x) => x,
@@ -169,7 +169,7 @@ pub fn parse_date<I>(
                     }
                 } else {
                     let s = match take!(DateToken::Plus | DateToken::Dash) {
-                        DateToken::Plus => 1, DateToken::Dash => -1, _ => panic!()
+                        DateToken::Plus => 1, DateToken::Dash => -1, _ => unreachable!()
                     };
                     let h = take!(DateToken::Number(s, None), s);
                     if h.len() == 4 {

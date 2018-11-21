@@ -669,7 +669,7 @@ impl Context {
                         "<{}> to {} is not defined",
                         top.show(self),
                         match digits {
-                            Digits::Default => panic!(),
+                            Digits::Default => unreachable!(),
                             Digits::FullInt => "digits".to_owned(),
                             Digits::Digits(n) => format!("{} digits", n)
                         }
