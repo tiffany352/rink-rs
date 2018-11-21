@@ -44,73 +44,49 @@ impl Context {
                 }
             }
 
-            fn lookup(&mut self, name: &Rc<String>) -> Option<()> {
-                fn inner(ctx: &mut Resolver, name: &Rc<String>) -> Option<()> {
-                    let unit = Name::Unit(name.clone());
-                    if ctx.input.get(&unit).is_some() {
-                        ctx.visit(&unit);
-                        return Some(())
-                    }
-                    let unit = Name::Prefix(name.clone());
-                    if ctx.input.get(&unit).is_some() {
-                        ctx.visit(&unit);
-                        return Some(())
-                    }
-                    let unit = Name::Quantity(name.clone());
-                    if ctx.input.get(&unit).is_some() {
-                        ctx.visit(&unit);
-                        return Some(())
-                    }
-                    None
+            fn lookup(&mut self, name: &Rc<String>) -> bool {
+                fn inner(ctx: &mut Resolver, name: &Rc<String>) -> bool {
+                    [Name::Unit, Name::Prefix, Name::Quantity].iter().any(|f| {
+                        let unit = f(name.clone());
+                        ctx.input.contains_key(&unit) && {
+                            ctx.visit(&unit);
+                            true
+                        }
+                    })
                 }
 
-                if let Some(()) = inner(self, name) {
-                    return Some(())
-                }
-                let mut found = vec![];
-                for (pre, _) in &self.input {
-                    if let &Name::Prefix(ref pre) = pre {
-                        if (*name).starts_with(&**pre) {
-                            found.push(pre.clone());
-                        }
-                    }
-                }
-                for pre in found {
-                    if let Some(()) = inner(self, &Rc::new(name[pre.len()..].to_owned())) {
-                        let unit = Name::Prefix(pre);
-                        self.visit(&unit);
-                        return Some(())
-                    }
-                }
-                if name.ends_with("s") {
-                    let name = &Rc::new(name[0..name.len()-1].to_owned());
-                    if let Some(()) = inner(self, name) {
-                        return Some(())
+                let mut outer = |name: &Rc<String>| -> bool {
+                    if inner(self, name) {
+                        return true;
                     }
                     let mut found = vec![];
-                    for (pre, _) in &self.input {
-                        if let &Name::Prefix(ref pre) = pre {
+                    for pre in self.input.keys() {
+                        if let Name::Prefix(ref pre) = *pre {
                             if (*name).starts_with(&**pre) {
                                 found.push(pre.clone());
                             }
                         }
                     }
-                    for pre in found {
-                        if let Some(()) = inner(self, &Rc::new(name[pre.len()..].to_owned())) {
+                    found.into_iter().any(|pre| {
+                        inner(self, &Rc::new(name[pre.len()..].to_owned())) && {
                             let unit = Name::Prefix(pre);
                             self.visit(&unit);
-                            return Some(())
+                            true
                         }
-                    }
+                    })
+                };
+
+                outer(name) || name.ends_with('s') && {
+                    let name = &Rc::new(name[0..name.len()-1].to_owned());
+                    outer(name)
                 }
-                None
             }
 
             fn eval(&mut self, expr: &Expr) {
                 match *expr {
                     Expr::Unit(ref name) => {
                         let name = self.intern(name);
-                        let _ = self.lookup(&name);
+                        self.lookup(&name);
                     },
                     Expr::Frac(ref left, ref right) |
                     Expr::Pow(ref left, ref right) |
