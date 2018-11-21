@@ -31,6 +31,7 @@ xml-rs = { version = "0.3.4", optional = true }
 json = { version = "0.10.2", optional = true }
 serde = { version = "0.8.16", optional = true }
 serde_derive = { version = "0.8.16", optional = true }
+dirs = "1.0.4"
 
 [[bin]]
 name = "rink"

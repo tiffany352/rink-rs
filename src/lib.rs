@@ -55,6 +55,7 @@ extern crate serde;
 #[cfg(feature = "nightly")]
 #[macro_use]
 extern crate serde_derive;
+extern crate dirs;
 
 pub mod text_query;
 pub mod context;
@@ -80,8 +81,6 @@ pub use number::Number;
 pub use context::Context;
 pub use value::Value;
 
-use std::env;
-use std::convert::From;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -89,36 +88,10 @@ use std::time::Duration;
 
 const DATA_FILE_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
 
-#[cfg(all(target_family = "unix", not(target_os = "macos")))]
 pub fn config_dir() -> Result<PathBuf, String> {
-    env::var("XDG_CONFIG_HOME")
-        .map(From::from)
-        .or_else(|_| {
-            env::home_dir()
-                .ok_or("Home dir not present".to_owned())
-                .map(From::from)
-                .map(|mut x: PathBuf| { x.push(".config/"); x })
-        })
-}
-
-#[cfg(target_os = "windows")]
-pub fn config_dir() -> Result<PathBuf, String> {
-    env::var("APPDATA")
-        .map(From::from)
-        .or_else(|_| {
-            env::home_dir()
-                .ok_or("Home dir not present".to_owned())
-                .map(From::from)
-                .map(|mut x: PathBuf| { x.push("AppData\\Roaming"); x })
-        })
-}
-
-#[cfg(target_os = "macos")]
-pub fn config_dir() -> Result<PathBuf, String> {
-    env::home_dir()
-        .ok_or("Home dir not present".to_owned())
-        .map(From::from)
-        .map(|mut x: PathBuf| { x.push("Library/Application Support"); x})
+    dirs::config_dir()
+        .map(|mut x: PathBuf| { x.push("rink"); x })
+        .ok_or_else(|| "Could not find config directory".into())
 }
 
 #[cfg(feature = "currency")]
@@ -154,8 +127,7 @@ pub fn load() -> Result<Context, String> {
     use std::io::Read;
     use std::path::Path;
 
-    let mut path = try!(config_dir());
-    path.push("rink/");
+    let path = try!(config_dir());
     let load = |name| {
         File::open(name)
         .and_then(|mut f| {
@@ -379,7 +351,6 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
         x.to_string()
     }
     let mut path = try!(config_dir());
-    path.push("rink/");
     let mut tmppath = path.clone();
     path.push(file);
     let tmpfile = format!("{}.part", file);
