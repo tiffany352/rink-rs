@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use number::{Number, Dim, NumberParts, pow};
 use num::{Num, Int};
 use date;
-use ast::{Expr, Query, Conversion, Digits};
+use ast::{Expr, Query, Conversion, Digits, Function};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
 use value::{Value, Show};
@@ -137,7 +137,7 @@ impl Context {
                     }
                 })
             },
-            Expr::Call(ref name, ref args) => {
+            Expr::Call(ref func, ref args) => {
                 let args = try!(
                     args.iter()
                         .map(|x| self.eval(x))
@@ -187,23 +187,23 @@ impl Context {
                     }
                 }}
 
-                match &**name {
-                    "sqrt" => func!(fn sqrt(num: Number) {
+                match func {
+                    Function::Sqrt => func!(fn sqrt(num: Number) {
                         num.root(2).map(Value::Number)
                     }),
-                    "exp" => func!(fn exp(num: Number) {
+                    Function::Exp => func!(fn exp(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().exp()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "ln" => func!(fn ln(num: Number) {
+                    Function::Ln => func!(fn ln(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().ln()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "log" => func!(fn log(num: Number, base: Number) {
+                    Function::Log => func!(fn log(num: Number, base: Number) {
                         if !base.unit.is_empty() {
                             Err("Base must be dimensionless".to_string())
                         } else {
@@ -214,19 +214,19 @@ impl Context {
                             }))
                         }
                     }),
-                    "log2" => func!(fn log2(num: Number) {
+                    Function::Log2 => func!(fn log2(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().log2()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "log10" => func!(fn ln(num: Number) {
+                    Function::Log10 => func!(fn ln(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().log10()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "hypot" => func!(fn hypot(x: Number, y: Number) {
+                    Function::Hypot => func!(fn hypot(x: Number, y: Number) {
                         if x.unit != y.unit {
                             Err("Arguments to hypot must have matching dimensionality".to_string())
                         } else {
@@ -236,43 +236,43 @@ impl Context {
                             }))
                         }
                     }),
-                    "sin" => func!(fn sin(num: Number) {
+                    Function::Sin => func!(fn sin(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().sin()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "cos" => func!(fn cos(num: Number) {
+                    Function::Cos => func!(fn cos(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().cos()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "tan" => func!(fn tan(num: Number) {
+                    Function::Tan => func!(fn tan(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().tan()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "asin" => func!(fn asin(num: Number) {
+                    Function::Asin => func!(fn asin(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().asin()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "acos" => func!(fn acos(num: Number) {
+                    Function::Acos => func!(fn acos(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().acos()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "atan" => func!(fn atan(num: Number) {
+                    Function::Atan => func!(fn atan(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().atan()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "atan2" => func!(fn atan2(x: Number, y: Number) {
+                    Function::Atan2 => func!(fn atan2(x: Number, y: Number) {
                         if x.unit != y.unit {
                             Err("Arguments to atan2 must have matching dimensionality".to_string())
                         } else {
@@ -283,45 +283,42 @@ impl Context {
                             }))
                         }
                     }),
-                    "sinh" => func!(fn sinh(num: Number) {
+                    Function::Sinh => func!(fn sinh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().sinh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "cosh" => func!(fn cosh(num: Number) {
+                    Function::Cosh => func!(fn cosh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().cosh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "tanh" => func!(fn tanh(num: Number) {
+                    Function::Tanh => func!(fn tanh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().tanh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "asinh" => func!(fn asinh(num: Number) {
+                    Function::Asinh => func!(fn asinh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().asinh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "acosh" => func!(fn acosh(num: Number) {
+                    Function::Acosh => func!(fn acosh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().acosh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "atanh" => func!(fn atanh(num: Number) {
+                    Function::Atanh => func!(fn atanh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().atanh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    _ => Err(QueryError::Generic(format!(
-                        "Function not found: {}", name
-                    )))
                 }
             },
             Expr::Error(ref e) => Err(QueryError::Generic(e.clone())),

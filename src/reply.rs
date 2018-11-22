@@ -203,8 +203,8 @@ impl ExprReply {
                         literal!(")");
                     }
                 },
-                Expr::Call(ref name, ref args) => {
-                    literal!(format!("{}(", name));
+                Expr::Call(ref func, ref args) => {
+                    literal!(format!("{}(", func.name()));
                     if let Some(first) = args.first() {
                         recurse(first, parts, Prec::Equals);
                     }

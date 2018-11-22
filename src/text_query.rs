@@ -429,12 +429,7 @@ impl<'a> Iterator for TokenIterator<'a> {
 pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
 fn is_func(name: &str) -> bool {
-    match name {
-        "sqrt" | "exp" | "ln" | "log" | "log2" | "log10" | "hypot" | "sin" |
-        "cos" | "tan" | "asin" | "acos" | "atan" | "atan2" | "sinh" | "cosh" |
-        "tanh" | "asinh" | "acosh" | "atanh" => true,
-        _ => false
-    }
+    Function::from_name(name).is_some()
 }
 
 fn is_attr(name: &str) -> Option<&'static str> {
@@ -478,9 +473,9 @@ fn parse_term(iter: &mut Iter) -> Expr {
                                                             describe(&x)))
                         }
                     }
-                    Expr::Call(name.clone(), args)
+                    Expr::Call(Function::from_name(name.as_ref()).unwrap(), args)
                 },
-                _ => Expr::Call(name.clone(), vec![parse_pow(iter)]),
+                _ => Expr::Call(Function::from_name(name.as_ref()).unwrap(), vec![parse_pow(iter)]),
             }
         },
         Token::Ident(ref attr) if is_attr(attr).is_some() => {

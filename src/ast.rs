@@ -44,8 +44,86 @@ pub enum Expr {
     Equals(Box<Expr>, Box<Expr>),
     Suffix(Degree, Box<Expr>),
     Of(String, Box<Expr>),
-    Call(String, Vec<Expr>),
+    Call(Function, Vec<Expr>),
     Error(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum Function {
+    Sqrt,
+    Exp,
+    Ln,
+    Log2,
+    Log10,
+    Sin,
+    Cos,
+    Tan,
+    Asin,
+    Acos,
+    Atan,
+    Sinh,
+    Cosh,
+    Tanh,
+    Asinh,
+    Acosh,
+    Atanh,
+    Log,
+    Hypot,
+    Atan2,
+}
+
+impl Function {
+    pub fn name(&self) -> &str {
+        match *self {
+            Function::Sqrt => "sqrt",
+            Function::Exp => "exp",
+            Function::Ln => "ln",
+            Function::Log2 => "log2",
+            Function::Log10 => "log10",
+            Function::Sin => "sin",
+            Function::Cos => "cos",
+            Function::Tan => "tan",
+            Function::Asin => "asin",
+            Function::Acos => "acos",
+            Function::Atan => "atan",
+            Function::Sinh => "sinh",
+            Function::Cosh => "cosh",
+            Function::Tanh => "tanh",
+            Function::Asinh => "asinh",
+            Function::Acosh => "acosh",
+            Function::Atanh => "atanh",
+            Function::Log => "log",
+            Function::Hypot => "hypot",
+            Function::Atan2 => "atan2",
+        }
+    }
+
+    pub fn from_name(s: &str) -> Option<Self> {
+        let func = match s {
+            "sqrt" => Function::Sqrt,
+            "exp" => Function::Exp,
+            "ln" => Function::Ln,
+            "log2" => Function::Log2,
+            "log10" => Function::Log10,
+            "sin" => Function::Sin,
+            "cos" => Function::Cos,
+            "tan" => Function::Tan,
+            "asin" => Function::Asin,
+            "acos" => Function::Acos,
+            "atan" => Function::Atan,
+            "sinh" => Function::Sinh,
+            "cosh" => Function::Cosh,
+            "tanh" => Function::Tanh,
+            "asinh" => Function::Asinh,
+            "acosh" => Function::Acosh,
+            "atanh" => Function::Atanh,
+            "log" => Function::Log,
+            "hypot" => Function::Hypot,
+            "atan2" => Function::Atan2,
+            _ => return None,
+        };
+        Some(func)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -219,8 +297,8 @@ impl fmt::Display for Expr {
                     }
                     Ok(())
                 },
-                Expr::Call(ref name, ref args) => {
-                    try!(write!(fmt, "{}(", name));
+                Expr::Call(ref func, ref args) => {
+                    try!(write!(fmt, "{}(", func.name()));
                     if let Some(first) = args.first() {
                         try!(recurse(first, fmt, Prec::Equals));
                     }
@@ -320,6 +398,7 @@ impl fmt::Display for DateToken {
 #[cfg(test)]
 mod test {
     use super::Expr::{self, *};
+    use super::Function;
 
     fn check<T: ::std::fmt::Display>(e: T, expected: &str) {
         assert_eq!(e.to_string(), expected);
@@ -333,9 +412,9 @@ mod test {
 
     #[test]
     fn test_display_call() {
-        check(Call("f".into(), vec![]), "f()");
-        check(Call("f".into(), vec![1.into()]), "f(1)");
-        check(Call("f".into(), vec![1.into(), 2.into()]), "f(1, 2)");
-        check(Call("f".into(), vec![1.into(), 2.into(), 3.into()]), "f(1, 2, 3)");
+        check(Call(Function::Sin, vec![]), "sin()");
+        check(Call(Function::Sin, vec![1.into()]), "sin(1)");
+        check(Call(Function::Sin, vec![1.into(), 2.into()]), "sin(1, 2)");
+        check(Call(Function::Sin, vec![1.into(), 2.into(), 3.into()]), "sin(1, 2, 3)");
     }
 }
