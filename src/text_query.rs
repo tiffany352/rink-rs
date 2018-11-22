@@ -428,10 +428,6 @@ impl<'a> Iterator for TokenIterator<'a> {
 
 pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
-fn is_func(name: &str) -> bool {
-    Function::from_name(name).is_some()
-}
-
 fn attr_from_name(name: &str) -> Option<&'static str> {
     match name {
         "int" | "international" => Some("int"),
@@ -451,51 +447,56 @@ fn attr_from_name(name: &str) -> Option<&'static str> {
     }
 }
 
+fn parse_function(iter: &mut Iter, func: Function) -> Expr {
+    let args = match iter.peek().cloned().unwrap() {
+        Token::LPar => {
+            iter.next();
+            let mut args = vec![];
+            loop {
+                if let Some(&Token::RPar) = iter.peek() {
+                    iter.next();
+                    break;
+                }
+                args.push(parse_expr(iter));
+                match iter.peek().cloned().unwrap() {
+                    Token::Comma => {
+                        iter.next();
+                    },
+                    Token::RPar => (),
+                    x => return Expr::Error(format!("Expected `,` or `)`, got {}",
+                                                    describe(&x)))
+                }
+            }
+            args
+        },
+        _ => vec![parse_pow(iter)],
+    };
+    Expr::Call(func, args)
+}
+
 fn parse_term(iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
-        Token::Ident(ref name) if is_func(name) => {
-            let args = match iter.peek().cloned().unwrap() {
-                Token::LPar => {
-                    iter.next();
-                    let mut args = vec![];
-                    loop {
-                        if let Some(&Token::RPar) = iter.peek() {
-                            iter.next();
-                            break;
-                        }
-                        args.push(parse_expr(iter));
-                        match iter.peek().cloned().unwrap() {
-                            Token::Comma => {
-                                iter.next();
-                            },
-                            Token::RPar => (),
-                            x => return Expr::Error(format!("Expected `,` or `)`, got {}",
-                                                            describe(&x)))
-                        }
-                    }
-                    args
-                },
-                _ => vec![parse_pow(iter)],
-            };
-            Expr::Call(Function::from_name(name.as_ref()).unwrap(), args)
-        },
-        Token::Ident(ref attr) if attr_from_name(attr).is_some() => {
-            match iter.peek().cloned().unwrap() {
-                Token::Ident(ref name) => {
-                    let attr = attr_from_name(attr).unwrap();
-                    iter.next();
-                    Expr::Unit(format!("{}{}", attr, name))
-                },
-                x => Expr::Error(format!("Attribute must be followed by ident, got {}",
-                                         describe(&x)))
+        Token::Ident(ref id) => {
+            if let Some(func) = Function::from_name(id) {
+                parse_function(iter, func)
+            } else if let Some(attr) = attr_from_name(id) {
+                match iter.peek().cloned().unwrap() {
+                    Token::Ident(ref name) => {
+                        iter.next();
+                        Expr::Unit(format!("{}{}", attr, name))
+                    },
+                    x => Expr::Error(format!("Attribute must be followed by ident, got {}",
+                                            describe(&x)))
+                }
+            } else {
+                match iter.peek().cloned().unwrap() {
+                    Token::Ident(ref s) if s == "of" => {
+                        iter.next();
+                        Expr::Of(id.clone(), Box::new(parse_juxt(iter)))
+                    },
+                    _ => Expr::Unit(id.to_string())
+                }
             }
-        },
-        Token::Ident(name) => match iter.peek().cloned().unwrap() {
-            Token::Ident(ref s) if s == "of" => {
-                iter.next();
-                Expr::Of(name.clone(), Box::new(parse_juxt(iter)))
-            },
-            _ => Expr::Unit(name)
         },
         Token::Quote(name) => Expr::Quote(name),
         Token::Decimal(num, frac, exp) =>
