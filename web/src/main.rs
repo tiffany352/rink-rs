@@ -55,8 +55,7 @@ fn root(rink: &Rink, req: &mut Request) -> IronResult<Response> {
 
     let map = req.get_ref::<Params>().unwrap();
     match map.find(&["q"]) {
-        Some(&Value::String(ref query)) if query == "" => (),
-        Some(&Value::String(ref query)) => {
+        Some(&Value::String(ref query)) if !query.is_empty() => {
             let mut reply = eval_json(query);
             reply.as_object_mut().unwrap().insert("input".to_owned(), query.to_json());
             println!("{}", reply.pretty());

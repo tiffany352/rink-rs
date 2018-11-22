@@ -98,9 +98,8 @@ impl<'a> Iterator for TokenIterator<'a> {
             },
             '#' => {
                 while let Some(c) = self.0.next() {
-                    match c {
-                        '\n' => break,
-                        _ => ()
+                    if c == '\n' {
+                        break;
                     }
                 }
                 Token::Newline

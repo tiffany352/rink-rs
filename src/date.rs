@@ -253,10 +253,7 @@ pub fn parse_date<I>(
     if advance {
         date.next();
     }
-    match res {
-        Ok(()) => parse_date(out, out_tz, date, &pat[1..]),
-        Err(e) => Err(e)
-    }
+    res.and_then(|_| parse_date(out, out_tz, date, &pat[1..]))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

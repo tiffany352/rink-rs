@@ -27,10 +27,9 @@ fn main_noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
             print!("> ");
         }
         stdout().flush().unwrap();
-        match f.read_line(&mut line) {
-            Ok(_) => (),
-            Err(_) => return
-        };
+        if f.read_line(&mut line).is_err() {
+            return
+        }
         // the underlying file object has hit an EOF if we try to read a
         // line but do not find the newline at the end, so let's break
         // out of the loop
