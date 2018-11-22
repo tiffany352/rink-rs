@@ -432,7 +432,7 @@ fn is_func(name: &str) -> bool {
     Function::from_name(name).is_some()
 }
 
-fn is_attr(name: &str) -> Option<&'static str> {
+fn attr_from_name(name: &str) -> Option<&'static str> {
     match name {
         "int" | "international" => Some("int"),
         "UKSJJ" => Some("UKSJJ"),
@@ -479,10 +479,10 @@ fn parse_term(iter: &mut Iter) -> Expr {
             };
             Expr::Call(Function::from_name(name.as_ref()).unwrap(), args)
         },
-        Token::Ident(ref attr) if is_attr(attr).is_some() => {
+        Token::Ident(ref attr) if attr_from_name(attr).is_some() => {
             match iter.peek().cloned().unwrap() {
                 Token::Ident(ref name) => {
-                    let attr = is_attr(attr).unwrap();
+                    let attr = attr_from_name(attr).unwrap();
                     iter.next();
                     Expr::Unit(format!("{}{}", attr, name))
                 },
