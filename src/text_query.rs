@@ -454,7 +454,7 @@ fn is_attr(name: &str) -> Option<&'static str> {
 fn parse_term(iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(ref name) if is_func(name) => {
-            match iter.peek().cloned().unwrap() {
+            let args = match iter.peek().cloned().unwrap() {
                 Token::LPar => {
                     iter.next();
                     let mut args = vec![];
@@ -473,10 +473,11 @@ fn parse_term(iter: &mut Iter) -> Expr {
                                                             describe(&x)))
                         }
                     }
-                    Expr::Call(Function::from_name(name.as_ref()).unwrap(), args)
+                    args
                 },
-                _ => Expr::Call(Function::from_name(name.as_ref()).unwrap(), vec![parse_pow(iter)]),
-            }
+                _ => vec![parse_pow(iter)],
+            };
+            Expr::Call(Function::from_name(name.as_ref()).unwrap(), args)
         },
         Token::Ident(ref attr) if is_attr(attr).is_some() => {
             match iter.peek().cloned().unwrap() {
