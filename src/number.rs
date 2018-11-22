@@ -156,7 +156,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
 
 /// Several stringified properties of a number which are useful for
 /// displaying it to a user.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct NumberParts {
     /// Present if the number can be concisely represented exactly.
@@ -177,21 +177,6 @@ pub struct NumberParts {
     pub quantity: Option<String>,
     /// The dimensionality of the unit.
     pub dimensions: Option<String>,
-}
-
-impl Default for NumberParts {
-    fn default() -> Self {
-        NumberParts {
-            exact_value: None,
-            approx_value: None,
-            factor: None,
-            divfactor: None,
-            raw_unit: None,
-            unit: None,
-            quantity: None,
-            dimensions: None,
-        }
-    }
 }
 
 impl NumberParts {
