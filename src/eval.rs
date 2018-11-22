@@ -685,10 +685,10 @@ impl Context {
                 }))
             },
             Query::Convert(ref top, Conversion::Expr(ref bottom), base, digits) => match
-                (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom))
+                (try!(self.eval(top)), try!(self.eval(bottom)), try!(self.eval_unit_name(bottom)))
             {
-                (Ok(Value::Number(top)), Ok(Value::Number(bottom)),
-                 Ok((bottom_name, bottom_const))) => {
+                (Value::Number(top), Value::Number(bottom),
+                 (bottom_name, bottom_const)) => {
                     if top.unit == bottom.unit {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
@@ -707,8 +707,8 @@ impl Context {
                             &top, &bottom)))
                     }
                 },
-                (Ok(Value::Substance(sub)), Ok(Value::Number(bottom)),
-                 Ok((bottom_name, bottom_const))) => {
+                (Value::Substance(sub), Value::Number(bottom),
+                 (bottom_name, bottom_const)) => {
                     sub.get_in_unit(
                         bottom,
                         self,
@@ -722,8 +722,8 @@ impl Context {
                         QueryReply::Substance
                     )
                 },
-                (Ok(Value::Number(top)), Ok(Value::Substance(mut sub)),
-                 Ok((bottom_name, bottom_const))) => {
+                (Value::Number(top), Value::Substance(mut sub),
+                 (bottom_name, bottom_const)) => {
                     let unit = sub.amount.clone();
                     sub.amount = top;
                     sub.get_in_unit(
@@ -739,14 +739,11 @@ impl Context {
                         QueryReply::Substance
                     )
                 },
-                (Ok(x), Ok(y), Ok(_)) => Err(QueryError::Generic(format!(
+                (x, y, _) => Err(QueryError::Generic(format!(
                     "Operation is not defined: <{}> -> <{}>",
                     x.show(self),
                     y.show(self)
                 ))),
-                (Err(e), _, _) => Err(e),
-                (_, Err(e), _) => Err(e),
-                (_, _, Err(e)) => Err(e),
             },
             Query::Convert(ref top, Conversion::List(ref list), None, Digits::Default) => {
                 let top = try!(self.eval(top));
