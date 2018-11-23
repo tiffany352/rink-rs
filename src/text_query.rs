@@ -474,6 +474,14 @@ fn parse_function(iter: &mut Iter, func: Function) -> Expr {
     Expr::Call(func, args)
 }
 
+fn parse_radix(num: &str, base: u8, description: &str) -> Expr {
+    Mpz::from_str_radix(&*num, base)
+        .map(|x| Mpq::ratio(&x, &Mpz::one()))
+        .map(Num::Mpq)
+        .map(Expr::Const)
+        .unwrap_or_else(|_| Expr::Error(format!("Failed to parse {}", description)))
+}
+
 fn parse_term(iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(ref id) => {
@@ -503,24 +511,9 @@ fn parse_term(iter: &mut Iter) -> Expr {
             ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
             .unwrap_or_else(|e| Expr::Error(e.to_string())),
-        Token::Hex(num) =>
-            Mpz::from_str_radix(&*num, 16)
-            .map(|x| Mpq::ratio(&x, &Mpz::one()))
-            .map(Num::Mpq)
-            .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error("Failed to parse hex".to_string())),
-        Token::Oct(num) =>
-            Mpz::from_str_radix(&*num, 8)
-            .map(|x| Mpq::ratio(&x, &Mpz::one()))
-            .map(Num::Mpq)
-            .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error("Failed to parse octal".to_string())),
-        Token::Bin(num) =>
-            Mpz::from_str_radix(&*num, 2)
-            .map(|x| Mpq::ratio(&x, &Mpz::one()))
-            .map(Num::Mpq)
-            .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error("Failed to parse binary".to_string())),
+        Token::Hex(num) => parse_radix(&*num, 16, "hex"),
+        Token::Oct(num) => parse_radix(&*num, 8, "octal"),
+        Token::Bin(num) => parse_radix(&*num, 2, "binary"),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         Token::LPar => {
