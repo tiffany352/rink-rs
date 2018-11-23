@@ -11,142 +11,142 @@ use std::rc::Rc;
 use value::Value;
 use Context;
 
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
+enum Name {
+    Unit(Rc<String>),
+    Prefix(Rc<String>),
+    Quantity(Rc<String>),
+    Category(Rc<String>),
+}
+
+impl Name {
+    fn name(&self) -> String {
+        match &self {
+            Name::Unit(ref name) |
+            Name::Prefix(ref name) |
+            Name::Quantity(ref name) |
+            Name::Category(ref name) => (**name).clone(),
+        }
+    }
+}
+
+struct Resolver {
+    interned: BTreeSet<Rc<String>>,
+    input: BTreeMap<Name, Rc<Def>>,
+    sorted: Vec<Name>,
+    unmarked: BTreeSet<Name>,
+    temp_marks: BTreeSet<Name>,
+    docs: BTreeMap<Name, String>,
+    categories: BTreeMap<Name, String>,
+}
+
+impl Resolver {
+    fn intern(&mut self, name: &String) -> Rc<String> {
+        if let Some(v) = self.interned.get(name).cloned() {
+            v
+        } else {
+            let v = Rc::new(name.to_owned());
+            self.interned.insert(v.clone());
+            v
+        }
+    }
+
+    fn lookup(&mut self, name: &Rc<String>) -> bool {
+        fn inner(ctx: &mut Resolver, name: &Rc<String>) -> bool {
+            [Name::Unit, Name::Prefix, Name::Quantity].iter().any(|f| {
+                let unit = f(name.clone());
+                ctx.input.contains_key(&unit) && {
+                    ctx.visit(&unit);
+                    true
+                }
+            })
+        }
+
+        let mut outer = |name: &Rc<String>| -> bool {
+            if inner(self, name) {
+                return true;
+            }
+            let mut found = vec![];
+            for pre in self.input.keys() {
+                if let Name::Prefix(ref pre) = *pre {
+                    if (*name).starts_with(&**pre) {
+                        found.push(pre.clone());
+                    }
+                }
+            }
+            found.into_iter().any(|pre| {
+                inner(self, &Rc::new(name[pre.len()..].to_owned())) && {
+                    let unit = Name::Prefix(pre);
+                    self.visit(&unit);
+                    true
+                }
+            })
+        };
+
+        outer(name) || name.ends_with('s') && {
+            let name = &Rc::new(name[0..name.len()-1].to_owned());
+            outer(name)
+        }
+    }
+
+    fn eval(&mut self, expr: &Expr) {
+        match *expr {
+            Expr::Unit(ref name) => {
+                let name = self.intern(name);
+                self.lookup(&name);
+            },
+            Expr::Frac(ref left, ref right) |
+            Expr::Pow(ref left, ref right) |
+            Expr::Add(ref left, ref right) |
+            Expr::Sub(ref left, ref right) => {
+                self.eval(left);
+                self.eval(right);
+            },
+            Expr::Neg(ref expr) | Expr::Plus(ref expr) |
+            Expr::Suffix(_, ref expr) | Expr::Of(_, ref expr) =>
+                self.eval(expr),
+            Expr::Mul(ref exprs) | Expr::Call(_, ref exprs) => for expr in exprs {
+                self.eval(expr);
+            },
+            _ => ()
+        }
+    }
+
+    fn visit(&mut self, name: &Name) {
+        if self.temp_marks.get(name).is_some() {
+            println!("Unit {:?} has a dependency cycle", name);
+            return;
+        }
+        if self.unmarked.get(name).is_some() {
+            self.temp_marks.insert(name.clone());
+            if let Some(v) = self.input.get(name).cloned() {
+                match *v {
+                    Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) |
+                    Def::Quantity(ref e) =>
+                        self.eval(e),
+                    Def::Canonicalization(ref e) => {
+                        self.lookup(&Rc::new(e.clone()));
+                    },
+                    Def::Substance { ref properties, .. } => {
+                        for prop in properties {
+                            self.eval(&prop.input);
+                            self.eval(&prop.output);
+                        }
+                    },
+                    _ => (),
+                }
+            }
+            self.unmarked.remove(name);
+            self.temp_marks.remove(name);
+            self.sorted.push(name.clone());
+        }
+    }
+}
+
 impl Context {
     /// Takes a parsed definitions.units from
     /// `gnu_units::parse()`. Prints if there are errors in the file.
     pub fn load(&mut self, defs: Defs) {
-        #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
-        enum Name {
-            Unit(Rc<String>),
-            Prefix(Rc<String>),
-            Quantity(Rc<String>),
-            Category(Rc<String>),
-        }
-
-        impl Name {
-            fn name(&self) -> String {
-                match &self {
-                    Name::Unit(ref name) |
-                    Name::Prefix(ref name) |
-                    Name::Quantity(ref name) |
-                    Name::Category(ref name) => (**name).clone(),
-                }
-            }
-        }
-
-        struct Resolver {
-            interned: BTreeSet<Rc<String>>,
-            input: BTreeMap<Name, Rc<Def>>,
-            sorted: Vec<Name>,
-            unmarked: BTreeSet<Name>,
-            temp_marks: BTreeSet<Name>,
-            docs: BTreeMap<Name, String>,
-            categories: BTreeMap<Name, String>,
-        }
-
-        impl Resolver {
-            fn intern(&mut self, name: &String) -> Rc<String> {
-                if let Some(v) = self.interned.get(name).cloned() {
-                    v
-                } else {
-                    let v = Rc::new(name.to_owned());
-                    self.interned.insert(v.clone());
-                    v
-                }
-            }
-
-            fn lookup(&mut self, name: &Rc<String>) -> bool {
-                fn inner(ctx: &mut Resolver, name: &Rc<String>) -> bool {
-                    [Name::Unit, Name::Prefix, Name::Quantity].iter().any(|f| {
-                        let unit = f(name.clone());
-                        ctx.input.contains_key(&unit) && {
-                            ctx.visit(&unit);
-                            true
-                        }
-                    })
-                }
-
-                let mut outer = |name: &Rc<String>| -> bool {
-                    if inner(self, name) {
-                        return true;
-                    }
-                    let mut found = vec![];
-                    for pre in self.input.keys() {
-                        if let Name::Prefix(ref pre) = *pre {
-                            if (*name).starts_with(&**pre) {
-                                found.push(pre.clone());
-                            }
-                        }
-                    }
-                    found.into_iter().any(|pre| {
-                        inner(self, &Rc::new(name[pre.len()..].to_owned())) && {
-                            let unit = Name::Prefix(pre);
-                            self.visit(&unit);
-                            true
-                        }
-                    })
-                };
-
-                outer(name) || name.ends_with('s') && {
-                    let name = &Rc::new(name[0..name.len()-1].to_owned());
-                    outer(name)
-                }
-            }
-
-            fn eval(&mut self, expr: &Expr) {
-                match *expr {
-                    Expr::Unit(ref name) => {
-                        let name = self.intern(name);
-                        self.lookup(&name);
-                    },
-                    Expr::Frac(ref left, ref right) |
-                    Expr::Pow(ref left, ref right) |
-                    Expr::Add(ref left, ref right) |
-                    Expr::Sub(ref left, ref right) => {
-                        self.eval(left);
-                        self.eval(right);
-                    },
-                    Expr::Neg(ref expr) | Expr::Plus(ref expr) |
-                    Expr::Suffix(_, ref expr) | Expr::Of(_, ref expr) =>
-                        self.eval(expr),
-                    Expr::Mul(ref exprs) | Expr::Call(_, ref exprs) => for expr in exprs {
-                        self.eval(expr);
-                    },
-                    _ => ()
-                }
-            }
-
-            fn visit(&mut self, name: &Name) {
-                if self.temp_marks.get(name).is_some() {
-                    println!("Unit {:?} has a dependency cycle", name);
-                    return;
-                }
-                if self.unmarked.get(name).is_some() {
-                    self.temp_marks.insert(name.clone());
-                    if let Some(v) = self.input.get(name).cloned() {
-                        match *v {
-                            Def::Prefix(ref e) | Def::SPrefix(ref e) | Def::Unit(ref e) |
-                            Def::Quantity(ref e) =>
-                                self.eval(e),
-                            Def::Canonicalization(ref e) => {
-                                self.lookup(&Rc::new(e.clone()));
-                            },
-                            Def::Substance { ref properties, .. } => {
-                                for prop in properties {
-                                    self.eval(&prop.input);
-                                    self.eval(&prop.output);
-                                }
-                            },
-                            _ => (),
-                        }
-                    }
-                    self.unmarked.remove(name);
-                    self.temp_marks.remove(name);
-                    self.sorted.push(name.clone());
-                }
-            }
-        }
-
         let mut resolver = Resolver {
             interned: BTreeSet::new(),
             input: BTreeMap::new(),
