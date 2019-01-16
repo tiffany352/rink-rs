@@ -150,8 +150,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 _ => Token::Slash
             },
             x @ '0'...'9' | x @ '.' => {
-                use std::ascii::AsciiExt;
-
                 if x == '0' && self.0.peek() == Some(&'x') {
                     self.0.next();
                     let mut hex = String::new();

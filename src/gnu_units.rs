@@ -106,8 +106,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 Token::Newline
             },
             x @ '0'...'9' | x @ '.' => {
-                use std::ascii::AsciiExt;
-
                 let mut integer = String::new();
                 let mut frac = None;
                 let mut exp = None;
