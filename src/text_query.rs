@@ -540,19 +540,19 @@ fn parse_term(iter: &mut Iter) -> Expr {
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse hex"))),
+            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse hex"))),
         Token::Oct(num) =>
             Mpz::from_str_radix(&*num, 8)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse octal"))),
+            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse octal"))),
         Token::Bin(num) =>
             Mpz::from_str_radix(&*num, 2)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse binary"))),
+            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse binary"))),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         Token::LPar => {

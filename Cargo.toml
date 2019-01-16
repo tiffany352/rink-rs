@@ -17,7 +17,7 @@ currency = ["hyper", "hyper-native-tls", "xml-rs", "json"]
 nightly = ["serde", "serde_derive"]
 
 [dependencies]
-rust-gmp = "0.3.2"
+rust-gmp = "0.5"
 chrono = "0.2.25"
 strsim = "0.5.1"
 chrono-tz = "0.2.2"
