@@ -178,7 +178,7 @@ impl Context {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
-            let mut helper = |dim: &Dim, pow: i64, buf: &mut Vec<u8>| {
+            let helper = |dim: &Dim, pow: i64, buf: &mut Vec<u8>| {
                 let mut map = Unit::new();
                 map.insert(dim.clone(), pow);
                 if let Some(name) = self.quantities.get(&map) {
