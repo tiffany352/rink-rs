@@ -33,19 +33,19 @@ impl<'a> Iterator for TokenIterator<'a> {
             return None
         }
         let res = match self.0.next().unwrap() {
-            letter @ 'A'...'Z' => {
+            letter @ 'A'..='Z' => {
                 let mut symbol = String::new();
                 symbol.push(letter);
                 match self.0.peek().cloned() {
-                    Some('a'...'z') => symbol.push(self.0.next().unwrap()),
+                    Some('a'..='z') => symbol.push(self.0.next().unwrap()),
                     _ => ()
                 }
                 Token::Symbol(symbol)
             }
-            digit @ '0'...'9' => {
+            digit @ '0'..='9' => {
                 let mut integer = String::new();
                 integer.push(digit);
-                while let Some('0'...'9') = self.0.peek().cloned() {
+                while let Some('0'..='9') = self.0.peek().cloned() {
                     integer.push(self.0.next().unwrap())
                 }
                 Token::Count(u32::from_str(&integer).unwrap())

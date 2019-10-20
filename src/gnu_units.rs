@@ -105,7 +105,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Newline
             },
-            x @ '0'...'9' | x @ '.' => {
+            x @ '0'..='9' | x @ '.' => {
                 let mut integer = String::new();
                 let mut frac = None;
                 let mut exp = None;
@@ -115,7 +115,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     integer.push(x);
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'...'9' => integer.push(self.0.next().unwrap()),
+                            '0'..='9' => integer.push(self.0.next().unwrap()),
                             _ => break
                         }
                     }
@@ -130,7 +130,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'...'9' => buf.push(self.0.next().unwrap()),
+                            '0'..='9' => buf.push(self.0.next().unwrap()),
                             _ => break
                         }
                     }
@@ -155,7 +155,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'...'9' => buf.push(self.0.next().unwrap()),
+                            '0'..='9' => buf.push(self.0.next().unwrap()),
                             _ => break
                         }
                     }

@@ -152,7 +152,6 @@ static CURRENCY_FILE: &'static str = include_str!("../currency.units");
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
     use std::io::Read;
-    use std::fs::File;
     use std::path::Path;
 
     let mut path = try!(config_dir());
