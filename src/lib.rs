@@ -43,9 +43,7 @@ extern crate libc;
 #[cfg(feature = "sandbox")]
 extern crate ipc_channel;
 #[cfg(feature = "currency")]
-extern crate hyper;
-#[cfg(feature = "currency")]
-extern crate hyper_native_tls;
+extern crate reqwest;
 #[cfg(feature = "currency")]
 extern crate xml;
 #[cfg(feature = "currency")]
@@ -364,16 +362,11 @@ fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
     res
 }
 
-#[cfg(feature = "hyper")]
+#[cfg(feature = "reqwest")]
 fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
     use std::fmt::Display;
     use std::time::SystemTime;
     use std::fs;
-    use std::io::{Read, Write};
-    use hyper::Client;
-    use hyper::status::StatusCode;
-    use hyper::net::HttpsConnector;
-    use hyper_native_tls::NativeTlsClient;
 
     fn ts<T:Display>(x: T) -> String {
         format!("{}", x)
@@ -402,23 +395,10 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             try!(fs::create_dir_all(path.parent().unwrap()).map_err(|x| format!("{}", x)));
             let mut f = try!(File::create(tmppath.clone()).map_err(|x| format!("{}", x)));
 
-            let ssl = NativeTlsClient::new().unwrap();
-            let connector = HttpsConnector::new(ssl);
-            let client = Client::with_connector(connector);
-            let mut res = try!(client.get(url).send().map_err(|x| format!("{}", x)));
-            if res.status != StatusCode::Ok {
-                return Err(format!("Request failed with status code {}", res.status))
-            }
-            let mut buf = vec![0; 8192];
-            loop {
-                match res.read(&mut buf) {
-                    Ok(0) => break,
-                    Ok(n) => {
-                        try!(f.write(&buf[..n]).map_err(|x| format!("{}", x)));
-                    },
-                    Err(e) => return Err(format!("{}", e))
-                }
-            }
+            reqwest::get(url)
+                .map_err(|err| format!("Request failed: {}", err))?
+                .copy_to(&mut f).map_err(|err| format!("Request failed: {}", err))?;
+
             try!(f.sync_all().map_err(|x| format!("{}", x)));
             drop(f);
             try!(fs::rename(tmppath.clone(), path.clone())
