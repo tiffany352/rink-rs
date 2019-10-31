@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/tiffany352/rink-rs.svg?branch=master)](https://travis-ci.org/tiffany352/rink-rs)
 [![codecov](https://codecov.io/gh/tiffany352/rink-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/tiffany352/rink-rs)
+[![crates.io](https://img.shields.io/crates/v/rink)](https://crates.io/crates/rink)
+[![downloads](https://img.shields.io/crates/d/rink)](https://crates.io/crates/rink)
 
 Rink is a unit-aware calculator. It can be used for physics and
 engineering calculations, as well as dimensionality analysis.
@@ -27,9 +29,10 @@ Unique features:
 Describes (hopefully) everything you need to know to use Rink's
 expression language.
 
-## [Web Interface](https://tiffnix.com/rink/)
+## [Web Interface: rinkcalc.app](https://rinkcalc.app)
 
-Rink is available via the web, so that you don't have to install it.
+Rink is available via a web interface in addition to the terminal-based
+interface. Useful for doing calculations on mobile.
 
 ## Install
 
