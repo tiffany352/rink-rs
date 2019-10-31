@@ -123,6 +123,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 },
                 _ => Token::Minus
             },
+            '\u{2212}' => Token::Minus,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {

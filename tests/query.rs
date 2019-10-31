@@ -569,3 +569,8 @@ fn test_formula() {
     );
     test("C60", "C60: molar_mass = 0.72066 kilogram / mole");
 }
+
+#[test]
+fn test_unicode_minus() {
+    test("\u{2212}10", "-10 (dimensionless)");
+}
