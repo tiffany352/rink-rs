@@ -2531,6 +2531,12 @@ litre                   liter
 dioptre                 diopter
 aluminium               aluminum
 sulphur                 sulfur
+androstenolone          dehydroepiandrosterone
+androstanolone          dihydrotestosterone
+oestrone                estrone
+oestradiol              estradiol
+oestriol                estriol
+oestetrol               estetrol
 
 #
 # Units derived the human body (may not be very accurate)
@@ -7040,6 +7046,20 @@ acetyl {
 phenyl {
     molar_mass      mass 77.1057 g / amount mol
 }
+
+# Steroid hormones.
+
+progesterone            C21H30O2
+dehydroepiandrosterone  C19H28O2
+androstenediol          C19H30O2
+androstenedione         C19H26O2
+testosterone            C19H28O2
+dihydrotestosterone     C19H30O2
+estrone                 C18H22O2
+estradiol               C18H24O2
+estriol                 C18H24O3
+estetrol                C18H24O4
+
 
 !endcategory
 
