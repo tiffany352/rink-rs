@@ -207,6 +207,23 @@ sr        !steradian
 ?? that the random variable takes on the value i.
 bit       !
 
+?? One international unit of a biological agent is the biological
+?? activity equivalent to a standard amount of a substance that
+?? represents the agent (its “reference preparation”). Agents that
+?? can be measured in international units are generally found in
+?? multiple forms (such as Vitamin A) and/or not meaningfully
+?? comparable in SI units like moles (such as prolactin).
+?? WHO TRS 932, Annex 2.
+IU                              !
+
+# XXX: conflates “biological activity” and “immunological activity” to
+# avoid a conflicting quantities warning; some biological agents have
+# more than one reference preparation and/or more than one type of
+# biological activity [WHO TRS 932 pp. 80–81], but it’s unclear how
+# we would map such agents to Rink’s substance/property model
+biological_activity             ? IU
+biological_activity_density     ? mass / biological_activity
+
 ###########################################################################
 #                                                                         #
 # Prefixes (longer names must come first)                                 #
@@ -2531,6 +2548,12 @@ litre                   liter
 dioptre                 diopter
 aluminium               aluminum
 sulphur                 sulfur
+androstenolone          dehydroepiandrosterone
+androstanolone          dihydrotestosterone
+oestrone                estrone
+oestradiol              estradiol
+oestriol                estriol
+oestetrol               estetrol
 
 #
 # Units derived the human body (may not be very accurate)
@@ -7040,6 +7063,27 @@ acetyl {
 phenyl {
     molar_mass      mass 77.1057 g / amount mol
 }
+
+# Biological or immunological activity of reference preparations.
+
+prolactin {
+    # 4th International Standard for Prolactin, human, pituitary [WHO/BS/2016.2292]
+    # <https://apps.who.int/iris/handle/10665/253053>
+    biological_activity_density     mass 3.2 µg / biological_activity 67 mIU
+}
+
+# Steroid hormones.
+
+progesterone            C21H30O2
+dehydroepiandrosterone  C19H28O2
+androstenediol          C19H30O2
+androstenedione         C19H26O2
+testosterone            C19H28O2
+dihydrotestosterone     C19H30O2
+estrone                 C18H22O2
+estradiol               C18H24O2
+estriol                 C18H24O3
+estetrol                C18H24O4
 
 !endcategory
 

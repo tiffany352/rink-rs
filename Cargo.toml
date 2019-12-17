@@ -1,6 +1,6 @@
 [package]
 name = "rink"
-version = "0.4.2"
+version = "0.4.4"
 authors = ["Tiffany Bennett <tiffany@stormbit.net>"]
 description = "Unit conversion tool and library, similar to frink"
 homepage = "https://github.com/tiffany352/rink-rs"
@@ -13,18 +13,17 @@ keywords = ["unit", "math", "conversion", "cli", "tool"]
 default = ["linefeed", "chrono-humanize", "gpl", "currency"]
 sandbox = ["libc", "ipc-channel"]
 gpl = []
-currency = ["hyper", "hyper-native-tls", "xml-rs", "json"]
+currency = ["reqwest", "xml-rs", "json"]
 nightly = ["serde", "serde_derive"]
 
 [dependencies]
-rust-gmp = "0.3.2"
+rust-gmp = "0.5"
 chrono = "0.2.25"
 strsim = "0.5.1"
 chrono-tz = "0.2.2"
 chrono-humanize = { version = "0.0.6", optional = true }
-linefeed = { version = "0.1.4", optional = true }
-hyper = { version = "0.10.10", optional = true }
-hyper-native-tls = { version = "0.2.2", optional = true }
+linefeed = { version = "0.4.0", optional = true }
+reqwest = { version = "0.9.2", optional = true }
 libc = { version = "0.2.14", optional = true }
 ipc-channel = { version = "0.5.1", optional = true }
 xml-rs = { version = "0.3.4", optional = true }

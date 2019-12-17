@@ -458,8 +458,6 @@ impl Number {
     }
 
     pub fn pow(&self, exp: &Number) -> Result<Number, String> {
-        use std::convert::Into;
-
         if !exp.dimless() {
             return Err(format!("Exponent must be dimensionless"))
         }

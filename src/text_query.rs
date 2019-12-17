@@ -41,6 +41,7 @@ pub enum Token {
     DegRo,
     DegDe,
     DegN,
+    Percent,
     Error(String),
 }
 
@@ -74,6 +75,7 @@ fn describe(token: &Token) -> String {
         Token::DegRo => "`°Rø`".to_owned(),
         Token::DegDe => "`°De`".to_owned(),
         Token::DegN => "`°N`".to_owned(),
+        Token::Percent => "%".to_owned(),
         Token::Error(ref e) => format!("<{}>", e)
     }
 }
@@ -101,7 +103,7 @@ impl<'a> Iterator for TokenIterator<'a> {
             ')' => Token::RPar,
             '+' => Token::Plus,
             ';' => Token::Semicolon,
-            '%' => Token::Ident("percent".to_owned()),
+            '%' => Token::Percent,
             '=' => Token::Equals,
             '^' => Token::Caret,
             ',' => Token::Comma,
@@ -121,6 +123,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 },
                 _ => Token::Minus
             },
+            '\u{2212}' => Token::Minus,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
@@ -136,6 +139,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                         }
                         if let Some('*') = self.0.next() {
                             if let Some(&'/') = self.0.peek() {
+                                self.0.next();
                                 return Some(Token::Comment(lines))
                             }
                         }
@@ -146,16 +150,14 @@ impl<'a> Iterator for TokenIterator<'a> {
                 },
                 _ => Token::Slash
             },
-            x @ '0'...'9' | x @ '.' => {
-                use std::ascii::AsciiExt;
-
+            x @ '0'..='9' | x @ '.' => {
                 if x == '0' && self.0.peek() == Some(&'x') {
                     self.0.next();
                     let mut hex = String::new();
 
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'...'9' | 'a'...'f' | 'A'...'F' =>
+                            '0'..='9' | 'a'..='f' | 'A'..='F' =>
                                 hex.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
@@ -176,7 +178,7 @@ impl<'a> Iterator for TokenIterator<'a> {
 
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'...'7' =>
+                            '0'..='7' =>
                                 oct.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
@@ -221,7 +223,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     integer.push(x);
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'...'9' => integer.push(self.0.next().unwrap()),
+                            '0'..='9' => integer.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
                             },
@@ -239,7 +241,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'...'9' => buf.push(self.0.next().unwrap()),
+                            '0'..='9' => buf.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
                             },
@@ -272,7 +274,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'...'9' => buf.push(self.0.next().unwrap()),
+                            '0'..='9' => buf.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
                             },
@@ -355,7 +357,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                                 let mut frac = String::new();
                                 self.0.next();
                                 while let Some(c) = self.0.peek().cloned() {
-                                    if x.is_digit(10) {
+                                    if c.is_digit(10) {
                                         self.0.next();
                                         frac.push(c);
                                     } else {
@@ -482,7 +484,7 @@ fn is_attr(name: &str) -> Option<&'static str> {
     }
 }
 
-fn parse_term(mut iter: &mut Iter) -> Expr {
+fn parse_term(iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(ref name) if is_func(name) => {
             match iter.peek().cloned().unwrap() {
@@ -537,19 +539,19 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse hex"))),
+            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse hex"))),
         Token::Oct(num) =>
             Mpz::from_str_radix(&*num, 8)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse octal"))),
+            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse octal"))),
         Token::Bin(num) =>
             Mpz::from_str_radix(&*num, 2)
             .map(|x| Mpq::ratio(&x, &Mpz::one()))
             .map(Num::Mpq)
             .map(Expr::Const)
-            .unwrap_or_else(|()| Expr::Error(format!("Failed to parse binary"))),
+            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse binary"))),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         Token::LPar => {
@@ -559,13 +561,30 @@ fn parse_term(mut iter: &mut Iter) -> Expr {
                 x => Expr::Error(format!("Expected `)`, got {}", describe(&x)))
             }
         },
+        Token::Percent => Expr::Unit("percent".to_owned()),
         Token::Date(toks) => Expr::Date(toks),
-        x => Expr::Error(format!("Expected term, got {}", describe(&x)))
+        Token::Comment(_) => parse_term(iter),
+        x => Expr::Error(format!("Expected term, got {}", describe(&x))),
     }
 }
 
-fn parse_pow(mut iter: &mut Iter) -> Expr {
+fn parse_suffix(iter: &mut Iter) -> Expr {
     let left = parse_term(iter);
+    match *iter.peek().unwrap() {
+        Token::Percent => {
+            let mut left = left;
+            while let Some(&Token::Percent) = iter.peek() {
+                iter.next();
+                left = Expr::Mul(vec![left, Expr::Unit("percent".to_owned())]);
+            }
+            left
+        },
+        _ => left
+    }
+}
+
+fn parse_pow(iter: &mut Iter) -> Expr {
+    let left = parse_suffix(iter);
     match *iter.peek().unwrap() {
         Token::Caret => {
             iter.next();
@@ -576,7 +595,7 @@ fn parse_pow(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_frac(mut iter: &mut Iter) -> Expr {
+fn parse_frac(iter: &mut Iter) -> Expr {
     let left = parse_pow(iter);
     match *iter.peek().unwrap() {
         Token::Pipe => {
@@ -588,7 +607,7 @@ fn parse_frac(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_juxt(mut iter: &mut Iter) -> Expr {
+fn parse_juxt(iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_frac(iter)];
     loop { match iter.peek().cloned().unwrap() {
         Token::Asterisk | Token::Slash | Token::Comma | Token::Equals |
@@ -628,7 +647,7 @@ fn parse_juxt(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_div(mut iter: &mut Iter) -> Expr {
+fn parse_div(iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_juxt(iter)];
     loop { match iter.peek().cloned().unwrap() {
         Token::Slash => {
@@ -653,7 +672,7 @@ fn parse_div(mut iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_add(mut iter: &mut Iter) -> Expr {
+fn parse_add(iter: &mut Iter) -> Expr {
     let mut left = parse_div(iter);
     loop { match *iter.peek().unwrap() {
         Token::Plus => {
@@ -670,7 +689,7 @@ fn parse_add(mut iter: &mut Iter) -> Expr {
     }}
 }
 
-fn parse_eq(mut iter: &mut Iter) -> Expr {
+fn parse_eq(iter: &mut Iter) -> Expr {
     let left = parse_add(iter);
     match iter.peek().cloned().unwrap() {
         Token::Equals => {
@@ -686,7 +705,7 @@ pub fn parse_expr(iter: &mut Iter) -> Expr {
     parse_eq(iter)
 }
 
-pub fn parse_unitlist(mut iter: &mut Iter) -> Option<Vec<String>> {
+pub fn parse_unitlist(iter: &mut Iter) -> Option<Vec<String>> {
     let mut expecting_term = true;
     let mut res = vec![];
     loop { match iter.next().unwrap() {
@@ -707,7 +726,7 @@ pub fn parse_unitlist(mut iter: &mut Iter) -> Option<Vec<String>> {
     }
 }
 
-pub fn parse_offset(mut iter: &mut Iter) -> Option<i64> {
+pub fn parse_offset(iter: &mut Iter) -> Option<i64> {
     use std::str::FromStr;
 
     let sign = match iter.next().unwrap() {
@@ -730,7 +749,7 @@ pub fn parse_offset(mut iter: &mut Iter) -> Option<i64> {
     Some(sign * (i64::from_str(&*hour).unwrap() * 3600 + i64::from_str(&*min).unwrap() * 60))
 }
 
-pub fn parse_query(mut iter: &mut Iter) -> Query {
+pub fn parse_query(iter: &mut Iter) -> Query {
     match iter.peek().cloned() {
         Some(Token::Ident(ref s)) if s == "factorize" => {
             iter.next();

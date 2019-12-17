@@ -81,6 +81,7 @@ pub enum Query {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum DatePattern {
     Literal(String),
     Match(String),
@@ -310,5 +311,28 @@ impl fmt::Display for DateToken {
             DateToken::Plus => write!(fmt, "+"),
             DateToken::Error(ref e) => write!(fmt, "<{}>", e),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::Expr::{self, *};
+
+    fn check<T: ::std::fmt::Display>(e: T, expected: &str) {
+        assert_eq!(format!("{}", e), expected);
+    }
+
+    impl From<i64> for Expr {
+        fn from(x: i64) -> Self {
+            Const(x.into())
+        }
+    }
+
+    #[test]
+    fn test_display_call() {
+        check(Call("f".into(), vec![]), "f()");
+        check(Call("f".into(), vec![1.into()]), "f(1)");
+        check(Call("f".into(), vec![1.into(), 2.into()]), "f(1, 2)");
+        check(Call("f".into(), vec![1.into(), 2.into(), 3.into()]), "f(1, 2, 3)");
     }
 }
