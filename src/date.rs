@@ -310,17 +310,17 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
         let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
         match (time, date) {
             (Ok(time), Ok(date)) =>
-                Ok(GenericDateTime::Fixed(DateTime::<FixedOffset>::from_utc(
-                    date.and_time(time), offset
-                ))),
+                offset.from_local_datetime(&date.and_time(time)).earliest().ok_or_else(|| (format!(
+                    "Datetime does not represent a valid moment in time"
+                ), count)).map(GenericDateTime::Fixed),
             (Ok(time), Err(_)) =>
                 Ok(GenericDateTime::Fixed(UTC::now().with_timezone(
                     &offset
                 ).date().and_time(time).unwrap())),
             (Err(_), Ok(date)) =>
-                Ok(GenericDateTime::Fixed(Date::<FixedOffset>::from_utc(
-                    date, offset
-                ).and_hms(0, 0, 0))),
+                offset.from_local_date(&date).earliest().map(|x| x.and_hms(0, 0, 0)).ok_or_else(|| (format!(
+                    "Datetime does not represent a valid moment in time"
+                ), count)).map(GenericDateTime::Fixed),
             _ => Err((format!("Failed to construct a useful datetime"), count))
         }
     }
