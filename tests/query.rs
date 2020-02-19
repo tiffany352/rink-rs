@@ -433,7 +433,7 @@ fn test_underscores_in_number() {
 fn test_date_input() {
     test_starts_with(
         "#2018-10-04T09:13:25.123   +2:00#",
-        "2018-10-04 11:13:25.123 +02:00",
+        "2018-10-04 09:13:25.123 +02:00",
     );
 }
 
@@ -573,4 +573,12 @@ fn test_formula() {
 #[test]
 fn test_unicode_minus() {
     test("\u{2212}10", "-10 (dimensionless)");
+}
+
+#[test]
+fn test_offset_date_math() {
+    test(
+        "#2020-01-01 05:00:00 +05:00# - #2020-01-01 00:00:00 +00:00#",
+        "0 second (time)"
+    )
 }
