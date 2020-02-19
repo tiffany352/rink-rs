@@ -17,4 +17,5 @@ path = "../"
 glob = "0.2.11"
 
 [dependencies.irc]
-version = "0.12.3"
+version = "0.13.6"
+features = ["json"]
