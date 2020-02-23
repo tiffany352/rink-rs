@@ -1,0 +1,37 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/buildpack-deps:buster
+    environment:
+      IMAGE_NAME: rink-irc
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker registry
+          command: |
+            echo "${DOCKER_PASS}" | docker login --username "${DOCKER_USER}" --password-stdin "${DOCKER_REGISTRY}"
+      - run:
+          name: Build Docker image
+          command: |
+            docker build -t ${IMAGE_NAME}:latest .
+      - run:
+          name: Push Docker image
+          command: |
+            GIT_COMMIT_ID=$(git rev-parse --short HEAD)
+            docker tag "${IMAGE_NAME}:latest" "${DOCKER_REGISTRY}/${IMAGE_NAME}:latest"
+            docker tag "${IMAGE_NAME}:latest" "${DOCKER_REGISTRY}/${IMAGE_NAME}:${GIT_COMMIT_ID}"
+            docker push "${DOCKER_REGISTRY}/${IMAGE_NAME}:latest"
+            docker push "${DOCKER_REGISTRY}/${IMAGE_NAME}:${GIT_COMMIT_ID}"
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+                - circleci
