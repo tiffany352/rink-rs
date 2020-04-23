@@ -8,6 +8,7 @@ repository = "https://github.com/tiffany352/rink-rs"
 readme = "README.md"
 license = "MPL-2.0"
 keywords = ["unit", "math", "conversion", "cli", "tool"]
+edition = "2018"
 
 [features]
 default = ["linefeed", "chrono-humanize", "gpl", "currency"]

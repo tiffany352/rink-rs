@@ -146,7 +146,7 @@ impl Context {
                     (fn $fname:ident($($name:ident : $ty:ident),*) $block:block) => {{
                         let mut iter = args.iter();
                         let mut count = 0;
-                        $( count += 1; let _ = stringify!($name); )*;
+                        $( count += 1; let _ = stringify!($name); )*
                         $(
                             let $name = match iter.next() {
                                 Some(&Value::$ty(ref v)) => v,
@@ -162,7 +162,7 @@ impl Context {
                                     stringify!($fname), count, args.len()
                                 )))
                             };
-                        )*;
+                        )*
                         if iter.next().is_some() {
                             return Err(QueryError::Generic(format!(
                                 "Argument number mismatch for {}: \
