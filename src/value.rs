@@ -2,14 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use number::Number;
+use crate::number::Number;
 use chrono::{DateTime, FixedOffset};
 use chrono_tz::Tz;
-use context::Context;
-use substance::Substance;
+use crate::context::Context;
+use crate::substance::Substance;
 use std::ops::{Add, Div, Mul, Neg, Sub};
-use date;
-use date::GenericDateTime;
+use crate::date;
+use crate::date::GenericDateTime;
 
 #[derive(Clone, Debug)]
 pub enum Value {

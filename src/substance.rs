@@ -2,16 +2,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use context::Context;
-use number::{Number, Dim};
-use num::Num;
-use value::Show;
+use crate::context::Context;
+use crate::number::{Number, Dim};
+use crate::num::Num;
+use crate::value::Show;
 use std::collections::BTreeMap;
-use reply::{PropertyReply, SubstanceReply};
+use crate::reply::{PropertyReply, SubstanceReply};
 use std::ops::{Mul, Div, Add};
 use std::iter::once;
 use std::rc::Rc;
-use ast::Digits;
+use crate::ast::Digits;
 
 macro_rules! try_div {
     ($x:expr, $y:expr, $context:expr) => {

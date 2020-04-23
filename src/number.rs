@@ -5,14 +5,14 @@
 use gmp::mpq::Mpq;
 use gmp::mpz::Mpz;
 use std::collections::BTreeMap;
-use value::Show;
+use crate::value::Show;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::rc::Rc;
 use std::fmt;
 use std::borrow::Borrow;
-use context::Context;
-use num::*;
-use ast::Digits;
+use crate::context::Context;
+use crate::num::*;
+use crate::ast::Digits;
 
 /// Alias for the primary representation of dimensionality.
 pub type Unit = BTreeMap<Dim, i64>;
@@ -617,7 +617,7 @@ impl Number {
     }
 
     fn pretty_unit(&self, context: &Context) -> Unit {
-        let pretty = ::factorize::fast_decompose(self, &context.reverse);
+        let pretty = crate::factorize::fast_decompose(self, &context.reverse);
         let pretty = pretty.into_iter()
             .map(|(k, p)| (context.canonicalizations.get(&*k.0).map(|x| Dim::new(x)).unwrap_or(k), p))
             .collect::<BTreeMap<_, _>>();
@@ -690,7 +690,7 @@ impl<'a, 'b> Mul<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
     fn mul(self, other: &Number) -> Self::Output {
-        let val = ::btree_merge(&self.unit, &other.unit, |a, b| if a+b != 0 { Some(a + b) } else { None });
+        let val = crate::btree_merge(&self.unit, &other.unit, |a, b| if a+b != 0 { Some(a + b) } else { None });
         Some(Number {
             value: &self.value * &other.value,
             unit: val,

@@ -6,9 +6,9 @@ use std::fs::File;
 use std::time::Duration;
 use xml::EventReader;
 use xml::reader::XmlEvent;
-use ast::{Defs, Def, Expr, DefEntry};
+use crate::ast::{Defs, Def, Expr, DefEntry};
 use std::rc::Rc;
-use num::Num;
+use crate::num::Num;
 
 static URL: &'static str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 
@@ -37,7 +37,7 @@ pub fn parse(f: File) -> Result<Defs, String> {
                     let mut iter = rate.split('.');
                     let integer = iter.next().unwrap();
                     let frac = iter.next();
-                    if let Ok(num) = ::number::Number::from_parts(integer, frac, None) {
+                    if let Ok(num) = crate::number::Number::from_parts(integer, frac, None) {
                         out.push(DefEntry {
                             name: currency.to_owned(),
                             def: Rc::new(Def::Unit(
@@ -62,5 +62,5 @@ pub fn parse(f: File) -> Result<Defs, String> {
 }
 
 pub fn load() -> Result<Defs, String> {
-    ::cached("currency.xml", URL, Duration::from_secs(23*60*60)).and_then(parse)
+    crate::cached("currency.xml", URL, Duration::from_secs(23*60*60)).and_then(parse)
 }

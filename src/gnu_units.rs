@@ -6,8 +6,8 @@ use std::str::Chars;
 use std::iter::Peekable;
 use std::rc::Rc;
 use std::collections::BTreeMap;
-use ast::*;
-use num::Num;
+use crate::ast::*;
+use crate::num::Num;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -211,7 +211,7 @@ fn parse_term(iter: &mut Iter) -> Expr {
             _ => Expr::Unit(name)
         },
         Token::Number(num, frac, exp) =>
-            ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
+            crate::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
             .unwrap_or_else(|e| Expr::Error(e.to_string())),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
@@ -546,7 +546,7 @@ pub fn tokens(iter: &mut Iter) -> Vec<Token> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ast::Expr;
+    use crate::ast::Expr;
 
     fn do_parse(s: &str) -> Expr {
         let mut iter = TokenIterator::new(s).peekable();

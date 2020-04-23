@@ -4,7 +4,7 @@
 
 use std::fs::File;
 use std::time::Duration;
-use ast::{Defs, Def, Expr, DefEntry};
+use crate::ast::{Defs, Def, Expr, DefEntry};
 use std::io::Read;
 use std::rc::Rc;
 use json;
@@ -19,7 +19,7 @@ pub fn parse(mut f: File) -> Result<Defs, String> {
     if let Some(price) = parsed["market_price_usd"].as_number() {
         let (sign, mantissa, exp) = price.as_parts();
         let integer = format!("{}{}", if sign { "" } else { "-" }, mantissa);
-        if let Ok(price) = ::Number::from_parts(&*integer, None, Some(&*exp.to_string())) {
+        if let Ok(price) = crate::Number::from_parts(&*integer, None, Some(&*exp.to_string())) {
             out.push(DefEntry {
                 name: "BTC".to_owned(),
                 def: Rc::new(Def::Unit(
@@ -38,5 +38,5 @@ pub fn parse(mut f: File) -> Result<Defs, String> {
 }
 
 pub fn load() -> Result<Defs, String> {
-    ::cached("btc.json", URL, Duration::from_secs(3*60*60)).and_then(parse)
+    crate::cached("btc.json", URL, Duration::from_secs(3*60*60)).and_then(parse)
 }

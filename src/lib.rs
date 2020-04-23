@@ -75,9 +75,9 @@ pub mod currency;
 #[cfg(feature = "currency")]
 pub mod btc;
 
-pub use number::Number;
-pub use context::Context;
-pub use value::Value;
+pub use crate::number::Number;
+pub use crate::context::Context;
+pub use crate::value::Value;
 
 use std::path::PathBuf;
 use std::collections::BTreeMap;

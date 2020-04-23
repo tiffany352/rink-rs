@@ -6,9 +6,9 @@ use std::str::{Chars, FromStr};
 use std::iter::Peekable;
 use std::collections::BTreeMap;
 use std::rc::Rc;
-use num::Num;
-use number::{Number, Dim};
-use substance::{Property, Properties, Substance};
+use crate::num::Num;
+use crate::number::{Number, Dim};
+use crate::substance::{Property, Properties, Substance};
 
 enum Token {
     Symbol(String),

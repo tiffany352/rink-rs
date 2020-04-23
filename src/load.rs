@@ -3,13 +3,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::{BTreeMap, BTreeSet};
-use number::{Number, Dim};
-use num::Num;
-use ast::{Expr, Def, Defs, DefEntry};
-use substance::{Substance, Property, Properties};
+use crate::number::{Number, Dim};
+use crate::num::Num;
+use crate::ast::{Expr, Def, Defs, DefEntry};
+use crate::substance::{Substance, Property, Properties};
 use std::rc::Rc;
-use value::Value;
-use Context;
+use crate::value::Value;
+use crate::Context;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
 enum Name {

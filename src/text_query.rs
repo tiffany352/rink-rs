@@ -4,10 +4,10 @@
 
 use std::str::Chars;
 use std::iter::Peekable;
-use ast::*;
+use crate::ast::*;
 use gmp::mpz::Mpz;
 use gmp::mpq::Mpq;
-use num::Num;
+use crate::num::Num;
 use chrono_tz::Tz;
 
 #[derive(Debug, Clone)]
@@ -509,7 +509,7 @@ fn parse_term(iter: &mut Iter) -> Expr {
         },
         Token::Quote(name) => Expr::Quote(name),
         Token::Decimal(num, frac, exp) =>
-            ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
+            crate::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
             .unwrap_or_else(|e| Expr::Error(e.to_string())),
         Token::Hex(num) => parse_radix(&*num, 16, "hex"),
@@ -855,7 +855,7 @@ mod test {
 
     #[test]
     fn mono_unit_list() {
-        use ast::*;
+        use crate::ast::*;
         match parse_query(&mut TokenIterator::new("foo -> bar").peekable()) {
             Query::Convert(_, Conversion::Expr(_), _, _) => (),
             x => panic!("Expected Convert(_, Expr(_), _), got {:?}", x),

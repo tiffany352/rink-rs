@@ -4,7 +4,7 @@
 
 use std::rc::Rc;
 use std::fmt;
-use num::Num;
+use crate::num::Num;
 use chrono_tz::Tz;
 
 #[derive(Debug, Clone)]
@@ -277,7 +277,7 @@ impl fmt::Display for Expr {
                 Expr::Unit(ref name) => write!(fmt, "{}", name),
                 Expr::Quote(ref name) => write!(fmt, "'{}'", name),
                 Expr::Const(ref num) => {
-                    let (_exact, val) = ::number::to_string(num, 10, Digits::Default);
+                    let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
                     write!(fmt, "{}", val)
                 },
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),

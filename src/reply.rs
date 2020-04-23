@@ -1,4 +1,4 @@
-use number::NumberParts;
+use crate::number::NumberParts;
 use std::convert::From;
 use std::rc::Rc;
 use std::collections::BTreeMap;
@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FmtResult;
 use chrono::{DateTime, TimeZone};
 use std::iter::once;
-use ast::{Expr, Digits};
+use crate::ast::{Expr, Digits};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
@@ -188,7 +188,7 @@ impl ExprReply {
                 Expr::Unit(ref name) => parts.push(ExprParts::Unit(name.clone())),
                 Expr::Quote(ref name) => literal!(format!("'{}'", name)),
                 Expr::Const(ref num) => {
-                    let (_exact, val) = ::number::to_string(num, 10, Digits::Default);
+                    let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
                     literal!(val.to_string())
                 },
                 Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
@@ -321,7 +321,7 @@ impl Display for ConformanceError {
 }
 
 impl DateReply {
-    pub fn new<Tz>(ctx: &::context::Context, date: DateTime<Tz>) -> DateReply
+    pub fn new<Tz>(ctx: &crate::context::Context, date: DateTime<Tz>) -> DateReply
     where Tz: TimeZone, Tz::Offset: Display {
         use chrono::{Datelike, Timelike};
         DateReply {

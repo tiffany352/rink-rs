@@ -3,12 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::{BTreeMap, BTreeSet};
-use number::{Dim, Number, Unit};
-use num::Num;
-use ast::{Expr, DatePattern};
-use search;
-use substance::Substance;
-use reply::NotFoundError;
+use crate::number::{Dim, Number, Unit};
+use crate::num::Num;
+use crate::ast::{Expr, DatePattern};
+use crate::search;
+use crate::substance::Substance;
+use crate::reply::NotFoundError;
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug, Default)]

@@ -2,12 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use ast::{DatePattern, DateToken, show_datepattern};
+use crate::ast::{DatePattern, DateToken, show_datepattern};
 use chrono::format::Parsed;
-use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration, Date, TimeZone};
-use context::Context;
-use number::{Number, Dim};
-use num::Num;
+use chrono::{Weekday, DateTime, UTC, FixedOffset, Duration, TimeZone};
+use crate::context::Context;
+use crate::number::{Number, Dim};
+use crate::num::Num;
 use std::iter::Peekable;
 use chrono_tz::Tz;
 use std::str::FromStr;
@@ -672,7 +672,7 @@ mod tests {
             "jan", "feb", "mar", "apr", "may", "june", "jul", "AUGUST", "SEp", "Oct", "novemBer",
             "dec",
         ]
-            .into_iter()
+            .iter()
             .enumerate()
         {
             let date = vec![DateToken::Literal(s.into())];

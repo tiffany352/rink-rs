@@ -3,23 +3,23 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::BTreeMap;
-use number::{Number, Dim, NumberParts, pow};
-use num::{Num, Int};
-use date;
-use ast::{Expr, Query, Conversion, Digits, Function};
+use crate::number::{Number, Dim, NumberParts, pow};
+use crate::num::{Num, Int};
+use crate::date;
+use crate::ast::{Expr, Query, Conversion, Digits, Function};
 use std::rc::Rc;
-use factorize::{factorize, Factors};
-use value::{Value, Show};
-use reply::{
+use crate::factorize::{factorize, Factors};
+use crate::value::{Value, Show};
+use crate::reply::{
     DefReply, ConversionReply, FactorizeReply, UnitsForReply,
     QueryReply, ConformanceError, QueryError, UnitListReply,
     DurationReply, SearchReply, DateReply, ExprReply,
     UnitsInCategory
 };
-use search;
-use context::Context;
-use substance::SubstanceGetError;
-use formula::substance_from_formula;
+use crate::search;
+use crate::context::Context;
+use crate::substance::SubstanceGetError;
+use crate::formula::substance_from_formula;
 
 impl Context {
     /// Evaluates an expression to compute its value, *excluding* `->`
@@ -352,7 +352,7 @@ impl Context {
                 let (right, rv) = self.eval_unit_name(right)?;
                 let right = right.into_iter()
                     .map(|(k,v)| (k, -v)).collect::<BTreeMap<_, _>>();
-                Ok((::btree_merge(
+                Ok((crate::btree_merge(
                     &left, &right,
                     |a,b| if a+b != 0 { Some(a + b) } else { None }),
                     &lv / &rv
@@ -362,7 +362,7 @@ impl Context {
                 args[1..].iter().fold(self.eval_unit_name(&args[0]), |acc, b| {
                     let (acc, av) = acc?;
                     let (b, bv) = self.eval_unit_name(b)?;
-                    Ok((::btree_merge(
+                    Ok((crate::btree_merge(
                         &acc, &b,
                         |a,b| if a+b != 0 { Some(a+b) } else { None }),
                         &av * &bv

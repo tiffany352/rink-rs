@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use context::Context;
+use crate::context::Context;
 use std::cmp::{PartialOrd, Ord, Ordering};
 use strsim::jaro_winkler;
 use std::collections::BinaryHeap;
@@ -29,7 +29,7 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
     let mut results = BinaryHeap::new();
     let query = query.to_lowercase();
     {
-        let mut try = |x: &'a str| {
+        let mut r#try = |x: &'a str| {
             let borrow = x;
             let x = x.to_lowercase();
             let modifier = if x == query {
@@ -57,16 +57,16 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         };
 
         for k in &ctx.dimensions {
-            try(&**k.0);
+            r#try(&**k.0);
         }
         for k in ctx.units.keys() {
-            try(&**k);
+            r#try(&**k);
         }
         for k in ctx.quantities.values() {
-            try(&**k);
+            r#try(&**k);
         }
         for k in ctx.substances.keys() {
-            try(&**k);
+            r#try(&**k);
         }
     }
     results.into_sorted_vec()
