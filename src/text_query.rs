@@ -2,13 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::str::Chars;
-use std::iter::Peekable;
 use crate::ast::*;
-use gmp::mpz::Mpz;
-use gmp::mpq::Mpq;
 use crate::num::Num;
 use chrono_tz::Tz;
+use gmp::mpq::Mpq;
+use gmp::mpz::Mpz;
+use std::iter::Peekable;
+use std::str::Chars;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -66,7 +66,7 @@ fn describe(token: &Token) -> String {
         Token::Comma => "`,`".to_owned(),
         Token::Percent => "%".to_owned(),
         Token::Degree(ref deg) => format!("`{}`", deg),
-        Token::Error(ref e) => format!("<{}>", e)
+        Token::Error(ref e) => format!("<{}>", e),
     }
 }
 
@@ -84,7 +84,7 @@ impl<'a> Iterator for TokenIterator<'a> {
 
     fn next(&mut self) -> Option<Token> {
         if self.0.peek().is_none() {
-            return Some(Token::Eof)
+            return Some(Token::Eof);
         }
         let res = match self.0.next().unwrap() {
             ' ' | '\t' => return self.next(),
@@ -100,25 +100,27 @@ impl<'a> Iterator for TokenIterator<'a> {
             '|' => Token::Pipe,
             ':' => Token::Colon,
             '→' => Token::DashArrow,
-            '*' => if self.0.peek().cloned() == Some('*') {
-                self.0.next();
-                Token::Caret
-            } else {
-                Token::Asterisk
-            },
+            '*' => {
+                if self.0.peek().cloned() == Some('*') {
+                    self.0.next();
+                    Token::Caret
+                } else {
+                    Token::Asterisk
+                }
+            }
             '-' => match self.0.peek().cloned() {
                 Some('>') => {
                     self.0.next();
                     Token::DashArrow
-                },
-                _ => Token::Minus
+                }
+                _ => Token::Minus,
             },
             '\u{2212}' => Token::Minus,
             '/' => match self.0.peek() {
                 Some(&'/') => loop {
                     match self.0.next() {
                         None | Some('\n') => return Some(Token::Comment(1)),
-                        _ => ()
+                        _ => (),
                     }
                 },
                 Some(&'*') => {
@@ -130,15 +132,15 @@ impl<'a> Iterator for TokenIterator<'a> {
                         if let Some('*') = self.0.next() {
                             if let Some(&'/') = self.0.peek() {
                                 self.0.next();
-                                return Some(Token::Comment(lines))
+                                return Some(Token::Comment(lines));
                             }
                         }
                         if self.0.peek() == None {
-                            return Some(Token::Error("Expected `*/`, got EOF".to_string()))
+                            return Some(Token::Error("Expected `*/`, got EOF".to_string()));
                         }
                     }
-                },
-                _ => Token::Slash
+                }
+                _ => Token::Slash,
             },
             x @ '0'..='9' | x @ '.' => {
                 if x == '0' && self.0.peek() == Some(&'x') {
@@ -147,19 +149,19 @@ impl<'a> Iterator for TokenIterator<'a> {
 
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'..='9' | 'a'..='f' | 'A'..='F' =>
-                                hex.push(self.0.next().unwrap()),
+                            '0'..='9' | 'a'..='f' | 'A'..='F' => hex.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
-                            },
-                            _ => break
+                            }
+                            _ => break,
                         }
                     }
                     if hex.is_empty() {
                         return Some(Token::Error(
-                            "Malformed hexadecimal literal: No digits after 0x".to_owned()))
+                            "Malformed hexadecimal literal: No digits after 0x".to_owned(),
+                        ));
                     }
-                    return Some(Token::Hex(hex))
+                    return Some(Token::Hex(hex));
                 }
 
                 if x == '0' && self.0.peek() == Some(&'o') {
@@ -168,19 +170,19 @@ impl<'a> Iterator for TokenIterator<'a> {
 
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0'..='7' =>
-                                oct.push(self.0.next().unwrap()),
+                            '0'..='7' => oct.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
-                            },
-                            _ => break
+                            }
+                            _ => break,
                         }
                     }
                     if oct.is_empty() {
                         return Some(Token::Error(
-                            "Malformed octal literal: No digits after 0o".to_owned()))
+                            "Malformed octal literal: No digits after 0o".to_owned(),
+                        ));
                     }
-                    return Some(Token::Oct(oct))
+                    return Some(Token::Oct(oct));
                 }
 
                 if x == '0' && self.0.peek() == Some(&'b') {
@@ -189,19 +191,19 @@ impl<'a> Iterator for TokenIterator<'a> {
 
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
-                            '0' | '1' =>
-                                bin.push(self.0.next().unwrap()),
+                            '0' | '1' => bin.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
-                            },
-                            _ => break
+                            }
+                            _ => break,
                         }
                     }
                     if bin.is_empty() {
                         return Some(Token::Error(
-                            "Malformed binary literal: No digits after 0b".to_owned()))
+                            "Malformed binary literal: No digits after 0b".to_owned(),
+                        ));
                     }
-                    return Some(Token::Bin(bin))
+                    return Some(Token::Bin(bin));
                 }
 
                 let mut integer = String::new();
@@ -216,8 +218,8 @@ impl<'a> Iterator for TokenIterator<'a> {
                             '0'..='9' => integer.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
-                            },
-                            _ => break
+                            }
+                            _ => break,
                         }
                     }
                 } else {
@@ -234,13 +236,14 @@ impl<'a> Iterator for TokenIterator<'a> {
                             '0'..='9' => buf.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
-                            },
-                            _ => break
+                            }
+                            _ => break,
                         }
                     }
                     if buf.is_empty() {
                         return Some(Token::Error(
-                            "Malformed number literal: No digits after decimal point".to_owned()))
+                            "Malformed number literal: No digits after decimal point".to_owned(),
+                        ));
                     }
                     frac = Some(buf)
                 }
@@ -255,11 +258,11 @@ impl<'a> Iterator for TokenIterator<'a> {
                         match c {
                             '-' => {
                                 buf.push(self.0.next().unwrap());
-                            },
+                            }
                             '+' => {
                                 self.0.next();
-                            },
-                            _ => ()
+                            }
+                            _ => (),
                         }
                     }
                     while let Some(c) = self.0.peek().cloned() {
@@ -267,18 +270,19 @@ impl<'a> Iterator for TokenIterator<'a> {
                             '0'..='9' => buf.push(self.0.next().unwrap()),
                             '\u{2009}' | '_' => {
                                 self.0.next();
-                            },
-                            _ => break
+                            }
+                            _ => break,
                         }
                     }
                     if buf.is_empty() {
                         return Some(Token::Error(
-                            "Malformed number literal: No digits after exponent".to_owned()))
+                            "Malformed number literal: No digits after exponent".to_owned(),
+                        ));
                     }
                     exp = Some(buf)
                 }
                 Token::Decimal(integer, frac, exp)
-            },
+            }
             '\\' => match self.0.next() {
                 Some('u') => {
                     let mut buf = String::new();
@@ -297,19 +301,26 @@ impl<'a> Iterator for TokenIterator<'a> {
                     } else {
                         Token::Error(format!("Invalid unicode scalar: {:x}", v))
                     }
-                },
-                _ => Token::Error("Unexpected \\".to_string())
+                }
+                _ => Token::Error("Unexpected \\".to_string()),
             },
             '\'' => {
                 let mut buf = String::new();
                 loop {
                     match self.0.next() {
-                        None | Some('\n') => return Some(Token::Error("Unexpected newline or EOF".to_string())),
+                        None | Some('\n') => {
+                            return Some(Token::Error("Unexpected newline or EOF".to_string()))
+                        }
                         Some('\\') => match self.0.next() {
                             Some('\'') => buf.push('\''),
                             Some('n') => buf.push('\n'),
                             Some('t') => buf.push('\t'),
-                            Some(c) => return Some(Token::Error(format!("Invalid escape sequence \\{}", c))),
+                            Some(c) => {
+                                return Some(Token::Error(format!(
+                                    "Invalid escape sequence \\{}",
+                                    c
+                                )))
+                            }
                             None => return Some(Token::Error("Unexpected EOF".to_string())),
                         },
                         Some('\'') => break,
@@ -317,7 +328,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 }
                 Token::Quote(buf)
-            },
+            }
             '#' => {
                 let mut toks = vec![];
                 while self.0.peek().is_some() {
@@ -331,7 +342,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                                 self.0.next();
                             }
                             DateToken::Space
-                        },
+                        }
                         x if x.is_digit(10) => {
                             let mut integer = String::new();
                             integer.push(x);
@@ -359,7 +370,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                                 None
                             };
                             DateToken::Number(integer, frac)
-                        },
+                        }
                         x => {
                             let mut buf = String::new();
                             buf.push(x);
@@ -372,7 +383,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                                 }
                             }
                             DateToken::Literal(buf)
-                        },
+                        }
                         //x => DateToken::Error(format!("Unexpected character '{}'", x))
                     };
                     toks.push(res);
@@ -384,7 +395,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     toks.pop();
                 }
                 Token::Date(toks)
-            },
+            }
             '"' => {
                 let mut buf = String::new();
                 while let Some(c) = self.0.next() {
@@ -399,7 +410,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 }
                 Token::Ident(buf)
-            },
+            }
             x => {
                 let mut buf = String::new();
                 buf.push(x);
@@ -413,13 +424,17 @@ impl<'a> Iterator for TokenIterator<'a> {
                 match &*buf {
                     "degC" | "°C" | "celsius" | "℃" => Token::Degree(Degree::Celsius),
                     "degF" | "°F" | "fahrenheit" | "℉" => Token::Degree(Degree::Fahrenheit),
-                    "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => Token::Degree(Degree::Reaumur),
-                    "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::Degree(Degree::Romer),
+                    "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => {
+                        Token::Degree(Degree::Reaumur)
+                    }
+                    "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => {
+                        Token::Degree(Degree::Romer)
+                    }
                     "degDe" | "°De" | "delisle" => Token::Degree(Degree::Delisle),
                     "degN" | "°N" | "degnewton" => Token::Degree(Degree::Newton),
                     "per" => Token::Slash,
                     "to" | "in" => Token::DashArrow,
-                    _ => Token::Ident(buf)
+                    _ => Token::Ident(buf),
                 }
             }
         };
@@ -462,14 +477,13 @@ fn parse_function(iter: &mut Iter, func: Function) -> Expr {
                 match iter.peek().cloned().unwrap() {
                     Token::Comma => {
                         iter.next();
-                    },
+                    }
                     Token::RPar => (),
-                    x => return Expr::Error(format!("Expected `,` or `)`, got {}",
-                                                    describe(&x)))
+                    x => return Expr::Error(format!("Expected `,` or `)`, got {}", describe(&x))),
                 }
             }
             args
-        },
+        }
         _ => vec![parse_pow(iter)],
     };
     Expr::Call(func, args)
@@ -493,25 +507,30 @@ fn parse_term(iter: &mut Iter) -> Expr {
                     Token::Ident(ref name) => {
                         iter.next();
                         Expr::Unit(format!("{}{}", attr, name))
-                    },
-                    x => Expr::Error(format!("Attribute must be followed by ident, got {}",
-                                            describe(&x)))
+                    }
+                    x => Expr::Error(format!(
+                        "Attribute must be followed by ident, got {}",
+                        describe(&x)
+                    )),
                 }
             } else {
                 match iter.peek().cloned().unwrap() {
                     Token::Ident(ref s) if s == "of" => {
                         iter.next();
                         Expr::Of(id.clone(), Box::new(parse_juxt(iter)))
-                    },
-                    _ => Expr::Unit(id.to_string())
+                    }
+                    _ => Expr::Unit(id.to_string()),
                 }
             }
-        },
+        }
         Token::Quote(name) => Expr::Quote(name),
-        Token::Decimal(num, frac, exp) =>
-            crate::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
-            .map(Expr::Const)
-            .unwrap_or_else(|e| Expr::Error(e.to_string())),
+        Token::Decimal(num, frac, exp) => crate::number::Number::from_parts(
+            &*num,
+            frac.as_ref().map(|x| &**x),
+            exp.as_ref().map(|x| &**x),
+        )
+        .map(Expr::Const)
+        .unwrap_or_else(|e| Expr::Error(e.to_string())),
         Token::Hex(num) => parse_radix(&*num, 16, "hex"),
         Token::Oct(num) => parse_radix(&*num, 8, "octal"),
         Token::Bin(num) => parse_radix(&*num, 2, "binary"),
@@ -521,9 +540,9 @@ fn parse_term(iter: &mut Iter) -> Expr {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
                 Token::RPar => res,
-                x => Expr::Error(format!("Expected `)`, got {}", describe(&x)))
+                x => Expr::Error(format!("Expected `)`, got {}", describe(&x))),
             }
-        },
+        }
         Token::Percent => Expr::Unit("percent".to_owned()),
         Token::Date(toks) => Expr::Date(toks),
         Token::Comment(_) => parse_term(iter),
@@ -541,8 +560,8 @@ fn parse_suffix(iter: &mut Iter) -> Expr {
                 left = Expr::Mul(vec![left, Expr::Unit("percent".to_owned())]);
             }
             left
-        },
-        _ => left
+        }
+        _ => left,
     }
 }
 
@@ -553,8 +572,8 @@ fn parse_pow(iter: &mut Iter) -> Expr {
             iter.next();
             let right = parse_pow(iter);
             Expr::Pow(Box::new(left), Box::new(right))
-        },
-        _ => left
+        }
+        _ => left,
     }
 }
 
@@ -565,24 +584,33 @@ fn parse_frac(iter: &mut Iter) -> Expr {
             iter.next();
             let right = parse_pow(iter);
             Expr::Frac(Box::new(left), Box::new(right))
-        },
-        _ => left
+        }
+        _ => left,
     }
 }
 
 fn parse_juxt(iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_frac(iter)];
-    loop { match iter.peek().cloned().unwrap() {
-        Token::Asterisk | Token::Slash | Token::Comma | Token::Equals |
-        Token::Plus | Token::Minus | Token::DashArrow |
-        Token::RPar | Token::Newline |
-        Token::Comment(_) | Token::Eof => break,
-        Token::Degree(deg) => {
-            iter.next();
-            terms = vec![Expr::Suffix(deg, Box::new(Expr::Mul(terms)))]
-        },
-        _ => terms.push(parse_frac(iter))
-    }}
+    loop {
+        match iter.peek().cloned().unwrap() {
+            Token::Asterisk
+            | Token::Slash
+            | Token::Comma
+            | Token::Equals
+            | Token::Plus
+            | Token::Minus
+            | Token::DashArrow
+            | Token::RPar
+            | Token::Newline
+            | Token::Comment(_)
+            | Token::Eof => break,
+            Token::Degree(deg) => {
+                iter.next();
+                terms = vec![Expr::Suffix(deg, Box::new(Expr::Mul(terms)))]
+            }
+            _ => terms.push(parse_frac(iter)),
+        }
+    }
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
@@ -592,22 +620,24 @@ fn parse_juxt(iter: &mut Iter) -> Expr {
 
 fn parse_div(iter: &mut Iter) -> Expr {
     let mut terms = vec![parse_juxt(iter)];
-    loop { match iter.peek().cloned().unwrap() {
-        Token::Slash => {
-            iter.next();
-            let left = if terms.len() == 1 {
-                terms.pop().unwrap()
-            } else {
-                Expr::Mul(terms.drain(..).collect())
-            };
-            terms = vec![Expr::Frac(Box::new(left), Box::new(parse_juxt(iter)))];
-        },
-        Token::Asterisk => {
-            iter.next();
-            terms.push(parse_juxt(iter));
-        },
-        _ => break
-    }}
+    loop {
+        match iter.peek().cloned().unwrap() {
+            Token::Slash => {
+                iter.next();
+                let left = if terms.len() == 1 {
+                    terms.pop().unwrap()
+                } else {
+                    Expr::Mul(terms.drain(..).collect())
+                };
+                terms = vec![Expr::Frac(Box::new(left), Box::new(parse_juxt(iter)))];
+            }
+            Token::Asterisk => {
+                iter.next();
+                terms.push(parse_juxt(iter));
+            }
+            _ => break,
+        }
+    }
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
@@ -617,19 +647,21 @@ fn parse_div(iter: &mut Iter) -> Expr {
 
 fn parse_add(iter: &mut Iter) -> Expr {
     let mut left = parse_div(iter);
-    loop { match *iter.peek().unwrap() {
-        Token::Plus => {
-            iter.next();
-            let right = parse_div(iter);
-            left = Expr::Add(Box::new(left), Box::new(right))
-        },
-        Token::Minus => {
-            iter.next();
-            let right = parse_div(iter);
-            left = Expr::Sub(Box::new(left), Box::new(right))
-        },
-        _ => return left
-    }}
+    loop {
+        match *iter.peek().unwrap() {
+            Token::Plus => {
+                iter.next();
+                let right = parse_div(iter);
+                left = Expr::Add(Box::new(left), Box::new(right))
+            }
+            Token::Minus => {
+                iter.next();
+                let right = parse_div(iter);
+                left = Expr::Sub(Box::new(left), Box::new(right))
+            }
+            _ => return left,
+        }
+    }
 }
 
 fn parse_eq(iter: &mut Iter) -> Expr {
@@ -639,8 +671,8 @@ fn parse_eq(iter: &mut Iter) -> Expr {
             iter.next();
             let right = parse_add(iter);
             Expr::Equals(Box::new(left), Box::new(right))
-        },
-        _ => left
+        }
+        _ => left,
     }
 }
 
@@ -651,17 +683,19 @@ pub fn parse_expr(iter: &mut Iter) -> Expr {
 pub fn parse_unitlist(iter: &mut Iter) -> Option<Vec<String>> {
     let mut expecting_term = true;
     let mut res = vec![];
-    loop { match iter.next().unwrap() {
-        Token::Ident(ref ident) if expecting_term => {
-            res.push(ident.clone());
-            expecting_term = false;
-        },
-        Token::Comma | Token::Semicolon if !expecting_term => {
-            expecting_term = true;
-        },
-        Token::Eof | Token::Newline | Token::Comment(_) if !expecting_term => break,
-        _ => return None
-    }}
+    loop {
+        match iter.next().unwrap() {
+            Token::Ident(ref ident) if expecting_term => {
+                res.push(ident.clone());
+                expecting_term = false;
+            }
+            Token::Comma | Token::Semicolon if !expecting_term => {
+                expecting_term = true;
+            }
+            Token::Eof | Token::Newline | Token::Comment(_) if !expecting_term => break,
+            _ => return None,
+        }
+    }
     if res.len() > 1 {
         Some(res)
     } else {
@@ -675,19 +709,19 @@ pub fn parse_offset(iter: &mut Iter) -> Option<i64> {
     let sign = match iter.next().unwrap() {
         Token::Plus => 1,
         Token::Minus => -1,
-        _ => return None
+        _ => return None,
     };
     let hour = match iter.next().unwrap() {
         Token::Decimal(ref i, None, None) if i.len() == 2 => i.clone(),
-        _ => return None
+        _ => return None,
     };
     match iter.next().unwrap() {
         Token::Colon => (),
-        _ => return None
+        _ => return None,
     }
     let min = match iter.next().unwrap() {
         Token::Decimal(ref i, None, None) if i.len() == 2 => i.clone(),
-        _ => return None
+        _ => return None,
     };
     Some(sign * (i64::from_str(&*hour).unwrap() * 3600 + i64::from_str(&*min).unwrap() * 60))
 }
@@ -696,8 +730,8 @@ pub fn parse_query(iter: &mut Iter) -> Query {
     match iter.peek().cloned() {
         Some(Token::Ident(ref s)) if s == "factorize" => {
             iter.next();
-            return Query::Factorize(parse_eq(iter))
-        },
+            return Query::Factorize(parse_eq(iter));
+        }
         Some(Token::Ident(ref s)) if s == "units" => {
             iter.next();
             if let Some(Token::Ident(ref s)) = iter.peek().cloned() {
@@ -705,15 +739,15 @@ pub fn parse_query(iter: &mut Iter) -> Query {
                     iter.next();
                 }
             }
-            return Query::UnitsFor(parse_eq(iter))
-        },
+            return Query::UnitsFor(parse_eq(iter));
+        }
         Some(Token::Ident(ref s)) if s == "search" => {
             iter.next();
             if let Some(Token::Ident(ref s)) = iter.peek().cloned() {
-                return Query::Search(s.clone())
+                return Query::Search(s.clone());
             }
-        },
-        _ => ()
+        }
+        _ => (),
     }
     let left = parse_eq(iter);
     match iter.peek().cloned().unwrap() {
@@ -723,9 +757,7 @@ pub fn parse_query(iter: &mut Iter) -> Query {
             let mut copy = iter.clone();
             if let Some(res) = parse_unitlist(&mut copy) {
                 *iter = copy;
-                return Query::Convert(
-                    left, Conversion::List(res), None, Digits::Default
-                )
+                return Query::Convert(left, Conversion::List(res), None, Digits::Default);
             }
             let digits = match iter.peek().cloned().unwrap() {
                 Token::Ident(ref s) if s == "digits" => {
@@ -735,49 +767,56 @@ pub fn parse_query(iter: &mut Iter) -> Query {
                             iter.next();
                             match u64::from_str_radix(&*int, 10) {
                                 Ok(v) => Digits::Digits(v),
-                                Err(e) => return Query::Error(format!(
-                                    "Failed to parse digits: {}", e
-                                ))
+                                Err(e) => {
+                                    return Query::Error(format!("Failed to parse digits: {}", e))
+                                }
                             }
-                        },
+                        }
                         _ => Digits::FullInt,
                     }
-                },
-                _ => Digits::Default
+                }
+                _ => Digits::Default,
             };
             let base = match iter.peek().cloned().unwrap() {
                 Token::Ident(ref s) if s == "base" => {
                     iter.next();
                     match iter.next() {
-                        Some(Token::Decimal(int, None, None)) => match u64::from_str_radix(&*int, 10) {
-                            Ok(v) if v >= 2 && v <= 36 => {
-                                Some(v as u8)
-                            },
-                            Ok(v) => return Query::Error(format!(
-                                "Unsupported base {}, must be from 2 to 36", v)),
-                            Err(e) => return Query::Error(format!(
-                                "Failed to parse base: {}", e))
-                        },
-                        Some(x) => return Query::Error(format!(
-                            "Expected decimal base, got {}", describe(&x))),
-                        None => return Query::Error(
-                            "Expected decimal base, got eof".to_string()
-                        )
+                        Some(Token::Decimal(int, None, None)) => {
+                            match u64::from_str_radix(&*int, 10) {
+                                Ok(v) if v >= 2 && v <= 36 => Some(v as u8),
+                                Ok(v) => {
+                                    return Query::Error(format!(
+                                        "Unsupported base {}, must be from 2 to 36",
+                                        v
+                                    ))
+                                }
+                                Err(e) => {
+                                    return Query::Error(format!("Failed to parse base: {}", e))
+                                }
+                            }
+                        }
+                        Some(x) => {
+                            return Query::Error(format!(
+                                "Expected decimal base, got {}",
+                                describe(&x)
+                            ))
+                        }
+                        None => return Query::Error("Expected decimal base, got eof".to_string()),
                     }
-                },
+                }
                 Token::Ident(ref s) if s == "hex" || s == "hexadecimal" || s == "base16" => {
                     iter.next();
                     Some(16)
-                },
+                }
                 Token::Ident(ref s) if s == "oct" || s == "octal" || s == "base8" => {
                     iter.next();
                     Some(8)
-                },
+                }
                 Token::Ident(ref s) if s == "bin" || s == "binary" || s == "base2" => {
                     iter.next();
                     Some(2)
-                },
-                _ => None
+                }
+                _ => None,
             };
             let right = match iter.peek().cloned().unwrap() {
                 Token::Eof => Conversion::None,
@@ -789,17 +828,15 @@ pub fn parse_query(iter: &mut Iter) -> Query {
                     } else {
                         Conversion::Expr(parse_eq(&mut old))
                     }
-                },
-                Token::Ident(ref s) if Tz::from_str(s).is_ok() => {
-                    Conversion::Timezone(Tz::from_str(s).expect(
-                        "Running from_str a second time failed"
-                    ))
-                },
-                _ => Conversion::Expr(parse_eq(iter))
+                }
+                Token::Ident(ref s) if Tz::from_str(s).is_ok() => Conversion::Timezone(
+                    Tz::from_str(s).expect("Running from_str a second time failed"),
+                ),
+                _ => Conversion::Expr(parse_eq(iter)),
             };
             Query::Convert(left, right, base, digits)
-        },
-        _ => Query::Expr(left)
+        }
+        _ => Query::Expr(left),
     }
 }
 
@@ -813,44 +850,42 @@ mod test {
 
     #[test]
     fn add_assoc() {
-        assert_eq!(parse("a + b - c + d - e"),
-                   "(((a + b) - c) + d) - e");
+        assert_eq!(parse("a + b - c + d - e"), "(((a + b) - c) + d) - e");
     }
 
     #[test]
     fn sub_crash_regression() {
-        assert_eq!(parse("-"),
-                   "-<error: Expected term, got eof>");
+        assert_eq!(parse("-"), "-<error: Expected term, got eof>");
     }
 
     #[test]
     fn mul_assoc() {
-        assert_eq!(parse("a b * c / d / e f * g h"),
-                   "(((a b) c / d) / e f) (g h)");
-        assert_eq!(parse("a|b c / g e|f"),
-                   "(a / b) c / g (e / f)");
-        assert_eq!(parse("a / b / c"),
-                   "(a / b) / c");
+        assert_eq!(
+            parse("a b * c / d / e f * g h"),
+            "(((a b) c / d) / e f) (g h)"
+        );
+        assert_eq!(parse("a|b c / g e|f"), "(a / b) c / g (e / f)");
+        assert_eq!(parse("a / b / c"), "(a / b) / c");
     }
 
     #[test]
     fn suffix_prec() {
-        assert_eq!(parse("a b °C + x y °F"),
-                   "a b °C + x y °F");
-        assert_eq!(parse("a b °C c"),
-                   "(a b °C) c");
-        assert_eq!(parse("a °C / x"),
-                   "a °C / x");
-        assert_eq!(parse("a °C * x"),
-                   "(a °C) x");
+        assert_eq!(parse("a b °C + x y °F"), "a b °C + x y °F");
+        assert_eq!(parse("a b °C c"), "(a b °C) c");
+        assert_eq!(parse("a °C / x"), "a °C / x");
+        assert_eq!(parse("a °C * x"), "(a °C) x");
     }
 
     #[test]
     fn number_lex() {
-        assert_eq!(parse("1e"),
-                   "<error: Expected term, got <Malformed number literal: No digits after exponent>>");
-        assert_eq!(parse("1."),
-                   "<error: Expected term, got <Malformed number literal: No digits after decimal point>>");
+        assert_eq!(
+            parse("1e"),
+            "<error: Expected term, got <Malformed number literal: No digits after exponent>>"
+        );
+        assert_eq!(
+            parse("1."),
+            "<error: Expected term, got <Malformed number literal: No digits after decimal point>>"
+        );
     }
 
     #[test]
@@ -864,7 +899,6 @@ mod test {
 
     #[test]
     fn test_of() {
-        assert_eq!(parse("foo of 1 abc def / 12"),
-                   "(foo of 1 abc def) / 12");
+        assert_eq!(parse("foo of 1 abc def / 12"), "(foo of 1 abc def) / 12");
     }
 }

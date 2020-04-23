@@ -3,9 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::context::Context;
-use std::cmp::{PartialOrd, Ord, Ordering};
-use strsim::jaro_winkler;
+use std::cmp::{Ord, Ordering, PartialOrd};
 use std::collections::BinaryHeap;
+use strsim::jaro_winkler;
 
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct SearchResult<'a> {
@@ -43,10 +43,7 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
             } else {
                 0_000
             };
-            let score = jaro_winkler(
-                &*x,
-                &*query,
-            );
+            let score = jaro_winkler(&*x, &*query);
             results.push(SearchResult {
                 score: (score * 1000.0) as i32 + modifier,
                 value: borrow,
@@ -69,7 +66,8 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
             r#try(&**k);
         }
     }
-    results.into_sorted_vec()
+    results
+        .into_sorted_vec()
         .into_iter()
         .filter_map(|x| if x.score > 800 { Some(x.value) } else { None })
         .collect()

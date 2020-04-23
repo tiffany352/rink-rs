@@ -4,8 +4,8 @@
 
 use gmp::mpq::Mpq;
 use gmp::mpz::Mpz;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::cmp::Ordering;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub type Int = Mpz;
 
@@ -22,7 +22,7 @@ pub enum Num {
 
 enum NumParity {
     Mpq(Mpq, Mpq),
-    Float(f64, f64)
+    Float(f64, f64),
 }
 
 impl Num {
@@ -45,12 +45,11 @@ impl Num {
 
     fn parity(&self, other: &Num) -> NumParity {
         match (self, other) {
-            (&Num::Float(left), right) =>
-                NumParity::Float(left, right.into()),
-            (left, &Num::Float(right)) =>
-                NumParity::Float(left.into(), right),
-            (&Num::Mpq(ref left), &Num::Mpq(ref right)) =>
-                NumParity::Mpq(left.clone(), right.clone()),
+            (&Num::Float(left), right) => NumParity::Float(left, right.into()),
+            (left, &Num::Float(right)) => NumParity::Float(left.into(), right),
+            (&Num::Mpq(ref left), &Num::Mpq(ref right)) => {
+                NumParity::Mpq(left.clone(), right.clone())
+            }
         }
     }
 
@@ -61,10 +60,8 @@ impl Num {
                 let floor = &div.get_num() / div.get_den();
                 let rem = &left - &(&right * &Mpq::ratio(&floor, &Mpz::one()));
                 (Num::Mpq(Mpq::ratio(&floor, &Mpz::one())), Num::Mpq(rem))
-            },
-            NumParity::Float(left, right) => {
-                (Num::Float(left / right), Num::Float(left % right))
-            },
+            }
+            NumParity::Float(left, right) => (Num::Float(left / right), Num::Float(left % right)),
         }
     }
 
@@ -72,10 +69,7 @@ impl Num {
         match *self {
             Num::Mpq(ref mpq) => (mpq.get_num(), mpq.get_den()),
             Num::Float(mut x) => {
-                let mut m = [
-                    [1, 0],
-                    [0, 1]
-                ];
+                let mut m = [[1, 0], [0, 1]];
                 let maxden = 1_000_000;
 
                 // loop finding terms until denom gets too big
@@ -102,18 +96,20 @@ impl Num {
                 }
 
                 (Int::from(m[0][0]), Int::from(m[1][0]))
-            },
+            }
         }
     }
 
     pub fn to_int(&self) -> Option<i64> {
         match *self {
             Num::Mpq(ref mpq) => (&(mpq.get_num() / mpq.get_den())).into(),
-            Num::Float(f) => if f.abs() < i64::max_value() as f64 {
-                Some(f as i64)
-            } else {
-                None
-            },
+            Num::Float(f) => {
+                if f.abs() < i64::max_value() as f64 {
+                    Some(f as i64)
+                } else {
+                    None
+                }
+            }
         }
     }
 
@@ -165,14 +161,12 @@ macro_rules! num_binop {
 
             fn $func(self, other: &'b Num) -> Num {
                 match self.parity(other) {
-                    NumParity::Mpq(left, right) =>
-                        Num::Mpq(left.$func(&right)),
-                    NumParity::Float(left, right) =>
-                        Num::Float(left.$func(&right)),
+                    NumParity::Mpq(left, right) => Num::Mpq(left.$func(&right)),
+                    NumParity::Float(left, right) => Num::Float(left.$func(&right)),
                 }
             }
         }
-    }
+    };
 }
 
 num_binop!(Add, add);

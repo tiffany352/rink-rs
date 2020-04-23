@@ -2,13 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::fs::File;
-use std::time::Duration;
-use xml::EventReader;
-use xml::reader::XmlEvent;
-use crate::ast::{Defs, Def, Expr, DefEntry};
-use std::rc::Rc;
+use crate::ast::{Def, DefEntry, Defs, Expr};
 use crate::num::Num;
+use std::fs::File;
+use std::rc::Rc;
+use std::time::Duration;
+use xml::reader::XmlEvent;
+use xml::EventReader;
 
 static URL: &'static str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 
@@ -26,10 +26,8 @@ pub fn parse(f: File) -> Result<Defs, String> {
                 let mut rate = None;
                 for attr in attrs {
                     match &*attr.name.local_name {
-                        "currency" =>
-                            currency = Some(&*attr.value),
-                        "rate" =>
-                            rate = Some(&*attr.value),
+                        "currency" => currency = Some(&*attr.value),
+                        "rate" => rate = Some(&*attr.value),
                         _ => (),
                     }
                 }
@@ -40,27 +38,26 @@ pub fn parse(f: File) -> Result<Defs, String> {
                     if let Ok(num) = crate::number::Number::from_parts(integer, frac, None) {
                         out.push(DefEntry {
                             name: currency.to_owned(),
-                            def: Rc::new(Def::Unit(
-                                Expr::Mul(vec![
-                                    Expr::Frac(Box::new(Expr::Const(Num::one())),
-                                               Box::new(Expr::Const(num))),
-                                    Expr::Unit("EUR".to_string())
-                                ]))),
+                            def: Rc::new(Def::Unit(Expr::Mul(vec![
+                                Expr::Frac(
+                                    Box::new(Expr::Const(Num::one())),
+                                    Box::new(Expr::Const(num)),
+                                ),
+                                Expr::Unit("EUR".to_string()),
+                            ]))),
                             doc: Some("Sourced from European Central Bank.".to_string()),
                             category: Some("currencies".to_owned()),
                         });
                     }
                 }
-            },
+            }
             Err(e) => return Err(e.to_string()),
             _ => (),
         }
     }
-    Ok(Defs {
-        defs: out
-    })
+    Ok(Defs { defs: out })
 }
 
 pub fn load() -> Result<Defs, String> {
-    crate::cached("currency.xml", URL, Duration::from_secs(23*60*60)).and_then(parse)
+    crate::cached("currency.xml", URL, Duration::from_secs(23 * 60 * 60)).and_then(parse)
 }

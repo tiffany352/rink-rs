@@ -2,10 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::rc::Rc;
-use std::fmt;
 use crate::num::Num;
 use chrono_tz::Tz;
+use std::fmt;
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub enum Degree {
@@ -184,7 +184,7 @@ pub enum Def {
     Quantity(Expr),
     Substance {
         symbol: Option<String>,
-        properties: Vec<Property>
+        properties: Vec<Property>,
     },
     Category(String),
     Error(String),
@@ -216,11 +216,9 @@ impl fmt::Display for Conversion {
                     .collect::<Vec<_>>()
                     .join(", ");
                 write!(fmt, "{}", list)
-            },
-            Conversion::Offset(off) =>
-                write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
-            Conversion::Timezone(ref tz) =>
-                write!(fmt, "{:?}", tz),
+            }
+            Conversion::Offset(off) => write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
+            Conversion::Timezone(ref tz) => write!(fmt, "{:?}", tz),
         }
     }
 }
@@ -255,7 +253,13 @@ impl fmt::Display for Expr {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         #[derive(PartialOrd, Ord, PartialEq, Eq)]
         enum Prec {
-            Term, Plus, Pow, Mul, Div, Add, Equals
+            Term,
+            Plus,
+            Pow,
+            Mul,
+            Div,
+            Add,
+            Equals,
         }
 
         fn recurse(expr: &Expr, fmt: &mut fmt::Formatter, prec: Prec) -> fmt::Result {
@@ -271,7 +275,7 @@ impl fmt::Display for Expr {
                         write!(fmt, ")")?;
                     }
                     Ok(())
-                }}
+                }};
             }
             match *expr {
                 Expr::Unit(ref name) => write!(fmt, "{}", name),
@@ -279,7 +283,7 @@ impl fmt::Display for Expr {
                 Expr::Const(ref num) => {
                     let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
                     write!(fmt, "{}", val)
-                },
+                }
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),
                 Expr::Mul(ref exprs) => {
                     if prec < Prec::Mul {
@@ -296,7 +300,7 @@ impl fmt::Display for Expr {
                         write!(fmt, ")")?;
                     }
                     Ok(())
-                },
+                }
                 Expr::Call(ref func, ref args) => {
                     write!(fmt, "{}(", func.name())?;
                     if let Some(first) = args.first() {
@@ -307,7 +311,7 @@ impl fmt::Display for Expr {
                         recurse(arg, fmt, Prec::Equals)?;
                     }
                     write!(fmt, ")")
-                },
+                }
                 Expr::Pow(ref left, ref right) => binop!(left, right, Prec::Pow, Prec::Term, "^"),
                 Expr::Frac(ref left, ref right) => binop!(left, right, Prec::Div, Prec::Mul, " / "),
                 Expr::Add(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " + "),
@@ -315,12 +319,14 @@ impl fmt::Display for Expr {
                 Expr::Plus(ref expr) => {
                     write!(fmt, "+")?;
                     recurse(expr, fmt, Prec::Plus)
-                },
+                }
                 Expr::Neg(ref expr) => {
                     write!(fmt, "-")?;
                     recurse(expr, fmt, Prec::Plus)
-                },
-                Expr::Equals(ref left, ref right) => binop!(left, right, Prec::Equals, Prec::Add, " = "),
+                }
+                Expr::Equals(ref left, ref right) => {
+                    binop!(left, right, Prec::Equals, Prec::Add, " = ")
+                }
                 Expr::Suffix(ref op, ref expr) => {
                     if prec < Prec::Mul {
                         write!(fmt, "(")?;
@@ -331,7 +337,7 @@ impl fmt::Display for Expr {
                         write!(fmt, ")")?;
                     }
                     Ok(())
-                },
+                }
                 Expr::Of(ref field, ref expr) => {
                     if prec < Prec::Add {
                         write!(fmt, "(")?;
@@ -342,8 +348,8 @@ impl fmt::Display for Expr {
                         write!(fmt, ")")?;
                     }
                     Ok(())
-                },
-                Expr::Error(ref err) => write!(fmt, "<error: {}>", err)
+                }
+                Expr::Error(ref err) => write!(fmt, "<error: {}>", err),
             }
         }
 
@@ -362,7 +368,7 @@ impl fmt::Display for DatePattern {
                     p.fmt(fmt)?;
                 }
                 write!(fmt, "]")
-            },
+            }
             DatePattern::Dash => write!(fmt, "-"),
             DatePattern::Colon => write!(fmt, ":"),
             DatePattern::Space => write!(fmt, " "),
@@ -415,6 +421,9 @@ mod test {
         check(Call(Function::Sin, vec![]), "sin()");
         check(Call(Function::Sin, vec![1.into()]), "sin(1)");
         check(Call(Function::Sin, vec![1.into(), 2.into()]), "sin(1, 2)");
-        check(Call(Function::Sin, vec![1.into(), 2.into(), 3.into()]), "sin(1, 2, 3)");
+        check(
+            Call(Function::Sin, vec![1.into(), 2.into(), 3.into()]),
+            "sin(1, 2, 3)",
+        );
     }
 }

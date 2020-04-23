@@ -1,12 +1,12 @@
+use crate::ast::{Digits, Expr};
 use crate::number::NumberParts;
-use std::convert::From;
-use std::rc::Rc;
-use std::collections::BTreeMap;
-use std::fmt::{Display, Formatter};
-use std::fmt::Result as FmtResult;
 use chrono::{DateTime, TimeZone};
+use std::collections::BTreeMap;
+use std::convert::From;
+use std::fmt::Result as FmtResult;
+use std::fmt::{Display, Formatter};
 use std::iter::once;
-use crate::ast::{Expr, Digits};
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
@@ -162,14 +162,20 @@ impl ExprReply {
 
         #[derive(PartialOrd, Ord, PartialEq, Eq)]
         enum Prec {
-            Term, Plus, Pow, Mul, Div, Add, Equals
+            Term,
+            Plus,
+            Pow,
+            Mul,
+            Div,
+            Add,
+            Equals,
         }
 
         fn recurse(expr: &Expr, parts: &mut Vec<ExprParts>, prec: Prec) {
             macro_rules! literal {
                 ($e:expr) => {{
                     parts.push(ExprParts::Literal($e.to_owned()))
-                }}
+                }};
             }
             macro_rules! binop {
                 ($left:expr, $right:expr, $prec:expr, $succ:expr, $sym:expr) => {{
@@ -182,7 +188,7 @@ impl ExprReply {
                     if prec < $prec {
                         literal!(")");
                     }
-                }}
+                }};
             }
             match *expr {
                 Expr::Unit(ref name) => parts.push(ExprParts::Unit(name.clone())),
@@ -190,7 +196,7 @@ impl ExprReply {
                 Expr::Const(ref num) => {
                     let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
                     literal!(val.to_string())
-                },
+                }
                 Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
                 Expr::Mul(ref exprs) => {
                     if prec < Prec::Mul {
@@ -202,7 +208,7 @@ impl ExprReply {
                     if prec < Prec::Mul {
                         literal!(")");
                     }
-                },
+                }
                 Expr::Call(ref func, ref args) => {
                     literal!(format!("{}(", func.name()));
                     if let Some(first) = args.first() {
@@ -213,7 +219,7 @@ impl ExprReply {
                         recurse(arg, parts, Prec::Equals);
                     }
                     literal!(")")
-                },
+                }
                 Expr::Pow(ref left, ref right) => binop!(left, right, Prec::Pow, Prec::Term, "^"),
                 Expr::Frac(ref left, ref right) => binop!(left, right, Prec::Div, Prec::Mul, " / "),
                 Expr::Add(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " + "),
@@ -221,12 +227,14 @@ impl ExprReply {
                 Expr::Plus(ref expr) => {
                     literal!("+");
                     recurse(expr, parts, Prec::Plus)
-                },
+                }
                 Expr::Neg(ref expr) => {
                     literal!("-");
                     recurse(expr, parts, Prec::Plus)
-                },
-                Expr::Equals(ref left, ref right) => binop!(left, right, Prec::Equals, Prec::Add, " = "),
+                }
+                Expr::Equals(ref left, ref right) => {
+                    binop!(left, right, Prec::Equals, Prec::Add, " = ")
+                }
                 Expr::Suffix(ref op, ref expr) => {
                     if prec < Prec::Mul {
                         literal!("(");
@@ -236,30 +244,25 @@ impl ExprReply {
                     if prec < Prec::Mul {
                         literal!(")");
                     }
-                },
+                }
                 Expr::Of(ref field, ref expr) => {
                     if prec < Prec::Add {
                         literal!("(");
                     }
                     let mut sub = vec![];
                     recurse(expr, &mut sub, Prec::Div);
-                    parts.push(ExprParts::Property(
-                        field.to_owned(),
-                        sub
-                    ));
+                    parts.push(ExprParts::Property(field.to_owned(), sub));
                     if prec < Prec::Add {
                         literal!(")");
                     }
-                },
-                Expr::Error(ref err) => parts.push(ExprParts::Error(err.to_owned()))
+                }
+                Expr::Error(ref err) => parts.push(ExprParts::Error(err.to_owned())),
             }
         }
 
         recurse(expr, &mut parts, Prec::Equals);
 
-        ExprReply {
-            exprs: parts
-        }
+        ExprReply { exprs: parts }
     }
 }
 
@@ -305,10 +308,8 @@ impl Display for QueryError {
 impl Display for NotFoundError {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match self.suggestion.as_ref() {
-            Some(ref s) => write!(
-                fmt, "No such unit {}, did you mean {}?", self.got, s),
-            None => write!(
-                fmt, "No such unit {}", self.got)
+            Some(ref s) => write!(fmt, "No such unit {}, did you mean {}?", self.got, s),
+            None => write!(fmt, "No such unit {}", self.got),
         }
     }
 }
@@ -322,7 +323,10 @@ impl Display for ConformanceError {
 
 impl DateReply {
     pub fn new<Tz>(ctx: &crate::context::Context, date: DateTime<Tz>) -> DateReply
-    where Tz: TimeZone, Tz::Offset: Display {
+    where
+        Tz: TimeZone,
+        Tz::Offset: Display,
+    {
         use chrono::{Datelike, Timelike};
         DateReply {
             string: date.to_string(),
@@ -351,17 +355,26 @@ impl Display for DateReply {
 impl Display for SubstanceReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         write!(
-            fmt, "{}: {}{}",
+            fmt,
+            "{}: {}{}",
             self.name,
-            self.doc.as_ref().map(|x| format!("{} ", x)).unwrap_or_default(),
-            self.properties.iter().map(|prop| format!(
-                "{} = {}{}",
-                prop.name,
-                prop.value.format("n u"),
-                prop.doc.as_ref()
-                    .map(|x| format!(" ({})", x))
-                    .unwrap_or_else(|| "".to_owned())
-            )).collect::<Vec<_>>().join("; ")
+            self.doc
+                .as_ref()
+                .map(|x| format!("{} ", x))
+                .unwrap_or_default(),
+            self.properties
+                .iter()
+                .map(|prop| format!(
+                    "{} = {}{}",
+                    prop.name,
+                    prop.value.format("n u"),
+                    prop.doc
+                        .as_ref()
+                        .map(|x| format!(" ({})", x))
+                        .unwrap_or_else(|| "".to_owned())
+                ))
+                .collect::<Vec<_>>()
+                .join("; ")
         )
     }
 }
@@ -390,39 +403,66 @@ impl Display for ConversionReply {
 
 impl Display for FactorizeReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        write!(fmt, "Factorizations: {}", self.factorizations.iter().map(|x| {
-            x.iter().map(|(u, p)| {
-                if *p == 1 { u.to_string() }
-                else { format!("{}^{}", u, p) }
-            }).collect::<Vec<_>>().join(" ")
-        }).collect::<Vec<_>>().join(";  "))
+        write!(
+            fmt,
+            "Factorizations: {}",
+            self.factorizations
+                .iter()
+                .map(|x| {
+                    x.iter()
+                        .map(|(u, p)| {
+                            if *p == 1 {
+                                u.to_string()
+                            } else {
+                                format!("{}^{}", u, p)
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect::<Vec<_>>()
+                .join(";  ")
+        )
     }
 }
 
 impl Display for UnitsForReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        write!(fmt, "Units for {}: {}", self.of.format("D w"), self.units.iter().map(|cat| {
-            if let Some(ref category) = cat.category {
-                format!("{}: {}", category, cat.units.join(", "))
-            } else {
-                cat.units.join(", ")
-            }
-        }).collect::<Vec<_>>().join("; "))
+        write!(
+            fmt,
+            "Units for {}: {}",
+            self.of.format("D w"),
+            self.units
+                .iter()
+                .map(|cat| {
+                    if let Some(ref category) = cat.category {
+                        format!("{}: {}", category, cat.units.join(", "))
+                    } else {
+                        cat.units.join(", ")
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("; ")
+        )
     }
 }
 
 impl Display for DurationReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        let res = [&self.years, &self.months, &self.weeks, &self.days,
-                   &self.hours, &self.minutes]
-            .iter()
-            .filter(|x| x.exact_value.as_ref().map(|x| &**x) != Some("0"))
-            .chain(once(&&self.seconds))
-            .map(|x| {
-                 x.to_string()
-            })
-            .collect::<Vec<_>>()
-            .join(", ");
+        let res = [
+            &self.years,
+            &self.months,
+            &self.weeks,
+            &self.days,
+            &self.hours,
+            &self.minutes,
+        ]
+        .iter()
+        .filter(|x| x.exact_value.as_ref().map(|x| &**x) != Some("0"))
+        .chain(once(&&self.seconds))
+        .map(|x| x.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
         write!(fmt, "{}", res)?;
         if let Some(q) = self.raw.quantity.as_ref() {
             write!(fmt, " ({})", q)
@@ -434,11 +474,15 @@ impl Display for DurationReply {
 
 impl Display for UnitListReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        write!(fmt, "{}",
-                    self.list.iter()
-                    .map(|x| x.to_string())
-                    .collect::<Vec<_>>()
-                    .join(", "))?;
+        write!(
+            fmt,
+            "{}",
+            self.list
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        )?;
         if let Some(q) = self.rest.quantity.as_ref() {
             write!(fmt, " ({})", q)
         } else {
@@ -450,8 +494,10 @@ impl Display for UnitListReply {
 impl Display for SearchReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         write!(
-            fmt, "Search results: {}",
-            self.results.iter()
+            fmt,
+            "Search results: {}",
+            self.results
+                .iter()
                 .map(|x| x.format("u p"))
                 .collect::<Vec<_>>()
                 .join(", ")

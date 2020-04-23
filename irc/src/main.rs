@@ -2,14 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-extern crate irc;
 extern crate glob;
+extern crate irc;
 extern crate rink;
 
 fn main() {
+    use glob::glob;
     use irc::client::prelude::*;
     use rink::*;
-    use glob::glob;
     use std::thread;
 
     #[cfg(feature = "sandbox")]
@@ -23,7 +23,7 @@ fn main() {
         ctx.short_output = true;
         match one_line(&mut ctx, line) {
             Ok(v) => v,
-            Err(e) => e
+            Err(e) => e,
         }
     }
 
@@ -34,7 +34,11 @@ fn main() {
         let mut prefix = nick.clone();
         prefix.push(':');
         for message in server.iter() {
-            if let Ok(Message { command: Command::PRIVMSG(ref chan, ref message_str), ..}) = message {
+            if let Ok(Message {
+                command: Command::PRIVMSG(ref chan, ref message_str),
+                ..
+            }) = message
+            {
                 let prefixed = message_str.starts_with(&*prefix);
                 if prefixed || &*chan == &*nick {
                     let reply_to = if &*chan == &*nick {
@@ -51,7 +55,9 @@ fn main() {
                     let reply = eval(line);
                     for line in reply.lines() {
                         if !line.trim().is_empty() {
-                            server.send(Command::NOTICE(reply_to.to_owned(), line.to_owned())).unwrap();
+                            server
+                                .send(Command::NOTICE(reply_to.to_owned(), line.to_owned()))
+                                .unwrap();
                             i += 1;
                         }
                         // cut off early
@@ -71,7 +77,7 @@ fn main() {
     for config in glob("servers/*.json").expect("Glob failed") {
         match config {
             Ok(config) => threads.push(thread::spawn(move || run(config.to_str().unwrap()))),
-            Err(e) => println!("{:?}", e)
+            Err(e) => println!("{:?}", e),
         }
     }
     for thread in threads {

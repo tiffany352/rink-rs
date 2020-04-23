@@ -2,14 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::number::Number;
-use chrono::{DateTime, FixedOffset};
-use chrono_tz::Tz;
 use crate::context::Context;
-use crate::substance::Substance;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::date;
 use crate::date::GenericDateTime;
+use crate::number::Number;
+use crate::substance::Substance;
+use chrono::{DateTime, FixedOffset};
+use chrono_tz::Tz;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -65,76 +65,83 @@ impl Show for Value {
 impl Value {
     pub fn pow(&self, exp: &Value) -> Result<Value, String> {
         match (self, exp) {
-            (&Value::Number(ref left), &Value::Number(ref right)) =>
-                left.pow(right).map(Value::Number),
-            (_, _) => Err("Operation is not defined".to_string())
+            (&Value::Number(ref left), &Value::Number(ref right)) => {
+                left.pow(right).map(Value::Number)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
         }
     }
 }
 
-impl<'a,'b> Add<&'b Value> for &'a Value {
+impl<'a, 'b> Add<&'b Value> for &'a Value {
     type Output = Result<Value, String>;
 
     fn add(self, other: &Value) -> Result<Value, String> {
         match (self, other) {
-            (&Value::Number(ref left), &Value::Number(ref right)) =>
-                (left + right)
+            (&Value::Number(ref left), &Value::Number(ref right)) => (left + right)
                 .ok_or("Addition of units with mismatched units is not meaningful".to_string())
                 .map(Value::Number),
-            (&Value::DateTime(ref left), &Value::Number(ref right)) |
-            (&Value::Number(ref right), &Value::DateTime(ref left)) =>
-                match *left {
-                    GenericDateTime::Fixed(left) => left.checked_add(date::to_duration(
-                        right
-                    )?).map(GenericDateTime::Fixed),
-                    GenericDateTime::Timezone(left) => left.checked_add(date::to_duration(
-                        right
-                    )?).map(GenericDateTime::Timezone),
-                }
-                .ok_or("Implementation error: value is out of range representable by datetime".to_string())
-                .map(Value::DateTime),
-            (&Value::Substance(ref left), &Value::Substance(ref right)) =>
-                left.add(right)
-                .map(Value::Substance),
-            (_, _) => Err("Operation is not defined".to_string())
+            (&Value::DateTime(ref left), &Value::Number(ref right))
+            | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
+                GenericDateTime::Fixed(left) => left
+                    .checked_add(date::to_duration(right)?)
+                    .map(GenericDateTime::Fixed),
+                GenericDateTime::Timezone(left) => left
+                    .checked_add(date::to_duration(right)?)
+                    .map(GenericDateTime::Timezone),
+            }
+            .ok_or(
+                "Implementation error: value is out of range representable by datetime".to_string(),
+            )
+            .map(Value::DateTime),
+            (&Value::Substance(ref left), &Value::Substance(ref right)) => {
+                left.add(right).map(Value::Substance)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
         }
     }
 }
 
-impl<'a,'b> Sub<&'b Value> for &'a Value {
+impl<'a, 'b> Sub<&'b Value> for &'a Value {
     type Output = Result<Value, String>;
 
     fn sub(self, other: &Value) -> Result<Value, String> {
         match (self, other) {
-            (&Value::Number(ref left), &Value::Number(ref right)) =>
-                (left - right)
+            (&Value::Number(ref left), &Value::Number(ref right)) => (left - right)
                 .ok_or("Subtraction of units with mismatched units is not meaningful".to_string())
                 .map(Value::Number),
-            (&Value::DateTime(ref left), &Value::Number(ref right)) |
-            (&Value::Number(ref right), &Value::DateTime(ref left)) =>
-                match *left {
-                    GenericDateTime::Fixed(left) => left.checked_sub(date::to_duration(
-                        right
-                    )?).map(GenericDateTime::Fixed),
-                    GenericDateTime::Timezone(left) => left.checked_sub(date::to_duration(
-                        right
-                    )?).map(GenericDateTime::Timezone),
-                }
-                .ok_or("Implementation error: value is out of range representable by datetime".to_string())
-                .map(Value::DateTime),
-            (&Value::DateTime(ref left), &Value::DateTime(ref right)) =>
+            (&Value::DateTime(ref left), &Value::Number(ref right))
+            | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
+                GenericDateTime::Fixed(left) => left
+                    .checked_sub(date::to_duration(right)?)
+                    .map(GenericDateTime::Fixed),
+                GenericDateTime::Timezone(left) => left
+                    .checked_sub(date::to_duration(right)?)
+                    .map(GenericDateTime::Timezone),
+            }
+            .ok_or(
+                "Implementation error: value is out of range representable by datetime".to_string(),
+            )
+            .map(Value::DateTime),
+            (&Value::DateTime(ref left), &Value::DateTime(ref right)) => {
                 date::from_duration(&match (left, right) {
-                    (&GenericDateTime::Fixed(ref left), &GenericDateTime::Fixed(ref right)) =>
-                        *left - *right,
-                    (&GenericDateTime::Fixed(ref left), &GenericDateTime::Timezone(ref right)) =>
-                        *left - *right,
-                    (&GenericDateTime::Timezone(ref left), &GenericDateTime::Timezone(ref right)) =>
-                        *left - *right,
-                    (&GenericDateTime::Timezone(ref left), &GenericDateTime::Fixed(ref right)) =>
-                        *left - *right,
+                    (&GenericDateTime::Fixed(ref left), &GenericDateTime::Fixed(ref right)) => {
+                        *left - *right
+                    }
+                    (&GenericDateTime::Fixed(ref left), &GenericDateTime::Timezone(ref right)) => {
+                        *left - *right
+                    }
+                    (
+                        &GenericDateTime::Timezone(ref left),
+                        &GenericDateTime::Timezone(ref right),
+                    ) => *left - *right,
+                    (&GenericDateTime::Timezone(ref left), &GenericDateTime::Fixed(ref right)) => {
+                        *left - *right
+                    }
                 })
-                .map(Value::Number),
-            (_, _) => Err("Operation is not defined".to_string())
+                .map(Value::Number)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
         }
     }
 }
@@ -144,42 +151,43 @@ impl<'a> Neg for &'a Value {
 
     fn neg(self) -> Self::Output {
         match *self {
-            Value::Number(ref num) =>
-                (-num).ok_or("Bug: Negation should not fail".to_string()).map(Value::Number),
-            _ => Err("Operation is not defined".to_string())
+            Value::Number(ref num) => (-num)
+                .ok_or("Bug: Negation should not fail".to_string())
+                .map(Value::Number),
+            _ => Err("Operation is not defined".to_string()),
         }
     }
 }
 
-impl<'a,'b> Mul<&'b Value> for &'a Value {
+impl<'a, 'b> Mul<&'b Value> for &'a Value {
     type Output = Result<Value, String>;
 
     fn mul(self, other: &Value) -> Result<Value, String> {
         match (self, other) {
-            (&Value::Number(ref left), &Value::Number(ref right)) =>
-                (left * right)
+            (&Value::Number(ref left), &Value::Number(ref right)) => (left * right)
                 .ok_or("Bug: Mul should not fail".to_string())
                 .map(Value::Number),
-            (&Value::Number(ref co), &Value::Substance(ref sub)) |
-            (&Value::Substance(ref sub), &Value::Number(ref co)) =>
-                (sub * co).map(Value::Substance),
-            (_, _) => Err("Operation is not defined".to_string())
+            (&Value::Number(ref co), &Value::Substance(ref sub))
+            | (&Value::Substance(ref sub), &Value::Number(ref co)) => {
+                (sub * co).map(Value::Substance)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
         }
     }
 }
 
-impl<'a,'b> Div<&'b Value> for &'a Value {
+impl<'a, 'b> Div<&'b Value> for &'a Value {
     type Output = Result<Value, String>;
 
     fn div(self, other: &Value) -> Result<Value, String> {
         match (self, other) {
-            (&Value::Number(ref left), &Value::Number(ref right)) =>
-                (left / right)
+            (&Value::Number(ref left), &Value::Number(ref right)) => (left / right)
                 .ok_or("Division by zero".to_string())
                 .map(Value::Number),
-            (&Value::Substance(ref sub), &Value::Number(ref co)) =>
-                (sub / co).map(Value::Substance),
-            (_, _) => Err("Operation is not defined".to_string())
+            (&Value::Substance(ref sub), &Value::Number(ref co)) => {
+                (sub / co).map(Value::Substance)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
         }
     }
 }
