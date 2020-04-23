@@ -593,7 +593,7 @@ impl Number {
         let quantity = context.quantities.get(&self.unit).cloned().or_else(|| {
             if self.unit.len() == 1 {
                 let e = self.unit.iter().next().unwrap();
-                let ref n = *e.0;
+                let n = &(*e.0);
                 if *e.1 == 1 {
                     Some((&*n.0).clone())
                 } else {
@@ -658,7 +658,7 @@ impl Number {
 
     fn pretty_unit(&self, context: &Context) -> Unit {
         let pretty = crate::factorize::fast_decompose(self, &context.reverse);
-        let pretty = pretty
+        pretty
             .into_iter()
             .map(|(k, p)| {
                 (
@@ -670,8 +670,7 @@ impl Number {
                     p,
                 )
             })
-            .collect::<BTreeMap<_, _>>();
-        pretty
+            .collect::<BTreeMap<_, _>>()
     }
 
     pub fn complexity_score(&self) -> i64 {

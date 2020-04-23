@@ -124,9 +124,9 @@ pub enum QueryReply {
     Number(NumberParts),
     Date(DateReply),
     Substance(SubstanceReply),
-    Duration(DurationReply),
-    Def(DefReply),
-    Conversion(ConversionReply),
+    Duration(Box<DurationReply>),
+    Def(Box<DefReply>),
+    Conversion(Box<ConversionReply>),
     Factorize(FactorizeReply),
     UnitsFor(UnitsForReply),
     UnitList(UnitListReply),
@@ -151,7 +151,7 @@ pub struct NotFoundError {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub enum QueryError {
-    Conformance(ConformanceError),
+    Conformance(Box<ConformanceError>),
     NotFound(NotFoundError),
     Generic(String),
 }
@@ -195,7 +195,7 @@ impl ExprReply {
                 Expr::Quote(ref name) => literal!(format!("'{}'", name)),
                 Expr::Const(ref num) => {
                     let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
-                    literal!(val.to_string())
+                    literal!(val)
                 }
                 Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
                 Expr::Mul(ref exprs) => {

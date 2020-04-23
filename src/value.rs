@@ -79,7 +79,9 @@ impl<'a, 'b> Add<&'b Value> for &'a Value {
     fn add(self, other: &Value) -> Result<Value, String> {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) => (left + right)
-                .ok_or("Addition of units with mismatched units is not meaningful".to_string())
+                .ok_or_else(|| {
+                    "Addition of units with mismatched units is not meaningful".to_string()
+                })
                 .map(Value::Number),
             (&Value::DateTime(ref left), &Value::Number(ref right))
             | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
@@ -90,9 +92,9 @@ impl<'a, 'b> Add<&'b Value> for &'a Value {
                     .checked_add(date::to_duration(right)?)
                     .map(GenericDateTime::Timezone),
             }
-            .ok_or(
-                "Implementation error: value is out of range representable by datetime".to_string(),
-            )
+            .ok_or_else(|| {
+                "Implementation error: value is out of range representable by datetime".to_string()
+            })
             .map(Value::DateTime),
             (&Value::Substance(ref left), &Value::Substance(ref right)) => {
                 left.add(right).map(Value::Substance)
@@ -108,7 +110,9 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
     fn sub(self, other: &Value) -> Result<Value, String> {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) => (left - right)
-                .ok_or("Subtraction of units with mismatched units is not meaningful".to_string())
+                .ok_or_else(|| {
+                    "Subtraction of units with mismatched units is not meaningful".to_string()
+                })
                 .map(Value::Number),
             (&Value::DateTime(ref left), &Value::Number(ref right))
             | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
@@ -119,9 +123,9 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
                     .checked_sub(date::to_duration(right)?)
                     .map(GenericDateTime::Timezone),
             }
-            .ok_or(
-                "Implementation error: value is out of range representable by datetime".to_string(),
-            )
+            .ok_or_else(|| {
+                "Implementation error: value is out of range representable by datetime".to_string()
+            })
             .map(Value::DateTime),
             (&Value::DateTime(ref left), &Value::DateTime(ref right)) => {
                 date::from_duration(&match (left, right) {
@@ -152,7 +156,7 @@ impl<'a> Neg for &'a Value {
     fn neg(self) -> Self::Output {
         match *self {
             Value::Number(ref num) => (-num)
-                .ok_or("Bug: Negation should not fail".to_string())
+                .ok_or_else(|| "Bug: Negation should not fail".to_string())
                 .map(Value::Number),
             _ => Err("Operation is not defined".to_string()),
         }
@@ -165,7 +169,7 @@ impl<'a, 'b> Mul<&'b Value> for &'a Value {
     fn mul(self, other: &Value) -> Result<Value, String> {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) => (left * right)
-                .ok_or("Bug: Mul should not fail".to_string())
+                .ok_or_else(|| "Bug: Mul should not fail".to_string())
                 .map(Value::Number),
             (&Value::Number(ref co), &Value::Substance(ref sub))
             | (&Value::Substance(ref sub), &Value::Number(ref co)) => {
@@ -182,7 +186,7 @@ impl<'a, 'b> Div<&'b Value> for &'a Value {
     fn div(self, other: &Value) -> Result<Value, String> {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) => (left / right)
-                .ok_or("Division by zero".to_string())
+                .ok_or_else(|| "Division by zero".to_string())
                 .map(Value::Number),
             (&Value::Substance(ref sub), &Value::Number(ref co)) => {
                 (sub / co).map(Value::Substance)

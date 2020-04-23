@@ -77,7 +77,7 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::time::Duration;
 
-const DATA_FILE_URL: &'static str =
+const DATA_FILE_URL: &str =
     "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
 
 pub fn config_dir() -> Result<PathBuf, String> {
@@ -114,8 +114,8 @@ static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.un
 #[cfg(not(feature = "gpl"))]
 static DEFAULT_FILE: Option<&'static str> = None;
 
-static DATES_FILE: &'static str = include_str!("../datepatterns.txt");
-static CURRENCY_FILE: &'static str = include_str!("../currency.units");
+static DATES_FILE: &str = include_str!("../datepatterns.txt");
+static CURRENCY_FILE: &str = include_str!("../currency.units");
 
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
@@ -133,10 +133,10 @@ pub fn load() -> Result<Context, String> {
     let units = load(Path::new("definitions.units").to_path_buf())
         .or_else(|_| load(path.join("definitions.units")))
         .or_else(|_| {
-            DEFAULT_FILE.map(|x| x.to_owned()).ok_or(
+            DEFAULT_FILE.map(|x| x.to_owned()).ok_or_else(|| {
                 "Did not exist in search path and binary is not compiled with `gpl` feature"
-                    .to_string(),
-            )
+                    .to_string()
+            })
         })
         .map_err(|e| {
             format!(
@@ -164,8 +164,7 @@ pub fn load() -> Result<Context, String> {
             .or_else(|_| load(path.join("currency.units")))
             .unwrap_or_else(|_| CURRENCY_FILE.to_owned());
         let mut iter = gnu_units::TokenIterator::new(&*defs).peekable();
-        let currency = gnu_units::parse(&mut iter);
-        currency
+        gnu_units::parse(&mut iter)
     };
     let currency = {
         let mut defs = vec![];

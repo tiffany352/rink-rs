@@ -171,7 +171,7 @@ impl Substance {
                             name: k.clone(),
                             value: if let Some(input) = input.as_ref() {
                                 let input_pretty = input.prettify(context);
-                                let mut output_pretty = output.clone();
+                                let mut output_pretty = output;
                                 output_pretty.unit = bottom_name
                                     .iter()
                                     .map(|(k, v)| (Dim::new(&k), *v as i64))
@@ -184,7 +184,7 @@ impl Substance {
                                 res.quantity = value.quantity;
                                 res
                             } else {
-                                output_show.clone()
+                                output_show
                             },
                             doc: v.doc.clone(),
                         }))
@@ -227,7 +227,7 @@ impl Substance {
                     name,
                     value: if let Some(input) = input.as_ref() {
                         let input_pretty = input.prettify(context);
-                        let mut output_pretty = output.clone();
+                        let mut output_pretty = output;
                         output_pretty.unit = bottom_name
                             .iter()
                             .map(|(k, v)| (Dim::new(&k), *v as i64))
@@ -240,7 +240,7 @@ impl Substance {
                         res.quantity = value.quantity;
                         res
                     } else {
-                        output_show.clone()
+                        output_show
                     },
                     doc: v.doc.clone(),
                 }))

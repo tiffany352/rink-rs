@@ -222,7 +222,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             exp.as_ref().map(|x| &**x),
         )
         .map(Expr::Const)
-        .unwrap_or_else(|e| Expr::Error(e.to_string())),
+        .unwrap_or_else(Expr::Error),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
         Token::Slash => Expr::Frac(
@@ -282,15 +282,10 @@ fn parse_mul(iter: &mut Iter<'_>) -> Expr {
 
 fn parse_div(iter: &mut Iter<'_>) -> Expr {
     let mut left = parse_mul(iter);
-    loop {
-        match *iter.peek().unwrap() {
-            Token::Slash => {
-                iter.next();
-                let right = parse_mul(iter);
-                left = Expr::Frac(Box::new(left), Box::new(right));
-            }
-            _ => break,
-        }
+    while let Token::Slash = *iter.peek().unwrap() {
+        iter.next();
+        let right = parse_mul(iter);
+        left = Expr::Frac(Box::new(left), Box::new(right));
     }
     left
 }
@@ -371,12 +366,12 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                 };
             }
             Token::Ident(name) => {
-                if name.ends_with("-") {
+                if name.ends_with('-') {
                     // prefix
                     let expr = parse_expr(iter);
                     let mut name = name;
                     name.pop();
-                    if name.ends_with("-") {
+                    if name.ends_with('-') {
                         name.pop();
                         map.push(DefEntry {
                             name,
@@ -538,11 +533,8 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
     }
 
     for entry in map.iter_mut() {
-        match Rc::get_mut(&mut entry.def).unwrap() {
-            &mut Def::Substance { ref mut symbol, .. } => {
-                *symbol = symbols.get(&entry.name).map(|x| x.to_owned())
-            }
-            _ => (),
+        if let Def::Substance { ref mut symbol, .. } = *Rc::get_mut(&mut entry.def).unwrap() {
+            *symbol = symbols.get(&entry.name).map(|x| x.to_owned())
         }
     }
 

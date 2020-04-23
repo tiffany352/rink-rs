@@ -9,7 +9,7 @@ use std::io::Read;
 use std::rc::Rc;
 use std::time::Duration;
 
-static URL: &'static str = "https://blockchain.info/stats?format=json";
+static URL: &str = "https://blockchain.info/stats?format=json";
 
 pub fn parse(mut f: File) -> Result<Defs, String> {
     let mut buf = String::new();

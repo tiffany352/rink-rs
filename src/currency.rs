@@ -10,7 +10,7 @@ use std::time::Duration;
 use xml::reader::XmlEvent;
 use xml::EventReader;
 
-static URL: &'static str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
+static URL: &str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 
 pub fn parse(f: File) -> Result<Defs, String> {
     let reader = EventReader::new(f);

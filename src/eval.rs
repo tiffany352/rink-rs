@@ -146,7 +146,7 @@ impl Context {
                 val.get(&**field).map(Value::Number).map_err(|e| match e {
                     SubstanceGetError::Generic(s) => QueryError::Generic(s),
                     SubstanceGetError::Conformance(l, r) => {
-                        QueryError::Conformance(self.conformance_err(&l, &r))
+                        QueryError::Conformance(Box::new(self.conformance_err(&l, &r)))
                     }
                 })
             }
@@ -595,7 +595,7 @@ impl Context {
         {
             let first = units
                 .first()
-                .ok_or("Expected non-empty unit list".to_string())?;
+                .ok_or_else(|| "Expected non-empty unit list".to_string())?;
             units
                 .iter()
                 .skip(1)
@@ -612,7 +612,9 @@ impl Context {
                 })
                 .collect::<Result<Vec<()>, _>>()?;
             if top.unit != first.unit {
-                return Err(QueryError::Conformance(self.conformance_err(&top, &first)));
+                return Err(QueryError::Conformance(Box::new(
+                    self.conformance_err(&top, &first),
+                )));
             }
         }
         let mut value = top.value.clone();
@@ -732,13 +734,13 @@ impl Context {
                         self.lookup(&name).map(|x| x.to_parts(self)),
                     )
                 };
-                Ok(QueryReply::Def(DefReply {
+                Ok(QueryReply::Def(Box::new(DefReply {
                     canon_name: canon,
                     def,
                     def_expr: def_expr.as_ref().map(|x| ExprReply::from(*x)),
                     value: res,
                     doc: self.docs.get(&name).cloned(),
-                }))
+                })))
             }
             Query::Convert(ref top, Conversion::None, Some(base), digits) => {
                 let top = self.eval(top)?;
@@ -758,7 +760,9 @@ impl Context {
                     approx_value: approx,
                     ..top.to_parts(self)
                 };
-                Ok(QueryReply::Conversion(ConversionReply { value: parts }))
+                Ok(QueryReply::Conversion(Box::new(ConversionReply {
+                    value: parts,
+                })))
             }
             Query::Convert(ref top, Conversion::None, base, digits @ Digits::Digits(_))
             | Query::Convert(ref top, Conversion::None, base, digits @ Digits::FullInt) => {
@@ -783,7 +787,9 @@ impl Context {
                     approx_value: approx,
                     ..top.to_parts(self)
                 };
-                Ok(QueryReply::Conversion(ConversionReply { value: parts }))
+                Ok(QueryReply::Conversion(Box::new(ConversionReply {
+                    value: parts,
+                })))
             }
             Query::Convert(ref top, Conversion::Expr(ref bottom), base, digits) => match (
                 self.eval(top)?,
@@ -802,16 +808,18 @@ impl Context {
                                 )))
                             }
                         };
-                        Ok(QueryReply::Conversion(self.show(
+                        Ok(QueryReply::Conversion(Box::new(self.show(
                             &raw,
                             &bottom,
                             bottom_name,
                             bottom_const,
                             base.unwrap_or(10),
                             digits,
-                        )))
+                        ))))
                     } else {
-                        Err(QueryError::Conformance(self.conformance_err(&top, &bottom)))
+                        Err(QueryError::Conformance(Box::new(
+                            self.conformance_err(&top, &bottom),
+                        )))
                     }
                 }
                 (Value::Substance(sub), Value::Number(bottom), (bottom_name, bottom_const)) => sub
@@ -918,7 +926,9 @@ impl Context {
                     .lookup(scale)
                     .expect(&*format!("Unit {} missing", scale));
                 if top.unit != bottom.unit {
-                    Err(QueryError::Conformance(self.conformance_err(&top, &bottom)))
+                    Err(QueryError::Conformance(Box::new(
+                        self.conformance_err(&top, &bottom),
+                    )))
                 } else {
                     let res = (top
                         - &self
@@ -928,14 +938,14 @@ impl Context {
                     let res = (&res / &bottom).unwrap();
                     let mut name = BTreeMap::new();
                     name.insert(deg.to_string(), 1);
-                    Ok(QueryReply::Conversion(self.show(
+                    Ok(QueryReply::Conversion(Box::new(self.show(
                         &res,
                         &bottom,
                         name,
                         Num::one(),
                         10,
                         digits,
-                    )))
+                    ))))
                 }
             }
             Query::Convert(ref _expr, ref which, Some(base), _digits) => Err(QueryError::Generic(
@@ -1016,7 +1026,7 @@ impl Context {
                 let val = match val {
                     None => {
                         let val = self.eval(expr)?;
-                        let val = match val {
+                        match val {
                             Value::Number(val) => val,
                             _ => {
                                 return Err(QueryError::Generic(format!(
@@ -1024,8 +1034,7 @@ impl Context {
                                     val.show(self)
                                 )))
                             }
-                        };
-                        val
+                        }
                     }
                     Some(val) => val,
                 };
@@ -1041,7 +1050,7 @@ impl Context {
                     }
                 }
                 if val.unit.len() == 1 {
-                    let ref n = *val.unit.iter().next().unwrap().0 .0;
+                    let n = &(*val.unit.iter().next().unwrap().0 .0);
                     dim_name = self.canonicalize(n).unwrap_or_else(|| n.to_owned());
                     let category = self.categories.get(&dim_name);
                     out.push((category, &dim_name));
@@ -1125,7 +1134,7 @@ impl Context {
                         let units = &["year", "week", "day", "hour", "minute", "second"];
                         let list = self.to_list(&n, units)?;
                         let mut list = list.into_iter();
-                        Ok(QueryReply::Duration(DurationReply {
+                        Ok(QueryReply::Duration(Box::new(DurationReply {
                             raw: n.to_parts(self),
                             years: list.next().expect("Unexpected end of iterator"),
                             //months: list.next().expect("Unexpected end of iterator"),
@@ -1144,7 +1153,7 @@ impl Context {
                             hours: list.next().expect("Unexpected end of iterator"),
                             minutes: list.next().expect("Unexpected end of iterator"),
                             seconds: list.next().expect("Unexpected end of iterator"),
-                        }))
+                        })))
                     }
                     Value::Number(n) => Ok(QueryReply::Number(n.to_parts(self))),
                     Value::DateTime(d) => match d {

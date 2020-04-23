@@ -246,10 +246,9 @@ where
         Some(&DatePattern::Optional(ref pats)) => {
             advance = false;
             let mut iter = date.clone();
-            match parse_date(out, out_tz, &mut iter, &pats[..]) {
-                Ok(()) => *date = iter,
-                Err(_) => (),
-            };
+            if let Ok(()) = parse_date(out, out_tz, &mut iter, &pats[..]) {
+                *date = iter
+            }
             Ok(())
         }
         Some(&DatePattern::Dash) => match tok {
@@ -335,14 +334,16 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
             _ => Err(("Failed to construct a useful datetime".to_string(), count)),
         }
     } else {
-        let offset = parsed.to_fixed_offset().unwrap_or(FixedOffset::east(0));
+        let offset = parsed
+            .to_fixed_offset()
+            .unwrap_or_else(|_| FixedOffset::east(0));
         match (time, date) {
             (Ok(time), Ok(date)) => offset
                 .from_local_datetime(&date.and_time(time))
                 .earliest()
                 .ok_or_else(|| {
                     (
-                        format!("Datetime does not represent a valid moment in time"),
+                        "Datetime does not represent a valid moment in time".to_string(),
                         count,
                     )
                 })
@@ -360,12 +361,12 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
                 .map(|x| x.and_hms(0, 0, 0))
                 .ok_or_else(|| {
                     (
-                        format!("Datetime does not represent a valid moment in time"),
+                        "Datetime does not represent a valid moment in time".to_string(),
                         count,
                     )
                 })
                 .map(GenericDateTime::Fixed),
-            _ => Err((format!("Failed to construct a useful datetime"), count)),
+            _ => Err(("Failed to construct a useful datetime".to_string(), count)),
         }
     }
 }

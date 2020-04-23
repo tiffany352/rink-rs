@@ -29,16 +29,13 @@ impl<'a> Iterator for TokenIterator<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        if self.0.peek().is_none() {
-            return None;
-        }
+        self.0.peek()?;
         let res = match self.0.next().unwrap() {
             letter @ 'A'..='Z' => {
                 let mut symbol = String::new();
                 symbol.push(letter);
-                match self.0.peek().cloned() {
-                    Some('a'..='z') => symbol.push(self.0.next().unwrap()),
-                    _ => (),
+                if let Some('a'..='z') = self.0.peek().cloned() {
+                    symbol.push(self.0.next().unwrap())
                 }
                 Token::Symbol(symbol)
             }

@@ -529,7 +529,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             exp.as_ref().map(|x| &**x),
         )
         .map(Expr::Const)
-        .unwrap_or_else(|e| Expr::Error(e.to_string())),
+        .unwrap_or_else(Expr::Error),
         Token::Hex(num) => parse_radix(&*num, 16, "hex"),
         Token::Oct(num) => parse_radix(&*num, 8, "octal"),
         Token::Bin(num) => parse_radix(&*num, 2, "binary"),
