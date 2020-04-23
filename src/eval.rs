@@ -28,8 +28,8 @@ impl Context {
         use std::ops::*;
         macro_rules! operator {
             ($left:ident $op:ident $opname:tt $right:ident) => {{
-                let left = try!(self.eval(&**$left));
-                let right = try!(self.eval(&**$right));
+                let left = self.eval(&**$left)?;
+                let right = self.eval(&**$right)?;
                 ((&left).$op(&right)).map_err(|e| {
                     QueryError::Generic(format!(
                         "{}: <{}> {} <{}>",
@@ -77,7 +77,7 @@ impl Context {
             Expr::Suffix(ref deg, ref left) => {
                 let (name, base, scale) = deg.name_base_scale();
 
-                let left = try!(self.eval(&**left));
+                let left = self.eval(&**left)?;
                 let left = match left {
                     Value::Number(left) => left,
                     _ => return Err(QueryError::Generic(format!(
@@ -100,7 +100,7 @@ impl Context {
 
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
                 a.and_then(|a| {
-                    let b = try!(self.eval(b));
+                    let b = self.eval(b)?;
                     (&a * &b).map_err(|e| QueryError::Generic(format!(
                         "{}: <{}> * <{}>",
                         e, a.show(self), b.show(self)
@@ -118,7 +118,7 @@ impl Context {
                 self.eval(right)
             },
             Expr::Of(ref field, ref val) => {
-                let val = try!(self.eval(val));
+                let val = self.eval(val)?;
                 let val = match val {
                     Value::Substance(sub) => sub,
                     x => return Err(QueryError::Generic(format!(
@@ -138,10 +138,9 @@ impl Context {
                 })
             },
             Expr::Call(ref func, ref args) => {
-                let args = try!(
-                    args.iter()
+                let args = args.iter()
                         .map(|x| self.eval(x))
-                        .collect::<Result<Vec<_>, _>>());
+                        .collect::<Result<Vec<_>, _>>()?;
 
                 macro_rules! func {
                     (fn $fname:ident($($name:ident : $ty:ident),*) $block:block) => {{
@@ -349,8 +348,8 @@ impl Context {
             Expr::Const(ref i) =>
                 Ok((BTreeMap::new(), i.clone())),
             Expr::Frac(ref left, ref right) => {
-                let (left, lv) = try!(self.eval_unit_name(left));
-                let (right, rv) = try!(self.eval_unit_name(right));
+                let (left, lv) = self.eval_unit_name(left)?;
+                let (right, rv) = self.eval_unit_name(right)?;
                 let right = right.into_iter()
                     .map(|(k,v)| (k, -v)).collect::<BTreeMap<_, _>>();
                 Ok((::btree_merge(
@@ -361,8 +360,8 @@ impl Context {
             },
             Expr::Mul(ref args) => {
                 args[1..].iter().fold(self.eval_unit_name(&args[0]), |acc, b| {
-                    let (acc, av) = try!(acc);
-                    let (b, bv) = try!(self.eval_unit_name(b));
+                    let (acc, av) = acc?;
+                    let (b, bv) = self.eval_unit_name(b)?;
                     Ok((::btree_merge(
                         &acc, &b,
                         |a,b| if a+b != 0 { Some(a+b) } else { None }),
@@ -371,7 +370,7 @@ impl Context {
                 })
             },
             Expr::Pow(ref left, ref exp) => {
-                let res = try!(self.eval(exp));
+                let res = self.eval(exp)?;
                 let res = match res {
                     Value::Number(num) => num,
                     _ => return Err(QueryError::Generic(
@@ -384,7 +383,7 @@ impl Context {
                     ))
                 }
                 let res = res.value.to_f64();
-                let (left, lv) = try!(self.eval_unit_name(left));
+                let (left, lv) = self.eval_unit_name(left)?;
                 Ok((left.into_iter()
                    .filter_map(|(k, v)| {
                        let v = v * res as isize;
@@ -398,7 +397,7 @@ impl Context {
                     pow(&lv, res as i32)))
             },
             Expr::Of(ref name, ref expr) => {
-                let res = try!(self.eval(expr));
+                let res = self.eval(expr)?;
                 let res = match res {
                     Value::Substance(sub) => sub,
                     _ => return Err(QueryError::Generic(
@@ -421,8 +420,8 @@ impl Context {
             },
             Expr::Add(ref left, ref right) |
             Expr::Sub(ref left, ref right) => {
-                let left = try!(self.eval_unit_name(left));
-                let right = try!(self.eval_unit_name(right));
+                let left = self.eval_unit_name(left)?;
+                let right = self.eval_unit_name(right)?;
                 if left != right {
                     return Err(QueryError::Generic(
                         "Add of values with differing \
@@ -515,13 +514,13 @@ impl Context {
     fn to_list(
         &self, top: &Number, list: &[&str]
     ) -> Result<Vec<NumberParts>, QueryError> {
-        let units = try!(list.iter().map(|x| {
+        let units = list.iter().map(|x| {
             self.lookup(x).ok_or_else(|| self.unknown_unit_err(x))
-        }).collect::<Result<Vec<Number>, _>>());
+        }).collect::<Result<Vec<Number>, _>>()?;
         {
-            let first = try!(units.first().ok_or(
-                "Expected non-empty unit list".to_string()));
-            try!(units.iter().skip(1).map(|x| {
+            let first = units.first().ok_or(
+                "Expected non-empty unit list".to_string())?;
+            units.iter().skip(1).map(|x| {
                 if first.unit != x.unit {
                     Err(format!(
                         "Units in unit list must conform: <{}> ; <{}>",
@@ -529,7 +528,7 @@ impl Context {
                 } else {
                     Ok(())
                 }
-            }).collect::<Result<Vec<()>, _>>());
+            }).collect::<Result<Vec<()>, _>>()?;
             if top.unit != first.unit {
                 return Err(QueryError::Conformance(
                     self.conformance_err(&top, &first)))
@@ -641,7 +640,7 @@ impl Context {
                 }))
             },
             Query::Convert(ref top, Conversion::None, Some(base), digits) => {
-                let top = try!(self.eval(top));
+                let top = self.eval(top)?;
                 let top = match top {
                     Value::Number(top) => top,
                     _ => return Err(QueryError::Generic(format!(
@@ -659,7 +658,7 @@ impl Context {
             },
             Query::Convert(ref top, Conversion::None, base, digits @ Digits::Digits(_)) |
             Query::Convert(ref top, Conversion::None, base, digits @ Digits::FullInt) => {
-                let top = try!(self.eval(top));
+                let top = self.eval(top)?;
                 let top = match top {
                     Value::Number(top) => top,
                     _ => return Err(QueryError::Generic(format!(
@@ -685,7 +684,7 @@ impl Context {
                 }))
             },
             Query::Convert(ref top, Conversion::Expr(ref bottom), base, digits) => match
-                (try!(self.eval(top)), try!(self.eval(bottom)), try!(self.eval_unit_name(bottom)))
+                (self.eval(top)?, self.eval(bottom)?, self.eval_unit_name(bottom)?)
             {
                 (Value::Number(top), Value::Number(bottom),
                  (bottom_name, bottom_const)) => {
@@ -746,7 +745,7 @@ impl Context {
                 ))),
             },
             Query::Convert(ref top, Conversion::List(ref list), None, Digits::Default) => {
-                let top = try!(self.eval(top));
+                let top = self.eval(top)?;
                 let top = match top {
                     Value::Number(num) => num,
                     _ => return Err(QueryError::Generic(format!(
@@ -770,7 +769,7 @@ impl Context {
             Query::Convert(ref top, Conversion::Offset(off), None, Digits::Default) => {
                 use chrono::FixedOffset;
 
-                let top = try!(self.eval(top));
+                let top = self.eval(top)?;
                 let top = match top {
                     Value::DateTime(date) => date,
                     _ => return Err(QueryError::Generic(format!(
@@ -780,7 +779,7 @@ impl Context {
                 Ok(QueryReply::Date(DateReply::new(self, top)))
             },
             Query::Convert(ref top, Conversion::Timezone(tz), None, Digits::Default) => {
-                let top = try!(self.eval(top));
+                let top = self.eval(top)?;
                 let top = match top {
                     Value::DateTime(date) => date,
                     _ => return Err(QueryError::Generic(format!(
@@ -792,7 +791,7 @@ impl Context {
             Query::Convert(ref top, Conversion::Degree(ref deg), None, digits) => {
                 let (name, base, scale) = deg.name_base_scale();
 
-                let top = try!(self.eval(top));
+                let top = self.eval(top)?;
                 let top = match top {
                     Value::Number(ref num) => num,
                     _ => return Err(QueryError::Generic(format!(
@@ -849,7 +848,7 @@ impl Context {
                 }
                 let val = match val {
                     None => {
-                        let val = try!(self.eval(expr));
+                        let val = self.eval(expr)?;
                         match val {
                             Value::Number(val) => val,
                             _ => return Err(QueryError::Generic(format!(
@@ -890,7 +889,7 @@ impl Context {
                 }
                 let val = match val {
                     None => {
-                        let val = try!(self.eval(expr));
+                        let val = self.eval(expr)?;
                         let val = match val {
                             Value::Number(val) => val,
                             _ => return Err(QueryError::Generic(format!(
@@ -989,11 +988,11 @@ impl Context {
             },
             Query::Expr(ref expr) |
             Query::Convert(ref expr, Conversion::None, None, Digits::Default) => {
-                let val = try!(self.eval(expr));
+                let val = self.eval(expr)?;
                 match val {
                     Value::Number(ref n) if n.unit == Number::one_unit(Dim::new("s")).unit => {
                         let units = &["year", "week", "day", "hour", "minute", "second"];
-                        let list = try!(self.to_list(&n, units));
+                        let list = self.to_list(&n, units)?;
                         let mut list = list.into_iter();
                         Ok(QueryReply::Duration(DurationReply {
                             raw: n.to_parts(self),
@@ -1022,7 +1021,7 @@ impl Context {
                         date::GenericDateTime::Timezone(d) => Ok(QueryReply::Date(DateReply::new(self, d))),
                     },
                     Value::Substance(s) => Ok(QueryReply::Substance(
-                        try!(s.to_reply(self).map_err(QueryError::Generic))
+                        s.to_reply(self).map_err(QueryError::Generic)?
                     )),
                 }
             },

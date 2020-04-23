@@ -262,13 +262,13 @@ impl fmt::Display for Expr {
             macro_rules! binop {
                 ($left:expr, $right:expr, $prec:expr, $succ:expr, $sym:expr) => {{
                     if prec < $prec {
-                        try!(write!(fmt, "("));
+                        write!(fmt, "(")?;
                     }
-                    try!(recurse($left, fmt, $succ));
-                    try!(write!(fmt, $sym));
-                    try!(recurse($right, fmt, $prec));
+                    recurse($left, fmt, $succ)?;
+                    write!(fmt, $sym)?;
+                    recurse($right, fmt, $prec)?;
                     if prec < $prec {
-                        try!(write!(fmt, ")"));
+                        write!(fmt, ")")?;
                     }
                     Ok(())
                 }}
@@ -283,28 +283,28 @@ impl fmt::Display for Expr {
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),
                 Expr::Mul(ref exprs) => {
                     if prec < Prec::Mul {
-                        try!(write!(fmt, "("));
+                        write!(fmt, "(")?;
                     }
                     if let Some(first) = exprs.first() {
-                        try!(recurse(first, fmt, Prec::Pow));
+                        recurse(first, fmt, Prec::Pow)?;
                     }
                     for expr in exprs.iter().skip(1) {
-                        try!(write!(fmt, " "));
-                        try!(recurse(expr, fmt, Prec::Pow));
+                        write!(fmt, " ")?;
+                        recurse(expr, fmt, Prec::Pow)?;
                     }
                     if prec < Prec::Mul {
-                        try!(write!(fmt, ")"));
+                        write!(fmt, ")")?;
                     }
                     Ok(())
                 },
                 Expr::Call(ref func, ref args) => {
-                    try!(write!(fmt, "{}(", func.name()));
+                    write!(fmt, "{}(", func.name())?;
                     if let Some(first) = args.first() {
-                        try!(recurse(first, fmt, Prec::Equals));
+                        recurse(first, fmt, Prec::Equals)?;
                     }
                     for arg in args.iter().skip(1) {
-                        try!(write!(fmt, ", "));
-                        try!(recurse(arg, fmt, Prec::Equals));
+                        write!(fmt, ", ")?;
+                        recurse(arg, fmt, Prec::Equals)?;
                     }
                     write!(fmt, ")")
                 },
@@ -313,33 +313,33 @@ impl fmt::Display for Expr {
                 Expr::Add(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " + "),
                 Expr::Sub(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " - "),
                 Expr::Plus(ref expr) => {
-                    try!(write!(fmt, "+"));
+                    write!(fmt, "+")?;
                     recurse(expr, fmt, Prec::Plus)
                 },
                 Expr::Neg(ref expr) => {
-                    try!(write!(fmt, "-"));
+                    write!(fmt, "-")?;
                     recurse(expr, fmt, Prec::Plus)
                 },
                 Expr::Equals(ref left, ref right) => binop!(left, right, Prec::Equals, Prec::Add, " = "),
                 Expr::Suffix(ref op, ref expr) => {
                     if prec < Prec::Mul {
-                        try!(write!(fmt, "("));
+                        write!(fmt, "(")?;
                     }
-                    try!(recurse(expr, fmt, Prec::Mul));
-                    try!(write!(fmt, " {}", op));
+                    recurse(expr, fmt, Prec::Mul)?;
+                    write!(fmt, " {}", op)?;
                     if prec < Prec::Mul {
-                        try!(write!(fmt, ")"));
+                        write!(fmt, ")")?;
                     }
                     Ok(())
                 },
                 Expr::Of(ref field, ref expr) => {
                     if prec < Prec::Add {
-                        try!(write!(fmt, "("));
+                        write!(fmt, "(")?;
                     }
-                    try!(write!(fmt, "{} of ", field));
-                    try!(recurse(expr, fmt, Prec::Div));
+                    write!(fmt, "{} of ", field)?;
+                    recurse(expr, fmt, Prec::Div)?;
                     if prec < Prec::Add {
-                        try!(write!(fmt, ")"));
+                        write!(fmt, ")")?;
                     }
                     Ok(())
                 },
@@ -357,9 +357,9 @@ impl fmt::Display for DatePattern {
             DatePattern::Literal(ref l) => write!(fmt, "'{}'", l),
             DatePattern::Match(ref n) => write!(fmt, "{}", n),
             DatePattern::Optional(ref pats) => {
-                try!(write!(fmt, "["));
+                write!(fmt, "[")?;
                 for p in pats {
-                    try!(p.fmt(fmt));
+                    p.fmt(fmt)?;
                 }
                 write!(fmt, "]")
             },

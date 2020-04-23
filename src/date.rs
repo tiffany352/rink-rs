@@ -285,7 +285,7 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
     } else {
         res
     };
-    try!(res.map_err(|e| (e, count)));
+    res.map_err(|e| (e, count))?;
     let time = parsed.to_naive_time();
     let date = parsed.to_naive_date();
     if let Some(tz) = tz {
@@ -392,7 +392,7 @@ pub fn parse_datepattern<I>(iter: &mut Peekable<I>)
             ':' => DatePattern::Colon,
             '[' => {
                 iter.next();
-                let res = DatePattern::Optional(try!(parse_datepattern(iter)));
+                let res = DatePattern::Optional(parse_datepattern(iter)?);
                 if iter.peek().cloned() != Some(']') {
                     return Err("Expected ]".to_string())
                 } else {

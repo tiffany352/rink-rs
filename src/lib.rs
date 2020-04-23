@@ -125,12 +125,12 @@ pub fn load() -> Result<Context, String> {
     use std::io::Read;
     use std::path::Path;
 
-    let path = try!(config_dir());
+    let path = config_dir()?;
     let load = |name| {
         File::open(name)
         .and_then(|mut f| {
             let mut buf = vec![];
-            try!(f.read_to_end(&mut buf));
+            f.read_to_end(&mut buf)?;
             Ok(String::from_utf8_lossy(&*buf).into_owned())
         })
     };
@@ -147,7 +147,7 @@ pub fn load() -> Result<Context, String> {
              {}\n\
              \n",
             e, &path, DATA_FILE_URL));
-    let units = try!(units);
+    let units = units?;
     let dates =
         load(Path::new("datepatterns.txt").to_path_buf())
         .or_else(|_| load(path.join("datepatterns.txt")))
@@ -343,7 +343,7 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
     fn ts<T:Display>(x: T) -> String {
         x.to_string()
     }
-    let mut path = try!(config_dir());
+    let mut path = config_dir()?;
     let mut tmppath = path.clone();
     path.push(file);
     let tmpfile = format!("{}.part", file);
@@ -352,10 +352,10 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
     File::open(path.clone())
         .map_err(ts)
         .and_then(|f| {
-            let stats = try!(f.metadata().map_err(ts));
-            let mtime = try!(stats.modified().map_err(ts));
+            let stats = f.metadata().map_err(ts)?;
+            let mtime = stats.modified().map_err(ts)?;
             let now = SystemTime::now();
-            let elapsed = try!(now.duration_since(mtime).map_err(ts));
+            let elapsed = now.duration_since(mtime).map_err(ts)?;
             if elapsed > expiration {
                 Err("File is out of date".to_string())
             } else {
@@ -363,17 +363,17 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             }
         })
         .or_else(|_| {
-            try!(fs::create_dir_all(path.parent().unwrap()).map_err(|x| x.to_string()));
-            let mut f = try!(File::create(tmppath.clone()).map_err(|x| x.to_string()));
+            fs::create_dir_all(path.parent().unwrap()).map_err(|x| x.to_string())?;
+            let mut f = File::create(tmppath.clone()).map_err(|x| x.to_string())?;
 
             reqwest::get(url)
                 .map_err(|err| format!("Request failed: {}", err))?
                 .copy_to(&mut f).map_err(|err| format!("Request failed: {}", err))?;
 
-            try!(f.sync_all().map_err(|x| format!("{}", x)));
+            f.sync_all().map_err(|x| format!("{}", x))?;
             drop(f);
-            try!(fs::rename(tmppath.clone(), path.clone())
-                 .map_err(|x| x.to_string()));
+            fs::rename(tmppath.clone(), path.clone())
+                 .map_err(|x| x.to_string())?;
             File::open(path).map_err(|x| x.to_string())
         })
 }

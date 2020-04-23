@@ -84,12 +84,12 @@ impl<'a,'b> Add<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::Number(ref right)) |
             (&Value::Number(ref right), &Value::DateTime(ref left)) =>
                 match *left {
-                    GenericDateTime::Fixed(left) => left.checked_add(try!(date::to_duration(
+                    GenericDateTime::Fixed(left) => left.checked_add(date::to_duration(
                         right
-                    ))).map(GenericDateTime::Fixed),
-                    GenericDateTime::Timezone(left) => left.checked_add(try!(date::to_duration(
+                    )?).map(GenericDateTime::Fixed),
+                    GenericDateTime::Timezone(left) => left.checked_add(date::to_duration(
                         right
-                    ))).map(GenericDateTime::Timezone),
+                    )?).map(GenericDateTime::Timezone),
                 }
                 .ok_or("Implementation error: value is out of range representable by datetime".to_string())
                 .map(Value::DateTime),
@@ -113,12 +113,12 @@ impl<'a,'b> Sub<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::Number(ref right)) |
             (&Value::Number(ref right), &Value::DateTime(ref left)) =>
                 match *left {
-                    GenericDateTime::Fixed(left) => left.checked_sub(try!(date::to_duration(
+                    GenericDateTime::Fixed(left) => left.checked_sub(date::to_duration(
                         right
-                    ))).map(GenericDateTime::Fixed),
-                    GenericDateTime::Timezone(left) => left.checked_sub(try!(date::to_duration(
+                    )?).map(GenericDateTime::Fixed),
+                    GenericDateTime::Timezone(left) => left.checked_sub(date::to_duration(
                         right
-                    ))).map(GenericDateTime::Timezone),
+                    )?).map(GenericDateTime::Timezone),
                 }
                 .ok_or("Implementation error: value is out of range representable by datetime".to_string())
                 .map(Value::DateTime),

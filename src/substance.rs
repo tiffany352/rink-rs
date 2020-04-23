@@ -75,28 +75,26 @@ impl Substance {
         } else {
             for prop in self.properties.properties.values() {
                 if name == prop.output_name {
-                    let input = try!(
-                        (&prop.input / &self.amount).ok_or_else(
+                    let input = (&prop.input / &self.amount).ok_or_else(
                             || SubstanceGetError::Generic(
-                                "Division by zero".to_owned())));
+                                "Division by zero".to_owned()))?;
                     if input.dimless() {
-                        let res = try!((&prop.output / &input).ok_or_else(
+                        let res = (&prop.output / &input).ok_or_else(
                             || SubstanceGetError::Generic(
-                                "Division by zero".to_owned())));
+                                "Division by zero".to_owned()))?;
                         return Ok(res)
                     } else {
                         return Err(SubstanceGetError::Conformance(
                             self.amount.clone(), prop.input.clone()))
                     }
                 } else if name == prop.input_name {
-                    let output = try!(
-                        (&prop.output / &self.amount).ok_or_else(
+                    let output = (&prop.output / &self.amount).ok_or_else(
                             || SubstanceGetError::Generic(
-                                "Division by zero".to_owned())));
+                                "Division by zero".to_owned()))?;
                     if output.dimless() {
-                        let res = try!((&prop.input / &output).ok_or_else(
+                        let res = (&prop.input / &output).ok_or_else(
                             || SubstanceGetError::Generic(
-                                "Division by zero".to_owned())));
+                                "Division by zero".to_owned()))?;
                         return Ok(res)
                     } else {
                         return Err(SubstanceGetError::Conformance(
@@ -126,7 +124,7 @@ impl Substance {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
-                properties: try!(self.properties.properties.iter().map(|(k, v)| {
+                properties: self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.dimless() {
                         let res = (&v.output * &self.amount).unwrap();
                         (None, try_div!(res, v.input, context))
@@ -175,7 +173,7 @@ impl Substance {
                     }))
                 }).filter_map(
                     |x| x.map(|x| x.map(Ok)).unwrap_or_else(|e| Some(Err(e)))
-                ).collect::<Result<Vec<PropertyReply>, String>>()),
+                ).collect::<Result<Vec<PropertyReply>, String>>()?,
             })
         } else {
             let func = |(_k, v): (&String, &Property)| {
@@ -234,10 +232,9 @@ impl Substance {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
-                properties: try!(
-                    once(Ok(Some(amount)))
+                properties: once(Ok(Some(amount)))
                         .chain(self.properties.properties.iter().map(func))
-                        .collect::<Result<Vec<Option<PropertyReply>>, String>>())
+                        .collect::<Result<Vec<Option<PropertyReply>>, String>>()?
                     .into_iter()
                     .filter_map(|x| x)
                     .collect(),
@@ -251,7 +248,7 @@ impl Substance {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
-                properties: try!(self.properties.properties.iter().map(|(k, v)| {
+                properties: self.properties.properties.iter().map(|(k, v)| {
                     let (input, output) = if v.input.dimless() {
                         let res = (&v.output * &self.amount).unwrap();
                         (None, try_div!(res, v.input, context))
@@ -273,7 +270,7 @@ impl Substance {
                         },
                         doc: v.doc.clone()
                     })
-                }).collect::<Result<Vec<PropertyReply>, String>>()),
+                }).collect::<Result<Vec<PropertyReply>, String>>()?,
             })
         } else {
             let func = |(_k, v): (&String, &Property)| {
@@ -315,10 +312,9 @@ impl Substance {
                 name: self.properties.name.clone(),
                 doc: context.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
-                properties: try!(
-                    once(Ok(Some(amount)))
+                properties: once(Ok(Some(amount)))
                         .chain(self.properties.properties.iter().map(func))
-                        .collect::<Result<Vec<Option<PropertyReply>>, String>>())
+                        .collect::<Result<Vec<Option<PropertyReply>>, String>>()?
                     .into_iter()
                     .filter_map(|x| x)
                     .collect(),
@@ -338,8 +334,8 @@ impl<'a, 'b> Mul<&'b Number> for &'a Substance {
 
     fn mul(self, other: &'b Number) -> Self::Output {
         Ok(Substance {
-            amount: try!((&self.amount * other).ok_or_else(
-                || "Multiplication of numbers should not fail".to_owned())),
+            amount: (&self.amount * other).ok_or_else(
+                || "Multiplication of numbers should not fail".to_owned())?,
             properties: self.properties.clone(),
         })
     }
@@ -350,8 +346,8 @@ impl<'a, 'b> Div<&'b Number> for &'a Substance {
 
     fn div(self, other: &'b Number) -> Self::Output {
         Ok(Substance {
-            amount: try!((&self.amount / other).ok_or_else(
-                || "Division by zero".to_owned())),
+            amount: (&self.amount / other).ok_or_else(
+                || "Division by zero".to_owned())?,
             properties: self.properties.clone(),
         })
     }

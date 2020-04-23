@@ -89,17 +89,17 @@ pub fn eval(query: &str) -> Result<QueryReply, Error> {
         .stdout(Stdio::piped())
         .env("RUST_BACKTRACE", "1")
         .spawn();
-    let child = try!(res);
+    let child = res?;
     let (rx, _) = server.accept().unwrap();
     let rx: IpcReceiver<Result<QueryReply, QueryError>> = rx;
 
     match rx.recv() {
         Ok(s) => {
-            try!(child.wait_with_output());
+            child.wait_with_output()?;
             s.map_err(Error::Rink)
         },
         Err(e) => {
-            let output = try!(child.wait_with_output());
+            let output = child.wait_with_output()?;
             match output.status.signal() {
                 Some(libc::SIGXCPU) => return Err(Error::Time),
                 // SIGABRT doesn't necessarily mean OOM, but GMP will raise it when it happens

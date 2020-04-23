@@ -122,8 +122,8 @@ fn ifnot1helper(
     use handlebars::RenderError;
     use handlebars::Renderable;
 
-    let param = try!(h.param(0)
-                     .ok_or_else(|| RenderError::new("Param not found for helper \"ifnot1\"")));
+    let param = h.param(0)
+                     .ok_or_else(|| RenderError::new("Param not found for helper \"ifnot1\""))?;
     let param = param.value();
 
     let value =
@@ -154,14 +154,14 @@ fn urlescapehelper(
 
     let tmpl = h.template();
     let res = match tmpl {
-        Some(ref t) => try!(t.renders(r, rc)),
+        Some(ref t) => t.renders(r, rc)?,
         None => return Err(RenderError::new("urlescape is a block helper")),
     };
     let res = res.split_whitespace().collect::<Vec<_>>().join(" ");
     let res = utf8_percent_encode(&res, QUERY_ENCODE_SET).collect::<String>();
     let res = res.split("%20").collect::<Vec<_>>().join("+");
-    try!(rc.writer.write_all(res.as_bytes()).map_err(
-        |e| RenderError::new(&e.to_string())));
+    rc.writer.write_all(res.as_bytes()).map_err(
+        |e| RenderError::new(&e.to_string()))?;
     Ok(())
 }
 

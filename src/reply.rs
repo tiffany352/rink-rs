@@ -315,7 +315,7 @@ impl Display for NotFoundError {
 
 impl Display for ConformanceError {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        try!(writeln!(fmt, "Conformance error: {} != {}", self.left, self.right));
+        writeln!(fmt, "Conformance error: {} != {}", self.left, self.right)?;
         write!(fmt, "Suggestions: {}", self.suggestions.join(", "))
     }
 }
@@ -340,9 +340,9 @@ impl DateReply {
 
 impl Display for DateReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        try!(write!(fmt, "{}", self.string));
+        write!(fmt, "{}", self.string)?;
         if let Some(ref human) = self.human {
-            try!(write!(fmt, " ({})", human));
+            write!(fmt, " ({})", human)?;
         }
         Ok(())
     }
@@ -368,15 +368,15 @@ impl Display for SubstanceReply {
 
 impl Display for DefReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        try!(write!(fmt, "Definition: {}", self.canon_name));
+        write!(fmt, "Definition: {}", self.canon_name)?;
         if let Some(ref def) = self.def {
-            try!(write!(fmt, " = {}", def));
+            write!(fmt, " = {}", def)?;
         }
         if let Some(ref value) = self.value {
-            try!(write!(fmt, " = {}", value.format("n u p")));
+            write!(fmt, " = {}", value.format("n u p"))?;
         }
         if let Some(ref doc) = self.doc {
-            try!(write!(fmt, ". {}", doc));
+            write!(fmt, ". {}", doc)?;
         }
         Ok(())
     }
@@ -423,7 +423,7 @@ impl Display for DurationReply {
             })
             .collect::<Vec<_>>()
             .join(", ");
-        try!(write!(fmt, "{}", res));
+        write!(fmt, "{}", res)?;
         if let Some(q) = self.raw.quantity.as_ref() {
             write!(fmt, " ({})", q)
         } else {
@@ -434,11 +434,11 @@ impl Display for DurationReply {
 
 impl Display for UnitListReply {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        try!(write!(fmt, "{}",
+        write!(fmt, "{}",
                     self.list.iter()
                     .map(|x| x.to_string())
                     .collect::<Vec<_>>()
-                    .join(", ")));
+                    .join(", "))?;
         if let Some(q) = self.rest.quantity.as_ref() {
             write!(fmt, " ({})", q)
         } else {

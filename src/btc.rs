@@ -13,8 +13,8 @@ static URL: &'static str = "https://blockchain.info/stats?format=json";
 
 pub fn parse(mut f: File) -> Result<Defs, String> {
     let mut buf = String::new();
-    try!(f.read_to_string(&mut buf).map_err(|x| x.to_string()));
-    let parsed = try!(json::parse(&*buf).map_err(|x| x.to_string()));
+    f.read_to_string(&mut buf).map_err(|x| x.to_string())?;
+    let parsed = json::parse(&*buf).map_err(|x| x.to_string())?;
     let mut out = vec![];
     if let Some(price) = parsed["market_price_usd"].as_number() {
         let (sign, mantissa, exp) = price.as_parts();
