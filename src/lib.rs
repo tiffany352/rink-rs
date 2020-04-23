@@ -32,10 +32,6 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 
 #![cfg_attr(feature = "nightly", feature(proc_macro))]
 
-
-
-
-
 #[cfg(feature = "sandbox")]
 extern crate ipc_channel;
 #[cfg(feature = "currency")]
@@ -46,7 +42,6 @@ extern crate libc;
 extern crate reqwest;
 #[cfg(feature = "nightly")]
 extern crate serde;
-
 
 #[cfg(feature = "nightly")]
 #[macro_use]

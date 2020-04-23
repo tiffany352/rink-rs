@@ -383,8 +383,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                                 }
                             }
                             DateToken::Literal(buf)
-                        }
-                        //x => DateToken::Error(format!("Unexpected character '{}'", x))
+                        } //x => DateToken::Error(format!("Unexpected character '{}'", x))
                     };
                     toks.push(res);
                 }
