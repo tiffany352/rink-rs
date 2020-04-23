@@ -8,7 +8,7 @@ use num::Num;
 use chrono_tz::Tz;
 
 #[derive(Debug, Clone)]
-pub enum SuffixOp {
+pub enum Degree {
     Celsius,
     Fahrenheit,
     Reaumur,
@@ -42,22 +42,95 @@ pub enum Expr {
     Neg(Box<Expr>),
     Plus(Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
-    Suffix(SuffixOp, Box<Expr>),
+    Suffix(Degree, Box<Expr>),
     Of(String, Box<Expr>),
-    Call(String, Vec<Expr>),
+    Call(Function, Vec<Expr>),
     Error(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum Function {
+    Sqrt,
+    Exp,
+    Ln,
+    Log2,
+    Log10,
+    Sin,
+    Cos,
+    Tan,
+    Asin,
+    Acos,
+    Atan,
+    Sinh,
+    Cosh,
+    Tanh,
+    Asinh,
+    Acosh,
+    Atanh,
+    Log,
+    Hypot,
+    Atan2,
+}
+
+impl Function {
+    pub fn name(&self) -> &str {
+        match *self {
+            Function::Sqrt => "sqrt",
+            Function::Exp => "exp",
+            Function::Ln => "ln",
+            Function::Log2 => "log2",
+            Function::Log10 => "log10",
+            Function::Sin => "sin",
+            Function::Cos => "cos",
+            Function::Tan => "tan",
+            Function::Asin => "asin",
+            Function::Acos => "acos",
+            Function::Atan => "atan",
+            Function::Sinh => "sinh",
+            Function::Cosh => "cosh",
+            Function::Tanh => "tanh",
+            Function::Asinh => "asinh",
+            Function::Acosh => "acosh",
+            Function::Atanh => "atanh",
+            Function::Log => "log",
+            Function::Hypot => "hypot",
+            Function::Atan2 => "atan2",
+        }
+    }
+
+    pub fn from_name(s: &str) -> Option<Self> {
+        let func = match s {
+            "sqrt" => Function::Sqrt,
+            "exp" => Function::Exp,
+            "ln" => Function::Ln,
+            "log2" => Function::Log2,
+            "log10" => Function::Log10,
+            "sin" => Function::Sin,
+            "cos" => Function::Cos,
+            "tan" => Function::Tan,
+            "asin" => Function::Asin,
+            "acos" => Function::Acos,
+            "atan" => Function::Atan,
+            "sinh" => Function::Sinh,
+            "cosh" => Function::Cosh,
+            "tanh" => Function::Tanh,
+            "asinh" => Function::Asinh,
+            "acosh" => Function::Acosh,
+            "atanh" => Function::Atanh,
+            "log" => Function::Log,
+            "hypot" => Function::Hypot,
+            "atan2" => Function::Atan2,
+            _ => return None,
+        };
+        Some(func)
+    }
 }
 
 #[derive(Debug, Clone)]
 pub enum Conversion {
     None,
     Expr(Expr),
-    DegC,
-    DegF,
-    DegRe,
-    DegRo,
-    DegDe,
-    DegN,
+    Degree(Degree),
     List(Vec<String>),
     Offset(i64),
     Timezone(Tz),
@@ -135,16 +208,11 @@ impl fmt::Display for Conversion {
         match *self {
             Conversion::None => write!(fmt, "nothing"),
             Conversion::Expr(ref expr) => write!(fmt, "{}", expr),
-            Conversion::DegC => write!(fmt, "°C"),
-            Conversion::DegF => write!(fmt, "°F"),
-            Conversion::DegRe => write!(fmt, "°Ré"),
-            Conversion::DegRo => write!(fmt, "°Rø"),
-            Conversion::DegDe => write!(fmt, "°De"),
-            Conversion::DegN => write!(fmt, "°N"),
+            Conversion::Degree(ref deg) => write!(fmt, "{}", deg),
             Conversion::List(ref list) => {
                 let list = list
                     .iter()
-                    .map(|x| format!("{}", x))
+                    .map(|x| x.to_string())
                     .collect::<Vec<_>>()
                     .join(", ");
                 write!(fmt, "{}", list)
@@ -157,15 +225,28 @@ impl fmt::Display for Conversion {
     }
 }
 
-impl fmt::Display for SuffixOp {
+impl fmt::Display for Degree {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            SuffixOp::Celsius => write!(fmt, "°C"),
-            SuffixOp::Fahrenheit => write!(fmt, "°F"),
-            SuffixOp::Newton => write!(fmt, "°N"),
-            SuffixOp::Reaumur => write!(fmt, "°Ré"),
-            SuffixOp::Romer => write!(fmt, "°Rø"),
-            SuffixOp::Delisle => write!(fmt, "°De"),
+            Degree::Celsius => write!(fmt, "°C"),
+            Degree::Fahrenheit => write!(fmt, "°F"),
+            Degree::Newton => write!(fmt, "°N"),
+            Degree::Reaumur => write!(fmt, "°Ré"),
+            Degree::Romer => write!(fmt, "°Rø"),
+            Degree::Delisle => write!(fmt, "°De"),
+        }
+    }
+}
+
+impl Degree {
+    pub fn name_base_scale(&self) -> (&str, &str, &str) {
+        match *self {
+            Degree::Celsius => ("C", "zerocelsius", "kelvin"),
+            Degree::Fahrenheit => ("F", "zerofahrenheit", "degrankine"),
+            Degree::Reaumur => ("Ré", "zerocelsius", "reaumur_absolute"),
+            Degree::Romer => ("Rø", "zeroromer", "romer_absolute"),
+            Degree::Delisle => ("De", "zerodelisle", "delisle_absolute"),
+            Degree::Newton => ("N", "zerocelsius", "newton_absolute"),
         }
     }
 }
@@ -216,8 +297,8 @@ impl fmt::Display for Expr {
                     }
                     Ok(())
                 },
-                Expr::Call(ref name, ref args) => {
-                    try!(write!(fmt, "{}(", name));
+                Expr::Call(ref func, ref args) => {
+                    try!(write!(fmt, "{}(", func.name()));
                     if let Some(first) = args.first() {
                         try!(recurse(first, fmt, Prec::Equals));
                     }
@@ -317,9 +398,10 @@ impl fmt::Display for DateToken {
 #[cfg(test)]
 mod test {
     use super::Expr::{self, *};
+    use super::Function;
 
     fn check<T: ::std::fmt::Display>(e: T, expected: &str) {
-        assert_eq!(format!("{}", e), expected);
+        assert_eq!(e.to_string(), expected);
     }
 
     impl From<i64> for Expr {
@@ -330,9 +412,9 @@ mod test {
 
     #[test]
     fn test_display_call() {
-        check(Call("f".into(), vec![]), "f()");
-        check(Call("f".into(), vec![1.into()]), "f(1)");
-        check(Call("f".into(), vec![1.into(), 2.into()]), "f(1, 2)");
-        check(Call("f".into(), vec![1.into(), 2.into(), 3.into()]), "f(1, 2, 3)");
+        check(Call(Function::Sin, vec![]), "sin()");
+        check(Call(Function::Sin, vec![1.into()]), "sin(1)");
+        check(Call(Function::Sin, vec![1.into(), 2.into()]), "sin(1, 2)");
+        check(Call(Function::Sin, vec![1.into(), 2.into(), 3.into()]), "sin(1, 2, 3)");
     }
 }

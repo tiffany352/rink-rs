@@ -53,6 +53,7 @@ extern crate serde;
 #[cfg(feature = "nightly")]
 #[macro_use]
 extern crate serde_derive;
+extern crate dirs;
 
 pub mod text_query;
 pub mod context;
@@ -78,8 +79,6 @@ pub use number::Number;
 pub use context::Context;
 pub use value::Value;
 
-use std::env;
-use std::convert::From;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -87,36 +86,10 @@ use std::time::Duration;
 
 const DATA_FILE_URL: &'static str = "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
 
-#[cfg(all(target_family = "unix", not(target_os = "macos")))]
 pub fn config_dir() -> Result<PathBuf, String> {
-    env::var("XDG_CONFIG_HOME")
-        .map(From::from)
-        .or_else(|_| {
-            env::home_dir()
-                .ok_or("Home dir not present".to_owned())
-                .map(From::from)
-                .map(|mut x: PathBuf| { x.push(".config/"); x })
-        })
-}
-
-#[cfg(target_os = "windows")]
-pub fn config_dir() -> Result<PathBuf, String> {
-    env::var("APPDATA")
-        .map(From::from)
-        .or_else(|_| {
-            env::home_dir()
-                .ok_or("Home dir not present".to_owned())
-                .map(From::from)
-                .map(|mut x: PathBuf| { x.push("AppData\\Roaming"); x })
-        })
-}
-
-#[cfg(target_os = "macos")]
-pub fn config_dir() -> Result<PathBuf, String> {
-    env::home_dir()
-        .ok_or("Home dir not present".to_owned())
-        .map(From::from)
-        .map(|mut x: PathBuf| { x.push("Library/Application Support"); x})
+    dirs::config_dir()
+        .map(|mut x: PathBuf| { x.push("rink"); x })
+        .ok_or_else(|| "Could not find config directory".into())
 }
 
 #[cfg(feature = "currency")]
@@ -152,8 +125,7 @@ pub fn load() -> Result<Context, String> {
     use std::io::Read;
     use std::path::Path;
 
-    let mut path = try!(config_dir());
-    path.push("rink/");
+    let path = try!(config_dir());
     let load = |name| {
         File::open(name)
         .and_then(|mut f| {
@@ -165,8 +137,8 @@ pub fn load() -> Result<Context, String> {
     let units =
         load(Path::new("definitions.units").to_path_buf())
         .or_else(|_| load(path.join("definitions.units")))
-        .or_else(|_| DEFAULT_FILE.map(|x| x.to_owned()).ok_or(format!(
-            "Did not exist in search path and binary is not compiled with `gpl` feature")))
+        .or_else(|_| DEFAULT_FILE.map(|x| x.to_owned()).ok_or(
+            "Did not exist in search path and binary is not compiled with `gpl` feature".to_string()))
         .map_err(|e| format!(
             "Failed to open definitions.units: {}\n\
              If you installed with `gpl` disabled, then you need to obtain definitions.units \
@@ -209,7 +181,7 @@ pub fn load() -> Result<Context, String> {
         let mut currency_defs = currency_defs;
         defs.append(&mut currency_defs.defs);
         ast::Defs {
-            defs: defs
+            defs,
         }
     };
 
@@ -312,11 +284,11 @@ pub fn one_line_sandbox(line: &str) -> String {
     let res = match rx.try_recv() {
         Ok(res) => res,
         Err(_) if unsafe { libc::WIFSIGNALED(status) && libc::WTERMSIG(status) == libc::SIGXCPU } =>
-            format!("Calculation timed out"),
+            "Calculation timed out".to_string(),
         // :(
-        Err(ref e) if format!("{}", e) == "IoError: Connection reset by peer (os error 104)" =>
-            format!("Calculation ran out of memory"),
-        Err(e) => format!("{}", e)
+        Err(ref e) if e.to_string() == "IoError: Connection reset by peer (os error 104)" =>
+            "Calculation ran out of memory".to_string(),
+        Err(e) => e.to_string()
     };
 
     println!("Calculation result: {:?}", res);
@@ -347,7 +319,7 @@ fn btree_merge<K: ::std::cmp::Ord+Clone, V:Clone, F:Fn(&V, &V) -> Option<V>>(
                 res.insert(akey.clone(), aval.clone());
                 a.next();
             },
-            (Some(_), Some(_)) => panic!(),
+            (Some(_), Some(_)) => unreachable!(),
             (None, Some((bkey, bval))) => {
                 res.insert(bkey.clone(), bval.clone());
                 b.next();
@@ -369,10 +341,9 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
     use std::fs;
 
     fn ts<T:Display>(x: T) -> String {
-        format!("{}", x)
+        x.to_string()
     }
     let mut path = try!(config_dir());
-    path.push("rink/");
     let mut tmppath = path.clone();
     path.push(file);
     let tmpfile = format!("{}.part", file);
@@ -386,14 +357,14 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             let now = SystemTime::now();
             let elapsed = try!(now.duration_since(mtime).map_err(ts));
             if elapsed > expiration {
-                Err(format!("File is out of date"))
+                Err("File is out of date".to_string())
             } else {
                 Ok(f)
             }
         })
         .or_else(|_| {
-            try!(fs::create_dir_all(path.parent().unwrap()).map_err(|x| format!("{}", x)));
-            let mut f = try!(File::create(tmppath.clone()).map_err(|x| format!("{}", x)));
+            try!(fs::create_dir_all(path.parent().unwrap()).map_err(|x| x.to_string()));
+            let mut f = try!(File::create(tmppath.clone()).map_err(|x| x.to_string()));
 
             reqwest::get(url)
                 .map_err(|err| format!("Request failed: {}", err))?
@@ -402,7 +373,7 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             try!(f.sync_all().map_err(|x| format!("{}", x)));
             drop(f);
             try!(fs::rename(tmppath.clone(), path.clone())
-                 .map_err(|x| format!("{}", x)));
-            File::open(path).map_err(|x| format!("{}", x))
+                 .map_err(|x| x.to_string()));
+            File::open(path).map_err(|x| x.to_string())
         })
 }

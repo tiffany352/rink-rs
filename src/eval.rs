@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use number::{Number, Dim, NumberParts, pow};
 use num::{Num, Int};
 use date;
-use ast::{Expr, SuffixOp, Query, Conversion, Digits};
+use ast::{Expr, Query, Conversion, Digits, Function};
 use std::rc::Rc;
 use factorize::{factorize, Factors};
 use value::{Value, Show};
@@ -38,30 +38,6 @@ impl Context {
                         right.show(self)
                     ))
                 })
-            }}
-        }
-
-        macro_rules! temperature {
-            ($left:ident, $name:expr, $base:expr, $scale:expr) => {{
-                let left = try!(self.eval(&**$left));
-                let left = match left {
-                    Value::Number(left) => left,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Expected number, got: <{}> °{}",
-                        left.show(self), stringify!($name)
-                    )))
-                };
-                if left.unit != BTreeMap::new() {
-                    Err(QueryError::Generic(format!(
-                        "Expected dimensionless, got: <{}>",
-                        left.show(self)
-                    )))
-                } else {
-                    let left = (&left * &self.lookup($scale).expect(
-                        &*format!("Missing {} unit", $scale))).unwrap();
-                    Ok(Value::Number((&left + &self.lookup($base)
-                                      .expect(&*format!("Missing {} constant", $base))).unwrap()))
-                }
             }}
         }
 
@@ -98,18 +74,29 @@ impl Context {
             Expr::Sub(ref left, ref right)  => operator!(left sub - right),
             Expr::Pow(ref left, ref right)  => operator!(left pow ^ right),
 
-            Expr::Suffix(SuffixOp::Celsius, ref left) =>
-                temperature!(left, "C", "zerocelsius", "kelvin"),
-            Expr::Suffix(SuffixOp::Fahrenheit, ref left) =>
-                temperature!(left, "F", "zerofahrenheit", "degrankine"),
-            Expr::Suffix(SuffixOp::Reaumur, ref left) =>
-                temperature!(left, "Ré", "zerocelsius", "reaumur_absolute"),
-            Expr::Suffix(SuffixOp::Romer, ref left) =>
-                temperature!(left, "Rø", "zeroromer", "romer_absolute"),
-            Expr::Suffix(SuffixOp::Delisle, ref left) =>
-                temperature!(left, "De", "zerodelisle", "delisle_absolute"),
-            Expr::Suffix(SuffixOp::Newton, ref left) =>
-                temperature!(left, "N", "zerocelsius", "newton_absolute"),
+            Expr::Suffix(ref deg, ref left) => {
+                let (name, base, scale) = deg.name_base_scale();
+
+                let left = try!(self.eval(&**left));
+                let left = match left {
+                    Value::Number(left) => left,
+                    _ => return Err(QueryError::Generic(format!(
+                        "Expected number, got: <{}> °{}",
+                        left.show(self), name
+                    )))
+                };
+                if left.unit != BTreeMap::new() {
+                    Err(QueryError::Generic(format!(
+                        "Expected dimensionless, got: <{}>",
+                        left.show(self)
+                    )))
+                } else {
+                    let left = (&left * &self.lookup(scale).expect(
+                        &*format!("Missing {} unit", scale))).unwrap();
+                    Ok(Value::Number((&left + &self.lookup(base)
+                                      .expect(&*format!("Missing {} constant", base))).unwrap()))
+                }
+            }
 
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
                 a.and_then(|a| {
@@ -150,7 +137,7 @@ impl Context {
                     }
                 })
             },
-            Expr::Call(ref name, ref args) => {
+            Expr::Call(ref func, ref args) => {
                 let args = try!(
                     args.iter()
                         .map(|x| self.eval(x))
@@ -200,27 +187,25 @@ impl Context {
                     }
                 }}
 
-                match &**name {
-                    "sqrt" => func!(fn sqrt(num: Number) {
+                match func {
+                    Function::Sqrt => func!(fn sqrt(num: Number) {
                         num.root(2).map(Value::Number)
                     }),
-                    "exp" => func!(fn exp(num: Number) {
+                    Function::Exp => func!(fn exp(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().exp()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "ln" => func!(fn ln(num: Number) {
+                    Function::Ln => func!(fn ln(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().ln()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "log" => func!(fn log(num: Number, base: Number) {
-                        if base.unit.len() > 0 {
-                            Err(format!(
-                                "Base must be dimensionless"
-                            ))
+                    Function::Log => func!(fn log(num: Number, base: Number) {
+                        if !base.unit.is_empty() {
+                            Err("Base must be dimensionless".to_string())
                         } else {
                             Ok(Value::Number(Number {
                                 value: Num::Float(num.value.to_f64()
@@ -229,24 +214,21 @@ impl Context {
                             }))
                         }
                     }),
-                    "log2" => func!(fn log2(num: Number) {
+                    Function::Log2 => func!(fn log2(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().log2()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "log10" => func!(fn ln(num: Number) {
+                    Function::Log10 => func!(fn ln(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().log10()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "hypot" => func!(fn hypot(x: Number, y: Number) {
+                    Function::Hypot => func!(fn hypot(x: Number, y: Number) {
                         if x.unit != y.unit {
-                            Err(format!(
-                                "Arguments to hypot must have matching \
-                                 dimensionality"
-                            ))
+                            Err("Arguments to hypot must have matching dimensionality".to_string())
                         } else {
                             Ok(Value::Number(Number {
                                 value: Num::Float(x.value.to_f64().hypot(y.value.to_f64())),
@@ -254,48 +236,45 @@ impl Context {
                             }))
                         }
                     }),
-                    "sin" => func!(fn sin(num: Number) {
+                    Function::Sin => func!(fn sin(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().sin()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "cos" => func!(fn cos(num: Number) {
+                    Function::Cos => func!(fn cos(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().cos()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "tan" => func!(fn tan(num: Number) {
+                    Function::Tan => func!(fn tan(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().tan()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "asin" => func!(fn asin(num: Number) {
+                    Function::Asin => func!(fn asin(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().asin()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "acos" => func!(fn acos(num: Number) {
+                    Function::Acos => func!(fn acos(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().acos()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "atan" => func!(fn atan(num: Number) {
+                    Function::Atan => func!(fn atan(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().atan()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "atan2" => func!(fn atan2(x: Number, y: Number) {
+                    Function::Atan2 => func!(fn atan2(x: Number, y: Number) {
                         if x.unit != y.unit {
-                            Err(format!(
-                                "Arguments to atan2 must have matching \
-                                 dimensionality"
-                            ))
+                            Err("Arguments to atan2 must have matching dimensionality".to_string())
                         } else {
                             Ok(Value::Number(Number {
                                 value: Num::Float(x.value.to_f64()
@@ -304,45 +283,42 @@ impl Context {
                             }))
                         }
                     }),
-                    "sinh" => func!(fn sinh(num: Number) {
+                    Function::Sinh => func!(fn sinh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().sinh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "cosh" => func!(fn cosh(num: Number) {
+                    Function::Cosh => func!(fn cosh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().cosh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "tanh" => func!(fn tanh(num: Number) {
+                    Function::Tanh => func!(fn tanh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().tanh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "asinh" => func!(fn asinh(num: Number) {
+                    Function::Asinh => func!(fn asinh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().asinh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "acosh" => func!(fn acosh(num: Number) {
+                    Function::Acosh => func!(fn acosh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().acosh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    "atanh" => func!(fn atanh(num: Number) {
+                    Function::Atanh => func!(fn atanh(num: Number) {
                         Ok(Value::Number(Number {
                             value: Num::Float(num.value.to_f64().atanh()),
                             unit: num.unit.clone(),
                         }))
                     }),
-                    _ => Err(QueryError::Generic(format!(
-                        "Function not found: {}", name
-                    )))
                 }
             },
             Expr::Error(ref e) => Err(QueryError::Generic(e.clone())),
@@ -361,9 +337,9 @@ impl Context {
                     "Expected identifier, got {:?}", x
                 )))
             },
-            Expr::Call(_, _) => Err(QueryError::Generic(format!(
-                "Calls are not allowed in the right hand side of conversions"
-            ))),
+            Expr::Call(_, _) => Err(QueryError::Generic(
+                "Calls are not allowed in the right hand side of conversions".to_string()
+            )),
             Expr::Unit(ref name) | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(self.canonicalize(&**name)
@@ -398,14 +374,14 @@ impl Context {
                 let res = try!(self.eval(exp));
                 let res = match res {
                     Value::Number(num) => num,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Exponents must be numbers"
-                    )))
+                    _ => return Err(QueryError::Generic(
+                        "Exponents must be numbers".to_string()
+                    ))
                 };
                 if !res.dimless() {
-                    return Err(QueryError::Generic(format!(
-                        "Exponents must be dimensionless"
-                    )))
+                    return Err(QueryError::Generic(
+                        "Exponents must be dimensionless".to_string()
+                    ))
                 }
                 let res = res.value.to_f64();
                 let (left, lv) = try!(self.eval_unit_name(left));
@@ -425,9 +401,9 @@ impl Context {
                 let res = try!(self.eval(expr));
                 let res = match res {
                     Value::Substance(sub) => sub,
-                    _ => return Err(QueryError::Generic(format!(
-                        "Property access on non-substance"
-                    )))
+                    _ => return Err(QueryError::Generic(
+                        "Property access on non-substance".to_string()
+                    ))
                 };
                 let name = if let Some(prop) = res.properties.properties.get(name) {
                     if prop.input == Number::one() {
@@ -448,27 +424,35 @@ impl Context {
                 let left = try!(self.eval_unit_name(left));
                 let right = try!(self.eval_unit_name(right));
                 if left != right {
-                    return Err(QueryError::Generic(format!(
+                    return Err(QueryError::Generic(
                         "Add of values with differing \
-                         dimensions is not meaningful"
-                    )))
+                         dimensions is not meaningful".to_string()
+                    ))
                 }
                 Ok(left)
             },
             Expr::Neg(ref v) => self.eval_unit_name(v).map(|(u, v)| (u, -&v)),
             Expr::Plus(ref v) => self.eval_unit_name(v),
             Expr::Suffix(_, _) =>
-                Err(QueryError::Generic(format!(
-                    "Temperature conversions must not be compound units"
-                ))),
-            Expr::Date(_) => Err(QueryError::Generic(format!(
-                "Dates are not allowed in the right hand side of conversions"
-            ))),
+                Err(QueryError::Generic(
+                    "Temperature conversions must not be compound units".to_string()
+                )),
+            Expr::Date(_) => Err(QueryError::Generic(
+                "Dates are not allowed in the right hand side of conversions".to_string()
+            )),
             Expr::Error(ref e) => Err(QueryError::Generic(e.clone())),
         }
     }
 
     fn conformance_err(&self, top: &Number, bottom: &Number) -> ConformanceError {
+        fn multiply_or_divide(recip: bool) -> &'static str {
+            if recip {
+                "divide"
+            } else {
+                "multiply"
+            }
+        }
+
         let mut topu = top.clone();
         topu.value = Num::one();
         let mut bottomu = bottom.clone();
@@ -476,27 +460,21 @@ impl Context {
         let mut suggestions = vec![];
         let diff = (&topu * &bottomu).unwrap();
         if diff.dimless() {
-            suggestions.push(format!("Reciprocal conversion, invert one side"));
+            suggestions.push("Reciprocal conversion, invert one side".to_string());
         } else {
             let diff = (&topu / &bottomu).unwrap();
             let (recip, desc) = self.describe_unit(&diff.invert());
-            let word = match recip {
-                false => "multiply",
-                true => "divide"
-            };
+            let word = multiply_or_divide(recip);
             suggestions.push(format!("{word} left side by {}", desc.trim(), word=word));
             let (recip, desc) = self.describe_unit(&diff);
-            let word = match recip {
-                false => "multiply",
-                true => "divide"
-            };
+            let word = multiply_or_divide(recip);
             suggestions.push(format!("{word} right side by {}", desc.trim(), word=word));
         }
 
         ConformanceError {
             left: top.to_parts(self),
             right: bottom.to_parts(self),
-            suggestions: suggestions,
+            suggestions,
         }
     }
 
@@ -518,12 +496,12 @@ impl Context {
                 exact_value: exact,
                 approx_value: approx,
                 factor: if num != Int::one() {
-                    Some(format!("{}", num))
+                    Some(num.to_string())
                 } else {
                     None
                 },
                 divfactor: if den != Int::one() {
-                    Some(format!("{}", den))
+                    Some(den.to_string())
                 } else {
                     None
                 },
@@ -542,7 +520,7 @@ impl Context {
         }).collect::<Result<Vec<Number>, _>>());
         {
             let first = try!(units.first().ok_or(
-                format!("Expected non-empty unit list")));
+                "Expected non-empty unit list".to_string()));
             try!(units.iter().skip(1).map(|x| {
                 if first.unit != x.unit {
                     Err(format!(
@@ -571,7 +549,7 @@ impl Context {
         }
         Ok(list.iter().zip(out.into_iter()).map(|(name, value)| {
             let pretty = Number {
-                value: value,
+                value,
                 unit: Number::one_unit(Dim::new(name)).unit
             }.to_parts(self);
             let unit: String = pretty.unit.or(pretty.dimensions)
@@ -645,18 +623,18 @@ impl Context {
                     let def = if let Some(ref q) = parts.quantity {
                         format!("base unit of {}", q)
                     } else {
-                        format!("base unit")
+                        "base unit".to_string()
                     };
                     (Some(def), None, None)
                 } else {
                     let def = self.definitions.get(&name);
-                    (def.as_ref().map(|x| format!("{}", x)),
+                    (def.as_ref().map(|x| x.to_string()),
                      def,
                      self.lookup(&name).map(|x| x.to_parts(self)))
                 };
                 Ok(QueryReply::Def(DefReply {
                     canon_name: canon,
-                    def: def,
+                    def,
                     def_expr: def_expr.as_ref().map(|x| ExprReply::from(*x)),
                     value: res,
                     doc: self.docs.get(&name).cloned(),
@@ -688,7 +666,7 @@ impl Context {
                         "<{}> to {} is not defined",
                         top.show(self),
                         match digits {
-                            Digits::Default => panic!(),
+                            Digits::Default => unreachable!(),
                             Digits::FullInt => "digits".to_owned(),
                             Digits::Digits(n) => format!("{} digits", n)
                         }
@@ -707,10 +685,10 @@ impl Context {
                 }))
             },
             Query::Convert(ref top, Conversion::Expr(ref bottom), base, digits) => match
-                (self.eval(top), self.eval(bottom), self.eval_unit_name(bottom))
+                (try!(self.eval(top)), try!(self.eval(bottom)), try!(self.eval_unit_name(bottom)))
             {
-                (Ok(Value::Number(top)), Ok(Value::Number(bottom)),
-                 Ok((bottom_name, bottom_const))) => {
+                (Value::Number(top), Value::Number(bottom),
+                 (bottom_name, bottom_const)) => {
                     if top.unit == bottom.unit {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
@@ -729,8 +707,8 @@ impl Context {
                             &top, &bottom)))
                     }
                 },
-                (Ok(Value::Substance(sub)), Ok(Value::Number(bottom)),
-                 Ok((bottom_name, bottom_const))) => {
+                (Value::Substance(sub), Value::Number(bottom),
+                 (bottom_name, bottom_const)) => {
                     sub.get_in_unit(
                         bottom,
                         self,
@@ -744,8 +722,8 @@ impl Context {
                         QueryReply::Substance
                     )
                 },
-                (Ok(Value::Number(top)), Ok(Value::Substance(mut sub)),
-                 Ok((bottom_name, bottom_const))) => {
+                (Value::Number(top), Value::Substance(mut sub),
+                 (bottom_name, bottom_const)) => {
                     let unit = sub.amount.clone();
                     sub.amount = top;
                     sub.get_in_unit(
@@ -761,14 +739,11 @@ impl Context {
                         QueryReply::Substance
                     )
                 },
-                (Ok(x), Ok(y), Ok(_)) => Err(QueryError::Generic(format!(
+                (x, y, _) => Err(QueryError::Generic(format!(
                     "Operation is not defined: <{}> -> <{}>",
                     x.show(self),
                     y.show(self)
                 ))),
-                (Err(e), _, _) => Err(e),
-                (_, Err(e), _) => Err(e),
-                (_, _, Err(e)) => Err(e),
             },
             Query::Convert(ref top, Conversion::List(ref list), None, Digits::Default) => {
                 let top = try!(self.eval(top));
@@ -788,7 +763,7 @@ impl Context {
                             quantity: self.quantities.get(&top.unit).cloned(),
                             ..Default::default()
                         },
-                        list: list,
+                        list,
                     })
                 })
             },
@@ -814,49 +789,32 @@ impl Context {
                 let top = top.with_timezone(&tz);
                 Ok(QueryReply::Date(DateReply::new(self, top)))
             },
-            Query::Convert(ref top, ref which @ Conversion::DegC, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegF, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegN, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegRe, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegRo, None, digits) |
-            Query::Convert(ref top, ref which @ Conversion::DegDe, None, digits) => {
-                let top = try!(self.eval(top));
-                macro_rules! temperature {
-                    ($name:expr, $base:expr, $scale:expr) => {{
-                        let top = match top {
-                            Value::Number(ref num) => num,
-                            _ => return Err(QueryError::Generic(format!(
-                                "Cannot convert <{}> to °{}", top.show(self), $name)))
-                        };
-                        let bottom = self.lookup($scale)
-                            .expect(&*format!("Unit {} missing", $scale));
-                        if top.unit != bottom.unit {
-                            Err(QueryError::Conformance(
-                                self.conformance_err(&top, &bottom)))
-                        } else {
-                            let res = (top - &self.lookup($base)
-                                       .expect(&*format!("Constant {} missing", $base))).unwrap();
-                            let res = (&res / &bottom).unwrap();
-                            let mut name = BTreeMap::new();
-                            name.insert(format!("°{}", $name), 1);
-                            Ok(QueryReply::Conversion(self.show(
-                                &res, &bottom,
-                                name, Num::one(),
-                                10,
-                                digits
-                            )))
-                        }
-                    }}
-                }
+            Query::Convert(ref top, Conversion::Degree(ref deg), None, digits) => {
+                let (name, base, scale) = deg.name_base_scale();
 
-                match *which {
-                    Conversion::DegC => temperature!("C", "zerocelsius", "kelvin"),
-                    Conversion::DegF => temperature!("F", "zerofahrenheit", "degrankine"),
-                    Conversion::DegRe => temperature!("Ré", "zerocelsius", "reaumur_absolute"),
-                    Conversion::DegRo => temperature!("Rø", "zeroromer", "romer_absolute"),
-                    Conversion::DegDe => temperature!("De", "zerodelisle", "delisle_absolute"),
-                    Conversion::DegN => temperature!("N", "zerocelsius", "newton_absolute"),
-                    _ => panic!()
+                let top = try!(self.eval(top));
+                let top = match top {
+                    Value::Number(ref num) => num,
+                    _ => return Err(QueryError::Generic(format!(
+                        "Cannot convert <{}> to °{}", top.show(self), name)))
+                };
+                let bottom = self.lookup(scale)
+                    .expect(&*format!("Unit {} missing", scale));
+                if top.unit != bottom.unit {
+                    Err(QueryError::Conformance(
+                        self.conformance_err(&top, &bottom)))
+                } else {
+                    let res = (top - &self.lookup(base)
+                                .expect(&*format!("Constant {} missing", base))).unwrap();
+                    let res = (&res / &bottom).unwrap();
+                    let mut name = BTreeMap::new();
+                    name.insert(deg.to_string(), 1);
+                    Ok(QueryReply::Conversion(self.show(
+                        &res, &bottom,
+                        name, Num::one(),
+                        10,
+                        digits
+                    )))
                 }
             },
             Query::Convert(ref _expr, ref which, Some(base), _digits) => {
@@ -892,12 +850,11 @@ impl Context {
                 let val = match val {
                     None => {
                         let val = try!(self.eval(expr));
-                        let val = match val {
+                        match val {
                             Value::Number(val) => val,
                             _ => return Err(QueryError::Generic(format!(
                                 "Cannot find derivatives of <{}>", val.show(self))),)
-                        };
-                        val
+                        }
                     },
                     Some(val) => val
                 };
@@ -974,7 +931,7 @@ impl Context {
                 let mut cur_cat = None;
                 for (category, name) in out {
                     if category != cur_cat {
-                        if cur.len() > 0 {
+                        if !cur.is_empty() {
                             let cat_name = cur_cat.and_then(|x| self.category_names.get(x));
                             categories.push(UnitsInCategory {
                                 category: cat_name.map(ToOwned::to_owned),
@@ -985,7 +942,7 @@ impl Context {
                     }
                     cur.push(name.clone());
                 }
-                if cur.len() > 0 {
+                if !cur.is_empty() {
                     let cat_name = cur_cat.and_then(|x| self.category_names.get(x));
                     categories.push(UnitsInCategory {
                         category: cat_name.map(ToOwned::to_owned),

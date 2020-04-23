@@ -35,12 +35,7 @@ pub enum Token {
     Colon,
     Date(Vec<DateToken>),
     Comma,
-    DegC,
-    DegF,
-    DegRe,
-    DegRo,
-    DegDe,
-    DegN,
+    Degree(Degree),
     Percent,
     Error(String),
 }
@@ -69,13 +64,8 @@ fn describe(token: &Token) -> String {
         Token::Colon => "`:`".to_owned(),
         Token::Date(_) => "date literal".to_owned(),
         Token::Comma => "`,`".to_owned(),
-        Token::DegC => "`°C`".to_owned(),
-        Token::DegF => "`°F`".to_owned(),
-        Token::DegRe => "`°Ré`".to_owned(),
-        Token::DegRo => "`°Rø`".to_owned(),
-        Token::DegDe => "`°De`".to_owned(),
-        Token::DegN => "`°N`".to_owned(),
         Token::Percent => "%".to_owned(),
+        Token::Degree(ref deg) => format!("`{}`", deg),
         Token::Error(ref e) => format!("<{}>", e)
     }
 }
@@ -93,7 +83,7 @@ impl<'a> Iterator for TokenIterator<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        if self.0.peek() == None {
+        if self.0.peek().is_none() {
             return Some(Token::Eof)
         }
         let res = match self.0.next().unwrap() {
@@ -144,7 +134,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             }
                         }
                         if self.0.peek() == None {
-                            return Some(Token::Error(format!("Expected `*/`, got EOF")))
+                            return Some(Token::Error("Expected `*/`, got EOF".to_string()))
                         }
                     }
                 },
@@ -165,7 +155,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if hex.len() == 0 {
+                    if hex.is_empty() {
                         return Some(Token::Error(
                             "Malformed hexadecimal literal: No digits after 0x".to_owned()))
                     }
@@ -186,7 +176,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if oct.len() == 0 {
+                    if oct.is_empty() {
                         return Some(Token::Error(
                             "Malformed octal literal: No digits after 0o".to_owned()))
                     }
@@ -207,7 +197,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if bin.len() == 0 {
+                    if bin.is_empty() {
                         return Some(Token::Error(
                             "Malformed binary literal: No digits after 0b".to_owned()))
                     }
@@ -248,7 +238,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if buf.len() == 0 {
+                    if buf.is_empty() {
                         return Some(Token::Error(
                             "Malformed number literal: No digits after decimal point".to_owned()))
                     }
@@ -281,7 +271,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => break
                         }
                     }
-                    if buf.len() == 0 {
+                    if buf.is_empty() {
                         return Some(Token::Error(
                             "Malformed number literal: No digits after exponent".to_owned()))
                     }
@@ -308,19 +298,19 @@ impl<'a> Iterator for TokenIterator<'a> {
                         Token::Error(format!("Invalid unicode scalar: {:x}", v))
                     }
                 },
-                _ => Token::Error(format!("Unexpected \\"))
+                _ => Token::Error("Unexpected \\".to_string())
             },
             '\'' => {
                 let mut buf = String::new();
                 loop {
                     match self.0.next() {
-                        None | Some('\n') => return Some(Token::Error(format!("Unexpected newline or EOF"))),
+                        None | Some('\n') => return Some(Token::Error("Unexpected newline or EOF".to_string())),
                         Some('\\') => match self.0.next() {
                             Some('\'') => buf.push('\''),
                             Some('n') => buf.push('\n'),
                             Some('t') => buf.push('\t'),
                             Some(c) => return Some(Token::Error(format!("Invalid escape sequence \\{}", c))),
-                            None => return Some(Token::Error(format!("Unexpected EOF"))),
+                            None => return Some(Token::Error("Unexpected EOF".to_string())),
                         },
                         Some('\'') => break,
                         Some(c) => buf.push(c),
@@ -421,12 +411,12 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 }
                 match &*buf {
-                    "degC" | "°C" | "celsius" | "℃" => Token::DegC,
-                    "degF" | "°F" | "fahrenheit" | "℉" => Token::DegF,
-                    "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => Token::DegRe,
-                    "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::DegRo,
-                    "degDe" | "°De" | "delisle" => Token::DegDe,
-                    "degN" | "°N" | "degnewton" => Token::DegN,
+                    "degC" | "°C" | "celsius" | "℃" => Token::Degree(Degree::Celsius),
+                    "degF" | "°F" | "fahrenheit" | "℉" => Token::Degree(Degree::Fahrenheit),
+                    "degRé" | "°Ré" | "degRe" | "°Re" | "réaumur" | "reaumur" => Token::Degree(Degree::Reaumur),
+                    "degRø" | "°Rø" | "degRo" | "°Ro" | "rømer" | "romer" => Token::Degree(Degree::Romer),
+                    "degDe" | "°De" | "delisle" => Token::Degree(Degree::Delisle),
+                    "degN" | "°N" | "degnewton" => Token::Degree(Degree::Newton),
                     "per" => Token::Slash,
                     "to" | "in" => Token::DashArrow,
                     _ => Token::Ident(buf)
@@ -439,33 +429,7 @@ impl<'a> Iterator for TokenIterator<'a> {
 
 pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
-fn is_func(name: &str) -> bool {
-    match name {
-        "sqrt" => true,
-        "exp" => true,
-        "ln" => true,
-        "log" => true,
-        "log2" => true,
-        "log10" => true,
-        "hypot" => true,
-        "sin" => true,
-        "cos" => true,
-        "tan" => true,
-        "asin" => true,
-        "acos" => true,
-        "atan" => true,
-        "atan2" => true,
-        "sinh" => true,
-        "cosh" => true,
-        "tanh" => true,
-        "asinh" => true,
-        "acosh" => true,
-        "atanh" => true,
-        _ => false
-    }
-}
-
-fn is_attr(name: &str) -> Option<&'static str> {
+fn attr_from_name(name: &str) -> Option<&'static str> {
     match name {
         "int" | "international" => Some("int"),
         "UKSJJ" => Some("UKSJJ"),
@@ -484,74 +448,73 @@ fn is_attr(name: &str) -> Option<&'static str> {
     }
 }
 
+fn parse_function(iter: &mut Iter, func: Function) -> Expr {
+    let args = match iter.peek().cloned().unwrap() {
+        Token::LPar => {
+            iter.next();
+            let mut args = vec![];
+            loop {
+                if let Some(&Token::RPar) = iter.peek() {
+                    iter.next();
+                    break;
+                }
+                args.push(parse_expr(iter));
+                match iter.peek().cloned().unwrap() {
+                    Token::Comma => {
+                        iter.next();
+                    },
+                    Token::RPar => (),
+                    x => return Expr::Error(format!("Expected `,` or `)`, got {}",
+                                                    describe(&x)))
+                }
+            }
+            args
+        },
+        _ => vec![parse_pow(iter)],
+    };
+    Expr::Call(func, args)
+}
+
+fn parse_radix(num: &str, base: u8, description: &str) -> Expr {
+    Mpz::from_str_radix(&*num, base)
+        .map(|x| Mpq::ratio(&x, &Mpz::one()))
+        .map(Num::Mpq)
+        .map(Expr::Const)
+        .unwrap_or_else(|_| Expr::Error(format!("Failed to parse {}", description)))
+}
+
 fn parse_term(iter: &mut Iter) -> Expr {
     match iter.next().unwrap() {
-        Token::Ident(ref name) if is_func(name) => {
-            match iter.peek().cloned().unwrap() {
-                Token::LPar => {
-                    iter.next();
-                    let mut args = vec![];
-                    loop {
-                        if let Some(&Token::RPar) = iter.peek() {
-                            iter.next();
-                            break;
-                        }
-                        args.push(parse_expr(iter));
-                        match iter.peek().cloned().unwrap() {
-                            Token::Comma => {
-                                iter.next();
-                            },
-                            Token::RPar => (),
-                            x => return Expr::Error(format!("Expected `,` or `)`, got {}",
-                                                            describe(&x)))
-                        }
-                    }
-                    Expr::Call(name.clone(), args)
-                },
-                _ => Expr::Call(name.clone(), vec![parse_pow(iter)]),
+        Token::Ident(ref id) => {
+            if let Some(func) = Function::from_name(id) {
+                parse_function(iter, func)
+            } else if let Some(attr) = attr_from_name(id) {
+                match iter.peek().cloned().unwrap() {
+                    Token::Ident(ref name) => {
+                        iter.next();
+                        Expr::Unit(format!("{}{}", attr, name))
+                    },
+                    x => Expr::Error(format!("Attribute must be followed by ident, got {}",
+                                            describe(&x)))
+                }
+            } else {
+                match iter.peek().cloned().unwrap() {
+                    Token::Ident(ref s) if s == "of" => {
+                        iter.next();
+                        Expr::Of(id.clone(), Box::new(parse_juxt(iter)))
+                    },
+                    _ => Expr::Unit(id.to_string())
+                }
             }
-        },
-        Token::Ident(ref attr) if is_attr(attr).is_some() => {
-            match iter.peek().cloned().unwrap() {
-                Token::Ident(ref name) => {
-                    let attr = is_attr(attr).unwrap();
-                    iter.next();
-                    Expr::Unit(format!("{}{}", attr, name))
-                },
-                x => Expr::Error(format!("Attribute must be followed by ident, got {}",
-                                         describe(&x)))
-            }
-        },
-        Token::Ident(name) => match iter.peek().cloned().unwrap() {
-            Token::Ident(ref s) if s == "of" => {
-                iter.next();
-                Expr::Of(name.clone(), Box::new(parse_juxt(iter)))
-            },
-            _ => Expr::Unit(name)
         },
         Token::Quote(name) => Expr::Quote(name),
         Token::Decimal(num, frac, exp) =>
             ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
             .map(Expr::Const)
-            .unwrap_or_else(|e| Expr::Error(format!("{}", e))),
-        Token::Hex(num) =>
-            Mpz::from_str_radix(&*num, 16)
-            .map(|x| Mpq::ratio(&x, &Mpz::one()))
-            .map(Num::Mpq)
-            .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse hex"))),
-        Token::Oct(num) =>
-            Mpz::from_str_radix(&*num, 8)
-            .map(|x| Mpq::ratio(&x, &Mpz::one()))
-            .map(Num::Mpq)
-            .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse octal"))),
-        Token::Bin(num) =>
-            Mpz::from_str_radix(&*num, 2)
-            .map(|x| Mpq::ratio(&x, &Mpz::one()))
-            .map(Num::Mpq)
-            .map(Expr::Const)
-            .unwrap_or_else(|_| Expr::Error(format!("Failed to parse binary"))),
+            .unwrap_or_else(|e| Expr::Error(e.to_string())),
+        Token::Hex(num) => parse_radix(&*num, 16, "hex"),
+        Token::Oct(num) => parse_radix(&*num, 8, "octal"),
+        Token::Bin(num) => parse_radix(&*num, 2, "binary"),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
         Token::LPar => {
@@ -614,29 +577,9 @@ fn parse_juxt(iter: &mut Iter) -> Expr {
         Token::Plus | Token::Minus | Token::DashArrow |
         Token::RPar | Token::Newline |
         Token::Comment(_) | Token::Eof => break,
-        Token::DegC => {
+        Token::Degree(deg) => {
             iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Celsius, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegF => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Fahrenheit, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegRe => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Reaumur, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegRo => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Romer, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegDe => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Delisle, Box::new(Expr::Mul(terms)))]
-        },
-        Token::DegN => {
-            iter.next();
-            terms = vec![Expr::Suffix(SuffixOp::Newton, Box::new(Expr::Mul(terms)))]
+            terms = vec![Expr::Suffix(deg, Box::new(Expr::Mul(terms)))]
         },
         _ => terms.push(parse_frac(iter))
     }}
@@ -738,10 +681,10 @@ pub fn parse_offset(iter: &mut Iter) -> Option<i64> {
         Token::Decimal(ref i, None, None) if i.len() == 2 => i.clone(),
         _ => return None
     };
-    let _col = match iter.next().unwrap() {
+    match iter.next().unwrap() {
         Token::Colon => (),
         _ => return None
-    };
+    }
     let min = match iter.next().unwrap() {
         Token::Decimal(ref i, None, None) if i.len() == 2 => i.clone(),
         _ => return None
@@ -817,8 +760,9 @@ pub fn parse_query(iter: &mut Iter) -> Query {
                         },
                         Some(x) => return Query::Error(format!(
                             "Expected decimal base, got {}", describe(&x))),
-                        None => return Query::Error(format!(
-                            "Expected decimal base, got eof"))
+                        None => return Query::Error(
+                            "Expected decimal base, got eof".to_string()
+                        )
                     }
                 },
                 Token::Ident(ref s) if s == "hex" || s == "hexadecimal" || s == "base16" => {
@@ -837,12 +781,7 @@ pub fn parse_query(iter: &mut Iter) -> Query {
             };
             let right = match iter.peek().cloned().unwrap() {
                 Token::Eof => Conversion::None,
-                Token::DegC => Conversion::DegC,
-                Token::DegF => Conversion::DegF,
-                Token::DegRe => Conversion::DegRe,
-                Token::DegRo => Conversion::DegRo,
-                Token::DegDe => Conversion::DegDe,
-                Token::DegN => Conversion::DegN,
+                Token::Degree(deg) => Conversion::Degree(deg),
                 Token::Plus | Token::Minus => {
                     let mut old = iter.clone();
                     if let Some(off) = parse_offset(iter) {

@@ -37,7 +37,7 @@ impl Serialize for Error {
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
-        Error::Generic(format!("{}", err))
+        Error::Generic(err.to_string())
     }
 }
 
@@ -112,7 +112,7 @@ pub fn eval(query: &str) -> Result<QueryReply, Error> {
                  Sandbox stdout: {}\n\
                  Sandbox stderr: {}",
                 e,
-                output.status.signal().map(|x| format!("{}", x)).unwrap_or("None".to_owned()),
+                output.status.signal().map(|x| x.to_string()).unwrap_or("None".to_owned()),
                 String::from_utf8_lossy(&output.stdout),
                 String::from_utf8_lossy(&output.stderr)
             )))
@@ -122,11 +122,11 @@ pub fn eval(query: &str) -> Result<QueryReply, Error> {
 
 pub fn eval_text(query: &str) -> String {
     match eval(query) {
-        Ok(v) => format!("{}", v),
-        Err(Error::Generic(e)) => format!("{}", e),
-        Err(Error::Memory) => format!("Calculation ran out of memory"),
-        Err(Error::Time) => format!("Calculation timed out"),
-        Err(Error::Rink(e)) => format!("{}", e),
+        Ok(v) => v.to_string(),
+        Err(Error::Generic(e)) => e.to_string(),
+        Err(Error::Memory) => "Calculation ran out of memory".to_string(),
+        Err(Error::Time) => "Calculation timed out".to_string(),
+        Err(Error::Rink(e)) => e.to_string(),
     }
 }
 

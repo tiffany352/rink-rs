@@ -55,8 +55,7 @@ fn root(rink: &Rink, req: &mut Request) -> IronResult<Response> {
 
     let map = req.get_ref::<Params>().unwrap();
     match map.find(&["q"]) {
-        Some(&Value::String(ref query)) if query == "" => (),
-        Some(&Value::String(ref query)) => {
+        Some(&Value::String(ref query)) if !query.is_empty() => {
             let mut reply = eval_json(query);
             reply.as_object_mut().unwrap().insert("input".to_owned(), query.to_json());
             println!("{}", reply.pretty());
@@ -66,7 +65,7 @@ fn root(rink: &Rink, req: &mut Request) -> IronResult<Response> {
         _ => (),
     };
 
-    if data.len() == 0 {
+    if data.is_empty() {
         data.insert("main-page".to_owned(), true.to_json());
     }
 
@@ -82,10 +81,10 @@ impl AfterMiddleware for ErrorMiddleware {
         let mut data = BTreeMap::new();
         let mut error = BTreeMap::new();
         if let Some(status) = err.response.status {
-            error.insert("status".to_owned(), format!("{}", status));
-            data.insert("title".to_owned(), format!("{}", status).to_json());
+            error.insert("status".to_owned(), status.to_string());
+            data.insert("title".to_owned(), status.to_string().to_json());
         }
-        error.insert("message".to_owned(), format!("{}", err.error));
+        error.insert("message".to_owned(), err.error.to_string());
         data.insert("error".to_owned(), error.to_json());
         data.insert("config".to_owned(), self.0.config.to_json());
         println!("{:#?}", data);
@@ -162,7 +161,7 @@ fn urlescapehelper(
     let res = utf8_percent_encode(&res, QUERY_ENCODE_SET).collect::<String>();
     let res = res.split("%20").collect::<Vec<_>>().join("+");
     try!(rc.writer.write_all(res.as_bytes()).map_err(
-        |e| RenderError::new(&format!("{}", e))));
+        |e| RenderError::new(&e.to_string())));
     Ok(())
 }
 
@@ -201,7 +200,7 @@ fn main() {
         ).unwrap()
     };
     let rink = Arc::new(Rink {
-        config: config,
+        config,
     });
     let (logger_before, logger_after) = Logger::new(None);
 

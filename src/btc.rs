@@ -13,13 +13,13 @@ static URL: &'static str = "https://blockchain.info/stats?format=json";
 
 pub fn parse(mut f: File) -> Result<Defs, String> {
     let mut buf = String::new();
-    try!(f.read_to_string(&mut buf).map_err(|x| format!("{}", x)));
-    let parsed = try!(json::parse(&*buf).map_err(|x| format!("{}", x)));
+    try!(f.read_to_string(&mut buf).map_err(|x| x.to_string()));
+    let parsed = try!(json::parse(&*buf).map_err(|x| x.to_string()));
     let mut out = vec![];
     if let Some(price) = parsed["market_price_usd"].as_number() {
         let (sign, mantissa, exp) = price.as_parts();
         let integer = format!("{}{}", if sign { "" } else { "-" }, mantissa);
-        if let Ok(price) = ::Number::from_parts(&*integer, None, Some(&*format!("{}", exp))) {
+        if let Ok(price) = ::Number::from_parts(&*integer, None, Some(&*exp.to_string())) {
             out.push(DefEntry {
                 name: "BTC".to_owned(),
                 def: Rc::new(Def::Unit(
@@ -27,7 +27,7 @@ pub fn parse(mut f: File) -> Result<Defs, String> {
                         Expr::Const(price),
                         Expr::Unit("USD".to_owned())
                     ]))),
-                doc: Some(format!("Sourced from blockchain.info.")),
+                doc: Some("Sourced from blockchain.info.".to_string()),
                 category: Some("currencies".to_owned()),
             });
         }

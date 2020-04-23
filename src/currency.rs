@@ -34,7 +34,7 @@ pub fn parse(f: File) -> Result<Defs, String> {
                     }
                 }
                 if let (Some(currency), Some(rate)) = (currency, rate) {
-                    let mut iter = rate.split(".");
+                    let mut iter = rate.split('.');
                     let integer = iter.next().unwrap();
                     let frac = iter.next();
                     if let Ok(num) = ::number::Number::from_parts(integer, frac, None) {
@@ -46,13 +46,13 @@ pub fn parse(f: File) -> Result<Defs, String> {
                                                Box::new(Expr::Const(num))),
                                     Expr::Unit("EUR".to_string())
                                 ]))),
-                            doc: Some(format!("Sourced from European Central Bank.")),
+                            doc: Some("Sourced from European Central Bank.".to_string()),
                             category: Some("currencies".to_owned()),
                         });
                     }
                 }
             },
-            Err(e) => return Err(format!("{}", e)),
+            Err(e) => return Err(e.to_string()),
             _ => (),
         }
     }

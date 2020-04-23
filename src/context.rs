@@ -11,7 +11,7 @@ use substance::Substance;
 use reply::NotFoundError;
 
 /// The evaluation context that contains unit definitions.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Context {
     pub dimensions: BTreeSet<Dim>,
     pub canonicalizations: BTreeMap<String, String>,
@@ -35,22 +35,9 @@ impl Context {
     /// Creates a new, empty context
     pub fn new() -> Context {
         Context {
-            dimensions: BTreeSet::new(),
-            canonicalizations: BTreeMap::new(),
-            units: BTreeMap::new(),
-            quantities: BTreeMap::new(),
-            reverse: BTreeMap::new(),
-            prefixes: Vec::new(),
-            definitions: BTreeMap::new(),
-            docs: BTreeMap::new(),
-            categories: BTreeMap::new(),
-            category_names: BTreeMap::new(),
-            datepatterns: Vec::new(),
-            substances: BTreeMap::new(),
-            substance_symbols: BTreeMap::new(),
-            temporaries: BTreeMap::new(),
             short_output: false,
             use_humanize: true,
+            ..Context::default()
         }
     }
 
@@ -81,31 +68,33 @@ impl Context {
             }
             None
         }
-        if let Some(v) = inner(self, name) {
-            return Some(v)
-        }
-        for &(ref pre, ref value) in &self.prefixes {
-            if name.starts_with(pre) {
-                if let Some(v) = inner(self, &name[pre.len()..]) {
-                    return Some((&v * &value).unwrap())
-                }
-            }
-        }
-        // after so that "ks" is kiloseconds
-        if name.ends_with("s") {
-            let name = &name[0..name.len()-1];
+
+        let outer = |name: &str| -> Option<Number> {
             if let Some(v) = inner(self, name) {
                 return Some(v)
             }
             for &(ref pre, ref value) in &self.prefixes {
                 if name.starts_with(pre) {
                     if let Some(v) = inner(self, &name[pre.len()..]) {
-                        return Some((&v * &value).unwrap())
+                        return Some((&v * value).unwrap())
                     }
                 }
             }
+            None
+        };
+
+        let res = outer(name);
+        if res.is_some() {
+            return res;
         }
-        None
+
+        // after so that "ks" is kiloseconds
+        if name.ends_with('s') {
+            let name = &name[0..name.len()-1];
+            outer(name)
+        } else {
+            None
+        }
     }
 
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
@@ -131,24 +120,8 @@ impl Context {
             }
             None
         }
-        if let Some(v) = inner(self, name) {
-            return Some(v)
-        }
-        for &(ref pre, ref val) in &self.prefixes {
-            if name.starts_with(pre) {
-                if let Some(v) = inner(self, &name[pre.len()..]) {
-                    let mut pre = pre;
-                    for &(ref other, ref otherval) in &self.prefixes {
-                        if other.len() > pre.len() && val == otherval {
-                            pre = other;
-                        }
-                    }
-                    return Some(format!("{}{}", pre, v))
-                }
-            }
-        }
-        if name.ends_with("s") {
-            let name = &name[0..name.len()-1];
+
+        let outer = |name: &str| -> Option<String> {
             if let Some(v) = inner(self, name) {
                 return Some(v)
             }
@@ -165,8 +138,20 @@ impl Context {
                     }
                 }
             }
+            None
+        };
+
+        let res = outer(name);
+        if res.is_some() {
+            return res;
         }
-        None
+
+        if name.ends_with('s') {
+            let name = &name[0..name.len()-1];
+            outer(name)
+        } else {
+            None
+        }
     }
 
     /// Describes a value's unit, gives true if the unit is reciprocal
@@ -193,6 +178,25 @@ impl Context {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
+            let helper = |dim: &Dim, pow: i64, buf: &mut Vec<u8>| {
+                let mut map = Unit::new();
+                map.insert(dim.clone(), pow);
+                if let Some(name) = self.quantities.get(&map) {
+                    write!(buf, " {}", name).unwrap();
+                } else {
+                    let mut map = Unit::new();
+                    map.insert(dim.clone(), 1);
+                    if let Some(name) = self.quantities.get(&map) {
+                        write!(buf, " {}", name).unwrap();
+                    } else {
+                        write!(buf, " '{}'", dim).unwrap();
+                    }
+                    if pow != 1 {
+                        write!(buf, "^{}", pow).unwrap();
+                    }
+                }
+            };
+
             let mut frac = vec![];
             let mut found = false;
             for (dim, &pow) in &value.unit {
@@ -200,25 +204,10 @@ impl Context {
                     frac.push((dim, -pow));
                 } else {
                     found = true;
-                    let mut map = Unit::new();
-                    map.insert(dim.clone(), pow);
-                    if let Some(name) = self.quantities.get(&map) {
-                        write!(buf, " {}", name).unwrap();
-                    } else {
-                        let mut map = Unit::new();
-                        map.insert(dim.clone(), 1);
-                        if let Some(name) = self.quantities.get(&map) {
-                            write!(buf, " {}", name).unwrap();
-                        } else {
-                            write!(buf, " '{}'", dim).unwrap();
-                        }
-                        if pow != 1 {
-                            write!(buf, "^{}", pow).unwrap();
-                        }
-                    }
+                    helper(dim, pow, &mut buf);
                 }
             }
-            if frac.len() > 0 {
+            if !frac.is_empty() {
                 if !found {
                     recip = true;
                 } else {
@@ -230,16 +219,7 @@ impl Context {
                     if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();
                     } else {
-                        let mut map = Unit::new();
-                        map.insert(dim.clone(), 1);
-                        if let Some(name) = self.quantities.get(&map) {
-                            write!(buf, " {}", name).unwrap();
-                        } else {
-                            write!(buf, " '{}'", dim).unwrap();
-                        }
-                        if pow != 1 {
-                            write!(buf, "^{}", pow).unwrap();
-                        }
+                        helper(dim, pow, &mut buf);
                     }
                 }
             }
