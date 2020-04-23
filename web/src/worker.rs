@@ -1,14 +1,14 @@
+use ipc_channel::ipc::{IpcOneShotServer, IpcReceiver, IpcSender};
 use libc;
-use ipc_channel::ipc::{IpcOneShotServer, IpcSender, IpcReceiver};
-use std::process::{Command, Stdio};
-use std::env;
 use rink;
-use rink::reply::{QueryReply, QueryError};
-use std::os::unix::process::ExitStatusExt;
-use std::io;
+use rink::reply::{QueryError, QueryReply};
 use rustc_serialize;
-use serde_json;
 use serde::ser::{Serialize, Serializer};
+use serde_json;
+use std::env;
+use std::io;
+use std::os::unix::process::ExitStatusExt;
+use std::process::{Command, Stdio};
 
 #[derive(Debug)]
 pub enum Error {
@@ -19,25 +19,22 @@ pub enum Error {
 }
 
 impl Serialize for Error {
-    fn serialize<S>(
-        &self, ser: &mut S
-    ) -> Result<(), S::Error> where S: Serializer {
+    fn serialize<S>(&self, ser: &mut S) -> Result<(), S::Error>
+    where
+        S: Serializer,
+    {
         match *self {
-            Error::Rink(ref e) =>
-                ser.serialize_newtype_variant("Error", 0, "Rink", e),
-            Error::Time =>
-                ser.serialize_newtype_variant("Error", 1, "Time", true),
-            Error::Memory =>
-                ser.serialize_newtype_variant("Error", 2, "Memory", true),
-            Error::Generic(ref e) =>
-                ser.serialize_newtype_variant("Error", 3, "Generic", e),
+            Error::Rink(ref e) => ser.serialize_newtype_variant("Error", 0, "Rink", e),
+            Error::Time => ser.serialize_newtype_variant("Error", 1, "Time", true),
+            Error::Memory => ser.serialize_newtype_variant("Error", 2, "Memory", true),
+            Error::Generic(ref e) => ser.serialize_newtype_variant("Error", 3, "Generic", e),
         }
     }
 }
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
-        Error::Generic(format!("{}", err))
+        Error::Generic(err.to_string())
     }
 }
 
@@ -59,7 +56,7 @@ pub fn worker(server_name: &str, query: &str) -> ! {
         let limit = libc::rlimit {
             // 15 seconds
             rlim_cur: 15,
-            rlim_max: 15
+            rlim_max: 15,
         };
         let res = libc::setrlimit(libc::RLIMIT_CPU, &limit);
         if res == -1 {
@@ -89,22 +86,22 @@ pub fn eval(query: &str) -> Result<QueryReply, Error> {
         .stdout(Stdio::piped())
         .env("RUST_BACKTRACE", "1")
         .spawn();
-    let child = try!(res);
+    let child = res?;
     let (rx, _) = server.accept().unwrap();
     let rx: IpcReceiver<Result<QueryReply, QueryError>> = rx;
 
     match rx.recv() {
         Ok(s) => {
-            try!(child.wait_with_output());
+            child.wait_with_output()?;
             s.map_err(Error::Rink)
-        },
+        }
         Err(e) => {
-            let output = try!(child.wait_with_output());
+            let output = child.wait_with_output()?;
             match output.status.signal() {
                 Some(libc::SIGXCPU) => return Err(Error::Time),
                 // SIGABRT doesn't necessarily mean OOM, but GMP will raise it when it happens
                 Some(libc::SIGABRT) => return Err(Error::Memory),
-                _ => ()
+                _ => (),
             };
             Err(Error::Generic(format!(
                 "Receiving reply from sandbox failed: {}\n\
@@ -112,7 +109,11 @@ pub fn eval(query: &str) -> Result<QueryReply, Error> {
                  Sandbox stdout: {}\n\
                  Sandbox stderr: {}",
                 e,
-                output.status.signal().map(|x| format!("{}", x)).unwrap_or("None".to_owned()),
+                output
+                    .status
+                    .signal()
+                    .map(|x| x.to_string())
+                    .unwrap_or("None".to_owned()),
                 String::from_utf8_lossy(&output.stdout),
                 String::from_utf8_lossy(&output.stderr)
             )))
@@ -122,11 +123,11 @@ pub fn eval(query: &str) -> Result<QueryReply, Error> {
 
 pub fn eval_text(query: &str) -> String {
     match eval(query) {
-        Ok(v) => format!("{}", v),
-        Err(Error::Generic(e)) => format!("{}", e),
-        Err(Error::Memory) => format!("Calculation ran out of memory"),
-        Err(Error::Time) => format!("Calculation timed out"),
-        Err(Error::Rink(e)) => format!("{}", e),
+        Ok(v) => v.to_string(),
+        Err(Error::Generic(e)) => e.to_string(),
+        Err(Error::Memory) => "Calculation ran out of memory".to_string(),
+        Err(Error::Time) => "Calculation timed out".to_string(),
+        Err(Error::Rink(e)) => e.to_string(),
     }
 }
 

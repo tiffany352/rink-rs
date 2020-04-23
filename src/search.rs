@@ -2,10 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use context::Context;
-use std::cmp::{PartialOrd, Ord, Ordering};
-use strsim::jaro_winkler;
+use crate::context::Context;
+use std::cmp::{Ord, Ordering, PartialOrd};
 use std::collections::BinaryHeap;
+use strsim::jaro_winkler;
 
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct SearchResult<'a> {
@@ -29,7 +29,7 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
     let mut results = BinaryHeap::new();
     let query = query.to_lowercase();
     {
-        let mut try = |x: &'a str| {
+        let mut r#try = |x: &'a str| {
             let borrow = x;
             let x = x.to_lowercase();
             let modifier = if x == query {
@@ -43,10 +43,7 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
             } else {
                 0_000
             };
-            let score = jaro_winkler(
-                &*x,
-                &*query,
-            );
+            let score = jaro_winkler(&*x, &*query);
             results.push(SearchResult {
                 score: (score * 1000.0) as i32 + modifier,
                 value: borrow,
@@ -57,19 +54,20 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         };
 
         for k in &ctx.dimensions {
-            try(&**k.0);
+            r#try(&**k.0);
         }
-        for (k, _v) in &ctx.units {
-            try(&**k);
+        for k in ctx.units.keys() {
+            r#try(&**k);
         }
-        for (_u, k) in &ctx.quantities {
-            try(&**k);
+        for k in ctx.quantities.values() {
+            r#try(&**k);
         }
-        for (k, _sub) in &ctx.substances {
-            try(&**k);
+        for k in ctx.substances.keys() {
+            r#try(&**k);
         }
     }
-    results.into_sorted_vec()
+    results
+        .into_sorted_vec()
         .into_iter()
         .filter_map(|x| if x.score > 800 { Some(x.value) } else { None })
         .collect()

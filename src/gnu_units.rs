@@ -2,12 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::str::Chars;
+use crate::ast::*;
+use crate::num::Num;
+use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::rc::Rc;
-use std::collections::BTreeMap;
-use ast::*;
-use num::Num;
+use std::str::Chars;
 
 #[derive(Debug, Clone)]
 pub enum Token {
@@ -45,7 +45,7 @@ fn is_ident(c: char) -> bool {
         //c if c.is_alphabetic() => true,
         //'_' | '$' | '-' | '\'' | '"' | '%' | ',' => true,
         ' ' | '\t' | '\n' | '\r' | '(' | ')' | '/' | '|' | '^' | '+' | '*' | '\\' | '#' => false,
-        _ => true
+        _ => true,
     }
 }
 
@@ -53,17 +53,19 @@ impl<'a> Iterator for TokenIterator<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        if self.0.peek() == None {
-            return Some(Token::Eof)
+        if self.0.peek().is_none() {
+            return Some(Token::Eof);
         }
         let res = match self.0.next().unwrap() {
             ' ' | '\t' => return self.next(),
-            '\r' => if self.0.peek() == Some(&'\n') {
-                self.0.next();
-                Token::Newline
-            } else {
-                Token::Newline
-            },
+            '\r' => {
+                if self.0.peek() == Some(&'\n') {
+                    self.0.next();
+                    Token::Newline
+                } else {
+                    Token::Newline
+                }
+            }
             '\n' => Token::Newline,
             '!' => Token::Bang,
             '(' => Token::LPar,
@@ -76,35 +78,38 @@ impl<'a> Iterator for TokenIterator<'a> {
             '*' => Token::Asterisk,
             '{' => Token::LeftBrace,
             '}' => Token::RightBrace,
-            '?' => if self.0.peek() == Some(&'?') {
-                self.0.next();
-                let mut out = String::new();
-                loop { match self.0.next() {
-                    Some('\n') | None => break,
-                    Some(x) => out.push(x),
-                }}
-                Token::Doc(out)
-            } else {
-                Token::Question
-            },
+            '?' => {
+                if self.0.peek() == Some(&'?') {
+                    self.0.next();
+                    let mut out = String::new();
+                    loop {
+                        match self.0.next() {
+                            Some('\n') | None => break,
+                            Some(x) => out.push(x),
+                        }
+                    }
+                    Token::Doc(out)
+                } else {
+                    Token::Question
+                }
+            }
             '\\' => match self.0.next() {
                 Some('\r') => match self.0.next() {
                     Some('\n') => self.next().unwrap(),
-                    _ => Token::Error(format!("Expected LF or CRLF line endings"))
+                    _ => Token::Error("Expected LF or CRLF line endings".to_string()),
                 },
                 Some('\n') => self.next().unwrap(),
                 Some(x) => Token::Error(format!("Invalid escape: \\{}", x)),
-                None => Token::Error(format!("Unexpected EOF")),
+                None => Token::Error("Unexpected EOF".to_string()),
             },
             '#' => {
                 while let Some(c) = self.0.next() {
-                    match c {
-                        '\n' => break,
-                        _ => ()
+                    if c == '\n' {
+                        break;
                     }
                 }
                 Token::Newline
-            },
+            }
             x @ '0'..='9' | x @ '.' => {
                 let mut integer = String::new();
                 let mut frac = None;
@@ -116,7 +121,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
                             '0'..='9' => integer.push(self.0.next().unwrap()),
-                            _ => break
+                            _ => break,
                         }
                     }
                 } else {
@@ -131,10 +136,10 @@ impl<'a> Iterator for TokenIterator<'a> {
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
                             '0'..='9' => buf.push(self.0.next().unwrap()),
-                            _ => break
+                            _ => break,
                         }
                     }
-                    if buf.len() > 0 {
+                    if !buf.is_empty() {
                         frac = Some(buf)
                     }
                 }
@@ -146,25 +151,25 @@ impl<'a> Iterator for TokenIterator<'a> {
                         match c {
                             '-' => {
                                 buf.push(self.0.next().unwrap());
-                            },
+                            }
                             '+' => {
                                 self.0.next();
-                            },
-                            _ => ()
+                            }
+                            _ => (),
                         }
                     }
                     while let Some(c) = self.0.peek().cloned() {
                         match c {
                             '0'..='9' => buf.push(self.0.next().unwrap()),
-                            _ => break
+                            _ => break,
                         }
                     }
-                    if buf.len() > 0 {
+                    if !buf.is_empty() {
                         exp = Some(buf)
                     }
                 }
                 Token::Number(integer, frac, exp)
-            },
+            }
             '"' => {
                 let mut buf = String::new();
                 while let Some(c) = self.0.next() {
@@ -179,7 +184,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 }
                 Token::Ident(buf)
-            },
+            }
             x if is_ident(x) => {
                 let mut buf = String::new();
                 buf.push(x);
@@ -191,10 +196,10 @@ impl<'a> Iterator for TokenIterator<'a> {
                     }
                 }
                 match &*buf {
-                    _ => Token::Ident(buf)
+                    _ => Token::Ident(buf),
                 }
-            },
-            x => Token::Error(format!("Unknown character: '{}'", x))
+            }
+            x => Token::Error(format!("Unknown character: '{}'", x)),
         };
         Some(res)
     }
@@ -202,62 +207,72 @@ impl<'a> Iterator for TokenIterator<'a> {
 
 pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
-fn parse_term(iter: &mut Iter) -> Expr {
+fn parse_term(iter: &mut Iter<'_>) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(name) => match iter.peek().cloned().unwrap() {
             Token::Ident(ref s) if s == "of" => {
                 iter.next();
                 Expr::Of(name, Box::new(parse_mul(iter)))
-            },
-            _ => Expr::Unit(name)
+            }
+            _ => Expr::Unit(name),
         },
-        Token::Number(num, frac, exp) =>
-            ::number::Number::from_parts(&*num, frac.as_ref().map(|x| &**x), exp.as_ref().map(|x| &**x))
-            .map(Expr::Const)
-            .unwrap_or_else(|e| Expr::Error(format!("{}", e))),
+        Token::Number(num, frac, exp) => crate::number::Number::from_parts(
+            &*num,
+            frac.as_ref().map(|x| &**x),
+            exp.as_ref().map(|x| &**x),
+        )
+        .map(Expr::Const)
+        .unwrap_or_else(Expr::Error),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
         Token::Slash => Expr::Frac(
             Box::new(Expr::Const(Num::one())),
-            Box::new(parse_term(iter))),
+            Box::new(parse_term(iter)),
+        ),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
                 Token::RPar => res,
-                x => Expr::Error(format!("Expected ), got {:?}", x))
+                x => Expr::Error(format!("Expected ), got {:?}", x)),
             }
-        },
-        x => Expr::Error(format!("Expected term, got {:?}", x))
+        }
+        x => Expr::Error(format!("Expected term, got {:?}", x)),
     }
 }
 
-fn parse_pow(iter: &mut Iter) -> Expr {
+fn parse_pow(iter: &mut Iter<'_>) -> Expr {
     let left = parse_term(iter);
     match *iter.peek().unwrap() {
         Token::Caret => {
             iter.next();
             let right = parse_pow(iter);
             Expr::Pow(Box::new(left), Box::new(right))
-        },
+        }
         Token::Pipe => {
             iter.next();
             let right = parse_pow(iter);
             Expr::Frac(Box::new(left), Box::new(right))
-        },
-        _ => left
+        }
+        _ => left,
     }
 }
 
-fn parse_mul(iter: &mut Iter) -> Expr {
+fn parse_mul(iter: &mut Iter<'_>) -> Expr {
     let mut terms = vec![parse_pow(iter)];
-    loop { match iter.peek().cloned().unwrap() {
-        Token::Slash | Token::Plus | Token::Dash | Token::RPar | Token::Newline | Token::Eof =>
-            break,
-        Token::Asterisk => {
-            iter.next();
-        },
-        _ => terms.push(parse_pow(iter))
-    }}
+    loop {
+        match iter.peek().cloned().unwrap() {
+            Token::Slash
+            | Token::Plus
+            | Token::Dash
+            | Token::RPar
+            | Token::Newline
+            | Token::Eof => break,
+            Token::Asterisk => {
+                iter.next();
+            }
+            _ => terms.push(parse_pow(iter)),
+        }
+    }
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
@@ -265,41 +280,38 @@ fn parse_mul(iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_div(iter: &mut Iter) -> Expr {
+fn parse_div(iter: &mut Iter<'_>) -> Expr {
     let mut left = parse_mul(iter);
-    loop { match *iter.peek().unwrap() {
-        Token::Slash => {
-            iter.next();
-            let right = parse_mul(iter);
-            left = Expr::Frac(Box::new(left), Box::new(right));
-        },
-        _ => break
-    }}
+    while let Token::Slash = *iter.peek().unwrap() {
+        iter.next();
+        let right = parse_mul(iter);
+        left = Expr::Frac(Box::new(left), Box::new(right));
+    }
     left
 }
 
-fn parse_add(iter: &mut Iter) -> Expr {
+fn parse_add(iter: &mut Iter<'_>) -> Expr {
     let left = parse_div(iter);
     match *iter.peek().unwrap() {
         Token::Plus => {
             iter.next();
             let right = parse_add(iter);
             Expr::Add(Box::new(left), Box::new(right))
-        },
+        }
         Token::Dash => {
             iter.next();
             let right = parse_add(iter);
             Expr::Sub(Box::new(left), Box::new(right))
-        },
-        _ => left
+        }
+        _ => left,
     }
 }
 
-pub fn parse_expr(iter: &mut Iter) -> Expr {
+pub fn parse_expr(iter: &mut Iter<'_>) -> Expr {
     parse_add(iter)
 }
 
-pub fn parse(iter: &mut Iter) -> Defs {
+pub fn parse(iter: &mut Iter<'_>) -> Defs {
     let mut map = vec![];
     let mut line = 1;
     let mut doc = None;
@@ -309,69 +321,67 @@ pub fn parse(iter: &mut Iter) -> Defs {
         match iter.next().unwrap() {
             Token::Newline => line += 1,
             Token::Eof => break,
-            Token::Bang => {
-                match iter.next().unwrap() {
-                    Token::Ident(ref s) if s == "category" => {
-                        match (iter.next().unwrap(), iter.next().unwrap()) {
-                            (Token::Ident(s), Token::Ident(d)) => {
-                                map.push(DefEntry {
-                                    name: s.clone(),
-                                    def: Rc::new(Def::Category(d)),
-                                    doc: None,
-                                    category: None
-                                });
-                                category = Some(s);
-                            },
-                            _ => println!("Malformed category directive"),
+            Token::Bang => match iter.next().unwrap() {
+                Token::Ident(ref s) if s == "category" => {
+                    match (iter.next().unwrap(), iter.next().unwrap()) {
+                        (Token::Ident(s), Token::Ident(d)) => {
+                            map.push(DefEntry {
+                                name: s.clone(),
+                                def: Rc::new(Def::Category(d)),
+                                doc: None,
+                                category: None,
+                            });
+                            category = Some(s);
                         }
-                    },
-                    Token::Ident(ref s) if s == "endcategory" => {
-                        if category.is_none() {
-                            println!("Stray endcategory directive");
+                        _ => println!("Malformed category directive"),
+                    }
+                }
+                Token::Ident(ref s) if s == "endcategory" => {
+                    if category.is_none() {
+                        println!("Stray endcategory directive");
+                    }
+                    category = None
+                }
+                Token::Ident(ref s) if s == "symbol" => {
+                    match (iter.next().unwrap(), iter.next().unwrap()) {
+                        (Token::Ident(subst), Token::Ident(sym)) => {
+                            symbols.insert(subst, sym);
                         }
-                        category = None
-                    },
-                    Token::Ident(ref s) if s == "symbol" => {
-                        match (iter.next().unwrap(), iter.next().unwrap()) {
-                            (Token::Ident(subst), Token::Ident(sym)) => {
-                                symbols.insert(subst, sym);
-                            }
-                            _ => println!("Malformed symbol directive"),
+                        _ => println!("Malformed symbol directive"),
+                    }
+                }
+                _ => loop {
+                    match iter.peek().cloned().unwrap() {
+                        Token::Newline | Token::Eof => break,
+                        _ => {
+                            iter.next();
                         }
                     }
-                    _ => loop {
-                        match iter.peek().cloned().unwrap() {
-                            Token::Newline | Token::Eof => break,
-                            _ => {
-                                iter.next();
-                            }
-                        }
-                    },
-                }
+                },
             },
             Token::Doc(line) => {
                 doc = match doc.take() {
                     None => Some(line.trim().to_owned()),
                     Some(old) => Some(format!("{} {}", old.trim(), line.trim())),
                 };
-            },
+            }
             Token::Ident(name) => {
-                if name.ends_with("-") {
+                if name.ends_with('-') {
                     // prefix
                     let expr = parse_expr(iter);
                     let mut name = name;
                     name.pop();
-                    if name.ends_with("-") {
+                    if name.ends_with('-') {
                         name.pop();
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::Prefix(expr)),
                             doc: doc.take(),
                             category: category.clone(),
                         });
                     } else {
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::SPrefix(expr)),
                             doc: doc.take(),
                             category: category.clone(),
@@ -409,7 +419,7 @@ pub fn parse(iter: &mut Iter) -> Defs {
                         iter.next();
                         let expr = parse_expr(iter);
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::Quantity(expr)),
                             doc: doc.take(),
                             category: category.clone(),
@@ -424,81 +434,84 @@ pub fn parse(iter: &mut Iter) -> Defs {
                                 Token::Ident(name) => name,
                                 Token::Newline => {
                                     line += 1;
-                                    continue
-                                },
+                                    continue;
+                                }
                                 Token::Eof => break,
                                 Token::Doc(line) => {
                                     prop_doc = match prop_doc.take() {
                                         None => Some(line.trim().to_owned()),
-                                        Some(old) => Some(format!(
-                                            "{} {}", old.trim(), line.trim())),
+                                        Some(old) => {
+                                            Some(format!("{} {}", old.trim(), line.trim()))
+                                        }
                                     };
-                                    continue
-                                },
-                                Token::RightBrace =>
-                                    break,
+                                    continue;
+                                }
+                                Token::RightBrace => break,
                                 x => {
                                     println!("Expected property, got {:?}", x);
-                                    break
-                                },
+                                    break;
+                                }
                             };
                             let output_name = match iter.next().unwrap() {
                                 Token::Ident(ref s) if s == "const" => {
                                     let input_name = match iter.next().unwrap() {
                                         Token::Ident(name) => name,
                                         x => {
-                                            println!("Expected property input \
-                                                      name, got {:?}", x);
-                                            break
-                                        },
+                                            println!(
+                                                "Expected property input \
+                                                      name, got {:?}",
+                                                x
+                                            );
+                                            break;
+                                        }
                                     };
                                     let output = parse_div(iter);
                                     props.push(Property {
                                         output_name: name.clone(),
-                                        name: name,
+                                        name,
                                         input: Expr::Const(Num::one()),
-                                        input_name: input_name,
-                                        output: output,
-                                        doc: prop_doc.take()
+                                        input_name,
+                                        output,
+                                        doc: prop_doc.take(),
                                     });
-                                    continue
-                                },
+                                    continue;
+                                }
                                 Token::Ident(name) => name,
                                 x => {
                                     println!("Expected property input name, got {:?}", x);
-                                    break
-                                },
+                                    break;
+                                }
                             };
                             let output = parse_mul(iter);
                             match iter.next().unwrap() {
                                 Token::Slash => (),
                                 x => {
                                     println!("Expected /, got {:?}", x);
-                                    break
+                                    break;
                                 }
                             }
                             let input_name = match iter.next().unwrap() {
                                 Token::Ident(name) => name,
                                 x => {
                                     println!("Expected property input name, got {:?}", x);
-                                    break
-                                },
+                                    break;
+                                }
                             };
                             let input = parse_mul(iter);
                             props.push(Property {
-                                name: name,
-                                input: input,
-                                input_name: input_name,
-                                output: output,
-                                output_name: output_name,
-                                doc: prop_doc.take()
+                                name,
+                                input,
+                                input_name,
+                                output,
+                                output_name,
+                                doc: prop_doc.take(),
                             });
                         }
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::Substance {
                                 symbol: None,
-                                properties: props
+                                properties: props,
                             }),
                             doc: doc.take(),
                             category: category.clone(),
@@ -507,38 +520,33 @@ pub fn parse(iter: &mut Iter) -> Defs {
                         // derived
                         let expr = parse_expr(iter);
                         map.push(DefEntry {
-                            name: name,
+                            name,
                             def: Rc::new(Def::Unit(expr)),
                             doc: doc.take(),
                             category: category.clone(),
                         });
                     }
                 }
-            },
+            }
             x => println!("Expected definition on line {}, got {:?}", line, x),
         };
     }
 
     for entry in map.iter_mut() {
-        match Rc::get_mut(&mut entry.def).unwrap() {
-            &mut Def::Substance { ref mut symbol, .. } => {
-                *symbol = symbols.get(&entry.name).map(|x| x.to_owned())
-            }
-            _ => ()
+        if let Def::Substance { ref mut symbol, .. } = *Rc::get_mut(&mut entry.def).unwrap() {
+            *symbol = symbols.get(&entry.name).map(|x| x.to_owned())
         }
     }
 
-    Defs {
-        defs: map
-    }
+    Defs { defs: map }
 }
 
-pub fn tokens(iter: &mut Iter) -> Vec<Token> {
+pub fn tokens(iter: &mut Iter<'_>) -> Vec<Token> {
     let mut out = vec![];
     loop {
         match iter.next().unwrap() {
             Token::Eof => break,
-            x => out.push(x)
+            x => out.push(x),
         }
     }
     out
@@ -547,7 +555,7 @@ pub fn tokens(iter: &mut Iter) -> Vec<Token> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ast::Expr;
+    use crate::ast::Expr;
 
     fn do_parse(s: &str) -> Expr {
         let mut iter = TokenIterator::new(s).peekable();
