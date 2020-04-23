@@ -46,7 +46,7 @@ impl Borrow<str> for Dim {
 }
 
 impl fmt::Display for Dim {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(fmt)
     }
 }
@@ -351,7 +351,7 @@ impl NumberParts {
 }
 
 impl fmt::Display for NumberParts {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "{}", self.format("n u w"))
     }
 }
@@ -684,7 +684,7 @@ impl Number {
 }
 
 impl fmt::Debug for Number {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let parts = self.to_parts_simple();
         write!(fmt, "{}", parts)
     }

@@ -279,7 +279,7 @@ impl From<String> for QueryError {
 }
 
 impl Display for QueryReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match *self {
             QueryReply::Number(ref v) => write!(fmt, "{}", v),
             QueryReply::Date(ref v) => write!(fmt, "{}", v),
@@ -296,7 +296,7 @@ impl Display for QueryReply {
 }
 
 impl Display for QueryError {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match *self {
             QueryError::Generic(ref v) => write!(fmt, "{}", v),
             QueryError::Conformance(ref v) => write!(fmt, "{}", v),
@@ -306,7 +306,7 @@ impl Display for QueryError {
 }
 
 impl Display for NotFoundError {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match self.suggestion.as_ref() {
             Some(ref s) => write!(fmt, "No such unit {}, did you mean {}?", self.got, s),
             None => write!(fmt, "No such unit {}", self.got),
@@ -315,7 +315,7 @@ impl Display for NotFoundError {
 }
 
 impl Display for ConformanceError {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         writeln!(fmt, "Conformance error: {} != {}", self.left, self.right)?;
         write!(fmt, "Suggestions: {}", self.suggestions.join(", "))
     }
@@ -343,7 +343,7 @@ impl DateReply {
 }
 
 impl Display for DateReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         write!(fmt, "{}", self.string)?;
         if let Some(ref human) = self.human {
             write!(fmt, " ({})", human)?;
@@ -353,7 +353,7 @@ impl Display for DateReply {
 }
 
 impl Display for SubstanceReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         write!(
             fmt,
             "{}: {}{}",
@@ -380,7 +380,7 @@ impl Display for SubstanceReply {
 }
 
 impl Display for DefReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         write!(fmt, "Definition: {}", self.canon_name)?;
         if let Some(ref def) = self.def {
             write!(fmt, " = {}", def)?;
@@ -396,13 +396,13 @@ impl Display for DefReply {
 }
 
 impl Display for ConversionReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         write!(fmt, "{}", self.value)
     }
 }
 
 impl Display for FactorizeReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         write!(
             fmt,
             "Factorizations: {}",
@@ -427,7 +427,7 @@ impl Display for FactorizeReply {
 }
 
 impl Display for UnitsForReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         write!(
             fmt,
             "Units for {}: {}",
@@ -448,7 +448,7 @@ impl Display for UnitsForReply {
 }
 
 impl Display for DurationReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         let res = [
             &self.years,
             &self.months,
@@ -473,7 +473,7 @@ impl Display for DurationReply {
 }
 
 impl Display for UnitListReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         write!(
             fmt,
             "{}",
@@ -492,7 +492,7 @@ impl Display for UnitListReply {
 }
 
 impl Display for SearchReply {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         write!(
             fmt,
             "Search results: {}",

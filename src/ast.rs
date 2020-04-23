@@ -204,7 +204,7 @@ pub struct Defs {
 }
 
 impl fmt::Display for Conversion {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Conversion::None => write!(fmt, "nothing"),
             Conversion::Expr(ref expr) => write!(fmt, "{}", expr),
@@ -224,7 +224,7 @@ impl fmt::Display for Conversion {
 }
 
 impl fmt::Display for Degree {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Degree::Celsius => write!(fmt, "°C"),
             Degree::Fahrenheit => write!(fmt, "°F"),
@@ -250,7 +250,7 @@ impl Degree {
 }
 
 impl fmt::Display for Expr {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         #[derive(PartialOrd, Ord, PartialEq, Eq)]
         enum Prec {
             Term,
@@ -262,7 +262,7 @@ impl fmt::Display for Expr {
             Equals,
         }
 
-        fn recurse(expr: &Expr, fmt: &mut fmt::Formatter, prec: Prec) -> fmt::Result {
+        fn recurse(expr: &Expr, fmt: &mut fmt::Formatter<'_>, prec: Prec) -> fmt::Result {
             macro_rules! binop {
                 ($left:expr, $right:expr, $prec:expr, $succ:expr, $sym:expr) => {{
                     if prec < $prec {
@@ -358,7 +358,7 @@ impl fmt::Display for Expr {
 }
 
 impl fmt::Display for DatePattern {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             DatePattern::Literal(ref l) => write!(fmt, "'{}'", l),
             DatePattern::Match(ref n) => write!(fmt, "{}", n),
@@ -387,7 +387,7 @@ pub fn show_datepattern(pat: &[DatePattern]) -> String {
 }
 
 impl fmt::Display for DateToken {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             DateToken::Literal(ref l) => write!(fmt, "{}", l),
             DateToken::Number(ref i, None) => write!(fmt, "{}", i),

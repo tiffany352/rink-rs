@@ -207,7 +207,7 @@ impl<'a> Iterator for TokenIterator<'a> {
 
 pub type Iter<'a> = Peekable<TokenIterator<'a>>;
 
-fn parse_term(iter: &mut Iter) -> Expr {
+fn parse_term(iter: &mut Iter<'_>) -> Expr {
     match iter.next().unwrap() {
         Token::Ident(name) => match iter.peek().cloned().unwrap() {
             Token::Ident(ref s) if s == "of" => {
@@ -240,7 +240,7 @@ fn parse_term(iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_pow(iter: &mut Iter) -> Expr {
+fn parse_pow(iter: &mut Iter<'_>) -> Expr {
     let left = parse_term(iter);
     match *iter.peek().unwrap() {
         Token::Caret => {
@@ -257,7 +257,7 @@ fn parse_pow(iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_mul(iter: &mut Iter) -> Expr {
+fn parse_mul(iter: &mut Iter<'_>) -> Expr {
     let mut terms = vec![parse_pow(iter)];
     loop {
         match iter.peek().cloned().unwrap() {
@@ -280,7 +280,7 @@ fn parse_mul(iter: &mut Iter) -> Expr {
     }
 }
 
-fn parse_div(iter: &mut Iter) -> Expr {
+fn parse_div(iter: &mut Iter<'_>) -> Expr {
     let mut left = parse_mul(iter);
     loop {
         match *iter.peek().unwrap() {
@@ -295,7 +295,7 @@ fn parse_div(iter: &mut Iter) -> Expr {
     left
 }
 
-fn parse_add(iter: &mut Iter) -> Expr {
+fn parse_add(iter: &mut Iter<'_>) -> Expr {
     let left = parse_div(iter);
     match *iter.peek().unwrap() {
         Token::Plus => {
@@ -312,11 +312,11 @@ fn parse_add(iter: &mut Iter) -> Expr {
     }
 }
 
-pub fn parse_expr(iter: &mut Iter) -> Expr {
+pub fn parse_expr(iter: &mut Iter<'_>) -> Expr {
     parse_add(iter)
 }
 
-pub fn parse(iter: &mut Iter) -> Defs {
+pub fn parse(iter: &mut Iter<'_>) -> Defs {
     let mut map = vec![];
     let mut line = 1;
     let mut doc = None;
@@ -549,7 +549,7 @@ pub fn parse(iter: &mut Iter) -> Defs {
     Defs { defs: map }
 }
 
-pub fn tokens(iter: &mut Iter) -> Vec<Token> {
+pub fn tokens(iter: &mut Iter<'_>) -> Vec<Token> {
     let mut out = vec![];
     loop {
         match iter.next().unwrap() {
