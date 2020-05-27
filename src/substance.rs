@@ -11,7 +11,7 @@ use crate::value::Show;
 use std::collections::BTreeMap;
 use std::iter::once;
 use std::ops::{Add, Div, Mul};
-use std::rc::Rc;
+use std::sync::Arc;
 
 macro_rules! try_div {
     ($x:expr, $y:expr, $context:expr) => {
@@ -43,7 +43,7 @@ pub struct Properties {
 #[derive(Debug, Clone)]
 pub struct Substance {
     pub amount: Number,
-    pub properties: Rc<Properties>,
+    pub properties: Arc<Properties>,
 }
 
 pub enum SubstanceGetError {
@@ -55,7 +55,7 @@ impl Substance {
     pub fn rename(self, name: String) -> Substance {
         Substance {
             amount: self.amount,
-            properties: Rc::new(Properties {
+            properties: Arc::new(Properties {
                 name,
                 properties: self.properties.properties.clone(),
             }),
@@ -400,7 +400,7 @@ impl<'a, 'b> Add<&'b Substance> for &'a Substance {
     fn add(self, other: &'b Substance) -> Self::Output {
         let res = Substance {
             amount: Number::one(),
-            properties: Rc::new(Properties {
+            properties: Arc::new(Properties {
                 name: format!(
                     "{} {} + {} {}",
                     self.amount.to_parts_simple().format("n u"),

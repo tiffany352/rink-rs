@@ -7,7 +7,7 @@ use crate::number::{Dim, Number};
 use crate::substance::{Properties, Property, Substance};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::str::{Chars, FromStr};
 
 enum Token {
@@ -107,7 +107,7 @@ pub fn substance_from_formula(
     );
     Some(Substance {
         amount: Number::one(),
-        properties: Rc::new(Properties {
+        properties: Arc::new(Properties {
             name: formula.to_owned(),
             properties: props,
         }),

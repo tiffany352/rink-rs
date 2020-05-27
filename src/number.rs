@@ -12,7 +12,7 @@ use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
-use std::rc::Rc;
+use std::sync::Arc;
 
 /// Alias for the primary representation of dimensionality.
 pub type Unit = BTreeMap<Dim, i64>;
@@ -20,7 +20,7 @@ pub type Unit = BTreeMap<Dim, i64>;
 /// A newtype for a string dimension ID, so that we can implement traits for it.
 #[cfg_attr(feature = "nightly", derive(Deserialize))]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct Dim(pub Rc<String>);
+pub struct Dim(pub Arc<String>);
 
 #[cfg(feature = "nightly")]
 impl ::serde::ser::Serialize for Dim {
@@ -53,7 +53,7 @@ impl fmt::Display for Dim {
 
 impl Dim {
     pub fn new(dim: &str) -> Dim {
-        Dim(Rc::new(dim.to_owned()))
+        Dim(Arc::new(dim.to_owned()))
     }
 }
 
