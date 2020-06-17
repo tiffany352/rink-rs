@@ -10,6 +10,7 @@ use crate::value::Value;
 use crate::Context;
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
 enum Name {
@@ -377,7 +378,7 @@ impl Context {
                                 name.clone(),
                                 Substance {
                                     amount: Number::one(),
-                                    properties: Rc::new(Properties {
+                                    properties: Arc::new(Properties {
                                         name: name.clone(),
                                         properties: res,
                                     }),

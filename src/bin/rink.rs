@@ -44,11 +44,10 @@ fn main_noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
 
 #[cfg(feature = "linefeed")]
 fn main_interactive() {
-    use linefeed::{Completer, Completion, ReadResult, Reader, Suffix, Terminal};
-    use std::cell::RefCell;
-    use std::rc::Rc;
+    use linefeed::{Completer, Completion, Interface, Prompter, ReadResult, Suffix, Terminal};
+    use std::sync::{Arc, Mutex};
 
-    let mut rl = match Reader::new("rink") {
+    let rl = match Interface::new("rink") {
         Err(_) => {
             // If we can't initialize linefeed on this terminal for some reason,
             // e.g. it being a pipe instead of a tty, use the noninteractive version
@@ -58,15 +57,15 @@ fn main_interactive() {
         }
         Ok(rl) => rl,
     };
-    rl.set_prompt("> ");
+    rl.set_prompt("> ").unwrap();
 
-    struct RinkCompleter(Rc<RefCell<Context>>);
+    struct RinkCompleter(Arc<Mutex<Context>>);
 
     impl<Term: Terminal> Completer<Term> for RinkCompleter {
         fn complete(
             &self,
             name: &str,
-            _reader: &Reader<Term>,
+            _prompter: &Prompter<Term>,
             _start: usize,
             _end: usize,
         ) -> Option<Vec<Completion>> {
@@ -192,11 +191,12 @@ fn main_interactive() {
             }
 
             let mut out = vec![];
-            out.append(&mut inner(&*self.0.borrow(), name));
-            for &(ref k, ref v) in &self.0.borrow().prefixes {
+            let ctx = self.0.lock().unwrap();
+            out.append(&mut inner(&ctx, name));
+            for &(ref k, ref v) in &ctx.prefixes {
                 if name.starts_with(&**k) {
                     out.append(
-                        &mut inner(&*self.0.borrow(), &name[k.len()..])
+                        &mut inner(&ctx, &name[k.len()..])
                             .into_iter()
                             .map(|x| Completion {
                                 completion: format!("{}{}", k, x.completion),
@@ -228,26 +228,19 @@ fn main_interactive() {
             return;
         }
     };
-    let ctx = Rc::new(RefCell::new(ctx));
+    let ctx = Arc::new(Mutex::new(ctx));
     let completer = RinkCompleter(ctx.clone());
-    rl.set_completer(Rc::new(completer));
+    rl.set_completer(Arc::new(completer));
 
     let mut hpath = rink::config_dir();
     if let Ok(ref mut path) = hpath {
-        path.push("rink/history.txt");
-    }
-    let hfile = hpath
-        .clone()
-        .and_then(|hpath| File::open(hpath).map_err(|x| x.to_string()));
-    let hfile = hfile.map(BufReader::new);
-    if let Ok(hfile) = hfile {
-        for line in hfile.lines() {
-            let line = match line {
-                Ok(line) => line,
-                Err(_e) => break,
-            };
-            rl.add_history(line);
-        }
+        path.push("history.txt");
+        rl.load_history(path).unwrap_or_else(|e| {
+            // ignore "not found" error
+            if e.kind() != std::io::ErrorKind::NotFound {
+                eprintln!("Loading history failed: {}", e);
+            }
+        });
     }
     loop {
         let readline = rl.read_line();
@@ -264,19 +257,19 @@ fn main_interactive() {
             }
             Ok(ReadResult::Input(line)) => {
                 rl.add_history(line.clone());
-                match one_line(&mut *ctx.borrow_mut(), &*line) {
+                match one_line(&mut *ctx.lock().unwrap(), &*line) {
                     Ok(v) => println!("{}", v),
                     Err(e) => println!("{}", e),
                 };
             }
             Ok(ReadResult::Eof) => {
                 println!();
-                let hfile = hpath.and_then(|hpath| File::create(hpath).map_err(|x| x.to_string()));
-                if let Ok(mut hfile) = hfile {
-                    for line in rl.history() {
-                        use std::io::Write;
-                        let _ = writeln!(hfile, "{}", line);
-                    }
+                if let Ok(ref path) = hpath {
+                    // ignore error - if this fails, the next line will as well.
+                    let _ = std::fs::create_dir_all(path.parent().unwrap());
+                    rl.save_history(path).unwrap_or_else(|e| {
+                        eprintln!("Saving history failed: {}", e);
+                    });
                 }
                 break;
             }
