@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-extern crate rink;
-
 use rink::*;
 
 thread_local! {
@@ -21,7 +19,7 @@ fn test(input: &str, output: &str) {
         let res = ctx.eval_outer(&expr);
         let res = match res {
             Ok(v) => v.to_string(),
-            Err(v) => v.to_string()
+            Err(v) => v.to_string(),
         };
         assert_eq!(res, output);
     });
@@ -45,7 +43,10 @@ fn test_starts_with(input: &str, output: &str) {
 
 #[test]
 fn test_definition() {
-    test("watt", "Definition: watt = J / s = 1 watt (power; kg m^2 / s^3)");
+    test(
+        "watt",
+        "Definition: watt = J / s = 1 watt (power; kg m^2 / s^3)",
+    );
 }
 
 #[test]
@@ -70,26 +71,35 @@ fn test_determinism() {
 
 #[test]
 fn test_sqrt_errors() {
-    test("sqrt -1",
-         "Complex numbers are not implemented: sqrt(-1 (dimensionless))");
-    test("sqrt(2m)",
-         "Result must have integer dimensions: sqrt(2 meter (length))");
+    test(
+        "sqrt -1",
+        "Complex numbers are not implemented: sqrt(-1 (dimensionless))",
+    );
+    test(
+        "sqrt(2m)",
+        "Result must have integer dimensions: sqrt(2 meter (length))",
+    );
 }
 
 #[test]
 fn test_number_regress() {
-    test("953 mega",
-         "9.53e8 (dimensionless)");
+    test("953 mega", "9.53e8 (dimensionless)");
 }
 
 #[test]
 fn test_lookup() {
-    test("pcs", "Definition: parsec = approx. 32.31314 petameter (length; m)");
+    test(
+        "pcs",
+        "Definition: parsec = approx. 32.31314 petameter (length; m)",
+    );
 }
 
 #[test]
 fn test_consts_in_conversion() {
-    test("1/mpg -> L / 100km", "112903/480, approx. 235.2145 liter / 100 kilometer (area)");
+    test(
+        "1/mpg -> L / 100km",
+        "112903/480, approx. 235.2145 liter / 100 kilometer (area)",
+    );
 }
 
 #[test]
@@ -99,7 +109,10 @@ fn negative_prefixes() {
 
 #[test]
 fn negative_now() {
-    test("-#jan 01, 1970#", "Operation is not defined: - <1970-01-01 00:00:00 +00:00>");
+    test(
+        "-#jan 01, 1970#",
+        "Operation is not defined: - <1970-01-01 00:00:00 +00:00>",
+    );
 }
 
 #[test]
@@ -109,17 +122,21 @@ fn negative_conversion() {
 
 #[test]
 fn test_units_for() {
-    test("units for electrical_potential",
-         "Units for kg m^2 / A s^3 (electrical_potential): \
-          CGS Units: abvolt, daniell, intvolt, statvolt; SI Derived Units: volt");
+    test(
+        "units for electrical_potential",
+        "Units for kg m^2 / A s^3 (electrical_potential): \
+          CGS Units: abvolt, daniell, intvolt, statvolt; SI Derived Units: volt",
+    );
 }
 
 #[test]
 fn test_factorize() {
-    test("factorize velocity",
-         "Factorizations: velocity;  acceleration time;  \
+    test(
+        "factorize velocity",
+        "Factorizations: velocity;  acceleration time;  \
           flow_rate fuel_efficiency;  \
-          frequency length;  jerk time^2");
+          frequency length;  jerk time^2",
+    );
 }
 
 #[test]
@@ -153,14 +170,19 @@ fn test_conformance() {
 
 #[test]
 fn test_dates() {
-    test("#jan 01, 1970#",
-         "1970-01-01 00:00:00 +00:00");
+    test("#jan 01, 1970#", "1970-01-01 00:00:00 +00:00");
 }
 
 #[test]
 fn test_lists() {
-    test("pi hour -> hr;min;sec", "3 hour, 8 minute, 29.73355 second (time)");
-    test("meter -> ft;inch;line", "3 foot, 3 inch, 4.440944 line (length)");
+    test(
+        "pi hour -> hr;min;sec",
+        "3 hour, 8 minute, 29.73355 second (time)",
+    );
+    test(
+        "meter -> ft;inch;line",
+        "3 foot, 3 inch, 4.440944 line (length)",
+    );
 }
 
 #[test]
@@ -171,8 +193,7 @@ fn test_volume_prefix() {
 
 #[test]
 fn test_offset_conversion() {
-    test("#jan 01, 1970# -> -05:00",
-         "1969-12-31 19:00:00 -05:00");
+    test("#jan 01, 1970# -> -05:00", "1969-12-31 19:00:00 -05:00");
 }
 
 #[test]
@@ -189,8 +210,14 @@ fn test_bases() {
     test("pi m -> hex m", "approx. 3.243f6a meter (length)");
     test("pi m -> oct m", "approx. 3.110375 meter (length)");
     test("pi m -> bin m", "approx. 11.00100 meter (length)");
-    test("100K -> hex °C", "Conversion to °C is not defined in base 16");
-    test("now -> hex +00:00", "Conversion to 00:00 is not defined in base 16");
+    test(
+        "100K -> hex °C",
+        "Conversion to °C is not defined in base 16",
+    );
+    test(
+        "now -> hex +00:00",
+        "Conversion to 00:00 is not defined in base 16",
+    );
     test("256 -> base 16", "100 (dimensionless)");
 
     test(
@@ -207,42 +234,45 @@ fn test_typos() {
 
 #[test]
 fn test_convert_from_substances() {
-    test("density of water",
-         "1000 kilogram / meter^3 (density)");
-    test("mass of ml water",
-         "1 gram (mass)");
-    test("volume of g water",
-         "1000 millimeter^3 (volume)");
-    test("ml water -> g",
-         "water: volume = 1000 millimeter^3; mass = 1 gram");
-    test("g water -> ml",
-         "water: mass = 1 gram; \
-          volume = 1 milliliter");
+    test("density of water", "1000 kilogram / meter^3 (density)");
+    test("mass of ml water", "1 gram (mass)");
+    test("volume of g water", "1000 millimeter^3 (volume)");
+    test(
+        "ml water -> g",
+        "water: volume = 1000 millimeter^3; mass = 1 gram",
+    );
+    test(
+        "g water -> ml",
+        "water: mass = 1 gram; \
+          volume = 1 milliliter",
+    );
 }
 
 #[test]
 fn test_convert_to_substances() {
-    test("kg -> egg",
-         "egg: USA large egg. \
+    test(
+        "kg -> egg",
+        "egg: USA large egg. \
           mass = 1 kilogram; \
           egg_shelled = 20 egg; \
           egg_white = 100/3, approx. 33.33333 egg; \
-          egg_yolk = 5000/93, approx. 53.76344 egg");
+          egg_yolk = 5000/93, approx. 53.76344 egg",
+    );
 }
 
 #[test]
 fn test_substance_add() {
-    test("air",
-         "air: Average molecular weight of air. \
-          molar_mass = approx. 28.96790 gram / mole");
+    test(
+        "air",
+        "air: Average molecular weight of air. \
+          molar_mass = approx. 28.96790 gram / mole",
+    );
 }
 
 #[test]
 fn test_duration_add() {
-    test("#jan 01, 1970# + 1 s",
-         "1970-01-01 00:00:01 +00:00");
-    test("#jan 01, 1970# + 1.123 s",
-         "1970-01-01 00:00:01.123 +00:00");
+    test("#jan 01, 1970# + 1 s", "1970-01-01 00:00:01 +00:00");
+    test("#jan 01, 1970# + 1.123 s", "1970-01-01 00:00:01.123 +00:00");
 }
 
 #[test]
@@ -252,10 +282,11 @@ fn test_0_seconds() {
 
 #[test]
 fn right_hand_property() {
-    test("kg -> mass_shelled of egg",
-         "20 egg_shelled (mass)");
-    test("nauticalmile -> arcmin radius of earth / radian",
-         "approx. 0.9993245 arcmin earth_radius / radian (length)");
+    test("kg -> mass_shelled of egg", "20 egg_shelled (mass)");
+    test(
+        "nauticalmile -> arcmin radius of earth / radian",
+        "approx. 0.9993245 arcmin earth_radius / radian (length)",
+    );
 }
 
 #[test]
@@ -550,7 +581,7 @@ fn test_try_decode_fail() {
         "#abc#",
         "Most likely pattern `--monthnum-day[ hour24:min[:sec][ offset]]` failed: \
          Expected `-`, got `abc`",
-         )
+    )
 }
 
 #[test]
@@ -579,6 +610,6 @@ fn test_unicode_minus() {
 fn test_offset_date_math() {
     test(
         "#2020-01-01 05:00:00 +05:00# - #2020-01-01 00:00:00 +00:00#",
-        "0 second (time)"
+        "0 second (time)",
     )
 }

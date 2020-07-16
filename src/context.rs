@@ -2,16 +2,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::ast::{DatePattern, Expr};
+use crate::num::Num;
+use crate::number::{Dim, Number, Unit};
+use crate::reply::NotFoundError;
+use crate::search;
+use crate::substance::Substance;
 use std::collections::{BTreeMap, BTreeSet};
-use number::{Dim, Number, Unit};
-use num::Num;
-use ast::{Expr, DatePattern};
-use search;
-use substance::Substance;
-use reply::NotFoundError;
 
 /// The evaluation context that contains unit definitions.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Context {
     pub dimensions: BTreeSet<Dim>,
     pub canonicalizations: BTreeMap<String, String>,
@@ -35,22 +35,9 @@ impl Context {
     /// Creates a new, empty context
     pub fn new() -> Context {
         Context {
-            dimensions: BTreeSet::new(),
-            canonicalizations: BTreeMap::new(),
-            units: BTreeMap::new(),
-            quantities: BTreeMap::new(),
-            reverse: BTreeMap::new(),
-            prefixes: Vec::new(),
-            definitions: BTreeMap::new(),
-            docs: BTreeMap::new(),
-            categories: BTreeMap::new(),
-            category_names: BTreeMap::new(),
-            datepatterns: Vec::new(),
-            substances: BTreeMap::new(),
-            substance_symbols: BTreeMap::new(),
-            temporaries: BTreeMap::new(),
             short_output: false,
             use_humanize: true,
+            ..Context::default()
         }
     }
 
@@ -63,94 +50,80 @@ impl Context {
     pub fn lookup(&self, name: &str) -> Option<Number> {
         fn inner(ctx: &Context, name: &str) -> Option<Number> {
             if let Some(v) = ctx.temporaries.get(name).cloned() {
-                return Some(v)
+                return Some(v);
             }
             if let Some(k) = ctx.dimensions.get(name) {
-                return Some(Number::one_unit(k.to_owned()))
+                return Some(Number::one_unit(k.to_owned()));
             }
             if let Some(v) = ctx.units.get(name).cloned() {
-                return Some(v)
+                return Some(v);
             }
             for (unit, quantity) in &ctx.quantities {
                 if name == quantity {
                     return Some(Number {
                         value: Num::one(),
-                        unit: unit.clone()
-                    })
+                        unit: unit.clone(),
+                    });
                 }
             }
             None
         }
-        if let Some(v) = inner(self, name) {
-            return Some(v)
-        }
-        for &(ref pre, ref value) in &self.prefixes {
-            if name.starts_with(pre) {
-                if let Some(v) = inner(self, &name[pre.len()..]) {
-                    return Some((&v * &value).unwrap())
-                }
-            }
-        }
-        // after so that "ks" is kiloseconds
-        if name.ends_with("s") {
-            let name = &name[0..name.len()-1];
+
+        let outer = |name: &str| -> Option<Number> {
             if let Some(v) = inner(self, name) {
-                return Some(v)
+                return Some(v);
             }
             for &(ref pre, ref value) in &self.prefixes {
                 if name.starts_with(pre) {
                     if let Some(v) = inner(self, &name[pre.len()..]) {
-                        return Some((&v * &value).unwrap())
+                        return Some((&v * value).unwrap());
                     }
                 }
             }
+            None
+        };
+
+        let res = outer(name);
+        if res.is_some() {
+            return res;
         }
-        None
+
+        // after so that "ks" is kiloseconds
+        if name.ends_with('s') {
+            let name = &name[0..name.len() - 1];
+            outer(name)
+        } else {
+            None
+        }
     }
 
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
         fn inner(ctx: &Context, name: &str) -> Option<String> {
             if let Some(v) = ctx.canonicalizations.get(name) {
-                return Some(v.clone())
+                return Some(v.clone());
             }
             if let Some(k) = ctx.dimensions.get(name) {
-                return Some((*k.0).clone())
+                return Some((*k.0).clone());
             }
             if let Some(v) = ctx.definitions.get(name) {
                 if let Expr::Unit(ref name) = *v {
                     if let Some(r) = ctx.canonicalize(&*name) {
-                        return Some(r)
+                        return Some(r);
                     } else {
-                        return Some(name.clone())
+                        return Some(name.clone());
                     }
                 } else {
                     // we cannot canonicalize it further
-                    return Some(name.to_owned())
+                    return Some(name.to_owned());
                 }
             }
             None
         }
-        if let Some(v) = inner(self, name) {
-            return Some(v)
-        }
-        for &(ref pre, ref val) in &self.prefixes {
-            if name.starts_with(pre) {
-                if let Some(v) = inner(self, &name[pre.len()..]) {
-                    let mut pre = pre;
-                    for &(ref other, ref otherval) in &self.prefixes {
-                        if other.len() > pre.len() && val == otherval {
-                            pre = other;
-                        }
-                    }
-                    return Some(format!("{}{}", pre, v))
-                }
-            }
-        }
-        if name.ends_with("s") {
-            let name = &name[0..name.len()-1];
+
+        let outer = |name: &str| -> Option<String> {
             if let Some(v) = inner(self, name) {
-                return Some(v)
+                return Some(v);
             }
             for &(ref pre, ref val) in &self.prefixes {
                 if name.starts_with(pre) {
@@ -161,12 +134,24 @@ impl Context {
                                 pre = other;
                             }
                         }
-                        return Some(format!("{}{}", pre, v))
+                        return Some(format!("{}{}", pre, v));
                     }
                 }
             }
+            None
+        };
+
+        let res = outer(name);
+        if res.is_some() {
+            return res;
         }
-        None
+
+        if name.ends_with('s') {
+            let name = &name[0..name.len() - 1];
+            outer(name)
+        } else {
+            None
+        }
     }
 
     /// Describes a value's unit, gives true if the unit is reciprocal
@@ -179,12 +164,16 @@ impl Context {
         let mut recip = false;
         let square = Number {
             value: Num::one(),
-            unit: value.unit.clone()
-        }.root(2).ok();
-        let inverse = (&Number::one() / &Number {
-            value: Num::one(),
-            unit: value.unit.clone()
-        }).unwrap();
+            unit: value.unit.clone(),
+        }
+        .root(2)
+        .ok();
+        let inverse = (&Number::one()
+            / &Number {
+                value: Num::one(),
+                unit: value.unit.clone(),
+            })
+            .unwrap();
         if let Some(name) = self.quantities.get(&value.unit) {
             write!(buf, "{}", name).unwrap();
         } else if let Some(name) = square.and_then(|square| self.quantities.get(&square.unit)) {
@@ -193,6 +182,25 @@ impl Context {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
+            let helper = |dim: &Dim, pow: i64, buf: &mut Vec<u8>| {
+                let mut map = Unit::new();
+                map.insert(dim.clone(), pow);
+                if let Some(name) = self.quantities.get(&map) {
+                    write!(buf, " {}", name).unwrap();
+                } else {
+                    let mut map = Unit::new();
+                    map.insert(dim.clone(), 1);
+                    if let Some(name) = self.quantities.get(&map) {
+                        write!(buf, " {}", name).unwrap();
+                    } else {
+                        write!(buf, " '{}'", dim).unwrap();
+                    }
+                    if pow != 1 {
+                        write!(buf, "^{}", pow).unwrap();
+                    }
+                }
+            };
+
             let mut frac = vec![];
             let mut found = false;
             for (dim, &pow) in &value.unit {
@@ -200,25 +208,10 @@ impl Context {
                     frac.push((dim, -pow));
                 } else {
                     found = true;
-                    let mut map = Unit::new();
-                    map.insert(dim.clone(), pow);
-                    if let Some(name) = self.quantities.get(&map) {
-                        write!(buf, " {}", name).unwrap();
-                    } else {
-                        let mut map = Unit::new();
-                        map.insert(dim.clone(), 1);
-                        if let Some(name) = self.quantities.get(&map) {
-                            write!(buf, " {}", name).unwrap();
-                        } else {
-                            write!(buf, " '{}'", dim).unwrap();
-                        }
-                        if pow != 1 {
-                            write!(buf, "^{}", pow).unwrap();
-                        }
-                    }
+                    helper(dim, pow, &mut buf);
                 }
             }
-            if frac.len() > 0 {
+            if !frac.is_empty() {
                 if !found {
                     recip = true;
                 } else {
@@ -230,16 +223,7 @@ impl Context {
                     if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();
                     } else {
-                        let mut map = Unit::new();
-                        map.insert(dim.clone(), 1);
-                        if let Some(name) = self.quantities.get(&map) {
-                            write!(buf, " {}", name).unwrap();
-                        } else {
-                            write!(buf, " '{}'", dim).unwrap();
-                        }
-                        if pow != 1 {
-                            write!(buf, "^{}", pow).unwrap();
-                        }
+                        helper(dim, pow, &mut buf);
                     }
                 }
             }

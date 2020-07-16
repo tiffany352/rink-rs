@@ -2,13 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::rc::Rc;
-use std::fmt;
-use num::Num;
+use crate::num::Num;
 use chrono_tz::Tz;
+use std::fmt;
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
-pub enum SuffixOp {
+pub enum Degree {
     Celsius,
     Fahrenheit,
     Reaumur,
@@ -42,22 +42,95 @@ pub enum Expr {
     Neg(Box<Expr>),
     Plus(Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
-    Suffix(SuffixOp, Box<Expr>),
+    Suffix(Degree, Box<Expr>),
     Of(String, Box<Expr>),
-    Call(String, Vec<Expr>),
+    Call(Function, Vec<Expr>),
     Error(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum Function {
+    Sqrt,
+    Exp,
+    Ln,
+    Log2,
+    Log10,
+    Sin,
+    Cos,
+    Tan,
+    Asin,
+    Acos,
+    Atan,
+    Sinh,
+    Cosh,
+    Tanh,
+    Asinh,
+    Acosh,
+    Atanh,
+    Log,
+    Hypot,
+    Atan2,
+}
+
+impl Function {
+    pub fn name(&self) -> &str {
+        match *self {
+            Function::Sqrt => "sqrt",
+            Function::Exp => "exp",
+            Function::Ln => "ln",
+            Function::Log2 => "log2",
+            Function::Log10 => "log10",
+            Function::Sin => "sin",
+            Function::Cos => "cos",
+            Function::Tan => "tan",
+            Function::Asin => "asin",
+            Function::Acos => "acos",
+            Function::Atan => "atan",
+            Function::Sinh => "sinh",
+            Function::Cosh => "cosh",
+            Function::Tanh => "tanh",
+            Function::Asinh => "asinh",
+            Function::Acosh => "acosh",
+            Function::Atanh => "atanh",
+            Function::Log => "log",
+            Function::Hypot => "hypot",
+            Function::Atan2 => "atan2",
+        }
+    }
+
+    pub fn from_name(s: &str) -> Option<Self> {
+        let func = match s {
+            "sqrt" => Function::Sqrt,
+            "exp" => Function::Exp,
+            "ln" => Function::Ln,
+            "log2" => Function::Log2,
+            "log10" => Function::Log10,
+            "sin" => Function::Sin,
+            "cos" => Function::Cos,
+            "tan" => Function::Tan,
+            "asin" => Function::Asin,
+            "acos" => Function::Acos,
+            "atan" => Function::Atan,
+            "sinh" => Function::Sinh,
+            "cosh" => Function::Cosh,
+            "tanh" => Function::Tanh,
+            "asinh" => Function::Asinh,
+            "acosh" => Function::Acosh,
+            "atanh" => Function::Atanh,
+            "log" => Function::Log,
+            "hypot" => Function::Hypot,
+            "atan2" => Function::Atan2,
+            _ => return None,
+        };
+        Some(func)
+    }
 }
 
 #[derive(Debug, Clone)]
 pub enum Conversion {
     None,
     Expr(Expr),
-    DegC,
-    DegF,
-    DegRe,
-    DegRo,
-    DegDe,
-    DegN,
+    Degree(Degree),
     List(Vec<String>),
     Offset(i64),
     Timezone(Tz),
@@ -111,7 +184,7 @@ pub enum Def {
     Quantity(Expr),
     Substance {
         symbol: Option<String>,
-        properties: Vec<Property>
+        properties: Vec<Property>,
     },
     Category(String),
     Error(String),
@@ -131,138 +204,152 @@ pub struct Defs {
 }
 
 impl fmt::Display for Conversion {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Conversion::None => write!(fmt, "nothing"),
             Conversion::Expr(ref expr) => write!(fmt, "{}", expr),
-            Conversion::DegC => write!(fmt, "°C"),
-            Conversion::DegF => write!(fmt, "°F"),
-            Conversion::DegRe => write!(fmt, "°Ré"),
-            Conversion::DegRo => write!(fmt, "°Rø"),
-            Conversion::DegDe => write!(fmt, "°De"),
-            Conversion::DegN => write!(fmt, "°N"),
+            Conversion::Degree(ref deg) => write!(fmt, "{}", deg),
             Conversion::List(ref list) => {
                 let list = list
                     .iter()
-                    .map(|x| format!("{}", x))
+                    .map(|x| x.to_string())
                     .collect::<Vec<_>>()
                     .join(", ");
                 write!(fmt, "{}", list)
-            },
-            Conversion::Offset(off) =>
-                write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
-            Conversion::Timezone(ref tz) =>
-                write!(fmt, "{:?}", tz),
+            }
+            Conversion::Offset(off) => write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
+            Conversion::Timezone(ref tz) => write!(fmt, "{:?}", tz),
         }
     }
 }
 
-impl fmt::Display for SuffixOp {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+impl fmt::Display for Degree {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            SuffixOp::Celsius => write!(fmt, "°C"),
-            SuffixOp::Fahrenheit => write!(fmt, "°F"),
-            SuffixOp::Newton => write!(fmt, "°N"),
-            SuffixOp::Reaumur => write!(fmt, "°Ré"),
-            SuffixOp::Romer => write!(fmt, "°Rø"),
-            SuffixOp::Delisle => write!(fmt, "°De"),
+            Degree::Celsius => write!(fmt, "°C"),
+            Degree::Fahrenheit => write!(fmt, "°F"),
+            Degree::Newton => write!(fmt, "°N"),
+            Degree::Reaumur => write!(fmt, "°Ré"),
+            Degree::Romer => write!(fmt, "°Rø"),
+            Degree::Delisle => write!(fmt, "°De"),
+        }
+    }
+}
+
+impl Degree {
+    pub fn name_base_scale(&self) -> (&str, &str, &str) {
+        match *self {
+            Degree::Celsius => ("C", "zerocelsius", "kelvin"),
+            Degree::Fahrenheit => ("F", "zerofahrenheit", "degrankine"),
+            Degree::Reaumur => ("Ré", "zerocelsius", "reaumur_absolute"),
+            Degree::Romer => ("Rø", "zeroromer", "romer_absolute"),
+            Degree::Delisle => ("De", "zerodelisle", "delisle_absolute"),
+            Degree::Newton => ("N", "zerocelsius", "newton_absolute"),
         }
     }
 }
 
 impl fmt::Display for Expr {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         #[derive(PartialOrd, Ord, PartialEq, Eq)]
         enum Prec {
-            Term, Plus, Pow, Mul, Div, Add, Equals
+            Term,
+            Plus,
+            Pow,
+            Mul,
+            Div,
+            Add,
+            Equals,
         }
 
-        fn recurse(expr: &Expr, fmt: &mut fmt::Formatter, prec: Prec) -> fmt::Result {
+        fn recurse(expr: &Expr, fmt: &mut fmt::Formatter<'_>, prec: Prec) -> fmt::Result {
             macro_rules! binop {
                 ($left:expr, $right:expr, $prec:expr, $succ:expr, $sym:expr) => {{
                     if prec < $prec {
-                        try!(write!(fmt, "("));
+                        write!(fmt, "(")?;
                     }
-                    try!(recurse($left, fmt, $succ));
-                    try!(write!(fmt, $sym));
-                    try!(recurse($right, fmt, $prec));
+                    recurse($left, fmt, $succ)?;
+                    write!(fmt, $sym)?;
+                    recurse($right, fmt, $prec)?;
                     if prec < $prec {
-                        try!(write!(fmt, ")"));
+                        write!(fmt, ")")?;
                     }
                     Ok(())
-                }}
+                }};
             }
             match *expr {
                 Expr::Unit(ref name) => write!(fmt, "{}", name),
                 Expr::Quote(ref name) => write!(fmt, "'{}'", name),
                 Expr::Const(ref num) => {
-                    let (_exact, val) = ::number::to_string(num, 10, Digits::Default);
+                    let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
                     write!(fmt, "{}", val)
-                },
+                }
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),
                 Expr::Mul(ref exprs) => {
                     if prec < Prec::Mul {
-                        try!(write!(fmt, "("));
+                        write!(fmt, "(")?;
                     }
                     if let Some(first) = exprs.first() {
-                        try!(recurse(first, fmt, Prec::Pow));
+                        recurse(first, fmt, Prec::Pow)?;
                     }
                     for expr in exprs.iter().skip(1) {
-                        try!(write!(fmt, " "));
-                        try!(recurse(expr, fmt, Prec::Pow));
+                        write!(fmt, " ")?;
+                        recurse(expr, fmt, Prec::Pow)?;
                     }
                     if prec < Prec::Mul {
-                        try!(write!(fmt, ")"));
+                        write!(fmt, ")")?;
                     }
                     Ok(())
-                },
-                Expr::Call(ref name, ref args) => {
-                    try!(write!(fmt, "{}(", name));
+                }
+                Expr::Call(ref func, ref args) => {
+                    write!(fmt, "{}(", func.name())?;
                     if let Some(first) = args.first() {
-                        try!(recurse(first, fmt, Prec::Equals));
+                        recurse(first, fmt, Prec::Equals)?;
                     }
                     for arg in args.iter().skip(1) {
-                        try!(write!(fmt, ", "));
-                        try!(recurse(arg, fmt, Prec::Equals));
+                        write!(fmt, ", ")?;
+                        recurse(arg, fmt, Prec::Equals)?;
                     }
                     write!(fmt, ")")
-                },
+                }
                 Expr::Pow(ref left, ref right) => binop!(left, right, Prec::Pow, Prec::Term, "^"),
                 Expr::Frac(ref left, ref right) => binop!(left, right, Prec::Div, Prec::Mul, " / "),
                 Expr::Add(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " + "),
                 Expr::Sub(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " - "),
                 Expr::Plus(ref expr) => {
-                    try!(write!(fmt, "+"));
+                    write!(fmt, "+")?;
                     recurse(expr, fmt, Prec::Plus)
-                },
+                }
                 Expr::Neg(ref expr) => {
-                    try!(write!(fmt, "-"));
+                    write!(fmt, "-")?;
                     recurse(expr, fmt, Prec::Plus)
-                },
-                Expr::Equals(ref left, ref right) => binop!(left, right, Prec::Equals, Prec::Add, " = "),
+                }
+                Expr::Equals(ref left, ref right) => {
+                    binop!(left, right, Prec::Equals, Prec::Add, " = ")
+                }
                 Expr::Suffix(ref op, ref expr) => {
                     if prec < Prec::Mul {
-                        try!(write!(fmt, "("));
+                        write!(fmt, "(")?;
                     }
-                    try!(recurse(expr, fmt, Prec::Mul));
-                    try!(write!(fmt, " {}", op));
+                    recurse(expr, fmt, Prec::Mul)?;
+                    write!(fmt, " {}", op)?;
                     if prec < Prec::Mul {
-                        try!(write!(fmt, ")"));
+                        write!(fmt, ")")?;
                     }
                     Ok(())
-                },
+                }
                 Expr::Of(ref field, ref expr) => {
                     if prec < Prec::Add {
-                        try!(write!(fmt, "("));
+                        write!(fmt, "(")?;
                     }
-                    try!(write!(fmt, "{} of ", field));
-                    try!(recurse(expr, fmt, Prec::Div));
+                    write!(fmt, "{} of ", field)?;
+                    recurse(expr, fmt, Prec::Div)?;
                     if prec < Prec::Add {
-                        try!(write!(fmt, ")"));
+                        write!(fmt, ")")?;
                     }
                     Ok(())
-                },
-                Expr::Error(ref err) => write!(fmt, "<error: {}>", err)
+                }
+                Expr::Error(ref err) => write!(fmt, "<error: {}>", err),
             }
         }
 
@@ -271,17 +358,17 @@ impl fmt::Display for Expr {
 }
 
 impl fmt::Display for DatePattern {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             DatePattern::Literal(ref l) => write!(fmt, "'{}'", l),
             DatePattern::Match(ref n) => write!(fmt, "{}", n),
             DatePattern::Optional(ref pats) => {
-                try!(write!(fmt, "["));
+                write!(fmt, "[")?;
                 for p in pats {
-                    try!(p.fmt(fmt));
+                    p.fmt(fmt)?;
                 }
                 write!(fmt, "]")
-            },
+            }
             DatePattern::Dash => write!(fmt, "-"),
             DatePattern::Colon => write!(fmt, ":"),
             DatePattern::Space => write!(fmt, " "),
@@ -300,7 +387,7 @@ pub fn show_datepattern(pat: &[DatePattern]) -> String {
 }
 
 impl fmt::Display for DateToken {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             DateToken::Literal(ref l) => write!(fmt, "{}", l),
             DateToken::Number(ref i, None) => write!(fmt, "{}", i),
@@ -317,9 +404,10 @@ impl fmt::Display for DateToken {
 #[cfg(test)]
 mod test {
     use super::Expr::{self, *};
+    use super::Function;
 
     fn check<T: ::std::fmt::Display>(e: T, expected: &str) {
-        assert_eq!(format!("{}", e), expected);
+        assert_eq!(e.to_string(), expected);
     }
 
     impl From<i64> for Expr {
@@ -330,9 +418,12 @@ mod test {
 
     #[test]
     fn test_display_call() {
-        check(Call("f".into(), vec![]), "f()");
-        check(Call("f".into(), vec![1.into()]), "f(1)");
-        check(Call("f".into(), vec![1.into(), 2.into()]), "f(1, 2)");
-        check(Call("f".into(), vec![1.into(), 2.into(), 3.into()]), "f(1, 2, 3)");
+        check(Call(Function::Sin, vec![]), "sin()");
+        check(Call(Function::Sin, vec![1.into()]), "sin(1)");
+        check(Call(Function::Sin, vec![1.into(), 2.into()]), "sin(1, 2)");
+        check(
+            Call(Function::Sin, vec![1.into(), 2.into(), 3.into()]),
+            "sin(1, 2, 3)",
+        );
     }
 }

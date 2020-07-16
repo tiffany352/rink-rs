@@ -2,17 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::ast::Digits;
+use crate::context::Context;
+use crate::num::*;
+use crate::value::Show;
 use gmp::mpq::Mpq;
 use gmp::mpz::Mpz;
-use std::collections::BTreeMap;
-use value::Show;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-use std::rc::Rc;
-use std::fmt;
 use std::borrow::Borrow;
-use context::Context;
-use num::*;
-use ast::Digits;
+use std::collections::BTreeMap;
+use std::fmt;
+use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::sync::Arc;
 
 /// Alias for the primary representation of dimensionality.
 pub type Unit = BTreeMap<Dim, i64>;
@@ -20,14 +20,14 @@ pub type Unit = BTreeMap<Dim, i64>;
 /// A newtype for a string dimension ID, so that we can implement traits for it.
 #[cfg_attr(feature = "nightly", derive(Deserialize))]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct Dim(pub Rc<String>);
+pub struct Dim(pub Arc<String>);
 
 #[cfg(feature = "nightly")]
 impl ::serde::ser::Serialize for Dim {
-    fn serialize<S>(
-        &self, serializer: &mut S
-    ) -> Result<(), S::Error>
-    where S: ::serde::ser::Serializer {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    where
+        S: ::serde::ser::Serializer,
+    {
         serializer.serialize_str(&**self.0)
     }
 }
@@ -46,14 +46,14 @@ impl Borrow<str> for Dim {
 }
 
 impl fmt::Display for Dim {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(fmt)
     }
 }
 
 impl Dim {
     pub fn new(dim: &str) -> Dim {
-        Dim(Rc::new(dim.to_owned()))
+        Dim(Arc::new(dim.to_owned()))
     }
 }
 
@@ -63,7 +63,7 @@ pub fn pow(left: &Num, exp: i32) -> Num {
     } else {
         let left = match *left {
             Num::Mpq(ref left) => left,
-            Num::Float(f) => return Num::Float(f.powi(exp))
+            Num::Float(f) => return Num::Float(f.powi(exp)),
         };
         let num = left.get_num().pow(exp as u32);
         let den = left.get_den().pow(exp as u32);
@@ -83,7 +83,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
             let mut m = Mpq::one();
             m.set_d(f);
             m
-        },
+        }
     };
     let intdigits = (&num / &den).size_in_base(base) as u32;
 
@@ -102,20 +102,21 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
     let mut placed_decimal = false;
     loop {
         let exact = cursor == zero;
-        let use_sci = if digits != Digits::Default || den == one && (base == 2 || base == 8 || base == 16 || base == 32) {
+        let use_sci = if digits != Digits::Default
+            || den == one && (base == 2 || base == 8 || base == 16 || base == 32)
+        {
             false
         } else {
-            intdigits+zeros > 9 * 10 / base as u32
+            intdigits + zeros > 9 * 10 / base as u32
         };
         let placed_ints = n >= intdigits;
         let ndigits = match digits {
             Digits::Default | Digits::FullInt => 6,
-            Digits::Digits(n) => intdigits as i32 + n as i32
+            Digits::Digits(n) => intdigits as i32 + n as i32,
         };
-        let bail =
-            (exact && (placed_ints || use_sci)) ||
-            (n as i32 - zeros as i32 > ndigits && use_sci) ||
-            n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, ndigits);
+        let bail = (exact && (placed_ints || use_sci))
+            || (n as i32 - zeros as i32 > ndigits && use_sci)
+            || n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, ndigits);
         if bail && use_sci {
             // scientific notation
             let off = if n < intdigits { 0 } else { zeros };
@@ -128,10 +129,10 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
                 buf.insert(0, '-');
             }
             buf.push_str(&*format!("e{}", intdigits as i32 - zeros as i32 - 1));
-            return (exact, buf)
+            return (exact, buf);
         }
         if bail {
-            return (exact, buf)
+            return (exact, buf);
         }
         if n == intdigits {
             buf.push('.');
@@ -145,7 +146,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
         } else if only_zeros {
             zeros += 1;
         }
-        if !(v == 0 && only_zeros && n < intdigits-1) {
+        if !(v == 0 && only_zeros && n < intdigits - 1) {
             buf.push(from_digit(v as u32, base as u32).unwrap());
         }
         cursor = &cursor * &ten_mpq;
@@ -156,7 +157,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
 
 /// Several stringified properties of a number which are useful for
 /// displaying it to a user.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
 pub struct NumberParts {
     /// Present if the number can be concisely represented exactly.
@@ -177,21 +178,6 @@ pub struct NumberParts {
     pub quantity: Option<String>,
     /// The dimensionality of the unit.
     pub dimensions: Option<String>,
-}
-
-impl Default for NumberParts {
-    fn default() -> Self {
-        NumberParts {
-            exact_value: None,
-            approx_value: None,
-            factor: None,
-            divfactor: None,
-            raw_unit: None,
-            unit: None,
-            quantity: None,
-            dimensions: None,
-        }
-    }
 }
 
 impl NumberParts {
@@ -218,119 +204,148 @@ impl NumberParts {
         let mut in_ws = true;
         for c in pat.chars() {
             match c {
-                'e' => if let Some(ex) = self.exact_value.as_ref() {
-                    write!(out, "\x0f{}", ex).unwrap();
-                } else {
-                    continue
-                },
-                'a' => if let Some(ap) = self.approx_value.as_ref() {
-                    write!(out, "\x0f{}", ap).unwrap();
-                } else {
-                    continue
-                },
+                'e' => {
+                    if let Some(ex) = self.exact_value.as_ref() {
+                        write!(out, "\x0f{}", ex).unwrap();
+                    } else {
+                        continue;
+                    }
+                }
+                'a' => {
+                    if let Some(ap) = self.approx_value.as_ref() {
+                        write!(out, "\x0f{}", ap).unwrap();
+                    } else {
+                        continue;
+                    }
+                }
                 'n' => match (self.exact_value.as_ref(), self.approx_value.as_ref()) {
-                    (Some(ex), Some(ap)) => write!(out, "\x0f{}\x0310, approx.\x0f {}", ex, ap).unwrap(),
+                    (Some(ex), Some(ap)) => {
+                        write!(out, "\x0f{}\x0310, approx.\x0f {}", ex, ap).unwrap()
+                    }
                     (Some(ex), None) => write!(out, "\x0f{}", ex).unwrap(),
                     (None, Some(ap)) => write!(out, "\x0310approx.\x0f {}", ap).unwrap(),
                     (None, None) => continue,
                 },
-                'u' => if let Some(unit) = self.raw_unit.as_ref() {
-                    if unit.len() == 0 { continue }
-                    let mut frac = vec![];
-                    let mut toks = vec![];
+                'u' => {
+                    if let Some(unit) = self.raw_unit.as_ref() {
+                        if unit.is_empty() {
+                            continue;
+                        }
+                        let mut frac = vec![];
+                        let mut toks = vec![];
 
-                    if let Some(f) = self.factor.as_ref() {
-                        toks.push(format!("*"));
-                        toks.push(format!("{}", f));
-                    }
-                    for (dim, &exp) in unit {
-                        if exp < 0 {
-                            frac.push((dim, exp));
-                        } else {
-                            if exp == 1 {
-                                toks.push(format!("{}", dim))
+                        if let Some(f) = self.factor.as_ref() {
+                            toks.push("*".to_string());
+                            toks.push(f.to_string());
+                        }
+                        for (dim, &exp) in unit {
+                            if exp < 0 {
+                                frac.push((dim, exp));
+                            } else if exp == 1 {
+                                toks.push(dim.to_string())
                             } else {
                                 toks.push(format!("{}^{}", dim, exp))
                             }
                         }
-                    }
-                    if frac.len() > 0 {
-                        toks.push(format!("/"));
+                        if !frac.is_empty() {
+                            toks.push("/".to_string());
+                            if let Some(d) = self.divfactor.as_ref() {
+                                toks.push(d.to_string());
+                            }
+                            for (dim, exp) in frac {
+                                let exp = -exp;
+                                if exp == 1 {
+                                    toks.push(dim.to_string())
+                                } else {
+                                    toks.push(format!("{}^{}", dim, exp))
+                                }
+                            }
+                        }
+                        write!(out, "{}", toks.join(" ")).unwrap();
+                    } else if let Some(unit) = self.unit.as_ref() {
+                        if unit.is_empty() {
+                            continue;
+                        }
+                        if let Some(f) = self.factor.as_ref() {
+                            write!(out, "* {} ", f).unwrap();
+                        }
                         if let Some(d) = self.divfactor.as_ref() {
-                            toks.push(format!("{}", d));
+                            write!(out, "| {} ", d).unwrap();
                         }
-                        for (dim, exp) in frac {
-                            let exp = -exp;
-                            if exp == 1 {
-                                toks.push(format!("{}", dim))
-                            } else {
-                                toks.push(format!("{}^{}", dim, exp))
-                            }
+                        write!(out, "{}", unit).unwrap();
+                    } else if let Some(dim) = self.dimensions.as_ref() {
+                        if dim.is_empty() {
+                            continue;
                         }
-                    }
-                    write!(out, "{}", toks.join(" ")).unwrap();
-                } else if let Some(unit) = self.unit.as_ref() {
-                    if unit.len() == 0 { continue }
-                    if let Some(f) = self.factor.as_ref() {
-                        write!(out, "* {} ", f).unwrap();
-                    }
-                    if let Some(d) = self.divfactor.as_ref() {
-                        write!(out, "| {} ", d).unwrap();
-                    }
-                    write!(out, "{}", unit).unwrap();
-                } else if let Some(dim) = self.dimensions.as_ref() {
-                    if dim.len() == 0 { continue }
-                    if let Some(f) = self.factor.as_ref() {
-                        write!(out, "* {} ", f).unwrap();
-                    }
-                    if let Some(d) = self.divfactor.as_ref() {
-                        write!(out, "| {} ", d).unwrap();
-                    }
-                    write!(out, "{}", dim).unwrap();
-                } else {
-                    continue
-                },
-                'q' => if let Some(q) = self.quantity.as_ref() {
-                    write!(out, "{}", q).unwrap();
-                } else {
-                    continue
-                },
-                'w' => if let Some(q) = self.quantity.as_ref() {
-                    write!(out, "\x0310(\x0f{}\x0310)", q).unwrap();
-                } else {
-                    continue
-                },
-                'd' => if let Some(dim) = self.dimensions.as_ref() {
-                    if self.unit.is_none() || dim.len() == 0 { continue }
-                    write!(out, "{}", dim).unwrap();
-                } else {
-                    continue
-                },
-                'D' => if let Some(dim) = self.dimensions.as_ref() {
-                    if dim.len() == 0 { continue }
-                    write!(out, "{}", dim).unwrap();
-                } else {
-                    continue
-                },
-                'p' => match (self.quantity.as_ref(), self.dimensions.as_ref().and_then(|x| {
-                    if self.unit.is_some() && x.len() > 0 {
-                        Some(x)
+                        if let Some(f) = self.factor.as_ref() {
+                            write!(out, "* {} ", f).unwrap();
+                        }
+                        if let Some(d) = self.divfactor.as_ref() {
+                            write!(out, "| {} ", d).unwrap();
+                        }
+                        write!(out, "{}", dim).unwrap();
                     } else {
-                        None
+                        continue;
                     }
-                })) {
-                    (Some(q), Some(d)) => write!(out, "\x0310(\x0f{}\x0310; \x0f{}\x0310)", q, d).unwrap(),
+                }
+                'q' => {
+                    if let Some(q) = self.quantity.as_ref() {
+                        write!(out, "{}", q).unwrap();
+                    } else {
+                        continue;
+                    }
+                }
+                'w' => {
+                    if let Some(q) = self.quantity.as_ref() {
+                        write!(out, "\x0310(\x0f{}\x0310)", q).unwrap();
+                    } else {
+                        continue;
+                    }
+                }
+                'd' => {
+                    if let Some(dim) = self.dimensions.as_ref() {
+                        if self.unit.is_none() || dim.is_empty() {
+                            continue;
+                        }
+                        write!(out, "{}", dim).unwrap();
+                    } else {
+                        continue;
+                    }
+                }
+                'D' => {
+                    if let Some(dim) = self.dimensions.as_ref() {
+                        if dim.is_empty() {
+                            continue;
+                        }
+                        write!(out, "{}", dim).unwrap();
+                    } else {
+                        continue;
+                    }
+                }
+                'p' => match (
+                    self.quantity.as_ref(),
+                    self.dimensions.as_ref().and_then(|x| {
+                        if self.unit.is_some() && !x.is_empty() {
+                            Some(x)
+                        } else {
+                            None
+                        }
+                    }),
+                ) {
+                    (Some(q), Some(d)) => {
+                        write!(out, "\x0310(\x0f{}\x0310; \x0f{}\x0310)", q, d).unwrap()
+                    }
                     (Some(q), None) => write!(out, "\x0310(\x0f{}\x0310)", q).unwrap(),
                     (None, Some(d)) => write!(out, "\x0310(\x0f{}\x0310)", d).unwrap(),
-                    (None, None) => continue
+                    (None, None) => continue,
                 },
                 ' ' if in_ws => continue,
                 ' ' if !in_ws => {
                     in_ws = true;
                     write!(out, " ").unwrap();
-                    continue
-                },
-                x => write!(out, "{}", x).unwrap()
+                    continue;
+                }
+                x => write!(out, "{}", x).unwrap(),
             }
             in_ws = false;
         }
@@ -340,7 +355,7 @@ impl NumberParts {
 }
 
 impl fmt::Display for NumberParts {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "{}", self.format("n u w"))
     }
 }
@@ -382,9 +397,7 @@ impl Number {
         }
     }
 
-    pub fn from_parts(
-        integer: &str, frac: Option<&str>, exp: Option<&str>
-    ) -> Result<Num, String> {
+    pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Num, String> {
         use std::str::FromStr;
 
         let num = Mpz::from_str_radix(integer, 10).unwrap();
@@ -399,7 +412,7 @@ impl Number {
             let exp: i32 = match FromStr::from_str(&*exp) {
                 Ok(exp) => exp,
                 // presumably because it is too large
-                Err(e) => return Err(format!("Failed to parse exponent: {}", e))
+                Err(e) => return Err(format!("Failed to parse exponent: {}", e)),
             };
             let res = Mpz::from(10).pow(exp.abs() as u32);
             if exp < 0 {
@@ -419,7 +432,9 @@ impl Number {
     pub fn invert(&self) -> Number {
         Number {
             value: &Num::one() / &self.value,
-            unit: self.unit.iter()
+            unit: self
+                .unit
+                .iter()
                 .map(|(k, &power)| (k.clone(), -power))
                 .collect::<Unit>(),
         }
@@ -427,12 +442,14 @@ impl Number {
 
     /// Raises a value to a dimensionless integer power.
     pub fn powi(&self, exp: i32) -> Number {
-        let unit = self.unit.iter()
+        let unit = self
+            .unit
+            .iter()
             .map(|(k, &power)| (k.clone(), power * exp as i64))
             .collect::<Unit>();
         Number {
             value: pow(&self.value, exp),
-            unit: unit
+            unit,
         }
     }
 
@@ -440,29 +457,28 @@ impl Number {
     /// powers divisible by n.
     pub fn root(&self, exp: i32) -> Result<Number, String> {
         if self.value < Num::zero() {
-            return Err(format!("Complex numbers are not implemented"))
+            return Err("Complex numbers are not implemented".to_string());
         }
         let mut res = Unit::new();
         for (dim, &power) in &self.unit {
             if power % exp as i64 != 0 {
-                return Err(format!(
-                    "Result must have integer dimensions"))
+                return Err("Result must have integer dimensions".to_string());
             } else {
                 res.insert(dim.clone(), power / exp as i64);
             }
         }
         Ok(Number {
             value: Num::Float(self.value.to_f64().powf(1.0 / exp as f64)),
-            unit: res
+            unit: res,
         })
     }
 
     pub fn pow(&self, exp: &Number) -> Result<Number, String> {
         if !exp.dimless() {
-            return Err(format!("Exponent must be dimensionless"))
+            return Err("Exponent must be dimensionless".to_string());
         }
         if exp.value.abs() >= Num::from(1 << 31) {
-            return Err(format!("Exponent is too large"))
+            return Err("Exponent is too large".to_string());
         }
         let (num, den) = exp.value.to_rational();
         let one = Int::one();
@@ -472,19 +488,14 @@ impl Number {
         } else if num == one {
             let exp: Option<i64> = (&den).into();
             self.root(exp.unwrap() as i32)
+        } else if !self.dimless() {
+            Err("Exponentiation must result in integer dimensions".to_string())
         } else {
-            if !self.dimless() {
-                Err(format!(
-                    "Exponentiation must result in integer dimensions"))
-            } else {
-                let exp = exp.value.to_f64();
-                Ok(Number {
-                    value: Num::Float(
-                        self.value.to_f64().powf(exp)
-                    ),
-                    unit: self.unit.clone()
-                })
-            }
+            let exp = exp.value.to_f64();
+            Ok(Number {
+                value: Num::Float(self.value.to_f64().powf(exp)),
+                unit: self.unit.clone(),
+            })
         }
     }
 
@@ -496,17 +507,16 @@ impl Number {
 
                 match to_string(&self.value, base, digits) {
                     (true, v) => (Some(v), None),
-                    (false, v) => if {den > Mpz::from(1_000) ||
-                                      num > Mpz::from(1_000_000u64)} {
-                        (None, Some(v))
-                    } else {
-                        (Some(format!("{}/{}", num, den)), Some(v))
+                    (false, v) => {
+                        if den > Mpz::from(1_000) || num > Mpz::from(1_000_000u64) {
+                            (None, Some(v))
+                        } else {
+                            (Some(format!("{}/{}", num, den)), Some(v))
+                        }
                     }
                 }
-            },
-            Num::Float(_f) => {
-                (None, Some(to_string(&self.value, base, digits).1))
-            },
+            }
+            Num::Float(_f) => (None, Some(to_string(&self.value, base, digits).1)),
         }
     }
 
@@ -527,14 +537,19 @@ impl Number {
         if unit.len() == 1 {
             use std::collections::HashSet;
             let prefixes = [
-                "milli", "micro", "nano", "pico", "femto", "atto", "zepto", "yocto",
-                "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta"]
-                .iter().cloned().collect::<HashSet<&'static str>>();
+                "milli", "micro", "nano", "pico", "femto", "atto", "zepto", "yocto", "kilo",
+                "mega", "giga", "tera", "peta", "exa", "zetta", "yotta",
+            ]
+            .iter()
+            .cloned()
+            .collect::<HashSet<&'static str>>();
             let orig = unit.iter().next().unwrap();
             // kg special case
             let (val, orig) = if &**(orig.0).0 == "kg" || &**(orig.0).0 == "kilogram" {
-                (&self.value * &pow(&Num::from(1000), (*orig.1) as i32),
-                 (Dim::new("gram"), orig.1))
+                (
+                    &self.value * &pow(&Num::from(1000), (*orig.1) as i32),
+                    (Dim::new("gram"), orig.1),
+                )
             } else {
                 (self.value.clone(), (orig.0.clone(), orig.1))
             };
@@ -543,13 +558,13 @@ impl Number {
                     continue;
                 }
                 let abs = val.abs();
-                if { abs >= pow(&v.value, (*orig.1) as i32) &&
-                     abs < pow(&(&v.value * &Num::from(1000)),
-                               (*orig.1) as i32) } {
+                if abs >= pow(&v.value, (*orig.1) as i32)
+                    && abs < pow(&(&v.value * &Num::from(1000)), (*orig.1) as i32)
+                {
                     let res = &val / &pow(&v.value, (*orig.1) as i32);
                     // tonne special case
                     let unit = if &**(orig.0).0 == "gram" && p == "mega" {
-                        format!("tonne")
+                        "tonne".to_string()
                     } else {
                         format!("{}{}", p, orig.0)
                     };
@@ -558,7 +573,7 @@ impl Number {
                     return Number {
                         value: res,
                         unit: map,
-                    }
+                    };
                 }
             }
             let mut map = BTreeMap::new();
@@ -570,7 +585,7 @@ impl Number {
         } else {
             Number {
                 value: self.value.clone(),
-                unit: unit,
+                unit,
             }
         }
     }
@@ -582,7 +597,7 @@ impl Number {
         let quantity = context.quantities.get(&self.unit).cloned().or_else(|| {
             if self.unit.len() == 1 {
                 let e = self.unit.iter().next().unwrap();
-                let ref n = *e.0;
+                let n = &(*e.0);
                 if *e.1 == 1 {
                     Some((&*n.0).clone())
                 } else {
@@ -596,9 +611,17 @@ impl Number {
         NumberParts {
             exact_value: exact,
             approx_value: approx,
-            unit: if value.unit != self.unit { Some(Number::unit_to_string(&value.unit)) } else { None },
-            raw_unit: if value.unit != self.unit { Some(value.unit) } else { None },
-            quantity: quantity,
+            unit: if value.unit != self.unit {
+                Some(Number::unit_to_string(&value.unit))
+            } else {
+                None
+            },
+            raw_unit: if value.unit != self.unit {
+                Some(value.unit)
+            } else {
+                None
+            },
+            quantity,
             dimensions: Some(Number::unit_to_string(&self.unit)),
             ..Default::default()
         }
@@ -620,7 +643,7 @@ impl Number {
                 }
             }
         }
-        if frac.len() > 0 {
+        if !frac.is_empty() {
             write!(out, " /").unwrap();
             for (dim, exp) in frac {
                 let exp = -exp;
@@ -631,31 +654,40 @@ impl Number {
             }
         }
 
-        if out.len() > 0 {
+        if !out.is_empty() {
             out.remove(0);
         }
         String::from_utf8(out).unwrap()
     }
 
     fn pretty_unit(&self, context: &Context) -> Unit {
-        let pretty = ::factorize::fast_decompose(self, &context.reverse);
-        let pretty = pretty.into_iter()
-            .map(|(k, p)| (context.canonicalizations.get(&*k.0).map(|x| Dim::new(x)).unwrap_or(k), p))
-            .collect::<BTreeMap<_, _>>();
+        let pretty = crate::factorize::fast_decompose(self, &context.reverse);
         pretty
+            .into_iter()
+            .map(|(k, p)| {
+                (
+                    context
+                        .canonicalizations
+                        .get(&*k.0)
+                        .map(|x| Dim::new(x))
+                        .unwrap_or(k),
+                    p,
+                )
+            })
+            .collect::<BTreeMap<_, _>>()
     }
 
     pub fn complexity_score(&self) -> i64 {
-        self.unit.iter().map(|(_, p)| 1 + p.abs()).fold(0, |a,x| a+x)
+        self.unit.iter().map(|(_, p)| 1 + p.abs()).sum()
     }
 
     pub fn dimless(&self) -> bool {
-        self.unit.len() == 0
+        self.unit.is_empty()
     }
 }
 
 impl fmt::Debug for Number {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let parts = self.to_parts_simple();
         write!(fmt, "{}", parts)
     }
@@ -664,7 +696,7 @@ impl fmt::Debug for Number {
 impl Show for Number {
     fn show(&self, context: &Context) -> String {
         let parts = self.to_parts(context);
-        format!("{}", parts)
+        parts.to_string()
     }
 }
 
@@ -673,7 +705,7 @@ impl<'a, 'b> Add<&'b Number> for &'a Number {
 
     fn add(self, other: &Number) -> Self::Output {
         if self.unit != other.unit {
-            return None
+            return None;
         }
         Some(Number {
             value: &self.value + &other.value,
@@ -687,7 +719,7 @@ impl<'a, 'b> Sub<&'b Number> for &'a Number {
 
     fn sub(self, other: &Number) -> Self::Output {
         if self.unit != other.unit {
-            return None
+            return None;
         }
         Some(Number {
             value: &self.value - &other.value,
@@ -711,7 +743,13 @@ impl<'a, 'b> Mul<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
     fn mul(self, other: &Number) -> Self::Output {
-        let val = ::btree_merge(&self.unit, &other.unit, |a, b| if a+b != 0 { Some(a + b) } else { None });
+        let val = crate::btree_merge(&self.unit, &other.unit, |a, b| {
+            if a + b != 0 {
+                Some(a + b)
+            } else {
+                None
+            }
+        });
         Some(Number {
             value: &self.value * &other.value,
             unit: val,

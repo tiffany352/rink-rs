@@ -4,47 +4,47 @@
 
 #![feature(proc_macro)]
 
-extern crate rink;
-extern crate iron;
-extern crate router;
-extern crate params;
 extern crate handlebars;
 extern crate handlebars_iron;
-extern crate staticfile;
-extern crate mount;
 extern crate ipc_channel;
+extern crate iron;
 extern crate libc;
-extern crate rustc_serialize;
-extern crate serde;
-extern crate serde_json;
 extern crate limiter;
 extern crate logger;
-extern crate url;
-extern crate toml;
+extern crate mount;
+extern crate params;
+extern crate rink;
+extern crate router;
+extern crate rustc_serialize;
+extern crate serde;
 extern crate serde_derive;
+extern crate serde_json;
+extern crate staticfile;
+extern crate toml;
+extern crate url;
 
 pub mod worker;
 
+use handlebars::Handlebars;
+use handlebars_iron::{DirectorySource, HandlebarsEngine, Template};
+use iron::headers;
+use iron::mime::Mime;
+use iron::modifiers::Header;
 use iron::prelude::*;
 use iron::status;
-use router::Router;
 use iron::AfterMiddleware;
-use iron::headers;
-use iron::modifiers::Header;
-use iron::mime::Mime;
-use handlebars::Handlebars;
-use handlebars_iron::{HandlebarsEngine, DirectorySource, Template};
-use mount::Mount;
-use staticfile::Static;
-use std::collections::BTreeMap;
-use params::{Params, Value};
-use std::env;
-use worker::{eval_text, eval_json};
 use limiter::RequestLimit;
 use logger::Logger;
-use rustc_serialize::json::{ToJson, Json};
-use std::sync::Arc;
+use mount::Mount;
+use params::{Params, Value};
+use router::Router;
+use rustc_serialize::json::{Json, ToJson};
+use staticfile::Static;
+use std::collections::BTreeMap;
+use std::env;
 use std::fs::File;
+use std::sync::Arc;
+use worker::{eval_json, eval_text};
 
 struct Rink {
     config: Json,
@@ -55,18 +55,20 @@ fn root(rink: &Rink, req: &mut Request) -> IronResult<Response> {
 
     let map = req.get_ref::<Params>().unwrap();
     match map.find(&["q"]) {
-        Some(&Value::String(ref query)) if query == "" => (),
-        Some(&Value::String(ref query)) => {
+        Some(&Value::String(ref query)) if !query.is_empty() => {
             let mut reply = eval_json(query);
-            reply.as_object_mut().unwrap().insert("input".to_owned(), query.to_json());
+            reply
+                .as_object_mut()
+                .unwrap()
+                .insert("input".to_owned(), query.to_json());
             println!("{}", reply.pretty());
             data.insert("queries".to_owned(), vec![reply].to_json());
             data.insert("title".to_owned(), query.to_json());
-        },
+        }
         _ => (),
     };
 
-    if data.len() == 0 {
+    if data.is_empty() {
         data.insert("main-page".to_owned(), true.to_json());
     }
 
@@ -82,10 +84,10 @@ impl AfterMiddleware for ErrorMiddleware {
         let mut data = BTreeMap::new();
         let mut error = BTreeMap::new();
         if let Some(status) = err.response.status {
-            error.insert("status".to_owned(), format!("{}", status));
-            data.insert("title".to_owned(), format!("{}", status).to_json());
+            error.insert("status".to_owned(), status.to_string());
+            data.insert("title".to_owned(), status.to_string().to_json());
         }
-        error.insert("message".to_owned(), format!("{}", err.error));
+        error.insert("message".to_owned(), err.error.to_string());
         data.insert("error".to_owned(), error.to_json());
         data.insert("config".to_owned(), self.0.config.to_json());
         println!("{:#?}", data);
@@ -112,32 +114,32 @@ fn opensearch(rink: &Rink, _req: &mut Request) -> IronResult<Response> {
     let mut data = BTreeMap::new();
     data.insert("config".to_owned(), rink.config.to_json());
 
-    Ok(Response::with((status::Ok, mime, Template::new("opensearch", data))))
+    Ok(Response::with((
+        status::Ok,
+        mime,
+        Template::new("opensearch", data),
+    )))
 }
 
 fn ifnot1helper(
     h: &handlebars::Helper,
     r: &Handlebars,
-    rc: &mut handlebars::RenderContext
+    rc: &mut handlebars::RenderContext,
 ) -> Result<(), handlebars::RenderError> {
     use handlebars::RenderError;
     use handlebars::Renderable;
 
-    let param = try!(h.param(0)
-                     .ok_or_else(|| RenderError::new("Param not found for helper \"ifnot1\"")));
+    let param = h
+        .param(0)
+        .ok_or_else(|| RenderError::new("Param not found for helper \"ifnot1\""))?;
     let param = param.value();
 
-    let value =
-        param.as_string().map(|x| x != "1").unwrap_or(true) &&
-        param.as_i64().map(|x| x != 1).unwrap_or(true) &&
-        param.as_u64().map(|x| x != 1).unwrap_or(true) &&
-        param.as_f64().map(|x| x != 1.0).unwrap_or(true);
+    let value = param.as_string().map(|x| x != "1").unwrap_or(true)
+        && param.as_i64().map(|x| x != 1).unwrap_or(true)
+        && param.as_u64().map(|x| x != 1).unwrap_or(true)
+        && param.as_f64().map(|x| x != 1.0).unwrap_or(true);
 
-    let tmpl = if value {
-        h.template()
-    } else {
-        h.inverse()
-    };
+    let tmpl = if value { h.template() } else { h.inverse() };
     match tmpl {
         Some(ref t) => t.render(r, rc),
         None => Ok(()),
@@ -147,7 +149,7 @@ fn ifnot1helper(
 fn urlescapehelper(
     h: &handlebars::Helper,
     r: &Handlebars,
-    rc: &mut handlebars::RenderContext
+    rc: &mut handlebars::RenderContext,
 ) -> Result<(), handlebars::RenderError> {
     use handlebars::RenderError;
     use handlebars::Renderable;
@@ -155,14 +157,15 @@ fn urlescapehelper(
 
     let tmpl = h.template();
     let res = match tmpl {
-        Some(ref t) => try!(t.renders(r, rc)),
+        Some(ref t) => t.renders(r, rc)?,
         None => return Err(RenderError::new("urlescape is a block helper")),
     };
     let res = res.split_whitespace().collect::<Vec<_>>().join(" ");
     let res = utf8_percent_encode(&res, QUERY_ENCODE_SET).collect::<String>();
     let res = res.split("%20").collect::<Vec<_>>().join("+");
-    try!(rc.writer.write_all(res.as_bytes()).map_err(
-        |e| RenderError::new(&format!("{}", e))));
+    rc.writer
+        .write_all(res.as_bytes())
+        .map_err(|e| RenderError::new(&e.to_string()))?;
     Ok(())
 }
 
@@ -191,18 +194,14 @@ fn main() {
         let mut file = File::open("rink-web.toml").expect(
             "Config file rink-web.toml does not exist. You \
              must create it with the keys specified in the \
-             sample."
+             sample.",
         );
         let mut buf = String::new();
         file.read_to_string(&mut buf).unwrap();
         let res = toml::Parser::new(&buf).parse().unwrap();
-        rustc_serialize::json::Json::from_str(
-            &serde_json::ser::to_string(&res).unwrap()
-        ).unwrap()
+        rustc_serialize::json::Json::from_str(&serde_json::ser::to_string(&res).unwrap()).unwrap()
     };
-    let rink = Arc::new(Rink {
-        config: config,
-    });
+    let rink = Arc::new(Rink { config });
     let (logger_before, logger_after) = Logger::new(None);
 
     let mut mount = Mount::new();
@@ -213,7 +212,11 @@ fn main() {
     let rink2 = rink.clone();
     router.get("/api", move |req: &mut Request| api(&rink2, req), "api");
     let rink2 = rink.clone();
-    router.get("/opensearch.xml", move |req: &mut Request| opensearch(&rink2, req), "opensearch.xml");
+    router.get(
+        "/opensearch.xml",
+        move |req: &mut Request| opensearch(&rink2, req),
+        "opensearch.xml",
+    );
     mount.mount("/", router);
 
     mount.mount("/static", Static::new("./static/"));

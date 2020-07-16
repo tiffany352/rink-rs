@@ -8,6 +8,7 @@ repository = "https://github.com/tiffany352/rink-rs"
 readme = "README.md"
 license = "MPL-2.0"
 keywords = ["unit", "math", "conversion", "cli", "tool"]
+edition = "2018"
 
 [features]
 default = ["linefeed", "chrono-humanize", "gpl", "currency"]
@@ -22,7 +23,7 @@ chrono = "0.2.25"
 strsim = "0.5.1"
 chrono-tz = "0.2.2"
 chrono-humanize = { version = "0.0.6", optional = true }
-linefeed = { version = "0.4.0", optional = true }
+linefeed = { version = "0.6.0", optional = true }
 reqwest = { version = "0.9.2", optional = true }
 libc = { version = "0.2.14", optional = true }
 ipc-channel = { version = "0.5.1", optional = true }
@@ -30,6 +31,7 @@ xml-rs = { version = "0.3.4", optional = true }
 json = { version = "0.10.2", optional = true }
 serde = { version = "0.8.16", optional = true }
 serde_derive = { version = "0.8.16", optional = true }
+dirs = "1.0.4"
 
 [[bin]]
 name = "rink"

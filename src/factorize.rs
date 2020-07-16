@@ -2,11 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::num::Num;
+use crate::number::{Dim, Number, Unit};
+use std::cmp;
 use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;
-use number::{Number, Unit, Dim};
-use num::Num;
-use std::cmp;
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct Factors(pub usize, pub Vec<Rc<String>>);
@@ -31,7 +31,7 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
             let vpow = value.unit.get(dim).cloned().unwrap_or(0);
             let snum = (vpow - pow).signum();
             if snum != 0 && snum != vpow.signum() {
-                continue 'outer
+                continue 'outer;
             }
         }
         let num = Number {
@@ -41,7 +41,10 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
         for &i in [-1, 1, 2].iter() {
             let res = (value / &num.powi(i)).unwrap();
             let score = res.complexity_score();
-            let better = best.as_ref().map(|&(_, _, _, current)| score < current).unwrap_or(true);
+            let better = best
+                .as_ref()
+                .map(|&(_, _, _, current)| score < current)
+                .unwrap_or(true);
             if better {
                 best = Some((name, unit, i, score));
             }
@@ -55,14 +58,13 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
             };
             let mut res = (value / &num.powi(pow)).unwrap().unit;
             res.insert(Dim::new(&**name), pow as i64);
-            return res
+            return res;
         }
     }
     value.unit.clone()
 }
 
-pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>)
-                 -> BinaryHeap<Factors> {
+pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>) -> BinaryHeap<Factors> {
     if value.dimless() {
         let mut map = BinaryHeap::new();
         map.push(Factors(0, vec![]));
@@ -80,7 +82,7 @@ pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>)
         let score = res.complexity_score();
         // we are not making the unit any simpler
         if score >= value_score {
-            continue
+            continue;
         }
         let res = factorize(&res, quantities);
         for Factors(score, mut vec) in res {
