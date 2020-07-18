@@ -23,7 +23,7 @@ stdin/stdout.
 ## Example
 
 ```rust
-use rink::*;
+use rink_core::*;
 
 let mut ctx = load().unwrap();
 println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
@@ -32,7 +32,6 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 
 // Maybe someday we can be clean against this.
 #![allow(clippy::cognitive_complexity)]
-#![cfg_attr(feature = "nightly", feature(proc_macro))]
 
 #[cfg(feature = "sandbox")]
 extern crate ipc_channel;
@@ -42,10 +41,8 @@ extern crate json;
 extern crate libc;
 #[cfg(feature = "currency")]
 extern crate reqwest;
-#[cfg(feature = "nightly")]
 extern crate serde;
 
-#[cfg(feature = "nightly")]
 #[macro_use]
 extern crate serde_derive;
 use dirs;
@@ -114,12 +111,12 @@ fn load_btc() -> Option<Result<ast::Defs, String>> {
 }
 
 #[cfg(feature = "gpl")]
-static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.units"));
+static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../../definitions.units"));
 #[cfg(not(feature = "gpl"))]
 static DEFAULT_FILE: Option<&'static str> = None;
 
-static DATES_FILE: &str = include_str!("../datepatterns.txt");
-static CURRENCY_FILE: &str = include_str!("../currency.units");
+static DATES_FILE: &str = include_str!("../../datepatterns.txt");
+static CURRENCY_FILE: &str = include_str!("../../currency.units");
 
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
@@ -382,7 +379,15 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             fs::create_dir_all(path.parent().unwrap()).map_err(|x| x.to_string())?;
             let mut f = File::create(tmppath.clone()).map_err(|x| x.to_string())?;
 
-            reqwest::get(url)
+            let client = reqwest::Client::builder()
+                .gzip(true)
+                .timeout(Duration::from_secs(2))
+                .build()
+                .map_err(|err| format!("Failed to create http client: {}", err))?;
+
+            client
+                .get(url)
+                .send()
                 .map_err(|err| format!("Request failed: {}", err))?
                 .copy_to(&mut f)
                 .map_err(|err| format!("Request failed: {}", err))?;
@@ -390,6 +395,8 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             f.sync_all().map_err(|x| format!("{}", x))?;
             drop(f);
             fs::rename(tmppath.clone(), path.clone()).map_err(|x| x.to_string())?;
-            File::open(path).map_err(|x| x.to_string())
+            File::open(path.clone()).map_err(|x| x.to_string())
         })
+        // If the request fails then try to reuse the already cached file
+        .or_else(|_| File::open(path.clone()).map_err(ts))
 }

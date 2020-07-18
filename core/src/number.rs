@@ -18,18 +18,9 @@ use std::sync::Arc;
 pub type Unit = BTreeMap<Dim, i64>;
 
 /// A newtype for a string dimension ID, so that we can implement traits for it.
-#[cfg_attr(feature = "nightly", derive(Deserialize))]
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct Dim(pub Arc<String>);
-
-#[cfg(feature = "nightly")]
-impl ::serde::ser::Serialize for Dim {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-    where
-        S: ::serde::ser::Serializer,
-    {
-        serializer.serialize_str(&**self.0)
-    }
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Dim {
+    pub id: Arc<String>,
 }
 
 /// The basic representation of a number with a unit.
@@ -41,19 +32,21 @@ pub struct Number {
 
 impl Borrow<str> for Dim {
     fn borrow(&self) -> &str {
-        &**self.0
+        &**self.id
     }
 }
 
 impl fmt::Display for Dim {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(fmt)
+        self.id.fmt(fmt)
     }
 }
 
 impl Dim {
     pub fn new(dim: &str) -> Dim {
-        Dim(Arc::new(dim.to_owned()))
+        Dim {
+            id: Arc::new(dim.to_owned()),
+        }
     }
 }
 
@@ -153,8 +146,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
 
 /// Several stringified properties of a number which are useful for
 /// displaying it to a user.
-#[derive(Clone, Debug, Default)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct NumberParts {
     /// Present if the number can be concisely represented exactly.
     /// May be decimal, fraction, or scientific notation.
@@ -536,7 +528,7 @@ impl Number {
             .collect::<HashSet<&'static str>>();
             let orig = unit.iter().next().unwrap();
             // kg special case
-            let (val, orig) = if &**(orig.0).0 == "kg" || &**(orig.0).0 == "kilogram" {
+            let (val, orig) = if &**(orig.0).id == "kg" || &**(orig.0).id == "kilogram" {
                 (
                     &self.value * &pow(&Num::from(1000), (*orig.1) as i32),
                     (Dim::new("gram"), orig.1),
@@ -554,7 +546,7 @@ impl Number {
                 {
                     let res = &val / &pow(&v.value, (*orig.1) as i32);
                     // tonne special case
-                    let unit = if &**(orig.0).0 == "gram" && p == "mega" {
+                    let unit = if &**(orig.0).id == "gram" && p == "mega" {
                         "tonne".to_string()
                     } else {
                         format!("{}{}", p, orig.0)
@@ -590,7 +582,7 @@ impl Number {
                 let e = self.unit.iter().next().unwrap();
                 let n = &(*e.0);
                 if *e.1 == 1 {
-                    Some((&*n.0).clone())
+                    Some((&*n.id).clone())
                 } else {
                     Some(format!("{}^{}", n, e.1))
                 }
@@ -659,7 +651,7 @@ impl Number {
                 (
                     context
                         .canonicalizations
-                        .get(&*k.0)
+                        .get(&*k.id)
                         .map(|x| Dim::new(x))
                         .unwrap_or(k),
                     p,

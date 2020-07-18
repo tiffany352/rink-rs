@@ -104,7 +104,7 @@ impl Context {
                 return Some(v.clone());
             }
             if let Some(k) = ctx.dimensions.get(name) {
-                return Some((*k.0).clone());
+                return Some((*k.id).clone());
             }
             if let Some(v) = ctx.definitions.get(name) {
                 if let Expr::Unit(ref name) = *v {

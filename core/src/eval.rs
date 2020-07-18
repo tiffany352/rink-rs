@@ -1051,7 +1051,7 @@ impl Context {
                     }
                 }
                 if val.unit.len() == 1 {
-                    let n = &(*val.unit.iter().next().unwrap().0 .0);
+                    let n = &(*val.unit.iter().next().unwrap().0.id);
                     dim_name = self.canonicalize(n).unwrap_or_else(|| n.to_owned());
                     let category = self.categories.get(&dim_name);
                     out.push((category, &dim_name));
