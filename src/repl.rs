@@ -1,7 +1,7 @@
 use std::io::{stdin, BufRead};
 use std::sync::{Arc, Mutex};
 
-use linefeed::{Interface, ReadResult};
+use linefeed::{Interface, ReadResult, Signal};
 
 use rink_core::{load, one_line};
 
@@ -74,6 +74,17 @@ pub fn interactive() {
             }
         });
     }
+
+    let save_history = || {
+        if let Ok(ref path) = hpath {
+            // ignore error - if this fails, the next line will as well.
+            let _ = std::fs::create_dir_all(path.parent().unwrap());
+            rl.save_history(path).unwrap_or_else(|e| {
+                eprintln!("Saving history failed: {}", e);
+            });
+        }
+    };
+
     loop {
         let readline = rl.read_line();
         match readline {
@@ -84,8 +95,13 @@ pub fn interactive() {
             Ok(ReadResult::Input(ref line)) if line == "help" => {
                 println!(
                     "For information on how to use Rink, see the manual: \
-                     https://github.com/tiffany352/rink-rs/wiki/Rink-Manual"
+                     https://github.com/tiffany352/rink-rs/wiki/Rink-Manual\n\
+                     To quit, type `quit`."
                 );
+            }
+            Ok(ReadResult::Input(ref line)) if line == "quit" || line == ":q" || line == "exit" => {
+                save_history();
+                break;
             }
             Ok(ReadResult::Input(line)) => {
                 rl.add_history(line.clone());
@@ -94,15 +110,10 @@ pub fn interactive() {
                     Err(e) => println!("{}", e),
                 };
             }
-            Ok(ReadResult::Eof) => {
-                println!();
-                if let Ok(ref path) = hpath {
-                    // ignore error - if this fails, the next line will as well.
-                    let _ = std::fs::create_dir_all(path.parent().unwrap());
-                    rl.save_history(path).unwrap_or_else(|e| {
-                        eprintln!("Saving history failed: {}", e);
-                    });
-                }
+            Ok(ReadResult::Eof)
+            | Ok(ReadResult::Signal(Signal::Interrupt))
+            | Ok(ReadResult::Signal(Signal::Quit)) => {
+                save_history();
                 break;
             }
             Ok(ReadResult::Signal(_)) => (),
