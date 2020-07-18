@@ -32,7 +32,6 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 
 // Maybe someday we can be clean against this.
 #![allow(clippy::cognitive_complexity)]
-#![cfg_attr(feature = "nightly", feature(proc_macro))]
 
 #[cfg(feature = "sandbox")]
 extern crate ipc_channel;
@@ -42,10 +41,8 @@ extern crate json;
 extern crate libc;
 #[cfg(feature = "currency")]
 extern crate reqwest;
-#[cfg(feature = "nightly")]
 extern crate serde;
 
-#[cfg(feature = "nightly")]
 #[macro_use]
 extern crate serde_derive;
 use dirs;

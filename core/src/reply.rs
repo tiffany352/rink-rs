@@ -8,8 +8,7 @@ use std::fmt::{Display, Formatter};
 use std::iter::once;
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExprParts {
     Literal(String),
     Unit(String),
@@ -17,14 +16,12 @@ pub enum ExprParts {
     Error(String),
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExprReply {
     exprs: Vec<ExprParts>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefReply {
     pub canon_name: String,
     pub def: Option<String>,
@@ -33,42 +30,36 @@ pub struct DefReply {
     pub doc: Option<String>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConversionReply {
     pub value: NumberParts,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FactorizeReply {
     pub factorizations: Vec<BTreeMap<Rc<String>, usize>>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnitsInCategory {
     pub category: Option<String>,
     pub units: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnitsForReply {
     pub units: Vec<UnitsInCategory>,
     /// Dimensions and quantity are set.
     pub of: NumberParts,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnitListReply {
     pub rest: NumberParts,
     pub list: Vec<NumberParts>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DurationReply {
     pub raw: NumberParts,
     pub years: NumberParts,
@@ -80,22 +71,19 @@ pub struct DurationReply {
     pub seconds: NumberParts,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchReply {
     pub results: Vec<NumberParts>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PropertyReply {
     pub name: String,
     pub value: NumberParts,
     pub doc: Option<String>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubstanceReply {
     pub name: String,
     pub doc: Option<String>,
@@ -103,8 +91,7 @@ pub struct SubstanceReply {
     pub properties: Vec<PropertyReply>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DateReply {
     pub year: i32,
     pub month: i32,
@@ -118,8 +105,7 @@ pub struct DateReply {
     pub string: String,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 pub enum QueryReply {
     Number(NumberParts),
@@ -134,23 +120,20 @@ pub enum QueryReply {
     Search(SearchReply),
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConformanceError {
     pub left: NumberParts,
     pub right: NumberParts,
     pub suggestions: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotFoundError {
     pub got: String,
     pub suggestion: Option<String>,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum QueryError {
     Conformance(Box<ConformanceError>),
     NotFound(NotFoundError),

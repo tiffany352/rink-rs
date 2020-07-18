@@ -18,20 +18,9 @@ use std::sync::Arc;
 pub type Unit = BTreeMap<Dim, i64>;
 
 /// A newtype for a string dimension ID, so that we can implement traits for it.
-#[cfg_attr(feature = "nightly", derive(Deserialize))]
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Dim {
     pub id: Arc<String>,
-}
-
-#[cfg(feature = "nightly")]
-impl ::serde::ser::Serialize for Dim {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-    where
-        S: ::serde::ser::Serializer,
-    {
-        serializer.serialize_str(&**self.id)
-    }
 }
 
 /// The basic representation of a number with a unit.
@@ -157,8 +146,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
 
 /// Several stringified properties of a number which are useful for
 /// displaying it to a user.
-#[derive(Clone, Debug, Default)]
-#[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct NumberParts {
     /// Present if the number can be concisely represented exactly.
     /// May be decimal, fraction, or scientific notation.

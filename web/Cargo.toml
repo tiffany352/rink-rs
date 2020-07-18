@@ -13,7 +13,6 @@ watch = ["handlebars-iron/watch"]
 
 [dependencies.rink-core]
 path = "../core"
-features = ["nightly"]
 
 [dependencies]
 ipc-channel = "0.5.1"

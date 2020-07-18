@@ -15,7 +15,6 @@ default = ["chrono-humanize", "gpl", "currency"]
 sandbox = ["libc", "ipc-channel"]
 gpl = []
 currency = ["reqwest", "xml-rs", "json"]
-nightly = ["serde", "serde_derive"]
 
 [dependencies]
 num = "0.3.0"
@@ -28,6 +27,6 @@ libc = { version = "0.2.14", optional = true }
 ipc-channel = { version = "0.5.1", optional = true }
 xml-rs = { version = "0.3.4", optional = true }
 json = { version = "0.10.2", optional = true }
-serde = { version = "0.8.16", optional = true }
-serde_derive = { version = "0.8.16", optional = true }
+serde = { version = "1", features = ["rc"] }
+serde_derive = "1"
 dirs = "1.0.4"
