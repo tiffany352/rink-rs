@@ -69,13 +69,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rink = "0.4"
-```
-
-and this to your crate root:
-
-```rust
-extern crate rink;
+rink-core = "0.5"
 ```
 
 ## License
