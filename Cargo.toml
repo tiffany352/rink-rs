@@ -13,7 +13,10 @@ edition = "2018"
 [dependencies]
 linefeed = "0.6.0"
 clap = "2.33.1"
-rink-core = { path = "./core" }
+
+[dependencies.rink-core]
+version = "0.5"
+path = "./core"
 
 [workspace]
 members = ["core", "web", "irc"]
