@@ -1,9 +1,11 @@
-use crate::RinkCompleter;
-use linefeed::{Interface, ReadResult};
-use rink_core::{load, one_line};
-use std::fs::File;
-use std::io::{stdin, BufRead, BufReader};
+use std::io::{stdin, BufRead};
 use std::sync::{Arc, Mutex};
+
+use linefeed::{Interface, ReadResult};
+
+use rink_core::{load, one_line};
+
+use crate::RinkCompleter;
 
 pub fn noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
     use std::io::{stdout, Write};

@@ -1,6 +1,8 @@
-use linefeed::{Completer, Completion, Prompter, Suffix, Terminal};
-use rink_core::{Context, Number};
 use std::sync::{Arc, Mutex};
+
+use linefeed::{Completer, Completion, Prompter, Suffix, Terminal};
+
+use rink_core::{Context, Number};
 
 pub struct RinkCompleter(Arc<Mutex<Context>>);
 
