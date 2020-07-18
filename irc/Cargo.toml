@@ -8,10 +8,10 @@ repository = "https://github.com/tiffany352/rink-rs"
 license = "MPL-2.0"
 
 [features]
-sandbox = ["rink/sandbox"]
+sandbox = ["rink-core/sandbox"]
 
-[dependencies.rink]
-path = "../"
+[dependencies.rink-core]
+path = "../core"
 
 [dependencies]
 glob = "0.2.11"

@@ -11,8 +11,8 @@ license = "MPL-2.0"
 [features]
 watch = ["handlebars-iron/watch"]
 
-[dependencies.rink]
-path = "../"
+[dependencies.rink-core]
+path = "../core"
 features = ["nightly"]
 
 [dependencies]
