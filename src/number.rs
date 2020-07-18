@@ -3,11 +3,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::Digits;
+use crate::bigint::BigInt;
+use crate::bigrat::BigRat;
 use crate::context::Context;
 use crate::num::*;
 use crate::value::Show;
-use gmp::mpq::Mpq;
-use gmp::mpz::Mpz;
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::fmt;
@@ -65,9 +65,9 @@ pub fn pow(left: &Num, exp: i32) -> Num {
             Num::Mpq(ref left) => left,
             Num::Float(f) => return Num::Float(f.powi(exp)),
         };
-        let num = left.get_num().pow(exp as u32);
-        let den = left.get_den().pow(exp as u32);
-        Num::Mpq(Mpq::ratio(&num, &den))
+        let num = BigInt::from(left.get_num()).pow(exp as u32);
+        let den = BigInt::from(left.get_den()).pow(exp as u32);
+        Num::Mpq(BigRat::ratio(&num, &den).into_inner())
     }
 }
 
@@ -77,13 +77,10 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
     let sign = *rational < Num::zero();
     let rational = rational.abs();
     let (num, den) = rational.to_rational();
+    let (num, den) = (BigInt::from(num), BigInt::from(den));
     let rational = match rational {
-        Num::Mpq(mpq) => mpq,
-        Num::Float(f) => {
-            let mut m = Mpq::one();
-            m.set_d(f);
-            m
-        }
+        Num::Mpq(mpq) => BigRat::from(mpq),
+        Num::Float(f) => BigRat::from(f),
     };
     let intdigits = (&num / &den).size_in_base(base) as u32;
 
@@ -91,11 +88,11 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
     if sign {
         buf.push('-');
     }
-    let zero = Mpq::zero();
-    let one = Int::one();
-    let ten = Int::from(base as u64);
-    let ten_mpq = Mpq::ratio(&ten, &one);
-    let mut cursor = &rational / &Mpq::ratio(&ten.pow(intdigits), &one);
+    let zero = BigRat::zero();
+    let one = BigInt::one();
+    let ten = BigInt::from(base as u64);
+    let ten_mpq = BigRat::ratio(&ten, &one);
+    let mut cursor = &rational / &BigRat::ratio(&ten.pow(intdigits), &one);
     let mut n = 0;
     let mut only_zeros = true;
     let mut zeros = 0;
@@ -138,8 +135,8 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
             buf.push('.');
             placed_decimal = true;
         }
-        let digit = &(&(&cursor.get_num() * &ten) / &cursor.get_den()) % &ten;
-        let v: Option<i64> = (&digit).into();
+        let digit = &(&(&cursor.numer() * &ten) / &cursor.denom()) % &ten;
+        let v: Option<i64> = digit.as_int();
         let v = v.unwrap();
         if v != 0 {
             only_zeros = false
@@ -150,7 +147,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
             buf.push(from_digit(v as u32, base as u32).unwrap());
         }
         cursor = &cursor * &ten_mpq;
-        cursor = &cursor - &Mpq::ratio(&digit, &one);
+        cursor = &cursor - &BigRat::ratio(&digit, &one);
         n += 1;
     }
 }
@@ -396,13 +393,13 @@ impl Number {
     pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Num, String> {
         use std::str::FromStr;
 
-        let num = Mpz::from_str_radix(integer, 10).unwrap();
+        let num = BigInt::from_str_radix(integer, 10).unwrap();
         let frac = if let Some(ref frac) = frac {
             let frac_digits = frac.len();
-            let frac = Mpz::from_str_radix(&*frac, 10).unwrap();
-            Mpq::ratio(&frac, &Mpz::from(10).pow(frac_digits as u32))
+            let frac = BigInt::from_str_radix(&*frac, 10).unwrap();
+            BigRat::ratio(&frac, &BigInt::from(10u64).pow(frac_digits as u32))
         } else {
-            Mpq::zero()
+            BigRat::zero()
         };
         let exp = if let Some(ref exp) = exp {
             let exp: i32 = match FromStr::from_str(&*exp) {
@@ -410,18 +407,18 @@ impl Number {
                 // presumably because it is too large
                 Err(e) => return Err(format!("Failed to parse exponent: {}", e)),
             };
-            let res = Mpz::from(10).pow(exp.abs() as u32);
+            let res = BigInt::from(10u64).pow(exp.abs() as u32);
             if exp < 0 {
-                Mpq::ratio(&Mpz::one(), &res)
+                BigRat::ratio(&BigInt::one(), &res)
             } else {
-                Mpq::ratio(&res, &Mpz::one())
+                BigRat::ratio(&res, &BigInt::one())
             }
         } else {
-            Mpq::one()
+            BigRat::one()
         };
-        let num = &Mpq::ratio(&num, &Mpz::one()) + &frac;
+        let num = &BigRat::ratio(&num, &BigInt::one()) + &frac;
         let num = &num * &exp;
-        Ok(Num::Mpq(num))
+        Ok(Num::Mpq(num.into_inner()))
     }
 
     /// Computes the reciprocal (1/x) of the value.
@@ -498,13 +495,13 @@ impl Number {
     pub fn numeric_value(&self, base: u8, digits: Digits) -> (Option<String>, Option<String>) {
         match self.value {
             Num::Mpq(ref mpq) => {
-                let num = mpq.get_num();
-                let den = mpq.get_den();
+                let num = BigInt::from(mpq.get_num());
+                let den = BigInt::from(mpq.get_den());
 
                 match to_string(&self.value, base, digits) {
                     (true, v) => (Some(v), None),
                     (false, v) => {
-                        if den > Mpz::from(1_000) || num > Mpz::from(1_000_000u64) {
+                        if den > BigInt::from(1_000u64) || num > BigInt::from(1_000_000u64) {
                             (None, Some(v))
                         } else {
                             (Some(format!("{}/{}", num, den)), Some(v))

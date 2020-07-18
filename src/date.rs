@@ -3,6 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{show_datepattern, DatePattern, DateToken};
+use crate::bigint::BigInt;
+use crate::bigrat::BigRat;
 use crate::context::Context;
 use crate::num::Num;
 use crate::number::{Dim, Number};
@@ -419,18 +421,18 @@ pub fn to_duration(num: &Number) -> Result<Duration, String> {
 }
 
 pub fn from_duration(duration: &Duration) -> Result<Number, String> {
-    use gmp::mpq::Mpq;
-    use gmp::mpz::Mpz;
-
     let ms = duration.num_milliseconds();
     let ns = (*duration - Duration::milliseconds(ms))
         .num_nanoseconds()
         .unwrap();
-    let ms_div = Mpz::from(1_000);
-    let ns_div = Mpz::from(1_000_000_000);
-    let ms = Mpq::ratio(&Mpz::from(ms), &ms_div);
-    let ns = Mpq::ratio(&Mpz::from(ns), &ns_div);
-    Ok(Number::new_unit(Num::Mpq(&ms + &ns), Dim::new("s")))
+    let ms_div = BigInt::from(1_000u64);
+    let ns_div = BigInt::from(1_000_000_000u64);
+    let ms = BigRat::ratio(&BigInt::from(ms), &ms_div);
+    let ns = BigRat::ratio(&BigInt::from(ns), &ns_div);
+    Ok(Number::new_unit(
+        Num::Mpq((&ms + &ns).into_inner()),
+        Dim::new("s"),
+    ))
 }
 
 pub fn now() -> DateTime<FixedOffset> {

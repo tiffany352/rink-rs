@@ -49,6 +49,8 @@ extern crate serde_derive;
 use dirs;
 
 pub mod ast;
+pub mod bigint;
+pub mod bigrat;
 #[cfg(feature = "currency")]
 pub mod btc;
 pub mod context;
