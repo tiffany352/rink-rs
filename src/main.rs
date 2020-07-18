@@ -2,12 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use rink;
+use rink_core;
 
+use linefeed::{Completer, Completion, Interface, Prompter, ReadResult, Suffix, Terminal};
 use std::fs::File;
 use std::io::{stdin, BufRead, BufReader};
+use std::sync::{Arc, Mutex};
 
-use rink::*;
+use rink_core::*;
 
 fn main_noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
     use std::io::{stdout, Write};
@@ -42,11 +44,7 @@ fn main_noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
     }
 }
 
-#[cfg(feature = "linefeed")]
 fn main_interactive() {
-    use linefeed::{Completer, Completion, Interface, Prompter, ReadResult, Suffix, Terminal};
-    use std::sync::{Arc, Mutex};
-
     let rl = match Interface::new("rink") {
         Err(_) => {
             // If we can't initialize linefeed on this terminal for some reason,
@@ -232,7 +230,7 @@ fn main_interactive() {
     let completer = RinkCompleter(ctx.clone());
     rl.set_completer(Arc::new(completer));
 
-    let mut hpath = rink::config_dir();
+    let mut hpath = rink_core::config_dir();
     if let Ok(ref mut path) = hpath {
         path.push("history.txt");
         rl.load_history(path).unwrap_or_else(|e| {
@@ -280,14 +278,6 @@ fn main_interactive() {
             }
         }
     }
-}
-
-// If we aren't compiling with linefeed support we should just call the
-// noninteractive version
-#[cfg(not(feature = "linefeed"))]
-fn main_interactive() {
-    let stdin = stdin();
-    main_noninteractive(stdin.lock(), true);
 }
 
 fn usage() {

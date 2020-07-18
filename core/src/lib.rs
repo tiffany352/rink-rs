@@ -23,7 +23,7 @@ stdin/stdout.
 ## Example
 
 ```rust
-use rink::*;
+use rink_core::*;
 
 let mut ctx = load().unwrap();
 println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
@@ -114,12 +114,12 @@ fn load_btc() -> Option<Result<ast::Defs, String>> {
 }
 
 #[cfg(feature = "gpl")]
-static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.units"));
+static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../../definitions.units"));
 #[cfg(not(feature = "gpl"))]
 static DEFAULT_FILE: Option<&'static str> = None;
 
-static DATES_FILE: &str = include_str!("../datepatterns.txt");
-static CURRENCY_FILE: &str = include_str!("../currency.units");
+static DATES_FILE: &str = include_str!("../../datepatterns.txt");
+static CURRENCY_FILE: &str = include_str!("../../currency.units");
 
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
