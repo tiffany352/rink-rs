@@ -459,7 +459,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                         x => {
                                             println!(
                                                 "Expected property input \
-                                                      name, got {:?}",
+                                                 name, got {:?}",
                                                 x
                                             );
                                             break;

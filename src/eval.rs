@@ -124,7 +124,7 @@ impl Context {
                     ref x => {
                         return Err(QueryError::Generic(format!(
                             "= is currently only used for inline unit definitions: \
-                         expected unit, got {}",
+                             expected unit, got {}",
                             x
                         )))
                     }

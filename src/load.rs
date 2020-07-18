@@ -306,7 +306,7 @@ impl Context {
                                 Ok(x) => {
                                     return Err(format!(
                                         "Expected number for input of \
-                                 property {}, got {:?}",
+                                         property {}, got {:?}",
                                         name, x
                                     ))
                                 }
@@ -322,7 +322,7 @@ impl Context {
                                 Ok(x) => {
                                     return Err(format!(
                                         "Expected number for output of \
-                                 property {}, got {:?}",
+                                         property {}, got {:?}",
                                         name, x
                                     ))
                                 }
@@ -342,7 +342,7 @@ impl Context {
                             for conflict in existing.intersection(&unique) {
                                 println!(
                                     "Warning: conflicting \
-                                 properties for {} of {}",
+                                     properties for {} of {}",
                                     conflict, name
                                 );
                             }

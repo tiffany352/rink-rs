@@ -252,7 +252,7 @@ fn main_interactive() {
             Ok(ReadResult::Input(ref line)) if line == "help" => {
                 println!(
                     "For information on how to use Rink, see the manual: \
-                          https://github.com/tiffany352/rink-rs/wiki/Rink-Manual"
+                     https://github.com/tiffany352/rink-rs/wiki/Rink-Manual"
                 );
             }
             Ok(ReadResult::Input(line)) => {
@@ -293,10 +293,10 @@ fn main_interactive() {
 fn usage() {
     println!(
         "{} {}\n{}\n{}\n\n\
-        USAGE:\n    {0} [input file]\n\n\
-        FLAGS:\n    -h, --help      Prints help information\n    \
-        -V, --version   Prints version information\n\n\
-        ARGS:\n    <input file>    Evaluate queries from this file",
+         USAGE:\n    {0} [input file]\n\n\
+         FLAGS:\n    -h, --help      Prints help information\n    \
+         -V, --version   Prints version information\n\n\
+         ARGS:\n    <input file>    Evaluate queries from this file",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION"),
         env!("CARGO_PKG_AUTHORS"),

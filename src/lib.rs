@@ -141,11 +141,11 @@ pub fn load() -> Result<Context, String> {
         .map_err(|e| {
             format!(
                 "Failed to open definitions.units: {}\n\
-             If you installed with `gpl` disabled, then you need to obtain definitions.units \
-             separately. Here is the URL, download it and put it in {:?}.\n\
-             \n\
-             {}\n\
-             \n",
+                 If you installed with `gpl` disabled, then you need to obtain definitions.units \
+                 separately. Here is the URL, download it and put it in {:?}.\n\
+                 \n\
+                 {}\n\
+                 \n",
                 e, &path, DATA_FILE_URL
             )
         });
