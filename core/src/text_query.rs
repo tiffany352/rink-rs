@@ -5,7 +5,7 @@
 use crate::ast::*;
 use crate::bigint::BigInt;
 use crate::bigrat::BigRat;
-use crate::num::Num;
+use crate::numeric::Numeric;
 use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -491,7 +491,7 @@ fn parse_function(iter: &mut Iter<'_>, func: Function) -> Expr {
 fn parse_radix(num: &str, base: u32, description: &str) -> Expr {
     BigInt::from_str_radix(num, base)
         .map(|x| BigRat::ratio(&x, &BigInt::one()))
-        .map(Num::Rational)
+        .map(Numeric::Rational)
         .map(Expr::Const)
         .unwrap_or_else(|_| Expr::Error(format!("Failed to parse {}", description)))
 }

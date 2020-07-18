@@ -6,8 +6,8 @@ use crate::ast::{show_datepattern, DatePattern, DateToken};
 use crate::bigint::BigInt;
 use crate::bigrat::BigRat;
 use crate::context::Context;
-use crate::num::Num;
-use crate::number::{Dim, Number};
+use crate::number::{Dimension, Number};
+use crate::numeric::Numeric;
 use chrono::format::Parsed;
 use chrono::{DateTime, Duration, FixedOffset, TimeZone, Weekday, UTC};
 use chrono_tz::Tz;
@@ -407,16 +407,16 @@ pub fn to_duration(num: &Number) -> Result<Duration, String> {
     if num.unit.len() != 1 || num.unit.get("s") != Some(&1) {
         return Err("Expected seconds".to_string());
     }
-    let max = Num::from(i64::max_value() / 1000);
+    let max = Numeric::from(i64::max_value() / 1000);
     if num.value.abs() > max {
         return Err(format!(
             "Implementation error: Number is out of range ({:?})",
             max
         ));
     }
-    let ms = &num.value * &Num::from(1000);
-    let (ms, rem) = ms.div_rem(&Num::from(1));
-    let ns = &rem * &Num::from(1_000_000_000);
+    let ms = &num.value * &Numeric::from(1000);
+    let (ms, rem) = ms.div_rem(&Numeric::from(1));
+    let ns = &rem * &Numeric::from(1_000_000_000);
     Ok(Duration::milliseconds(ms.to_int().unwrap()) + Duration::nanoseconds(ns.to_int().unwrap()))
 }
 
@@ -429,7 +429,10 @@ pub fn from_duration(duration: &Duration) -> Result<Number, String> {
     let ns_div = BigInt::from(1_000_000_000u64);
     let ms = BigRat::ratio(&BigInt::from(ms), &ms_div);
     let ns = BigRat::ratio(&BigInt::from(ns), &ns_div);
-    Ok(Number::new_unit(Num::Rational(&ms + &ns), Dim::new("s")))
+    Ok(Number::new_unit(
+        Numeric::Rational(&ms + &ns),
+        Dimension::new("s"),
+    ))
 }
 
 pub fn now() -> DateTime<FixedOffset> {

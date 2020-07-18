@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::*;
-use crate::num::Num;
+use crate::numeric::Numeric;
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::rc::Rc;
@@ -226,7 +226,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
         Token::Slash => Expr::Frac(
-            Box::new(Expr::Const(Num::one())),
+            Box::new(Expr::Const(Numeric::one())),
             Box::new(parse_term(iter)),
         ),
         Token::LPar => {
@@ -469,7 +469,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                     props.push(Property {
                                         output_name: name.clone(),
                                         name,
-                                        input: Expr::Const(Num::one()),
+                                        input: Expr::Const(Numeric::one()),
                                         input_name,
                                         output,
                                         doc: prop_doc.take(),
@@ -623,7 +623,7 @@ mod tests {
         expect!(
             ".123",
             Expr::Const,
-            Num::Rational(BigRat::small_ratio(123, 1000))
+            Numeric::Rational(BigRat::small_ratio(123, 1000))
         );
     }
 

@@ -4,8 +4,8 @@
 
 use crate::ast::Digits;
 use crate::context::Context;
-use crate::num::Num;
-use crate::number::{Dim, Number};
+use crate::number::{Dimension, Number};
+use crate::numeric::Numeric;
 use crate::reply::{PropertyReply, SubstanceReply};
 use crate::value::Show;
 use std::collections::BTreeMap;
@@ -122,7 +122,7 @@ impl Substance {
         unit: Number,
         context: &Context,
         bottom_name: BTreeMap<String, isize>,
-        bottom_const: Num,
+        bottom_const: Numeric,
         base: u8,
         digits: Digits,
     ) -> Result<SubstanceReply, String> {
@@ -174,7 +174,7 @@ impl Substance {
                                 let mut output_pretty = output;
                                 output_pretty.unit = bottom_name
                                     .iter()
-                                    .map(|(k, v)| (Dim::new(&k), *v as i64))
+                                    .map(|(k, v)| (Dimension::new(&k), *v as i64))
                                     .collect();
                                 let mut res = try_div!(output_pretty, input_pretty, context)
                                     .to_parts(context);
@@ -230,7 +230,7 @@ impl Substance {
                         let mut output_pretty = output;
                         output_pretty.unit = bottom_name
                             .iter()
-                            .map(|(k, v)| (Dim::new(&k), *v as i64))
+                            .map(|(k, v)| (Dimension::new(&k), *v as i64))
                             .collect();
                         let mut res =
                             try_div!(output_pretty, input_pretty, context).to_parts(context);
@@ -417,7 +417,7 @@ impl<'a, 'b> Add<&'b Substance> for &'a Substance {
                             Some(v) => v,
                             None => return None,
                         };
-                        let mol = Number::one_unit(Dim::new("mol"));
+                        let mol = Number::one_unit(Dimension::new("mol"));
                         if prop1.input_name != prop2.input_name
                             || prop1.output_name != prop2.output_name
                             || prop1.input.unit != prop2.input.unit

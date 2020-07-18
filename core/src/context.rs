@@ -3,8 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{DatePattern, Expr};
-use crate::num::Num;
-use crate::number::{Dim, Number, Unit};
+use crate::number::{Dimension, Number, Quantity};
+use crate::numeric::Numeric;
 use crate::reply::NotFoundError;
 use crate::search;
 use crate::substance::Substance;
@@ -13,11 +13,11 @@ use std::collections::{BTreeMap, BTreeSet};
 /// The evaluation context that contains unit definitions.
 #[derive(Debug, Default)]
 pub struct Context {
-    pub dimensions: BTreeSet<Dim>,
+    pub dimensions: BTreeSet<Dimension>,
     pub canonicalizations: BTreeMap<String, String>,
     pub units: BTreeMap<String, Number>,
-    pub quantities: BTreeMap<Unit, String>,
-    pub reverse: BTreeMap<Unit, String>,
+    pub quantities: BTreeMap<Quantity, String>,
+    pub reverse: BTreeMap<Quantity, String>,
     pub prefixes: Vec<(String, Number)>,
     pub definitions: BTreeMap<String, Expr>,
     pub docs: BTreeMap<String, String>,
@@ -61,7 +61,7 @@ impl Context {
             for (unit, quantity) in &ctx.quantities {
                 if name == quantity {
                     return Some(Number {
-                        value: Num::one(),
+                        value: Numeric::one(),
                         unit: unit.clone(),
                     });
                 }
@@ -163,14 +163,14 @@ impl Context {
         let mut buf = vec![];
         let mut recip = false;
         let square = Number {
-            value: Num::one(),
+            value: Numeric::one(),
             unit: value.unit.clone(),
         }
         .root(2)
         .ok();
         let inverse = (&Number::one()
             / &Number {
-                value: Num::one(),
+                value: Numeric::one(),
                 unit: value.unit.clone(),
             })
             .unwrap();
@@ -182,13 +182,13 @@ impl Context {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
-            let helper = |dim: &Dim, pow: i64, buf: &mut Vec<u8>| {
-                let mut map = Unit::new();
+            let helper = |dim: &Dimension, pow: i64, buf: &mut Vec<u8>| {
+                let mut map = Quantity::new();
                 map.insert(dim.clone(), pow);
                 if let Some(name) = self.quantities.get(&map) {
                     write!(buf, " {}", name).unwrap();
                 } else {
-                    let mut map = Unit::new();
+                    let mut map = Quantity::new();
                     map.insert(dim.clone(), 1);
                     if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();
@@ -218,7 +218,7 @@ impl Context {
                     write!(buf, " /").unwrap();
                 }
                 for (dim, pow) in frac {
-                    let mut map = Unit::new();
+                    let mut map = Quantity::new();
                     map.insert(dim.clone(), pow);
                     if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();

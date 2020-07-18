@@ -8,8 +8,8 @@ use crate::context::Context;
 use crate::date;
 use crate::factorize::{factorize, Factors};
 use crate::formula::substance_from_formula;
-use crate::num::Num;
-use crate::number::{pow, Dim, Number, NumberParts};
+use crate::number::{pow, Dimension, Number, NumberParts};
+use crate::numeric::Numeric;
 use crate::reply::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
     FactorizeReply, QueryError, QueryReply, SearchReply, UnitListReply, UnitsForReply,
@@ -55,7 +55,7 @@ impl Context {
                         .map(Value::Substance)
                 })
                 .ok_or_else(|| QueryError::NotFound(self.unknown_unit_err(name))),
-            Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dim::new(&**name)))),
+            Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dimension::new(&**name)))),
             Expr::Const(ref num) => Ok(Value::Number(Number::new(num.clone()))),
             Expr::Date(ref date) => match date::try_decode(date, self) {
                 Ok(date) => Ok(Value::DateTime(date)),
@@ -210,7 +210,7 @@ impl Context {
                     Function::Exp => func!(
                         fn exp(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().exp()),
+                                value: Numeric::Float(num.value.to_f64().exp()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -218,7 +218,7 @@ impl Context {
                     Function::Ln => func!(
                         fn ln(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().ln()),
+                                value: Numeric::Float(num.value.to_f64().ln()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -229,7 +229,9 @@ impl Context {
                                 Err("Base must be dimensionless".to_string())
                             } else {
                                 Ok(Value::Number(Number {
-                                    value: Num::Float(num.value.to_f64().log(base.value.to_f64())),
+                                    value: Numeric::Float(
+                                        num.value.to_f64().log(base.value.to_f64()),
+                                    ),
                                     unit: num.unit.clone(),
                                 }))
                             }
@@ -238,7 +240,7 @@ impl Context {
                     Function::Log2 => func!(
                         fn log2(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().log2()),
+                                value: Numeric::Float(num.value.to_f64().log2()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -246,7 +248,7 @@ impl Context {
                     Function::Log10 => func!(
                         fn ln(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().log10()),
+                                value: Numeric::Float(num.value.to_f64().log10()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -258,7 +260,7 @@ impl Context {
                                     .to_string())
                             } else {
                                 Ok(Value::Number(Number {
-                                    value: Num::Float(x.value.to_f64().hypot(y.value.to_f64())),
+                                    value: Numeric::Float(x.value.to_f64().hypot(y.value.to_f64())),
                                     unit: x.unit.clone(),
                                 }))
                             }
@@ -267,7 +269,7 @@ impl Context {
                     Function::Sin => func!(
                         fn sin(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().sin()),
+                                value: Numeric::Float(num.value.to_f64().sin()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -275,7 +277,7 @@ impl Context {
                     Function::Cos => func!(
                         fn cos(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().cos()),
+                                value: Numeric::Float(num.value.to_f64().cos()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -283,7 +285,7 @@ impl Context {
                     Function::Tan => func!(
                         fn tan(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().tan()),
+                                value: Numeric::Float(num.value.to_f64().tan()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -291,7 +293,7 @@ impl Context {
                     Function::Asin => func!(
                         fn asin(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().asin()),
+                                value: Numeric::Float(num.value.to_f64().asin()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -299,7 +301,7 @@ impl Context {
                     Function::Acos => func!(
                         fn acos(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().acos()),
+                                value: Numeric::Float(num.value.to_f64().acos()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -307,7 +309,7 @@ impl Context {
                     Function::Atan => func!(
                         fn atan(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().atan()),
+                                value: Numeric::Float(num.value.to_f64().atan()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -319,7 +321,7 @@ impl Context {
                                     .to_string())
                             } else {
                                 Ok(Value::Number(Number {
-                                    value: Num::Float(x.value.to_f64().atan2(y.value.to_f64())),
+                                    value: Numeric::Float(x.value.to_f64().atan2(y.value.to_f64())),
                                     unit: x.unit.clone(),
                                 }))
                             }
@@ -328,7 +330,7 @@ impl Context {
                     Function::Sinh => func!(
                         fn sinh(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().sinh()),
+                                value: Numeric::Float(num.value.to_f64().sinh()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -336,7 +338,7 @@ impl Context {
                     Function::Cosh => func!(
                         fn cosh(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().cosh()),
+                                value: Numeric::Float(num.value.to_f64().cosh()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -344,7 +346,7 @@ impl Context {
                     Function::Tanh => func!(
                         fn tanh(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().tanh()),
+                                value: Numeric::Float(num.value.to_f64().tanh()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -352,7 +354,7 @@ impl Context {
                     Function::Asinh => func!(
                         fn asinh(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().asinh()),
+                                value: Numeric::Float(num.value.to_f64().asinh()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -360,7 +362,7 @@ impl Context {
                     Function::Acosh => func!(
                         fn acosh(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().acosh()),
+                                value: Numeric::Float(num.value.to_f64().acosh()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -368,7 +370,7 @@ impl Context {
                     Function::Atanh => func!(
                         fn atanh(num: Number) {
                             Ok(Value::Number(Number {
-                                value: Num::Float(num.value.to_f64().atanh()),
+                                value: Numeric::Float(num.value.to_f64().atanh()),
                                 unit: num.unit.clone(),
                             }))
                         }
@@ -382,13 +384,13 @@ impl Context {
     pub fn eval_unit_name(
         &self,
         expr: &Expr,
-    ) -> Result<(BTreeMap<String, isize>, Num), QueryError> {
+    ) -> Result<(BTreeMap<String, isize>, Numeric), QueryError> {
         match *expr {
             Expr::Equals(ref left, ref _right) => match **left {
                 Expr::Unit(ref name) => {
                     let mut map = BTreeMap::new();
                     map.insert(name.clone(), 1);
-                    Ok((map, Num::one()))
+                    Ok((map, Numeric::one()))
                 }
                 ref x => Err(QueryError::Generic(format!(
                     "Expected identifier, got {:?}",
@@ -404,7 +406,7 @@ impl Context {
                     self.canonicalize(&**name).unwrap_or_else(|| name.clone()),
                     1,
                 );
-                Ok((map, Num::one()))
+                Ok((map, Numeric::one()))
             }
             Expr::Const(ref i) => Ok((BTreeMap::new(), i.clone())),
             Expr::Frac(ref left, ref right) => {
@@ -492,7 +494,7 @@ impl Context {
                     self.canonicalize(&**name).unwrap_or_else(|| name.clone()),
                     1,
                 );
-                Ok((map, Num::one()))
+                Ok((map, Numeric::one()))
             }
             Expr::Add(ref left, ref right) | Expr::Sub(ref left, ref right) => {
                 let left = self.eval_unit_name(left)?;
@@ -528,9 +530,9 @@ impl Context {
         }
 
         let mut topu = top.clone();
-        topu.value = Num::one();
+        topu.value = Numeric::one();
         let mut bottomu = bottom.clone();
-        bottomu.value = Num::one();
+        bottomu.value = Numeric::one();
         let mut suggestions = vec![];
         let diff = (&topu * &bottomu).unwrap();
         if diff.dimless() {
@@ -557,14 +559,14 @@ impl Context {
         raw: &Number,
         bottom: &Number,
         bottom_name: BTreeMap<String, isize>,
-        bottom_const: Num,
+        bottom_const: Numeric,
         base: u8,
         digits: Digits,
     ) -> ConversionReply {
         let (exact, approx) = raw.numeric_value(base, digits);
         let bottom_name = bottom_name
             .into_iter()
-            .map(|(a, b)| (Dim::new(&*a), b as i64))
+            .map(|(a, b)| (Dimension::new(&*a), b as i64))
             .collect();
         let (num, den) = bottom_const.to_rational();
         ConversionReply {
@@ -636,7 +638,7 @@ impl Context {
             .map(|(name, value)| {
                 let pretty = Number {
                     value,
-                    unit: Number::one_unit(Dim::new(name)).unit,
+                    unit: Number::one_unit(Dimension::new(name)).unit,
                 }
                 .to_parts(self);
                 let unit: String = pretty
@@ -645,7 +647,7 @@ impl Context {
                     .map(|x| self.canonicalize(&*x).unwrap_or(x))
                     .expect("to_parts returned no dimensions");
                 let mut raw = BTreeMap::new();
-                raw.insert(Dim::new(&unit), 1);
+                raw.insert(Dimension::new(&unit), 1);
                 NumberParts {
                     unit: Some(unit),
                     raw_unit: Some(raw),
@@ -943,7 +945,7 @@ impl Context {
                         &res,
                         &bottom,
                         name,
-                        Num::one(),
+                        Numeric::one(),
                         10,
                         digits,
                     ))))
@@ -967,7 +969,7 @@ impl Context {
                     for (u, k) in &self.quantities {
                         if name == k {
                             val = Some(Number {
-                                value: Num::one(),
+                                value: Numeric::one(),
                                 unit: u.clone(),
                             });
                             break;
@@ -1017,7 +1019,7 @@ impl Context {
                     for (u, k) in &self.quantities {
                         if name == k {
                             val = Some(Number {
-                                value: Num::one(),
+                                value: Numeric::one(),
                                 unit: u.clone(),
                             });
                             break;
@@ -1117,7 +1119,7 @@ impl Context {
                             })
                             .expect("Search returned non-existent result");
                         let mut raw = BTreeMap::new();
-                        raw.insert(Dim::new(x), 1);
+                        raw.insert(Dimension::new(x), 1);
                         NumberParts {
                             unit: Some(x.to_owned()),
                             raw_unit: Some(raw),
@@ -1131,7 +1133,9 @@ impl Context {
             | Query::Convert(ref expr, Conversion::None, None, Digits::Default) => {
                 let val = self.eval(expr)?;
                 match val {
-                    Value::Number(ref n) if n.unit == Number::one_unit(Dim::new("s")).unit => {
+                    Value::Number(ref n)
+                        if n.unit == Number::one_unit(Dimension::new("s")).unit =>
+                    {
                         let units = &["year", "week", "day", "hour", "minute", "second"];
                         let list = self.to_list(&n, units)?;
                         let mut list = list.into_iter();
@@ -1144,7 +1148,7 @@ impl Context {
                                 unit: Some("month".to_owned()),
                                 raw_unit: Some({
                                     let mut raw = BTreeMap::new();
-                                    raw.insert(Dim::new("month"), 1);
+                                    raw.insert(Dimension::new("month"), 1);
                                     raw
                                 }),
                                 ..Default::default()

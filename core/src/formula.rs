@@ -2,8 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::num::Num;
-use crate::number::{Dim, Number};
+use crate::number::{Dimension, Number};
+use crate::numeric::Numeric;
 use crate::substance::{Properties, Property, Substance};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
@@ -62,10 +62,10 @@ pub fn substance_from_formula(
     substances: &BTreeMap<String, Substance>,
 ) -> Option<Substance> {
     let mut molar_mass_unit = BTreeMap::new();
-    molar_mass_unit.insert(Dim::new("kg"), 1);
-    molar_mass_unit.insert(Dim::new("mol"), -1);
+    molar_mass_unit.insert(Dimension::new("kg"), 1);
+    molar_mass_unit.insert(Dimension::new("mol"), -1);
     let mut total_molar_mass = Number {
-        value: Num::from(0),
+        value: Numeric::from(0),
         unit: molar_mass_unit,
     };
 
@@ -76,7 +76,7 @@ pub fn substance_from_formula(
                 let count = match iter.peek() {
                     Some(&Token::Count(n)) => {
                         iter.next().unwrap();
-                        Number::new(Num::from(n as i64))
+                        Number::new(Numeric::from(n as i64))
                     }
                     _ => Number::one(),
                 };

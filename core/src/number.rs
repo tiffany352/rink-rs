@@ -6,7 +6,7 @@ use crate::ast::Digits;
 use crate::bigint::BigInt;
 use crate::bigrat::BigRat;
 use crate::context::Context;
-use crate::num::*;
+use crate::numeric::*;
 use crate::value::Show;
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
@@ -15,64 +15,64 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::sync::Arc;
 
 /// Alias for the primary representation of dimensionality.
-pub type Unit = BTreeMap<Dim, i64>;
+pub type Quantity = BTreeMap<Dimension, i64>;
 
 /// A newtype for a string dimension ID, so that we can implement traits for it.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct Dim {
+pub struct Dimension {
     pub id: Arc<String>,
 }
 
 /// The basic representation of a number with a unit.
 #[derive(Clone, PartialEq)]
 pub struct Number {
-    pub value: Num,
-    pub unit: Unit,
+    pub value: Numeric,
+    pub unit: Quantity,
 }
 
-impl Borrow<str> for Dim {
+impl Borrow<str> for Dimension {
     fn borrow(&self) -> &str {
         &**self.id
     }
 }
 
-impl fmt::Display for Dim {
+impl fmt::Display for Dimension {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.id.fmt(fmt)
     }
 }
 
-impl Dim {
-    pub fn new(dim: &str) -> Dim {
-        Dim {
+impl Dimension {
+    pub fn new(dim: &str) -> Dimension {
+        Dimension {
             id: Arc::new(dim.to_owned()),
         }
     }
 }
 
-pub fn pow(left: &Num, exp: i32) -> Num {
+pub fn pow(left: &Numeric, exp: i32) -> Numeric {
     if exp < 0 {
-        &Num::one() / &pow(left, -exp)
+        &Numeric::one() / &pow(left, -exp)
     } else {
         let left = match *left {
-            Num::Rational(ref left) => left,
-            Num::Float(f) => return Num::Float(f.powi(exp)),
+            Numeric::Rational(ref left) => left,
+            Numeric::Float(f) => return Numeric::Float(f.powi(exp)),
         };
         let num = left.numer().pow(exp as u32);
         let den = left.denom().pow(exp as u32);
-        Num::Rational(BigRat::ratio(&num, &den))
+        Numeric::Rational(BigRat::ratio(&num, &den))
     }
 }
 
-pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
+pub fn to_string(rational: &Numeric, base: u8, digits: Digits) -> (bool, String) {
     use std::char::from_digit;
 
-    let sign = *rational < Num::zero();
+    let sign = *rational < Numeric::zero();
     let rational = rational.abs();
     let (num, den) = rational.to_rational();
     let rational = match rational {
-        Num::Rational(rational) => rational,
-        Num::Float(f) => BigRat::from(f),
+        Numeric::Rational(rational) => rational,
+        Numeric::Float(f) => BigRat::from(f),
     };
     let intdigits = (&num / &den).size_in_base(base) as u32;
 
@@ -159,7 +159,7 @@ pub struct NumberParts {
     /// Divisor factor, if not one.
     pub divfactor: Option<String>,
     /// High-level unit decomposition, in format that can be manipulated.
-    pub raw_unit: Option<Unit>,
+    pub raw_unit: Option<Quantity>,
     /// Higher-level unit decomposition, if available.
     pub unit: Option<String>,
     /// The physical quantity associated with the unit, if available.
@@ -347,33 +347,33 @@ impl fmt::Display for NumberParts {
 impl Number {
     pub fn one() -> Number {
         Number {
-            value: Num::one(),
-            unit: Unit::new(),
+            value: Numeric::one(),
+            unit: Quantity::new(),
         }
     }
 
-    pub fn one_unit(unit: Dim) -> Number {
-        Number::new_unit(Num::one(), unit)
+    pub fn one_unit(unit: Dimension) -> Number {
+        Number::new_unit(Numeric::one(), unit)
     }
 
     pub fn zero() -> Number {
         Number {
-            value: Num::zero(),
-            unit: Unit::new(),
+            value: Numeric::zero(),
+            unit: Quantity::new(),
         }
     }
 
     /// Creates a dimensionless value.
-    pub fn new(num: Num) -> Number {
+    pub fn new(num: Numeric) -> Number {
         Number {
             value: num,
-            unit: Unit::new(),
+            unit: Quantity::new(),
         }
     }
 
     /// Creates a value with a single dimension.
-    pub fn new_unit(num: Num, unit: Dim) -> Number {
-        let mut map = Unit::new();
+    pub fn new_unit(num: Numeric, unit: Dimension) -> Number {
+        let mut map = Quantity::new();
         map.insert(unit, 1);
         Number {
             value: num,
@@ -381,7 +381,11 @@ impl Number {
         }
     }
 
-    pub fn from_parts(integer: &str, frac: Option<&str>, exp: Option<&str>) -> Result<Num, String> {
+    pub fn from_parts(
+        integer: &str,
+        frac: Option<&str>,
+        exp: Option<&str>,
+    ) -> Result<Numeric, String> {
         use std::str::FromStr;
 
         let num = BigInt::from_str_radix(integer, 10).unwrap();
@@ -408,18 +412,18 @@ impl Number {
             BigRat::one()
         };
         let num = &BigRat::ratio(&num, &BigInt::one()) + &frac;
-        Ok(Num::Rational(&num * &exp))
+        Ok(Numeric::Rational(&num * &exp))
     }
 
     /// Computes the reciprocal (1/x) of the value.
     pub fn invert(&self) -> Number {
         Number {
-            value: &Num::one() / &self.value,
+            value: &Numeric::one() / &self.value,
             unit: self
                 .unit
                 .iter()
                 .map(|(k, &power)| (k.clone(), -power))
-                .collect::<Unit>(),
+                .collect::<Quantity>(),
         }
     }
 
@@ -429,7 +433,7 @@ impl Number {
             .unit
             .iter()
             .map(|(k, &power)| (k.clone(), power * exp as i64))
-            .collect::<Unit>();
+            .collect::<Quantity>();
         Number {
             value: pow(&self.value, exp),
             unit,
@@ -439,10 +443,10 @@ impl Number {
     /// Computes the nth root of a value iff all of its units have
     /// powers divisible by n.
     pub fn root(&self, exp: i32) -> Result<Number, String> {
-        if self.value < Num::zero() {
+        if self.value < Numeric::zero() {
             return Err("Complex numbers are not implemented".to_string());
         }
-        let mut res = Unit::new();
+        let mut res = Quantity::new();
         for (dim, &power) in &self.unit {
             if power % exp as i64 != 0 {
                 return Err("Result must have integer dimensions".to_string());
@@ -451,7 +455,7 @@ impl Number {
             }
         }
         Ok(Number {
-            value: Num::Float(self.value.to_f64().powf(1.0 / exp as f64)),
+            value: Numeric::Float(self.value.to_f64().powf(1.0 / exp as f64)),
             unit: res,
         })
     }
@@ -460,7 +464,7 @@ impl Number {
         if !exp.dimless() {
             return Err("Exponent must be dimensionless".to_string());
         }
-        if exp.value.abs() >= Num::from(1 << 31) {
+        if exp.value.abs() >= Numeric::from(1 << 31) {
             return Err("Exponent is too large".to_string());
         }
         let (num, den) = exp.value.to_rational();
@@ -476,7 +480,7 @@ impl Number {
         } else {
             let exp = exp.value.to_f64();
             Ok(Number {
-                value: Num::Float(self.value.to_f64().powf(exp)),
+                value: Numeric::Float(self.value.to_f64().powf(exp)),
                 unit: self.unit.clone(),
             })
         }
@@ -484,7 +488,7 @@ impl Number {
 
     pub fn numeric_value(&self, base: u8, digits: Digits) -> (Option<String>, Option<String>) {
         match self.value {
-            Num::Rational(ref rational) => {
+            Numeric::Rational(ref rational) => {
                 let num = rational.numer();
                 let den = rational.denom();
 
@@ -499,7 +503,7 @@ impl Number {
                     }
                 }
             }
-            Num::Float(_f) => (None, Some(to_string(&self.value, base, digits).1)),
+            Numeric::Float(_f) => (None, Some(to_string(&self.value, base, digits).1)),
         }
     }
 
@@ -530,8 +534,8 @@ impl Number {
             // kg special case
             let (val, orig) = if &**(orig.0).id == "kg" || &**(orig.0).id == "kilogram" {
                 (
-                    &self.value * &pow(&Num::from(1000), (*orig.1) as i32),
-                    (Dim::new("gram"), orig.1),
+                    &self.value * &pow(&Numeric::from(1000), (*orig.1) as i32),
+                    (Dimension::new("gram"), orig.1),
                 )
             } else {
                 (self.value.clone(), (orig.0.clone(), orig.1))
@@ -542,7 +546,7 @@ impl Number {
                 }
                 let abs = val.abs();
                 if abs >= pow(&v.value, (*orig.1) as i32)
-                    && abs < pow(&(&v.value * &Num::from(1000)), (*orig.1) as i32)
+                    && abs < pow(&(&v.value * &Numeric::from(1000)), (*orig.1) as i32)
                 {
                     let res = &val / &pow(&v.value, (*orig.1) as i32);
                     // tonne special case
@@ -552,7 +556,7 @@ impl Number {
                         format!("{}{}", p, orig.0)
                     };
                     let mut map = BTreeMap::new();
-                    map.insert(Dim::new(&*unit), *orig.1);
+                    map.insert(Dimension::new(&*unit), *orig.1);
                     return Number {
                         value: res,
                         unit: map,
@@ -610,7 +614,7 @@ impl Number {
         }
     }
 
-    pub fn unit_to_string(unit: &Unit) -> String {
+    pub fn unit_to_string(unit: &Quantity) -> String {
         use std::io::Write;
 
         let mut out = vec![];
@@ -643,7 +647,7 @@ impl Number {
         String::from_utf8(out).unwrap()
     }
 
-    fn pretty_unit(&self, context: &Context) -> Unit {
+    fn pretty_unit(&self, context: &Context) -> Quantity {
         let pretty = crate::factorize::fast_decompose(self, &context.reverse);
         pretty
             .into_iter()
@@ -652,7 +656,7 @@ impl Number {
                     context
                         .canonicalizations
                         .get(&*k.id)
-                        .map(|x| Dim::new(x))
+                        .map(|x| Dimension::new(x))
                         .unwrap_or(k),
                     p,
                 )
@@ -746,7 +750,7 @@ impl<'a, 'b> Div<&'b Number> for &'a Number {
 
     #[allow(clippy::suspicious_arithmetic_impl)]
     fn div(self, other: &Number) -> Self::Output {
-        if other.value == Num::zero() || other.value == Num::Float(0.0) {
+        if other.value == Numeric::zero() || other.value == Numeric::Float(0.0) {
             None
         } else {
             self * &other.invert()

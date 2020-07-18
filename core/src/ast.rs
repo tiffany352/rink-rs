@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::num::Num;
+use crate::numeric::Numeric;
 use chrono_tz::Tz;
 use std::fmt;
 use std::rc::Rc;
@@ -32,7 +32,7 @@ pub enum DateToken {
 pub enum Expr {
     Unit(String),
     Quote(String),
-    Const(Num),
+    Const(Numeric),
     Date(Vec<DateToken>),
     Frac(Box<Expr>, Box<Expr>),
     Mul(Vec<Expr>),

@@ -2,8 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::num::Num;
-use crate::number::{Dim, Number, Unit};
+use crate::number::{Dimension, Number, Quantity};
+use crate::numeric::Numeric;
 use std::cmp;
 use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;
@@ -23,7 +23,7 @@ impl cmp::Ord for Factors {
     }
 }
 
-pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Unit {
+pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Quantity, String>) -> Quantity {
     let mut best = None;
     'outer: for (unit, name) in quantities.iter() {
         // make sure we aren't doing something weird like introducing new base units
@@ -35,7 +35,7 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
             }
         }
         let num = Number {
-            value: Num::one(),
+            value: Numeric::one(),
             unit: unit.clone(),
         };
         for &i in [-1, 1, 2].iter() {
@@ -53,18 +53,21 @@ pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Unit, String>) -> Un
     if let Some((name, unit, pow, score)) = best {
         if score < value.complexity_score() {
             let num = Number {
-                value: Num::one(),
+                value: Numeric::one(),
                 unit: unit.clone(),
             };
             let mut res = (value / &num.powi(pow)).unwrap().unit;
-            res.insert(Dim::new(&**name), pow as i64);
+            res.insert(Dimension::new(&**name), pow as i64);
             return res;
         }
     }
     value.unit.clone()
 }
 
-pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>) -> BinaryHeap<Factors> {
+pub fn factorize(
+    value: &Number,
+    quantities: &BTreeMap<Quantity, Rc<String>>,
+) -> BinaryHeap<Factors> {
     if value.dimless() {
         let mut map = BinaryHeap::new();
         map.push(Factors(0, vec![]));
@@ -74,7 +77,7 @@ pub fn factorize(value: &Number, quantities: &BTreeMap<Unit, Rc<String>>) -> Bin
     let value_score = value.complexity_score();
     for (unit, name) in quantities.iter().rev() {
         let num = Number {
-            value: Num::one(),
+            value: Numeric::one(),
             unit: unit.clone(),
         };
         let res = (value / &num).unwrap();

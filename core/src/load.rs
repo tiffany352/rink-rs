@@ -3,8 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{Def, DefEntry, Defs, Expr};
-use crate::num::Num;
-use crate::number::{Dim, Number};
+use crate::number::{Dimension, Number};
+use crate::numeric::Numeric;
 use crate::substance::{Properties, Property, Substance};
 use crate::value::Value;
 use crate::Context;
@@ -231,7 +231,7 @@ impl Context {
             let name = name.name();
             match *def {
                 Def::Dimension => {
-                    self.dimensions.insert(Dim::new(&*name));
+                    self.dimensions.insert(Dimension::new(&*name));
                 }
                 Def::Canonicalization(ref of) => {
                     self.canonicalizations.insert(of.clone(), name.clone());
@@ -248,7 +248,7 @@ impl Context {
                 }
                 Def::Unit(ref expr) => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
-                        if v.value == Num::one() && reverse.contains(&*name) {
+                        if v.value == Numeric::one() && reverse.contains(&*name) {
                             self.reverse.insert(v.unit.clone(), name.clone());
                         }
                         self.definitions.insert(name.clone(), expr.clone());

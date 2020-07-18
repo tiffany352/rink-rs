@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use ::num::cast::ToPrimitive;
-use ::num::rational::BigRational as NumRat;
-use ::num::traits::{sign::Signed, One, Zero};
+use num::cast::ToPrimitive;
+use num::rational::BigRational as NumRat;
+use num::traits::{sign::Signed, One, Zero};
 use std::cmp::Ord;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 

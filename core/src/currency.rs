@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{Def, DefEntry, Defs, Expr};
-use crate::num::Num;
+use crate::numeric::Numeric;
 use std::fs::File;
 use std::rc::Rc;
 use std::time::Duration;
@@ -40,7 +40,7 @@ pub fn parse(f: File) -> Result<Defs, String> {
                             name: currency.to_owned(),
                             def: Rc::new(Def::Unit(Expr::Mul(vec![
                                 Expr::Frac(
-                                    Box::new(Expr::Const(Num::one())),
+                                    Box::new(Expr::Const(Numeric::one())),
                                     Box::new(Expr::Const(num)),
                                 ),
                                 Expr::Unit("EUR".to_string()),
