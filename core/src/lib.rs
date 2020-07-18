@@ -379,7 +379,15 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             fs::create_dir_all(path.parent().unwrap()).map_err(|x| x.to_string())?;
             let mut f = File::create(tmppath.clone()).map_err(|x| x.to_string())?;
 
-            reqwest::get(url)
+            let client = reqwest::Client::builder()
+                .gzip(true)
+                .timeout(Duration::from_secs(2))
+                .build()
+                .map_err(|err| format!("Failed to create http client: {}", err))?;
+
+            client
+                .get(url)
+                .send()
                 .map_err(|err| format!("Request failed: {}", err))?
                 .copy_to(&mut f)
                 .map_err(|err| format!("Request failed: {}", err))?;
@@ -387,6 +395,8 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             f.sync_all().map_err(|x| format!("{}", x))?;
             drop(f);
             fs::rename(tmppath.clone(), path.clone()).map_err(|x| x.to_string())?;
-            File::open(path).map_err(|x| x.to_string())
+            File::open(path.clone()).map_err(|x| x.to_string())
         })
+        // If the request fails then try to reuse the already cached file
+        .or_else(|_| File::open(path.clone()).map_err(ts))
 }
