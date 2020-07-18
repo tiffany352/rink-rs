@@ -62,12 +62,12 @@ pub fn pow(left: &Num, exp: i32) -> Num {
         &Num::one() / &pow(left, -exp)
     } else {
         let left = match *left {
-            Num::Mpq(ref left) => left,
+            Num::Rational(ref left) => left,
             Num::Float(f) => return Num::Float(f.powi(exp)),
         };
         let num = left.numer().pow(exp as u32);
         let den = left.denom().pow(exp as u32);
-        Num::Mpq(BigRat::ratio(&num, &den))
+        Num::Rational(BigRat::ratio(&num, &den))
     }
 }
 
@@ -79,7 +79,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
     let (num, den) = rational.to_rational();
     let (num, den) = (BigInt::from(num), BigInt::from(den));
     let rational = match rational {
-        Num::Mpq(mpq) => BigRat::from(mpq),
+        Num::Rational(rational) => rational.clone(),
         Num::Float(f) => BigRat::from(f),
     };
     let intdigits = (&num / &den).size_in_base(base) as u32;
@@ -91,7 +91,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
     let zero = BigRat::zero();
     let one = BigInt::one();
     let ten = BigInt::from(base as u64);
-    let ten_mpq = BigRat::ratio(&ten, &one);
+    let ten_rational = BigRat::ratio(&ten, &one);
     let mut cursor = &rational / &BigRat::ratio(&ten.pow(intdigits), &one);
     let mut n = 0;
     let mut only_zeros = true;
@@ -146,7 +146,7 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
         if !(v == 0 && only_zeros && n < intdigits - 1) {
             buf.push(from_digit(v as u32, base as u32).unwrap());
         }
-        cursor = &cursor * &ten_mpq;
+        cursor = &cursor * &ten_rational;
         cursor = &cursor - &BigRat::ratio(&digit, &one);
         n += 1;
     }
@@ -417,7 +417,7 @@ impl Number {
             BigRat::one()
         };
         let num = &BigRat::ratio(&num, &BigInt::one()) + &frac;
-        Ok(Num::Mpq(&num * &exp))
+        Ok(Num::Rational(&num * &exp))
     }
 
     /// Computes the reciprocal (1/x) of the value.
@@ -493,9 +493,9 @@ impl Number {
 
     pub fn numeric_value(&self, base: u8, digits: Digits) -> (Option<String>, Option<String>) {
         match self.value {
-            Num::Mpq(ref mpq) => {
-                let num = mpq.numer();
-                let den = mpq.denom();
+            Num::Rational(ref rational) => {
+                let num = rational.numer();
+                let den = rational.denom();
 
                 match to_string(&self.value, base, digits) {
                     (true, v) => (Some(v), None),

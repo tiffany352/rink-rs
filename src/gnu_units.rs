@@ -623,7 +623,7 @@ mod tests {
         expect!(
             ".123",
             Expr::Const,
-            Num::Mpq(BigRat::small_ratio(123, 1000))
+            Num::Rational(BigRat::small_ratio(123, 1000))
         );
     }
 

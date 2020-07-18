@@ -12,7 +12,7 @@ use crate::bigrat::BigRat;
 #[derive(Clone, PartialEq, Debug)]
 pub enum Num {
     /// Arbitrary-precision rational fraction.
-    Mpq(BigRat),
+    Rational(BigRat),
     /// Machine floats.
     Float(f64),
     // /// Machine ints.
@@ -20,24 +20,24 @@ pub enum Num {
 }
 
 enum NumParity {
-    Mpq(BigRat, BigRat),
+    Rational(BigRat, BigRat),
     Float(f64, f64),
 }
 
 impl Num {
     pub fn one() -> Num {
-        Num::Mpq(BigRat::one())
+        Num::Rational(BigRat::one())
         //Num::Int(1)
     }
 
     pub fn zero() -> Num {
-        Num::Mpq(BigRat::zero())
+        Num::Rational(BigRat::zero())
         //Num::Int(0)
     }
 
     pub fn abs(&self) -> Num {
         match *self {
-            Num::Mpq(ref mpq) => Num::Mpq(mpq.abs()),
+            Num::Rational(ref mpq) => Num::Rational(mpq.abs()),
             Num::Float(f) => Num::Float(f.abs()),
         }
     }
@@ -46,21 +46,21 @@ impl Num {
         match (self, other) {
             (&Num::Float(left), right) => NumParity::Float(left, right.into()),
             (left, &Num::Float(right)) => NumParity::Float(left.into(), right),
-            (&Num::Mpq(ref left), &Num::Mpq(ref right)) => {
-                NumParity::Mpq(left.clone(), right.clone())
+            (&Num::Rational(ref left), &Num::Rational(ref right)) => {
+                NumParity::Rational(left.clone(), right.clone())
             }
         }
     }
 
     pub fn div_rem(&self, other: &Num) -> (Num, Num) {
         match self.parity(other) {
-            NumParity::Mpq(left, right) => {
+            NumParity::Rational(left, right) => {
                 let div = &left / &right;
                 let floor = &div.numer() / &div.denom();
                 let rem = &left - &(&right * &BigRat::ratio(&floor, &BigInt::one()));
                 (
-                    Num::Mpq(BigRat::ratio(&floor, &BigInt::one())),
-                    Num::Mpq(rem),
+                    Num::Rational(BigRat::ratio(&floor, &BigInt::one())),
+                    Num::Rational(rem),
                 )
             }
             NumParity::Float(left, right) => (Num::Float(left / right), Num::Float(left % right)),
@@ -69,7 +69,7 @@ impl Num {
 
     pub fn to_rational(&self) -> (BigInt, BigInt) {
         match *self {
-            Num::Mpq(ref mpq) => (mpq.numer(), mpq.denom()),
+            Num::Rational(ref mpq) => (mpq.numer(), mpq.denom()),
             Num::Float(mut x) => {
                 let mut m = [[1, 0], [0, 1]];
                 let maxden = 1_000_000;
@@ -104,7 +104,7 @@ impl Num {
 
     pub fn to_int(&self) -> Option<i64> {
         match *self {
-            Num::Mpq(ref mpq) => (&mpq.numer() / &mpq.denom()).as_int(),
+            Num::Rational(ref mpq) => (&mpq.numer() / &mpq.denom()).as_int(),
             Num::Float(f) => {
                 if f.abs() < i64::max_value() as f64 {
                     Some(f as i64)
@@ -122,13 +122,13 @@ impl Num {
 
 impl From<BigRat> for Num {
     fn from(rat: BigRat) -> Num {
-        Num::Mpq(rat)
+        Num::Rational(rat)
     }
 }
 
 impl From<BigInt> for Num {
     fn from(int: BigInt) -> Num {
-        Num::Mpq(BigRat::ratio(&int, &BigInt::one()))
+        Num::Rational(BigRat::ratio(&int, &BigInt::one()))
     }
 }
 
@@ -141,7 +141,7 @@ impl From<i64> for Num {
 impl<'a> Into<f64> for &'a Num {
     fn into(self) -> f64 {
         match *self {
-            Num::Mpq(ref mpq) => mpq.as_float(),
+            Num::Rational(ref mpq) => mpq.as_float(),
             Num::Float(f) => f,
         }
     }
@@ -150,7 +150,7 @@ impl<'a> Into<f64> for &'a Num {
 impl PartialOrd for Num {
     fn partial_cmp(&self, other: &Num) -> Option<Ordering> {
         match self.parity(other) {
-            NumParity::Mpq(left, right) => left.partial_cmp(&right),
+            NumParity::Rational(left, right) => left.partial_cmp(&right),
             NumParity::Float(left, right) => left.partial_cmp(&right),
         }
     }
@@ -163,7 +163,7 @@ macro_rules! num_binop {
 
             fn $func(self, other: &'b Num) -> Num {
                 match self.parity(other) {
-                    NumParity::Mpq(left, right) => Num::Mpq(left.$func(&right)),
+                    NumParity::Rational(left, right) => Num::Rational(left.$func(&right)),
                     NumParity::Float(left, right) => Num::Float(left.$func(&right)),
                 }
             }
@@ -181,7 +181,7 @@ impl<'a> Neg for &'a Num {
 
     fn neg(self) -> Num {
         match *self {
-            Num::Mpq(ref mpq) => Num::Mpq(-mpq),
+            Num::Rational(ref mpq) => Num::Rational(-mpq),
             Num::Float(f) => Num::Float(-f),
         }
     }
