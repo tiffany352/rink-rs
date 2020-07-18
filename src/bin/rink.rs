@@ -72,10 +72,10 @@ fn main_interactive() {
             fn inner(ctx: &Context, name: &str) -> Vec<Completion> {
                 let mut out = vec![];
                 for k in &ctx.dimensions {
-                    if (**k.0).starts_with(name) {
+                    if (**k.id).starts_with(name) {
                         out.push(Completion {
-                            completion: (*k.0).clone(),
-                            display: Some(format!("{} (base unit)", k.0)),
+                            completion: (*k.id).clone(),
+                            display: Some(format!("{} (base unit)", k.id)),
                             suffix: Suffix::Default,
                         });
                     }

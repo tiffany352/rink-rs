@@ -54,7 +54,7 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         };
 
         for k in &ctx.dimensions {
-            r#try(&**k.0);
+            r#try(&**k.id);
         }
         for k in ctx.units.keys() {
             r#try(&**k);
