@@ -42,6 +42,8 @@ struct Resolver {
 }
 
 impl Resolver {
+    // Doesn't seem to be a way to get a value in a BTreeSet<String> without having a String, it doesn't like &str.
+    #[allow(clippy::ptr_arg)]
     fn intern(&mut self, name: &String) -> Rc<String> {
         if let Some(v) = self.interned.get(name).cloned() {
             v

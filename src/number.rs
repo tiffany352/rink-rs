@@ -77,9 +77,8 @@ pub fn to_string(rational: &Num, base: u8, digits: Digits) -> (bool, String) {
     let sign = *rational < Num::zero();
     let rational = rational.abs();
     let (num, den) = rational.to_rational();
-    let (num, den) = (BigInt::from(num), BigInt::from(den));
     let rational = match rational {
-        Num::Rational(rational) => rational.clone(),
+        Num::Rational(rational) => rational,
         Num::Float(f) => BigRat::from(f),
     };
     let intdigits = (&num / &den).size_in_base(base) as u32;
@@ -734,6 +733,7 @@ impl<'a> Neg for &'a Number {
 impl<'a, 'b> Mul<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
+    #[allow(clippy::suspicious_arithmetic_impl)]
     fn mul(self, other: &Number) -> Self::Output {
         let val = crate::btree_merge(&self.unit, &other.unit, |a, b| {
             if a + b != 0 {
@@ -752,6 +752,7 @@ impl<'a, 'b> Mul<&'b Number> for &'a Number {
 impl<'a, 'b> Div<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
+    #[allow(clippy::suspicious_arithmetic_impl)]
     fn div(self, other: &Number) -> Self::Output {
         if other.value == Num::zero() || other.value == Num::Float(0.0) {
             None

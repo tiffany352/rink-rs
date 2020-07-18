@@ -30,6 +30,8 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 ```
 */
 
+// Maybe someday we can be clean against this.
+#![allow(clippy::cognitive_complexity)]
 #![cfg_attr(feature = "nightly", feature(proc_macro))]
 
 #[cfg(feature = "sandbox")]

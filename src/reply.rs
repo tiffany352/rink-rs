@@ -120,6 +120,7 @@ pub struct DateReply {
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "nightly", derive(Serialize, Deserialize))]
+#[allow(clippy::large_enum_variant)]
 pub enum QueryReply {
     Number(NumberParts),
     Date(DateReply),
