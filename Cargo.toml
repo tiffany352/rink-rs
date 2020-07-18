@@ -18,7 +18,7 @@ currency = ["reqwest", "xml-rs", "json"]
 nightly = ["serde", "serde_derive"]
 
 [dependencies]
-rust-gmp = "0.5"
+num = "0.3.0"
 chrono = "0.2.25"
 strsim = "0.5.1"
 chrono-tz = "0.2.2"

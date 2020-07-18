@@ -125,7 +125,7 @@ fn test_units_for() {
     test(
         "units for electrical_potential",
         "Units for kg m^2 / A s^3 (electrical_potential): \
-          CGS Units: abvolt, daniell, intvolt, statvolt; SI Derived Units: volt",
+         CGS Units: abvolt, daniell, intvolt, statvolt; SI Derived Units: volt",
     );
 }
 
@@ -134,8 +134,8 @@ fn test_factorize() {
     test(
         "factorize velocity",
         "Factorizations: velocity;  acceleration time;  \
-          flow_rate fuel_efficiency;  \
-          frequency length;  jerk time^2",
+         flow_rate fuel_efficiency;  \
+         frequency length;  jerk time^2",
     );
 }
 
@@ -244,7 +244,7 @@ fn test_convert_from_substances() {
     test(
         "g water -> ml",
         "water: mass = 1 gram; \
-          volume = 1 milliliter",
+         volume = 1 milliliter",
     );
 }
 
@@ -253,10 +253,10 @@ fn test_convert_to_substances() {
     test(
         "kg -> egg",
         "egg: USA large egg. \
-          mass = 1 kilogram; \
-          egg_shelled = 20 egg; \
-          egg_white = 100/3, approx. 33.33333 egg; \
-          egg_yolk = 5000/93, approx. 53.76344 egg",
+         mass = 1 kilogram; \
+         egg_shelled = 20 egg; \
+         egg_white = 100/3, approx. 33.33333 egg; \
+         egg_yolk = 5000/93, approx. 53.76344 egg",
     );
 }
 
@@ -265,7 +265,7 @@ fn test_substance_add() {
     test(
         "air",
         "air: Average molecular weight of air. \
-          molar_mass = approx. 28.96790 gram / mole",
+         molar_mass = approx. 28.96790 gram / mole",
     );
 }
 

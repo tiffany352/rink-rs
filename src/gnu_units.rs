@@ -459,7 +459,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                         x => {
                                             println!(
                                                 "Expected property input \
-                                                      name, got {:?}",
+                                                 name, got {:?}",
                                                 x
                                             );
                                             break;
@@ -619,11 +619,12 @@ mod tests {
 
     #[test]
     fn test_float_leading_dot() {
-        use gmp::mpq::Mpq;
-        use gmp::mpz::Mpz;
-        let num = Mpz::from(123);
-        let den = Mpz::from(1000);
-        expect!(".123", Expr::Const, Num::Mpq(Mpq::ratio(&num, &den)));
+        use crate::bigrat::BigRat;
+        expect!(
+            ".123",
+            Expr::Const,
+            Num::Rational(BigRat::small_ratio(123, 1000))
+        );
     }
 
     #[test]

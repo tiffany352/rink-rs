@@ -3,10 +3,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::*;
+use crate::bigint::BigInt;
+use crate::bigrat::BigRat;
 use crate::num::Num;
 use chrono_tz::Tz;
-use gmp::mpq::Mpq;
-use gmp::mpz::Mpz;
 use std::iter::Peekable;
 use std::str::Chars;
 
@@ -488,10 +488,10 @@ fn parse_function(iter: &mut Iter<'_>, func: Function) -> Expr {
     Expr::Call(func, args)
 }
 
-fn parse_radix(num: &str, base: u8, description: &str) -> Expr {
-    Mpz::from_str_radix(&*num, base)
-        .map(|x| Mpq::ratio(&x, &Mpz::one()))
-        .map(Num::Mpq)
+fn parse_radix(num: &str, base: u32, description: &str) -> Expr {
+    BigInt::from_str_radix(num, base)
+        .map(|x| BigRat::ratio(&x, &BigInt::one()))
+        .map(Num::Rational)
         .map(Expr::Const)
         .unwrap_or_else(|_| Expr::Error(format!("Failed to parse {}", description)))
 }

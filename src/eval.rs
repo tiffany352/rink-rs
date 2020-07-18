@@ -3,11 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{Conversion, Digits, Expr, Function, Query};
+use crate::bigint::BigInt;
 use crate::context::Context;
 use crate::date;
 use crate::factorize::{factorize, Factors};
 use crate::formula::substance_from_formula;
-use crate::num::{Int, Num};
+use crate::num::Num;
 use crate::number::{pow, Dim, Number, NumberParts};
 use crate::reply::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
@@ -124,7 +125,7 @@ impl Context {
                     ref x => {
                         return Err(QueryError::Generic(format!(
                             "= is currently only used for inline unit definitions: \
-                         expected unit, got {}",
+                             expected unit, got {}",
                             x
                         )))
                     }
@@ -570,12 +571,12 @@ impl Context {
             value: NumberParts {
                 exact_value: exact,
                 approx_value: approx,
-                factor: if num != Int::one() {
+                factor: if num != BigInt::one() {
                     Some(num.to_string())
                 } else {
                     None
                 },
-                divfactor: if den != Int::one() {
+                divfactor: if den != BigInt::one() {
                     Some(den.to_string())
                 } else {
                     None

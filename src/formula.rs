@@ -7,8 +7,8 @@ use crate::number::{Dim, Number};
 use crate::substance::{Properties, Property, Substance};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
-use std::sync::Arc;
 use std::str::{Chars, FromStr};
+use std::sync::Arc;
 
 enum Token {
     Symbol(String),

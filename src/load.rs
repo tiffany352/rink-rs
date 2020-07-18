@@ -42,6 +42,8 @@ struct Resolver {
 }
 
 impl Resolver {
+    // Doesn't seem to be a way to get a value in a BTreeSet<String> without having a String, it doesn't like &str.
+    #[allow(clippy::ptr_arg)]
     fn intern(&mut self, name: &String) -> Rc<String> {
         if let Some(v) = self.interned.get(name).cloned() {
             v
@@ -306,7 +308,7 @@ impl Context {
                                 Ok(x) => {
                                     return Err(format!(
                                         "Expected number for input of \
-                                 property {}, got {:?}",
+                                         property {}, got {:?}",
                                         name, x
                                     ))
                                 }
@@ -322,7 +324,7 @@ impl Context {
                                 Ok(x) => {
                                     return Err(format!(
                                         "Expected number for output of \
-                                 property {}, got {:?}",
+                                         property {}, got {:?}",
                                         name, x
                                     ))
                                 }
@@ -342,7 +344,7 @@ impl Context {
                             for conflict in existing.intersection(&unique) {
                                 println!(
                                     "Warning: conflicting \
-                                 properties for {} of {}",
+                                     properties for {} of {}",
                                     conflict, name
                                 );
                             }

@@ -30,6 +30,8 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 ```
 */
 
+// Maybe someday we can be clean against this.
+#![allow(clippy::cognitive_complexity)]
 #![cfg_attr(feature = "nightly", feature(proc_macro))]
 
 #[cfg(feature = "sandbox")]
@@ -49,6 +51,8 @@ extern crate serde_derive;
 use dirs;
 
 pub mod ast;
+pub mod bigint;
+pub mod bigrat;
 #[cfg(feature = "currency")]
 pub mod btc;
 pub mod context;
@@ -141,11 +145,11 @@ pub fn load() -> Result<Context, String> {
         .map_err(|e| {
             format!(
                 "Failed to open definitions.units: {}\n\
-             If you installed with `gpl` disabled, then you need to obtain definitions.units \
-             separately. Here is the URL, download it and put it in {:?}.\n\
-             \n\
-             {}\n\
-             \n",
+                 If you installed with `gpl` disabled, then you need to obtain definitions.units \
+                 separately. Here is the URL, download it and put it in {:?}.\n\
+                 \n\
+                 {}\n\
+                 \n",
                 e, &path, DATA_FILE_URL
             )
         });
