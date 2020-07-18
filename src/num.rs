@@ -37,7 +37,7 @@ impl Num {
 
     pub fn abs(&self) -> Num {
         match *self {
-            Num::Rational(ref mpq) => Num::Rational(mpq.abs()),
+            Num::Rational(ref rational) => Num::Rational(rational.abs()),
             Num::Float(f) => Num::Float(f.abs()),
         }
     }
@@ -69,7 +69,7 @@ impl Num {
 
     pub fn to_rational(&self) -> (BigInt, BigInt) {
         match *self {
-            Num::Rational(ref mpq) => (mpq.numer(), mpq.denom()),
+            Num::Rational(ref rational) => (rational.numer(), rational.denom()),
             Num::Float(mut x) => {
                 let mut m = [[1, 0], [0, 1]];
                 let maxden = 1_000_000;
@@ -104,7 +104,7 @@ impl Num {
 
     pub fn to_int(&self) -> Option<i64> {
         match *self {
-            Num::Rational(ref mpq) => (&mpq.numer() / &mpq.denom()).as_int(),
+            Num::Rational(ref rational) => (&rational.numer() / &rational.denom()).as_int(),
             Num::Float(f) => {
                 if f.abs() < i64::max_value() as f64 {
                     Some(f as i64)
@@ -141,7 +141,7 @@ impl From<i64> for Num {
 impl<'a> Into<f64> for &'a Num {
     fn into(self) -> f64 {
         match *self {
-            Num::Rational(ref mpq) => mpq.as_float(),
+            Num::Rational(ref rational) => rational.as_float(),
             Num::Float(f) => f,
         }
     }
@@ -181,7 +181,7 @@ impl<'a> Neg for &'a Num {
 
     fn neg(self) -> Num {
         match *self {
-            Num::Rational(ref mpq) => Num::Rational(-mpq),
+            Num::Rational(ref rational) => Num::Rational(-rational),
             Num::Float(f) => Num::Float(-f),
         }
     }

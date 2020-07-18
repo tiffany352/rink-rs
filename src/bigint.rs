@@ -11,7 +11,7 @@ use std::ops::{Div, Mul, Rem};
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct BigInt {
-    mpz: NumInt,
+    inner: NumInt,
 }
 
 #[derive(Debug)]
@@ -21,61 +21,63 @@ pub enum BigIntError {
 
 impl BigInt {
     pub fn one() -> BigInt {
-        BigInt { mpz: NumInt::one() }
+        BigInt {
+            inner: NumInt::one(),
+        }
     }
 
     pub fn zero() -> BigInt {
         BigInt {
-            mpz: NumInt::zero(),
+            inner: NumInt::zero(),
         }
     }
 
     pub fn inner(&self) -> &NumInt {
-        &self.mpz
+        &self.inner
     }
 
     pub fn into_inner(self) -> NumInt {
-        self.mpz
+        self.inner
     }
 
     pub fn from_str_radix(input: &str, base: u32) -> Result<Self, BigIntError> {
         NumInt::from_str_radix(input, base)
-            .map(|mpz| BigInt { mpz })
+            .map(|inner| BigInt { inner })
             .map_err(|_err| BigIntError::ParseError)
     }
 
     pub fn pow(&self, exponent: u32) -> BigInt {
         BigInt {
-            mpz: self.mpz.pow(exponent),
+            inner: self.inner.pow(exponent),
         }
     }
 
     pub fn size_in_base(&self, base: u8) -> usize {
-        1 + ((self.mpz.bits()) as f64 * std::f64::consts::LN_2 / (base as f64).ln()).floor()
+        1 + ((self.inner.bits()) as f64 * std::f64::consts::LN_2 / (base as f64).ln()).floor()
             as usize
     }
 
     pub fn as_int(&self) -> Option<i64> {
-        self.mpz.to_i64()
+        self.inner.to_i64()
     }
 }
 
 impl fmt::Display for BigInt {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        self.mpz.fmt(fmt)
+        self.inner.fmt(fmt)
     }
 }
 
 impl From<NumInt> for BigInt {
-    fn from(mpz: NumInt) -> BigInt {
-        BigInt { mpz }
+    fn from(inner: NumInt) -> BigInt {
+        BigInt { inner }
     }
 }
 
 impl From<u64> for BigInt {
     fn from(value: u64) -> BigInt {
         BigInt {
-            mpz: NumInt::from(value),
+            inner: NumInt::from(value),
         }
     }
 }
@@ -83,7 +85,7 @@ impl From<u64> for BigInt {
 impl From<i64> for BigInt {
     fn from(value: i64) -> BigInt {
         BigInt {
-            mpz: NumInt::from(value),
+            inner: NumInt::from(value),
         }
     }
 }
@@ -93,7 +95,7 @@ impl<'a> Mul for &'a BigInt {
 
     fn mul(self, rhs: &'a BigInt) -> BigInt {
         BigInt {
-            mpz: &self.mpz * &rhs.mpz,
+            inner: &self.inner * &rhs.inner,
         }
     }
 }
@@ -103,7 +105,7 @@ impl<'a> Div for &'a BigInt {
 
     fn div(self, rhs: &'a BigInt) -> BigInt {
         BigInt {
-            mpz: &self.mpz / &rhs.mpz,
+            inner: &self.inner / &rhs.inner,
         }
     }
 }
@@ -113,7 +115,7 @@ impl<'a> Rem for &'a BigInt {
 
     fn rem(self, rhs: &'a BigInt) -> BigInt {
         BigInt {
-            mpz: &self.mpz % &rhs.mpz,
+            inner: &self.inner % &rhs.inner,
         }
     }
 }
