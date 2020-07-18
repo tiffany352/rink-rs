@@ -3,11 +3,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use gmp::mpz::Mpz;
-use std::cmp::{Ord, Ordering};
+use std::cmp::Ord;
 use std::fmt;
 use std::ops::{Div, Mul, Rem};
 
-#[derive(PartialEq, Eq, PartialOrd, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct BigInt {
     mpz: Mpz,
 }
@@ -76,12 +76,6 @@ impl From<i64> for BigInt {
 impl From<Mpz> for BigInt {
     fn from(mpz: Mpz) -> BigInt {
         BigInt { mpz }
-    }
-}
-
-impl Ord for BigInt {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.mpz.cmp(&other.mpz)
     }
 }
 

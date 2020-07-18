@@ -3,10 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use gmp::mpq::Mpq;
-use std::ops::{Add, Div, Mul, Sub};
+use std::cmp::Ord;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use crate::bigint::BigInt;
 
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BigRat {
     mpq: Mpq,
 }
@@ -41,6 +43,16 @@ impl BigRat {
     pub fn denom(&self) -> BigInt {
         BigInt::from(self.mpq.get_den())
     }
+
+    pub fn abs(&self) -> BigRat {
+        BigRat {
+            mpq: self.mpq.abs(),
+        }
+    }
+
+    pub fn as_float(&self) -> f64 {
+        self.mpq.clone().into()
+    }
 }
 
 impl From<Mpq> for BigRat {
@@ -54,12 +66,6 @@ impl From<f64> for BigRat {
         let mut mpq = Mpq::one();
         mpq.set_d(value);
         BigRat { mpq }
-    }
-}
-
-impl PartialEq for BigRat {
-    fn eq(&self, other: &Self) -> bool {
-        self.mpq.eq(&other.mpq)
     }
 }
 
@@ -80,6 +86,14 @@ impl<'a> Sub for &'a BigRat {
         BigRat {
             mpq: &self.mpq - &rhs.mpq,
         }
+    }
+}
+
+impl<'a> Neg for &'a BigRat {
+    type Output = BigRat;
+
+    fn neg(self) -> BigRat {
+        BigRat { mpq: -&self.mpq }
     }
 }
 

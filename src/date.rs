@@ -429,10 +429,7 @@ pub fn from_duration(duration: &Duration) -> Result<Number, String> {
     let ns_div = BigInt::from(1_000_000_000u64);
     let ms = BigRat::ratio(&BigInt::from(ms), &ms_div);
     let ns = BigRat::ratio(&BigInt::from(ns), &ns_div);
-    Ok(Number::new_unit(
-        Num::Mpq((&ms + &ns).into_inner()),
-        Dim::new("s"),
-    ))
+    Ok(Number::new_unit(Num::Mpq(&ms + &ns), Dim::new("s")))
 }
 
 pub fn now() -> DateTime<FixedOffset> {

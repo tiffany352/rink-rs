@@ -65,9 +65,9 @@ pub fn pow(left: &Num, exp: i32) -> Num {
             Num::Mpq(ref left) => left,
             Num::Float(f) => return Num::Float(f.powi(exp)),
         };
-        let num = BigInt::from(left.get_num()).pow(exp as u32);
-        let den = BigInt::from(left.get_den()).pow(exp as u32);
-        Num::Mpq(BigRat::ratio(&num, &den).into_inner())
+        let num = left.numer().pow(exp as u32);
+        let den = left.denom().pow(exp as u32);
+        Num::Mpq(BigRat::ratio(&num, &den))
     }
 }
 
@@ -417,8 +417,7 @@ impl Number {
             BigRat::one()
         };
         let num = &BigRat::ratio(&num, &BigInt::one()) + &frac;
-        let num = &num * &exp;
-        Ok(Num::Mpq(num.into_inner()))
+        Ok(Num::Mpq(&num * &exp))
     }
 
     /// Computes the reciprocal (1/x) of the value.
@@ -474,12 +473,12 @@ impl Number {
             return Err("Exponent is too large".to_string());
         }
         let (num, den) = exp.value.to_rational();
-        let one = Int::one();
+        let one = BigInt::one();
         if den == one {
-            let exp: Option<i64> = (&num).into();
+            let exp: Option<i64> = num.as_int();
             Ok(self.powi(exp.unwrap() as i32))
         } else if num == one {
-            let exp: Option<i64> = (&den).into();
+            let exp: Option<i64> = den.as_int();
             self.root(exp.unwrap() as i32)
         } else if !self.dimless() {
             Err("Exponentiation must result in integer dimensions".to_string())
@@ -495,8 +494,8 @@ impl Number {
     pub fn numeric_value(&self, base: u8, digits: Digits) -> (Option<String>, Option<String>) {
         match self.value {
             Num::Mpq(ref mpq) => {
-                let num = BigInt::from(mpq.get_num());
-                let den = BigInt::from(mpq.get_den());
+                let num = mpq.numer();
+                let den = mpq.denom();
 
                 match to_string(&self.value, base, digits) {
                     (true, v) => (Some(v), None),

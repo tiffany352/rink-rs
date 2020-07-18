@@ -2,18 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use gmp::mpq::Mpq;
-use gmp::mpz::Mpz;
-use std::cmp::Ordering;
+use std::cmp::{Ordering, PartialOrd};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-pub type Int = Mpz;
+use crate::bigint::BigInt;
+use crate::bigrat::BigRat;
 
 /// Number type.
 #[derive(Clone, PartialEq, Debug)]
 pub enum Num {
     /// Arbitrary-precision rational fraction.
-    Mpq(Mpq),
+    Mpq(BigRat),
     /// Machine floats.
     Float(f64),
     // /// Machine ints.
@@ -21,18 +20,18 @@ pub enum Num {
 }
 
 enum NumParity {
-    Mpq(Mpq, Mpq),
+    Mpq(BigRat, BigRat),
     Float(f64, f64),
 }
 
 impl Num {
     pub fn one() -> Num {
-        Num::Mpq(Mpq::one())
+        Num::Mpq(BigRat::one())
         //Num::Int(1)
     }
 
     pub fn zero() -> Num {
-        Num::Mpq(Mpq::zero())
+        Num::Mpq(BigRat::zero())
         //Num::Int(0)
     }
 
@@ -57,17 +56,20 @@ impl Num {
         match self.parity(other) {
             NumParity::Mpq(left, right) => {
                 let div = &left / &right;
-                let floor = &div.get_num() / div.get_den();
-                let rem = &left - &(&right * &Mpq::ratio(&floor, &Mpz::one()));
-                (Num::Mpq(Mpq::ratio(&floor, &Mpz::one())), Num::Mpq(rem))
+                let floor = &div.numer() / &div.denom();
+                let rem = &left - &(&right * &BigRat::ratio(&floor, &BigInt::one()));
+                (
+                    Num::Mpq(BigRat::ratio(&floor, &BigInt::one())),
+                    Num::Mpq(rem),
+                )
             }
             NumParity::Float(left, right) => (Num::Float(left / right), Num::Float(left % right)),
         }
     }
 
-    pub fn to_rational(&self) -> (Int, Int) {
+    pub fn to_rational(&self) -> (BigInt, BigInt) {
         match *self {
-            Num::Mpq(ref mpq) => (mpq.get_num(), mpq.get_den()),
+            Num::Mpq(ref mpq) => (mpq.numer(), mpq.denom()),
             Num::Float(mut x) => {
                 let mut m = [[1, 0], [0, 1]];
                 let maxden = 1_000_000;
@@ -95,14 +97,14 @@ impl Num {
                     }
                 }
 
-                (Int::from(m[0][0]), Int::from(m[1][0]))
+                (BigInt::from(m[0][0]), BigInt::from(m[1][0]))
             }
         }
     }
 
     pub fn to_int(&self) -> Option<i64> {
         match *self {
-            Num::Mpq(ref mpq) => (&(mpq.get_num() / mpq.get_den())).into(),
+            Num::Mpq(ref mpq) => (&mpq.numer() / &mpq.denom()).as_int(),
             Num::Float(f) => {
                 if f.abs() < i64::max_value() as f64 {
                     Some(f as i64)
@@ -118,28 +120,28 @@ impl Num {
     }
 }
 
-impl From<Mpq> for Num {
-    fn from(mpq: Mpq) -> Num {
-        Num::Mpq(mpq)
+impl From<BigRat> for Num {
+    fn from(rat: BigRat) -> Num {
+        Num::Mpq(rat)
     }
 }
 
-impl From<Mpz> for Num {
-    fn from(mpz: Mpz) -> Num {
-        Num::Mpq(Mpq::ratio(&mpz, &Mpz::one()))
+impl From<BigInt> for Num {
+    fn from(int: BigInt) -> Num {
+        Num::Mpq(BigRat::ratio(&int, &BigInt::one()))
     }
 }
 
 impl From<i64> for Num {
     fn from(i: i64) -> Num {
-        Num::from(Mpz::from(i))
+        Num::from(BigInt::from(i))
     }
 }
 
 impl<'a> Into<f64> for &'a Num {
     fn into(self) -> f64 {
         match *self {
-            Num::Mpq(ref mpq) => mpq.clone().into(),
+            Num::Mpq(ref mpq) => mpq.as_float(),
             Num::Float(f) => f,
         }
     }
