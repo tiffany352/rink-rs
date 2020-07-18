@@ -2,14 +2,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use gmp::mpz::Mpz;
+use ::num::bigint::BigInt as NumInt;
+use ::num::cast::ToPrimitive;
+use ::num::traits::{Num, One, Zero};
 use std::cmp::Ord;
 use std::fmt;
 use std::ops::{Div, Mul, Rem};
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct BigInt {
-    mpz: Mpz,
+    mpz: NumInt,
 }
 
 #[derive(Debug)]
@@ -19,19 +21,25 @@ pub enum BigIntError {
 
 impl BigInt {
     pub fn one() -> BigInt {
-        BigInt { mpz: Mpz::one() }
+        BigInt { mpz: NumInt::one() }
     }
 
     pub fn zero() -> BigInt {
-        BigInt { mpz: Mpz::zero() }
+        BigInt {
+            mpz: NumInt::zero(),
+        }
     }
 
-    pub fn raw_mpz(&self) -> &Mpz {
+    pub fn inner(&self) -> &NumInt {
         &self.mpz
     }
 
-    pub fn from_str_radix(input: &str, base: u8) -> Result<Self, BigIntError> {
-        Mpz::from_str_radix(input, base)
+    pub fn into_inner(self) -> NumInt {
+        self.mpz
+    }
+
+    pub fn from_str_radix(input: &str, base: u32) -> Result<Self, BigIntError> {
+        NumInt::from_str_radix(input, base)
             .map(|mpz| BigInt { mpz })
             .map_err(|_err| BigIntError::ParseError)
     }
@@ -43,11 +51,12 @@ impl BigInt {
     }
 
     pub fn size_in_base(&self, base: u8) -> usize {
-        self.mpz.size_in_base(base)
+        1 + ((self.mpz.bits()) as f64 * std::f64::consts::LN_2 / (base as f64).ln()).floor()
+            as usize
     }
 
     pub fn as_int(&self) -> Option<i64> {
-        (&self.mpz).into()
+        self.mpz.to_i64()
     }
 }
 
@@ -57,10 +66,16 @@ impl fmt::Display for BigInt {
     }
 }
 
+impl From<NumInt> for BigInt {
+    fn from(mpz: NumInt) -> BigInt {
+        BigInt { mpz }
+    }
+}
+
 impl From<u64> for BigInt {
     fn from(value: u64) -> BigInt {
         BigInt {
-            mpz: Mpz::from(value),
+            mpz: NumInt::from(value),
         }
     }
 }
@@ -68,14 +83,8 @@ impl From<u64> for BigInt {
 impl From<i64> for BigInt {
     fn from(value: i64) -> BigInt {
         BigInt {
-            mpz: Mpz::from(value),
+            mpz: NumInt::from(value),
         }
-    }
-}
-
-impl From<Mpz> for BigInt {
-    fn from(mpz: Mpz) -> BigInt {
-        BigInt { mpz }
     }
 }
 
@@ -106,5 +115,26 @@ impl<'a> Rem for &'a BigInt {
         BigInt {
             mpz: &self.mpz % &rhs.mpz,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::BigInt;
+    #[test]
+    fn test_size_in_base_10() {
+        // http://oeis.org/A034887
+        let num_digits = [
+            1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9,
+            10, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16, 16,
+            16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20,
+        ];
+
+        let mut result = vec![];
+        for i in 0..num_digits.len() {
+            let num = BigInt::from(2u64).pow(i as u32);
+            result.push(num.size_in_base(10));
+        }
+        assert_eq!(&result[..], &num_digits[..]);
     }
 }
