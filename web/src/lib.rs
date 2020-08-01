@@ -1,6 +1,5 @@
 use rink_core;
-use rink_core::ast::Query;
-use rink_core::reply::QueryReply;
+use rink_core::ast;
 use rink_core::text_query;
 use wasm_bindgen::prelude::*;
 
@@ -8,27 +7,30 @@ use wasm_bindgen::prelude::*;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[wasm_bindgen]
-pub fn exec_query(query: &str) -> String {
-    let mut context = rink_core::simple_context().unwrap();
-    match rink_core::one_line(&mut context, query) {
-        Ok(value) => value,
-        Err(value) => value,
-    }
+pub fn set_panic_hook() {
+    // When the `console_error_panic_hook` feature is enabled, we can call the
+    // `set_panic_hook` function at least once during initialization, and then
+    // we will get better error messages if our code ever panics.
+    //
+    // For more details see
+    // https://github.com/rustwasm/console_error_panic_hook#readme
+    #[cfg(feature = "console_error_panic_hook")]
+    console_error_panic_hook::set_once();
 }
 
 #[wasm_bindgen]
-pub struct Statement {
-    query: Query,
+pub struct Query {
+    query: ast::Query,
 }
 
 #[wasm_bindgen]
-impl Statement {
+impl Query {
     #[wasm_bindgen(constructor)]
-    pub fn new(input: &str) -> Statement {
+    pub fn new(input: &str) -> Query {
+        set_panic_hook();
         let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
         let query = text_query::parse_query(&mut iter);
-        Statement { query }
+        Query { query }
     }
 
     #[wasm_bindgen(js_name = getExpr)]
@@ -38,24 +40,22 @@ impl Statement {
 }
 
 #[wasm_bindgen]
-pub fn parse_expr(input: &str) -> Query {}
-
-#[wasm_bindgen]
-pub struct Session {
+pub struct Context {
     context: rink_core::Context,
 }
 
 #[wasm_bindgen]
-impl Session {
+impl Context {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Session {
-        Session {
-            context: rink_core::Context::new(),
+    pub fn new() -> Context {
+        Context {
+            // Todo: Use a blank context instead.
+            context: rink_core::simple_context().unwrap(),
         }
     }
-}
 
-#[wasm_bindgen]
-pub fn eval_expr(session: &mut Session, expr: Query) -> QueryReply {
-    ctx.eval_outer(&expr)
+    #[wasm_bindgen]
+    pub fn eval(&mut self, expr: &Query) -> JsValue {
+        JsValue::from_serde(&self.context.eval_outer(&expr.query)).unwrap()
+    }
 }

@@ -3,7 +3,7 @@
 #![cfg(target_arch = "wasm32")]
 
 extern crate wasm_bindgen_test;
-use rink_web::exec_query;
+use rink_web::{Context, Query};
 use wasm_bindgen_test::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
@@ -15,5 +15,8 @@ fn pass() {
 
 #[wasm_bindgen_test]
 fn check_query() {
-    assert_eq!(exec_query("3 feet to meters"), "0.9144 meter (length)");
+    let query = Query::new("3 feet to meters");
+    let mut context = Context::new();
+    let result = context.eval(&query);
+    assert_eq!(result, "0.9144 meter (length)");
 }
