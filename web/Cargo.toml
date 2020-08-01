@@ -13,7 +13,7 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["console_error_panic_hook"]
+default = ["console_error_panic_hook", "rink-core/gpl"]
 
 [dependencies.rink-core]
 path = "../core"
