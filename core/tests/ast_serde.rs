@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use assert_json_diff::assert_json_eq;
 use rink_core::*;
 use serde_json;
 use serde_json::json;
@@ -15,12 +16,13 @@ fn to_json(input: &str) -> Value {
 
 #[test]
 fn check_simple() {
-    assert_eq!(
+    assert_json_eq!(
         to_json("1 + 2"),
         json!({
             "type": "expr",
             "value": {
-                "type": "add",
+                "type": "binop",
+                "op": "add",
                 "left": {
                     "type": "const",
                     "value": "1",

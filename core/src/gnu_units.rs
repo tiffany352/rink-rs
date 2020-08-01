@@ -224,11 +224,11 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),
         )
-        .map(Expr::Const)
+        .map(Expr::new_const)
         .unwrap_or_else(Expr::Error),
         Token::Plus => Expr::new_plus(parse_term(iter)),
         Token::Dash => Expr::new_negate(parse_term(iter)),
-        Token::Slash => Expr::new_frac(Expr::Const(Numeric::one()), parse_term(iter)),
+        Token::Slash => Expr::new_frac(Expr::new_const(Numeric::one()), parse_term(iter)),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
@@ -477,7 +477,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                     props.push(Property {
                                         output_name: name.clone(),
                                         name,
-                                        input: Expr::Const(Numeric::one()),
+                                        input: Expr::new_const(Numeric::one()),
                                         input_name,
                                         output,
                                         doc: prop_doc.take(),
@@ -588,12 +588,12 @@ mod tests {
             expr: x,
         }) = expr
         {
-            if let Expr::Const(x) = *x {
+            if let Expr::Const { value: x } = *x {
                 if x != 1.into() {
                     panic!("number != 1");
                 }
             } else {
-                panic!("argument of x is not Expr::Const");
+                panic!("argument of x is not Expr::new_const");
             }
         } else {
             panic!("missing plus");
@@ -615,7 +615,10 @@ mod tests {
             Expr::Error,
             "Expected term, got Error(\"Expected LF or CRLF line endings\")"
         );
-        expect!("\\\r\n1", Expr::Const, 1.into());
+        match do_parse("\\\r\n1") {
+            Expr::Const { value: s } => assert_eq!(s, 1.into()),
+            x => panic!("Expected const, got {}", x),
+        }
 
         expect!(
             "\\a",
@@ -632,11 +635,12 @@ mod tests {
     #[test]
     fn test_float_leading_dot() {
         use crate::bigrat::BigRat;
-        expect!(
-            ".123",
-            Expr::Const,
-            Numeric::Rational(BigRat::small_ratio(123, 1000))
-        );
+        match do_parse(".123") {
+            Expr::Const { value: s } => {
+                assert_eq!(s, Numeric::Rational(BigRat::small_ratio(123, 1000)))
+            }
+            x => panic!("Expected const, got {}", x),
+        }
     }
 
     #[test]

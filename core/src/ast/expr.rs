@@ -1,12 +1,12 @@
 use super::*;
 
 #[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "lowercase")]
 #[serde(tag = "type")]
 pub enum Expr {
     Unit(String),
     Quote(String),
-    Const(Numeric),
+    Const { value: Numeric },
     Date(Vec<DateToken>),
     BinOp(BinOpExpr),
     UnaryOp(UnaryOpExpr),
@@ -17,6 +17,10 @@ pub enum Expr {
 }
 
 impl Expr {
+    pub fn new_const(value: Numeric) -> Expr {
+        Expr::Const { value }
+    }
+
     pub fn new_call(func: Function, args: Vec<Expr>) -> Expr {
         Expr::Call { func, args }
     }
@@ -111,8 +115,8 @@ impl fmt::Display for Expr {
             match *expr {
                 Expr::Unit(ref name) => write!(fmt, "{}", name),
                 Expr::Quote(ref name) => write!(fmt, "'{}'", name),
-                Expr::Const(ref num) => {
-                    let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
+                Expr::Const { ref value } => {
+                    let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
                     write!(fmt, "{}", val)
                 }
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),
@@ -197,5 +201,11 @@ impl fmt::Display for Expr {
         }
 
         recurse(self, fmt, Precedence::Equals)
+    }
+}
+
+impl From<i64> for Expr {
+    fn from(x: i64) -> Self {
+        Expr::new_const(x.into())
     }
 }

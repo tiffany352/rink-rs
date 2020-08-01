@@ -153,8 +153,8 @@ impl ExprReply {
             match *expr {
                 Expr::Unit(ref name) => parts.push(ExprParts::Unit(name.clone())),
                 Expr::Quote(ref name) => literal!(format!("'{}'", name)),
-                Expr::Const(ref num) => {
-                    let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
+                Expr::Const { ref value } => {
+                    let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
                     literal!(val)
                 }
                 Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),

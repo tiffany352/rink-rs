@@ -1,14 +1,8 @@
-use super::Expr::{self, *};
+use super::Expr::*;
 use super::Function;
 
 fn check<T: ::std::fmt::Display>(e: T, expected: &str) {
     assert_eq!(e.to_string(), expected);
-}
-
-impl From<i64> for Expr {
-    fn from(x: i64) -> Self {
-        Const(x.into())
-    }
 }
 
 #[test]

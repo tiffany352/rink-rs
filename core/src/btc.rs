@@ -18,7 +18,7 @@ pub fn parse(buf: String) -> Result<Defs, String> {
             out.push(DefEntry {
                 name: "BTC".to_owned(),
                 def: Rc::new(Def::Unit(Expr::Mul(vec![
-                    Expr::Const(price),
+                    Expr::new_const(price),
                     Expr::Unit("USD".to_owned()),
                 ]))),
                 doc: Some("Sourced from blockchain.info.".to_string()),

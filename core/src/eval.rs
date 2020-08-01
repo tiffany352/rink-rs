@@ -41,7 +41,7 @@ impl Context {
                 })
                 .ok_or_else(|| QueryError::NotFound(self.unknown_unit_err(name))),
             Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dimension::new(&**name)))),
-            Expr::Const(ref num) => Ok(Value::Number(Number::new(num.clone()))),
+            Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
             Expr::Date(ref date) => match date::try_decode(date, self) {
                 Ok(date) => Ok(Value::DateTime(date)),
                 Err(e) => Err(QueryError::Generic(e)),
@@ -408,7 +408,7 @@ impl Context {
                 );
                 Ok((map, Numeric::one()))
             }
-            Expr::Const(ref i) => Ok((BTreeMap::new(), i.clone())),
+            Expr::Const { ref value } => Ok((BTreeMap::new(), value.clone())),
             Expr::BinOp(ref binop) => match binop.op {
                 BinOpType::Equals => match *binop.left {
                     Expr::Unit(ref name) => {

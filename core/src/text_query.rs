@@ -492,7 +492,7 @@ fn parse_radix(num: &str, base: u32, description: &str) -> Expr {
     BigInt::from_str_radix(num, base)
         .map(|x| BigRat::ratio(&x, &BigInt::one()))
         .map(Numeric::Rational)
-        .map(Expr::Const)
+        .map(Expr::new_const)
         .unwrap_or_else(|_| Expr::Error(format!("Failed to parse {}", description)))
 }
 
@@ -528,7 +528,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),
         )
-        .map(Expr::Const)
+        .map(Expr::new_const)
         .unwrap_or_else(Expr::Error),
         Token::Hex(num) => parse_radix(&*num, 16, "hex"),
         Token::Oct(num) => parse_radix(&*num, 8, "octal"),

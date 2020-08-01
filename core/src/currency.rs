@@ -38,7 +38,10 @@ pub fn parse<R: Read>(reader: R) -> Result<Defs, String> {
                         out.push(DefEntry {
                             name: currency.to_owned(),
                             def: Rc::new(Def::Unit(Expr::Mul(vec![
-                                Expr::new_frac(Expr::Const(Numeric::one()), Expr::Const(num)),
+                                Expr::new_frac(
+                                    Expr::new_const(Numeric::one()),
+                                    Expr::new_const(num),
+                                ),
                                 Expr::Unit("EUR".to_string()),
                             ]))),
                             doc: Some("Sourced from European Central Bank.".to_string()),
