@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{BinOp, BinOpType, Conversion, Digits, Expr, Function, Query};
+use crate::ast::{BinOpExpr, BinOpType, Conversion, Digits, Expr, Function, Query};
 use crate::bigint::BigInt;
 use crate::context::Context;
 use crate::date;
@@ -51,7 +51,7 @@ impl Context {
             }),
             Expr::Plus(ref expr) => self.eval(&**expr),
 
-            Expr::BinOp(BinOp {
+            Expr::BinOp(BinOpExpr {
                 op: BinOpType::Equals,
                 ref left,
                 ref right,

@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{BinOp, Def, DefEntry, Defs, Expr};
+use crate::ast::{BinOpExpr, Def, DefEntry, Defs, Expr};
 use crate::number::{Dimension, Number};
 use crate::numeric::Numeric;
 use crate::substance::{Properties, Property, Substance};
@@ -99,7 +99,7 @@ impl Resolver {
                 let name = self.intern(name);
                 self.lookup(&name);
             }
-            Expr::BinOp(BinOp {
+            Expr::BinOp(BinOpExpr {
                 ref left,
                 ref right,
                 ..

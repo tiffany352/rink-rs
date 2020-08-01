@@ -9,7 +9,7 @@ pub enum Expr {
     #[serde(skip_deserializing)]
     Const(Numeric),
     Date(Vec<DateToken>),
-    BinOp(BinOp),
+    BinOp(BinOpExpr),
     Mul(Vec<Expr>),
     Neg(Box<Expr>),
     Plus(Box<Expr>),
@@ -36,7 +36,7 @@ impl Expr {
     pub fn new_bin(op: BinOpType, numer: Expr, denom: Expr) -> Expr {
         let left = Box::new(numer);
         let right = Box::new(denom);
-        Expr::BinOp(BinOp { op, left, right })
+        Expr::BinOp(BinOpExpr { op, left, right })
     }
 
     pub fn new_add(numer: Expr, denom: Expr) -> Expr {

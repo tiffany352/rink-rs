@@ -228,7 +228,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
         .unwrap_or_else(Expr::Error),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
-        Token::Slash => Expr::BinOp(BinOp {
+        Token::Slash => Expr::BinOp(BinOpExpr {
             op: BinOpType::Frac,
             left: Box::new(Expr::Const(Numeric::one())),
             right: Box::new(parse_term(iter)),
@@ -250,7 +250,7 @@ fn parse_pow(iter: &mut Iter<'_>) -> Expr {
         Token::Caret => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::BinOp(BinOp {
+            Expr::BinOp(BinOpExpr {
                 op: BinOpType::Pow,
                 left: Box::new(left),
                 right: Box::new(right),
@@ -259,7 +259,7 @@ fn parse_pow(iter: &mut Iter<'_>) -> Expr {
         Token::Pipe => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::BinOp(BinOp {
+            Expr::BinOp(BinOpExpr {
                 op: BinOpType::Frac,
                 left: Box::new(left),
                 right: Box::new(right),

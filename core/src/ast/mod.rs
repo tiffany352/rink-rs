@@ -61,7 +61,7 @@ impl BinOpType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BinOp {
+pub struct BinOpExpr {
     pub op: BinOpType,
     pub left: Box<Expr>,
     pub right: Box<Expr>,
