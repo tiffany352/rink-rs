@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub enum Conversion {
     None,
     Expr(Expr),
@@ -11,14 +11,14 @@ pub enum Conversion {
     Timezone(Tz),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub enum Digits {
     Default,
     FullInt,
     Digits(u64),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 pub enum Query {

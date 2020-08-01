@@ -1,25 +1,18 @@
 use super::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
 pub enum Expr {
     Unit(String),
     Quote(String),
-    #[serde(skip_deserializing)]
     Const(Numeric),
     Date(Vec<DateToken>),
     BinOp(BinOpExpr),
     UnaryOp(UnaryOpExpr),
     Mul(Vec<Expr>),
-    Of {
-        property: String,
-        expr: Box<Expr>,
-    },
-    Call {
-        func: Function,
-        args: Vec<Expr>,
-    },
+    Of { property: String, expr: Box<Expr> },
+    Call { func: Function, args: Vec<Expr> },
     Error(String),
 }
 
