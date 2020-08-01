@@ -287,7 +287,11 @@ impl GenericDateTime {
     }
 }
 
-fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (String, usize)> {
+fn attempt(
+    now: DateTime<UTC>,
+    date: &[DateToken],
+    pat: &[DatePattern],
+) -> Result<GenericDateTime, (String, usize)> {
     let mut parsed = Parsed::new();
     let mut tz = None;
     let mut iter = date.iter().cloned().peekable();
@@ -320,7 +324,7 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
                     )
                 })
                 .map(GenericDateTime::Timezone),
-            (Ok(time), Err(_)) => Ok(UTC::now().with_timezone(&tz).date().and_time(time).unwrap())
+            (Ok(time), Err(_)) => Ok(now.with_timezone(&tz).date().and_time(time).unwrap())
                 .map(GenericDateTime::Timezone),
             (Err(_), Ok(date)) => tz
                 .from_local_date(&date)
@@ -351,11 +355,7 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
                 })
                 .map(GenericDateTime::Fixed),
             (Ok(time), Err(_)) => Ok(GenericDateTime::Fixed(
-                UTC::now()
-                    .with_timezone(&offset)
-                    .date()
-                    .and_time(time)
-                    .unwrap(),
+                now.with_timezone(&offset).date().and_time(time).unwrap(),
             )),
             (Err(_), Ok(date)) => offset
                 .from_local_date(&date)
@@ -376,7 +376,7 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
 pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTime, String> {
     let mut best = None;
     for pat in &context.datepatterns {
-        match attempt(date, pat) {
+        match attempt(context.now, date, pat) {
             Ok(datetime) => return Ok(datetime),
             Err((e, c)) => {
                 //println!("{}", e);
@@ -432,10 +432,6 @@ pub fn from_duration(duration: &Duration) -> Result<Number, String> {
         Numeric::Rational(&ms + &ns),
         Dimension::new("s"),
     ))
-}
-
-pub fn now() -> DateTime<FixedOffset> {
-    UTC::now().with_timezone(&FixedOffset::east(0))
 }
 
 pub fn parse_datepattern<I>(iter: &mut Peekable<I>) -> Result<Vec<DatePattern>, String>
@@ -764,10 +760,12 @@ mod tests {
             Number(x.into(), None)
         }
 
+        let now = UTC::now();
+
         macro_rules! check_attempt {
             ($date:expr, $pat:expr) => {{
                 let pat = parse_datepattern(&mut $pat.chars().peekable()).unwrap();
-                attempt($date, pat.as_ref())
+                attempt(now, $date, pat.as_ref())
             }};
         }
 

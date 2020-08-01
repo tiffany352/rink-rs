@@ -8,10 +8,11 @@ use crate::numeric::Numeric;
 use crate::reply::NotFoundError;
 use crate::search;
 use crate::substance::Substance;
+use chrono::{DateTime, UTC};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The evaluation context that contains unit definitions.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Context {
     pub dimensions: BTreeSet<Dimension>,
     pub canonicalizations: BTreeMap<String, String>,
@@ -27,6 +28,7 @@ pub struct Context {
     pub substances: BTreeMap<String, Substance>,
     pub substance_symbols: BTreeMap<String, String>,
     pub temporaries: BTreeMap<String, Number>,
+    pub now: DateTime<UTC>,
     pub short_output: bool,
     pub use_humanize: bool,
 }
@@ -37,8 +39,28 @@ impl Context {
         Context {
             short_output: false,
             use_humanize: true,
-            ..Context::default()
+
+            now: UTC::now(),
+
+            dimensions: BTreeSet::new(),
+            prefixes: vec![],
+            datepatterns: vec![],
+            canonicalizations: BTreeMap::new(),
+            units: BTreeMap::new(),
+            quantities: BTreeMap::new(),
+            reverse: BTreeMap::new(),
+            definitions: BTreeMap::new(),
+            docs: BTreeMap::new(),
+            categories: BTreeMap::new(),
+            category_names: BTreeMap::new(),
+            substances: BTreeMap::new(),
+            substance_symbols: BTreeMap::new(),
+            temporaries: BTreeMap::new(),
         }
+    }
+
+    pub fn update_time(&mut self) {
+        self.now = UTC::now();
     }
 
     pub fn load_dates(&mut self, mut dates: Vec<Vec<DatePattern>>) {

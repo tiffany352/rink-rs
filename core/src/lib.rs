@@ -74,6 +74,7 @@ pub static CURRENCY_FILE: &str = include_str!("../currency.units");
 
 /// Evaluates a single line within a context.
 pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
+    ctx.update_time();
     let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     let res = ctx.eval_outer(&expr);

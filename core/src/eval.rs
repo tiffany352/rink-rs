@@ -18,6 +18,7 @@ use crate::reply::{
 use crate::search;
 use crate::substance::SubstanceGetError;
 use crate::value::{Show, Value};
+use chrono::FixedOffset;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
@@ -28,9 +29,9 @@ impl Context {
         use std::ops::*;
 
         match *expr {
-            Expr::Unit(ref name) if name == "now" => {
-                Ok(Value::DateTime(date::GenericDateTime::Fixed(date::now())))
-            }
+            Expr::Unit(ref name) if name == "now" => Ok(Value::DateTime(
+                date::GenericDateTime::Fixed(self.now.with_timezone(&FixedOffset::east(0))),
+            )),
             Expr::Unit(ref name) => self
                 .lookup(name)
                 .map(Value::Number)
@@ -908,8 +909,6 @@ impl Context {
                     })
             }
             Query::Convert(ref top, Conversion::Offset(off), None, Digits::Default) => {
-                use chrono::FixedOffset;
-
                 let top = self.eval(top)?;
                 let top = match top {
                     Value::DateTime(date) => date,
