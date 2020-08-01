@@ -16,7 +16,7 @@ pub use def::{DatePattern, Def, DefEntry, Defs, Property};
 pub use expr::{Expr, Precedence};
 pub use query::{Conversion, Digits, Query};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum Degree {
     Celsius,
@@ -65,6 +65,30 @@ pub struct BinOpExpr {
     pub op: BinOpType,
     pub left: Box<Expr>,
     pub right: Box<Expr>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[serde(untagged)]
+pub enum UnaryOpType {
+    Negative,
+    Positive,
+    Degree(Degree),
+}
+
+impl UnaryOpType {
+    pub fn is_prefix(self) -> bool {
+        match self {
+            UnaryOpType::Degree(_) => false,
+            _ => true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnaryOpExpr {
+    pub op: UnaryOpType,
+    pub expr: Box<Expr>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -10,13 +10,8 @@ pub enum Expr {
     Const(Numeric),
     Date(Vec<DateToken>),
     BinOp(BinOpExpr),
+    UnaryOp(UnaryOpExpr),
     Mul(Vec<Expr>),
-    Neg(Box<Expr>),
-    Plus(Box<Expr>),
-    Suffix {
-        suffix: Degree,
-        expr: Box<Expr>,
-    },
     Of {
         property: String,
         expr: Box<Expr>,
@@ -65,9 +60,22 @@ impl Expr {
         Expr::Of { property, expr }
     }
 
-    pub fn new_suffix(suffix: Degree, expr: Expr) -> Expr {
+    pub fn new_unary(op: UnaryOpType, expr: Expr) -> Expr {
         let expr = Box::new(expr);
-        Expr::Suffix { suffix, expr }
+        Expr::UnaryOp(UnaryOpExpr { op, expr })
+    }
+
+    pub fn new_suffix(suffix: Degree, expr: Expr) -> Expr {
+        let op = UnaryOpType::Degree(suffix);
+        Expr::new_unary(op, expr)
+    }
+
+    pub fn new_plus(expr: Expr) -> Expr {
+        Expr::new_unary(UnaryOpType::Positive, expr)
+    }
+
+    pub fn new_negate(expr: Expr) -> Expr {
+        Expr::new_unary(UnaryOpType::Negative, expr)
     }
 }
 
@@ -129,6 +137,27 @@ impl fmt::Display for Expr {
                     }
                     Ok(())
                 }
+                Expr::UnaryOp(ref unaryop) => match unaryop.op {
+                    UnaryOpType::Positive => {
+                        write!(fmt, "+")?;
+                        recurse(&unaryop.expr, fmt, Precedence::Plus)
+                    }
+                    UnaryOpType::Negative => {
+                        write!(fmt, "-")?;
+                        recurse(&unaryop.expr, fmt, Precedence::Plus)
+                    }
+                    UnaryOpType::Degree(ref suffix) => {
+                        if prec < Precedence::Mul {
+                            write!(fmt, "(")?;
+                        }
+                        recurse(&unaryop.expr, fmt, Precedence::Mul)?;
+                        write!(fmt, " {}", suffix)?;
+                        if prec < Precedence::Mul {
+                            write!(fmt, ")")?;
+                        }
+                        Ok(())
+                    }
+                },
                 Expr::Mul(ref exprs) => {
                     if prec < Precedence::Mul {
                         write!(fmt, "(")?;
@@ -155,28 +184,6 @@ impl fmt::Display for Expr {
                         recurse(arg, fmt, Precedence::Equals)?;
                     }
                     write!(fmt, ")")
-                }
-                Expr::Plus(ref expr) => {
-                    write!(fmt, "+")?;
-                    recurse(expr, fmt, Precedence::Plus)
-                }
-                Expr::Neg(ref expr) => {
-                    write!(fmt, "-")?;
-                    recurse(expr, fmt, Precedence::Plus)
-                }
-                Expr::Suffix {
-                    ref suffix,
-                    ref expr,
-                } => {
-                    if prec < Precedence::Mul {
-                        write!(fmt, "(")?;
-                    }
-                    recurse(expr, fmt, Precedence::Mul)?;
-                    write!(fmt, " {}", suffix)?;
-                    if prec < Precedence::Mul {
-                        write!(fmt, ")")?;
-                    }
-                    Ok(())
                 }
                 Expr::Of {
                     ref property,

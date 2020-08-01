@@ -533,8 +533,8 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
         Token::Hex(num) => parse_radix(&*num, 16, "hex"),
         Token::Oct(num) => parse_radix(&*num, 8, "octal"),
         Token::Bin(num) => parse_radix(&*num, 2, "binary"),
-        Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
-        Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
+        Token::Plus => Expr::new_plus(parse_term(iter)),
+        Token::Minus => Expr::new_negate(parse_term(iter)),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {

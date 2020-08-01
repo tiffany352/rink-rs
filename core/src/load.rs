@@ -107,10 +107,8 @@ impl Resolver {
                 self.eval(left);
                 self.eval(right);
             }
-            Expr::Neg(ref expr)
-            | Expr::Plus(ref expr)
-            | Expr::Suffix { ref expr, .. }
-            | Expr::Of { ref expr, .. } => self.eval(expr),
+            Expr::UnaryOp(ref unaryop) => self.eval(&unaryop.expr),
+            Expr::Of { ref expr, .. } => self.eval(expr),
 
             Expr::Mul(ref exprs)
             | Expr::Call {

@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{BinOpExpr, BinOpType, Conversion, Digits, Expr, Function, Query};
+use crate::ast::{BinOpExpr, BinOpType, Conversion, Digits, Expr, Function, Query, UnaryOpType};
 use crate::bigint::BigInt;
 use crate::context::Context;
 use crate::date;
@@ -46,10 +46,6 @@ impl Context {
                 Ok(date) => Ok(Value::DateTime(date)),
                 Err(e) => Err(QueryError::Generic(e)),
             },
-            Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| {
-                (-&v).map_err(|e| QueryError::Generic(format!("{}: - <{}>", e, v.show(self))))
-            }),
-            Expr::Plus(ref expr) => self.eval(&**expr),
 
             Expr::BinOp(BinOpExpr {
                 op: BinOpType::Equals,
@@ -90,43 +86,46 @@ impl Context {
                 })
             }
 
-            Expr::Suffix {
-                ref suffix,
-                ref expr,
-            } => {
-                let (name, base, scale) = suffix.name_base_scale();
+            Expr::UnaryOp(ref unaryop) => match unaryop.op {
+                UnaryOpType::Positive => self.eval(&unaryop.expr),
+                UnaryOpType::Negative => self.eval(&unaryop.expr).and_then(|v| {
+                    (-&v).map_err(|e| QueryError::Generic(format!("{}: - <{}>", e, v.show(self))))
+                }),
+                UnaryOpType::Degree(ref suffix) => {
+                    let (name, base, scale) = suffix.name_base_scale();
 
-                let expr = self.eval(&**expr)?;
-                let expr = match expr {
-                    Value::Number(expr) => expr,
-                    _ => {
-                        return Err(QueryError::Generic(format!(
-                            "Expected number, got: <{}> °{}",
-                            expr.show(self),
-                            name
+                    let expr = self.eval(&unaryop.expr)?;
+                    let expr = match expr {
+                        Value::Number(expr) => expr,
+                        _ => {
+                            return Err(QueryError::Generic(format!(
+                                "Expected number, got: <{}> °{}",
+                                expr.show(self),
+                                name
+                            )))
+                        }
+                    };
+                    if expr.unit != BTreeMap::new() {
+                        Err(QueryError::Generic(format!(
+                            "Expected dimensionless, got: <{}>",
+                            expr.show(self)
                         )))
+                    } else {
+                        let expr = (&expr
+                            * &self
+                                .lookup(scale)
+                                .expect(&*format!("Missing {} unit", scale)))
+                            .unwrap();
+                        Ok(Value::Number(
+                            (&expr
+                                + &self
+                                    .lookup(base)
+                                    .expect(&*format!("Missing {} constant", base)))
+                                .unwrap(),
+                        ))
                     }
-                };
-                if expr.unit != BTreeMap::new() {
-                    Err(QueryError::Generic(format!(
-                        "Expected dimensionless, got: <{}>",
-                        expr.show(self)
-                    )))
-                } else {
-                    let expr = (&expr
-                        * &self
-                            .lookup(scale)
-                            .expect(&*format!("Missing {} unit", scale)))
-                        .unwrap();
-                    Ok(Value::Number(
-                        (&expr
-                            + &self
-                                .lookup(base)
-                                .expect(&*format!("Missing {} constant", base)))
-                            .unwrap(),
-                    ))
                 }
-            }
+            },
 
             Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
                 a.and_then(|a| {
@@ -535,11 +534,13 @@ impl Context {
                 );
                 Ok((map, Numeric::one()))
             }
-            Expr::Neg(ref v) => self.eval_unit_name(v).map(|(u, v)| (u, -&v)),
-            Expr::Plus(ref v) => self.eval_unit_name(v),
-            Expr::Suffix { .. } => Err(QueryError::Generic(
-                "Temperature conversions must not be compound units".to_string(),
-            )),
+            Expr::UnaryOp(ref unaryop) => match unaryop.op {
+                UnaryOpType::Positive => self.eval_unit_name(&unaryop.expr),
+                UnaryOpType::Negative => self.eval_unit_name(&unaryop.expr).map(|(u, v)| (u, -&v)),
+                UnaryOpType::Degree(_) => Err(QueryError::Generic(
+                    "Temperature conversions must not be compound units".to_string(),
+                )),
+            },
             Expr::Date(_) => Err(QueryError::Generic(
                 "Dates are not allowed in the right hand side of conversions".to_string(),
             )),

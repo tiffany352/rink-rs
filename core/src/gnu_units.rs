@@ -226,13 +226,9 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
         )
         .map(Expr::Const)
         .unwrap_or_else(Expr::Error),
-        Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
-        Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
-        Token::Slash => Expr::BinOp(BinOpExpr {
-            op: BinOpType::Frac,
-            left: Box::new(Expr::Const(Numeric::one())),
-            right: Box::new(parse_term(iter)),
-        }),
+        Token::Plus => Expr::new_plus(parse_term(iter)),
+        Token::Dash => Expr::new_negate(parse_term(iter)),
+        Token::Slash => Expr::new_frac(Expr::Const(Numeric::one()), parse_term(iter)),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
@@ -587,7 +583,11 @@ mod tests {
     fn test_parse_term_plus() {
         let expr = do_parse("+1");
 
-        if let Expr::Plus(x) = expr {
+        if let Expr::UnaryOp(UnaryOpExpr {
+            op: UnaryOpType::Positive,
+            expr: x,
+        }) = expr
+        {
             if let Expr::Const(x) = *x {
                 if x != 1.into() {
                     panic!("number != 1");

@@ -1,4 +1,4 @@
-use crate::ast::{Digits, Expr, Precedence};
+use crate::ast::{Digits, Expr, Precedence, UnaryOpType};
 use crate::number::NumberParts;
 use chrono::{DateTime, TimeZone};
 use std::collections::BTreeMap;
@@ -193,27 +193,26 @@ impl ExprReply {
                         literal!(")");
                     }
                 }
-                Expr::Plus(ref expr) => {
-                    literal!("+");
-                    recurse(expr, parts, Precedence::Plus)
-                }
-                Expr::Neg(ref expr) => {
-                    literal!("-");
-                    recurse(expr, parts, Precedence::Plus)
-                }
-                Expr::Suffix {
-                    ref suffix,
-                    ref expr,
-                } => {
-                    if prec < Precedence::Mul {
-                        literal!("(");
+                Expr::UnaryOp(ref unaryop) => match unaryop.op {
+                    UnaryOpType::Positive => {
+                        literal!("+");
+                        recurse(expr, parts, Precedence::Plus)
                     }
-                    recurse(expr, parts, Precedence::Mul);
-                    literal!(suffix.to_string());
-                    if prec < Precedence::Mul {
-                        literal!(")");
+                    UnaryOpType::Negative => {
+                        literal!("-");
+                        recurse(expr, parts, Precedence::Plus)
                     }
-                }
+                    UnaryOpType::Degree(ref suffix) => {
+                        if prec < Precedence::Mul {
+                            literal!("(");
+                        }
+                        recurse(&unaryop.expr, parts, Precedence::Mul);
+                        literal!(suffix.to_string());
+                        if prec < Precedence::Mul {
+                            literal!(")");
+                        }
+                    }
+                },
                 Expr::Of {
                     ref property,
                     ref expr,
