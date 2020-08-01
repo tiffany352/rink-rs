@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{Def, DefEntry, Defs, Expr};
+use crate::ast::{BinOp, Def, DefEntry, Defs, Expr};
 use crate::number::{Dimension, Number};
 use crate::numeric::Numeric;
 use crate::substance::{Properties, Property, Substance};
@@ -99,18 +99,23 @@ impl Resolver {
                 let name = self.intern(name);
                 self.lookup(&name);
             }
-            Expr::Frac(ref left, ref right)
-            | Expr::Pow(ref left, ref right)
-            | Expr::Add(ref left, ref right)
-            | Expr::Sub(ref left, ref right) => {
+            Expr::BinOp(BinOp {
+                ref left,
+                ref right,
+                ..
+            }) => {
                 self.eval(left);
                 self.eval(right);
             }
             Expr::Neg(ref expr)
             | Expr::Plus(ref expr)
-            | Expr::Suffix(_, ref expr)
-            | Expr::Of(_, ref expr) => self.eval(expr),
-            Expr::Mul(ref exprs) | Expr::Call(_, ref exprs) => {
+            | Expr::Suffix { ref expr, .. }
+            | Expr::Of { ref expr, .. } => self.eval(expr),
+
+            Expr::Mul(ref exprs)
+            | Expr::Call {
+                args: ref exprs, ..
+            } => {
                 for expr in exprs {
                     self.eval(expr);
                 }

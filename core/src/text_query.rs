@@ -485,7 +485,7 @@ fn parse_function(iter: &mut Iter<'_>, func: Function) -> Expr {
         }
         _ => vec![parse_pow(iter)],
     };
-    Expr::Call(func, args)
+    Expr::new_call(func, args)
 }
 
 fn parse_radix(num: &str, base: u32, description: &str) -> Expr {
@@ -516,7 +516,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
                 match iter.peek().cloned().unwrap() {
                     Token::Ident(ref s) if s == "of" => {
                         iter.next();
-                        Expr::Of(id.clone(), Box::new(parse_juxt(iter)))
+                        Expr::new_of(id, parse_juxt(iter))
                     }
                     _ => Expr::Unit(id.to_string()),
                 }
@@ -570,7 +570,7 @@ fn parse_pow(iter: &mut Iter<'_>) -> Expr {
         Token::Caret => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::Pow(Box::new(left), Box::new(right))
+            Expr::new_pow(left, right)
         }
         _ => left,
     }
@@ -582,7 +582,7 @@ fn parse_frac(iter: &mut Iter<'_>) -> Expr {
         Token::Pipe => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::Frac(Box::new(left), Box::new(right))
+            Expr::new_frac(left, right)
         }
         _ => left,
     }
@@ -605,7 +605,7 @@ fn parse_juxt(iter: &mut Iter<'_>) -> Expr {
             | Token::Eof => break,
             Token::Degree(deg) => {
                 iter.next();
-                terms = vec![Expr::Suffix(deg, Box::new(Expr::Mul(terms)))]
+                terms = vec![Expr::new_suffix(deg, Expr::Mul(terms))]
             }
             _ => terms.push(parse_frac(iter)),
         }
@@ -628,7 +628,7 @@ fn parse_div(iter: &mut Iter<'_>) -> Expr {
                 } else {
                     Expr::Mul(terms.drain(..).collect())
                 };
-                terms = vec![Expr::Frac(Box::new(left), Box::new(parse_juxt(iter)))];
+                terms = vec![Expr::new_frac(left, parse_juxt(iter))];
             }
             Token::Asterisk => {
                 iter.next();
@@ -651,12 +651,12 @@ fn parse_add(iter: &mut Iter<'_>) -> Expr {
             Token::Plus => {
                 iter.next();
                 let right = parse_div(iter);
-                left = Expr::Add(Box::new(left), Box::new(right))
+                left = Expr::new_add(left, right)
             }
             Token::Minus => {
                 iter.next();
                 let right = parse_div(iter);
-                left = Expr::Sub(Box::new(left), Box::new(right))
+                left = Expr::new_sub(left, right)
             }
             _ => return left,
         }
@@ -669,7 +669,7 @@ fn parse_eq(iter: &mut Iter<'_>) -> Expr {
         Token::Equals => {
             iter.next();
             let right = parse_add(iter);
-            Expr::Equals(Box::new(left), Box::new(right))
+            Expr::new_equals(left, right)
         }
         _ => left,
     }

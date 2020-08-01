@@ -212,7 +212,10 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
         Token::Ident(name) => match iter.peek().cloned().unwrap() {
             Token::Ident(ref s) if s == "of" => {
                 iter.next();
-                Expr::Of(name, Box::new(parse_mul(iter)))
+                Expr::Of {
+                    property: name,
+                    expr: Box::new(parse_mul(iter)),
+                }
             }
             _ => Expr::Unit(name),
         },
@@ -225,10 +228,11 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
         .unwrap_or_else(Expr::Error),
         Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
         Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
-        Token::Slash => Expr::Frac(
-            Box::new(Expr::Const(Numeric::one())),
-            Box::new(parse_term(iter)),
-        ),
+        Token::Slash => Expr::BinOp(BinOp {
+            op: BinOpType::Frac,
+            left: Box::new(Expr::Const(Numeric::one())),
+            right: Box::new(parse_term(iter)),
+        }),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
@@ -246,12 +250,20 @@ fn parse_pow(iter: &mut Iter<'_>) -> Expr {
         Token::Caret => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::Pow(Box::new(left), Box::new(right))
+            Expr::BinOp(BinOp {
+                op: BinOpType::Pow,
+                left: Box::new(left),
+                right: Box::new(right),
+            })
         }
         Token::Pipe => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::Frac(Box::new(left), Box::new(right))
+            Expr::BinOp(BinOp {
+                op: BinOpType::Frac,
+                left: Box::new(left),
+                right: Box::new(right),
+            })
         }
         _ => left,
     }
@@ -285,7 +297,7 @@ fn parse_div(iter: &mut Iter<'_>) -> Expr {
     while let Token::Slash = *iter.peek().unwrap() {
         iter.next();
         let right = parse_mul(iter);
-        left = Expr::Frac(Box::new(left), Box::new(right));
+        left = Expr::new_frac(left, right);
     }
     left
 }
@@ -296,12 +308,12 @@ fn parse_add(iter: &mut Iter<'_>) -> Expr {
         Token::Plus => {
             iter.next();
             let right = parse_add(iter);
-            Expr::Add(Box::new(left), Box::new(right))
+            Expr::new_add(left, right)
         }
         Token::Dash => {
             iter.next();
             let right = parse_add(iter);
-            Expr::Sub(Box::new(left), Box::new(right))
+            Expr::new_sub(left, right)
         }
         _ => left,
     }

@@ -1,4 +1,4 @@
-use crate::ast::{Digits, Expr};
+use crate::ast::{Digits, Expr, Precedence};
 use crate::number::NumberParts;
 use chrono::{DateTime, TimeZone};
 use std::collections::BTreeMap;
@@ -144,34 +144,10 @@ impl ExprReply {
     pub fn from(expr: &Expr) -> ExprReply {
         let mut parts = vec![];
 
-        #[derive(PartialOrd, Ord, PartialEq, Eq)]
-        enum Prec {
-            Term,
-            Plus,
-            Pow,
-            Mul,
-            Div,
-            Add,
-            Equals,
-        }
-
-        fn recurse(expr: &Expr, parts: &mut Vec<ExprParts>, prec: Prec) {
+        fn recurse(expr: &Expr, parts: &mut Vec<ExprParts>, prec: Precedence) {
             macro_rules! literal {
                 ($e:expr) => {{
                     parts.push(ExprParts::Literal($e.to_owned()))
-                }};
-            }
-            macro_rules! binop {
-                ($left:expr, $right:expr, $prec:expr, $succ:expr, $sym:expr) => {{
-                    if prec < $prec {
-                        literal!("(");
-                    }
-                    recurse($left, parts, $succ);
-                    literal!($sym);
-                    recurse($right, parts, $prec);
-                    if prec < $prec {
-                        literal!(")");
-                    }
                 }};
             }
             match *expr {
@@ -183,60 +159,72 @@ impl ExprReply {
                 }
                 Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
                 Expr::Mul(ref exprs) => {
-                    if prec < Prec::Mul {
+                    if prec < Precedence::Mul {
                         literal!("(");
                     }
                     for expr in exprs.iter() {
-                        recurse(expr, parts, Prec::Pow);
+                        recurse(expr, parts, Precedence::Pow);
                     }
-                    if prec < Prec::Mul {
+                    if prec < Precedence::Mul {
                         literal!(")");
                     }
                 }
-                Expr::Call(ref func, ref args) => {
+                Expr::Call { ref func, ref args } => {
                     literal!(format!("{}(", func.name()));
                     if let Some(first) = args.first() {
-                        recurse(first, parts, Prec::Equals);
+                        recurse(first, parts, Precedence::Equals);
                     }
                     for arg in args.iter().skip(1) {
                         literal!(",");
-                        recurse(arg, parts, Prec::Equals);
+                        recurse(arg, parts, Precedence::Equals);
                     }
                     literal!(")")
                 }
-                Expr::Pow(ref left, ref right) => binop!(left, right, Prec::Pow, Prec::Term, "^"),
-                Expr::Frac(ref left, ref right) => binop!(left, right, Prec::Div, Prec::Mul, " / "),
-                Expr::Add(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " + "),
-                Expr::Sub(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " - "),
-                Expr::Plus(ref expr) => {
-                    literal!("+");
-                    recurse(expr, parts, Prec::Plus)
-                }
-                Expr::Neg(ref expr) => {
-                    literal!("-");
-                    recurse(expr, parts, Prec::Plus)
-                }
-                Expr::Equals(ref left, ref right) => {
-                    binop!(left, right, Prec::Equals, Prec::Add, " = ")
-                }
-                Expr::Suffix(ref op, ref expr) => {
-                    if prec < Prec::Mul {
+                Expr::BinOp(ref binop) => {
+                    let op_prec = Precedence::from(binop.op);
+                    let succ = Precedence::next(binop.op);
+                    if prec < op_prec {
                         literal!("(");
                     }
-                    recurse(expr, parts, Prec::Mul);
-                    literal!(op.to_string());
-                    if prec < Prec::Mul {
+                    recurse(&binop.left, parts, succ);
+                    literal!(binop.op.symbol());
+                    recurse(&binop.right, parts, op_prec);
+                    if prec < op_prec {
                         literal!(")");
                     }
                 }
-                Expr::Of(ref field, ref expr) => {
-                    if prec < Prec::Add {
+                Expr::Plus(ref expr) => {
+                    literal!("+");
+                    recurse(expr, parts, Precedence::Plus)
+                }
+                Expr::Neg(ref expr) => {
+                    literal!("-");
+                    recurse(expr, parts, Precedence::Plus)
+                }
+                Expr::Suffix {
+                    ref suffix,
+                    ref expr,
+                } => {
+                    if prec < Precedence::Mul {
+                        literal!("(");
+                    }
+                    recurse(expr, parts, Precedence::Mul);
+                    literal!(suffix.to_string());
+                    if prec < Precedence::Mul {
+                        literal!(")");
+                    }
+                }
+                Expr::Of {
+                    ref property,
+                    ref expr,
+                } => {
+                    if prec < Precedence::Add {
                         literal!("(");
                     }
                     let mut sub = vec![];
-                    recurse(expr, &mut sub, Prec::Div);
-                    parts.push(ExprParts::Property(field.to_owned(), sub));
-                    if prec < Prec::Add {
+                    recurse(expr, &mut sub, Precedence::Div);
+                    parts.push(ExprParts::Property(property.to_owned(), sub));
+                    if prec < Precedence::Add {
                         literal!(")");
                     }
                 }
@@ -244,7 +232,7 @@ impl ExprReply {
             }
         }
 
-        recurse(expr, &mut parts, Prec::Equals);
+        recurse(expr, &mut parts, Precedence::Equals);
 
         ExprReply { exprs: parts }
     }

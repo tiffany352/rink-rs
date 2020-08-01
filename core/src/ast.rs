@@ -29,26 +29,60 @@ pub enum DateToken {
     Error(String),
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum BinOpType {
+    Add,
+    Sub,
+    Frac,
+    Pow,
+    Equals,
+}
+
+impl BinOpType {
+    pub fn symbol(self) -> &'static str {
+        match self {
+            BinOpType::Add => " + ",
+            BinOpType::Sub => " - ",
+            BinOpType::Frac => " / ",
+            BinOpType::Pow => "^",
+            BinOpType::Equals => " = ",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BinOp {
+    pub op: BinOpType,
+    pub left: Box<Expr>,
+    pub right: Box<Expr>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(tag = "type", content = "value")]
+#[serde(tag = "type")]
 pub enum Expr {
     Unit(String),
     Quote(String),
     #[serde(skip_deserializing)]
     Const(Numeric),
     Date(Vec<DateToken>),
-    Frac(Box<Expr>, Box<Expr>),
+    BinOp(BinOp),
     Mul(Vec<Expr>),
-    Pow(Box<Expr>, Box<Expr>),
-    Add(Box<Expr>, Box<Expr>),
-    Sub(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
     Plus(Box<Expr>),
-    Equals(Box<Expr>, Box<Expr>),
-    Suffix(Degree, Box<Expr>),
-    Of(String, Box<Expr>),
-    Call(Function, Vec<Expr>),
+    Suffix {
+        suffix: Degree,
+        expr: Box<Expr>,
+    },
+    Of {
+        property: String,
+        expr: Box<Expr>,
+    },
+    Call {
+        func: Function,
+        args: Vec<Expr>,
+    },
     Error(String),
 }
 
@@ -257,34 +291,42 @@ impl Degree {
     }
 }
 
+#[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Copy)]
+pub enum Precedence {
+    Term,
+    Plus,
+    Pow,
+    Mul,
+    Div,
+    Add,
+    Equals,
+}
+
+impl Precedence {
+    pub fn from(binop_type: BinOpType) -> Precedence {
+        match binop_type {
+            BinOpType::Add => Precedence::Add,
+            BinOpType::Sub => Precedence::Add,
+            BinOpType::Pow => Precedence::Pow,
+            BinOpType::Frac => Precedence::Div,
+            BinOpType::Equals => Precedence::Equals,
+        }
+    }
+
+    pub fn next(binop_type: BinOpType) -> Precedence {
+        match binop_type {
+            BinOpType::Add => Precedence::Div,
+            BinOpType::Sub => Precedence::Div,
+            BinOpType::Pow => Precedence::Term,
+            BinOpType::Frac => Precedence::Mul,
+            BinOpType::Equals => Precedence::Add,
+        }
+    }
+}
+
 impl fmt::Display for Expr {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        #[derive(PartialOrd, Ord, PartialEq, Eq)]
-        enum Prec {
-            Term,
-            Plus,
-            Pow,
-            Mul,
-            Div,
-            Add,
-            Equals,
-        }
-
-        fn recurse(expr: &Expr, fmt: &mut fmt::Formatter<'_>, prec: Prec) -> fmt::Result {
-            macro_rules! binop {
-                ($left:expr, $right:expr, $prec:expr, $succ:expr, $sym:expr) => {{
-                    if prec < $prec {
-                        write!(fmt, "(")?;
-                    }
-                    recurse($left, fmt, $succ)?;
-                    write!(fmt, $sym)?;
-                    recurse($right, fmt, $prec)?;
-                    if prec < $prec {
-                        write!(fmt, ")")?;
-                    }
-                    Ok(())
-                }};
-            }
+        fn recurse(expr: &Expr, fmt: &mut fmt::Formatter<'_>, prec: Precedence) -> fmt::Result {
             match *expr {
                 Expr::Unit(ref name) => write!(fmt, "{}", name),
                 Expr::Quote(ref name) => write!(fmt, "'{}'", name),
@@ -293,66 +335,79 @@ impl fmt::Display for Expr {
                     write!(fmt, "{}", val)
                 }
                 Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),
+                Expr::BinOp(ref binop) => {
+                    let op_prec = Precedence::from(binop.op);
+                    let succ = Precedence::next(binop.op);
+                    if prec < op_prec {
+                        write!(fmt, "(")?;
+                    }
+                    recurse(&binop.left, fmt, succ)?;
+                    write!(fmt, "{}", binop.op.symbol())?;
+                    recurse(&binop.right, fmt, op_prec)?;
+                    if prec < op_prec {
+                        write!(fmt, ")")?;
+                    }
+                    Ok(())
+                }
                 Expr::Mul(ref exprs) => {
-                    if prec < Prec::Mul {
+                    if prec < Precedence::Mul {
                         write!(fmt, "(")?;
                     }
                     if let Some(first) = exprs.first() {
-                        recurse(first, fmt, Prec::Pow)?;
+                        recurse(first, fmt, Precedence::Pow)?;
                     }
                     for expr in exprs.iter().skip(1) {
                         write!(fmt, " ")?;
-                        recurse(expr, fmt, Prec::Pow)?;
+                        recurse(expr, fmt, Precedence::Pow)?;
                     }
-                    if prec < Prec::Mul {
+                    if prec < Precedence::Mul {
                         write!(fmt, ")")?;
                     }
                     Ok(())
                 }
-                Expr::Call(ref func, ref args) => {
+                Expr::Call { ref func, ref args } => {
                     write!(fmt, "{}(", func.name())?;
                     if let Some(first) = args.first() {
-                        recurse(first, fmt, Prec::Equals)?;
+                        recurse(first, fmt, Precedence::Equals)?;
                     }
                     for arg in args.iter().skip(1) {
                         write!(fmt, ", ")?;
-                        recurse(arg, fmt, Prec::Equals)?;
+                        recurse(arg, fmt, Precedence::Equals)?;
                     }
                     write!(fmt, ")")
                 }
-                Expr::Pow(ref left, ref right) => binop!(left, right, Prec::Pow, Prec::Term, "^"),
-                Expr::Frac(ref left, ref right) => binop!(left, right, Prec::Div, Prec::Mul, " / "),
-                Expr::Add(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " + "),
-                Expr::Sub(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " - "),
                 Expr::Plus(ref expr) => {
                     write!(fmt, "+")?;
-                    recurse(expr, fmt, Prec::Plus)
+                    recurse(expr, fmt, Precedence::Plus)
                 }
                 Expr::Neg(ref expr) => {
                     write!(fmt, "-")?;
-                    recurse(expr, fmt, Prec::Plus)
+                    recurse(expr, fmt, Precedence::Plus)
                 }
-                Expr::Equals(ref left, ref right) => {
-                    binop!(left, right, Prec::Equals, Prec::Add, " = ")
-                }
-                Expr::Suffix(ref op, ref expr) => {
-                    if prec < Prec::Mul {
+                Expr::Suffix {
+                    ref suffix,
+                    ref expr,
+                } => {
+                    if prec < Precedence::Mul {
                         write!(fmt, "(")?;
                     }
-                    recurse(expr, fmt, Prec::Mul)?;
-                    write!(fmt, " {}", op)?;
-                    if prec < Prec::Mul {
+                    recurse(expr, fmt, Precedence::Mul)?;
+                    write!(fmt, " {}", suffix)?;
+                    if prec < Precedence::Mul {
                         write!(fmt, ")")?;
                     }
                     Ok(())
                 }
-                Expr::Of(ref field, ref expr) => {
-                    if prec < Prec::Add {
+                Expr::Of {
+                    ref property,
+                    ref expr,
+                } => {
+                    if prec < Precedence::Add {
                         write!(fmt, "(")?;
                     }
-                    write!(fmt, "{} of ", field)?;
-                    recurse(expr, fmt, Prec::Div)?;
-                    if prec < Prec::Add {
+                    write!(fmt, "{} of ", property)?;
+                    recurse(expr, fmt, Precedence::Div)?;
+                    if prec < Precedence::Add {
                         write!(fmt, ")")?;
                     }
                     Ok(())
@@ -361,7 +416,7 @@ impl fmt::Display for Expr {
             }
         }
 
-        recurse(self, fmt, Prec::Equals)
+        recurse(self, fmt, Precedence::Equals)
     }
 }
 
@@ -409,6 +464,49 @@ impl fmt::Display for DateToken {
     }
 }
 
+impl Expr {
+    pub fn new_call(func: Function, args: Vec<Expr>) -> Expr {
+        Expr::Call { func, args }
+    }
+
+    pub fn new_bin(op: BinOpType, numer: Expr, denom: Expr) -> Expr {
+        let left = Box::new(numer);
+        let right = Box::new(denom);
+        Expr::BinOp(BinOp { op, left, right })
+    }
+
+    pub fn new_add(numer: Expr, denom: Expr) -> Expr {
+        Expr::new_bin(BinOpType::Add, numer, denom)
+    }
+
+    pub fn new_sub(numer: Expr, denom: Expr) -> Expr {
+        Expr::new_bin(BinOpType::Sub, numer, denom)
+    }
+
+    pub fn new_frac(numer: Expr, denom: Expr) -> Expr {
+        Expr::new_bin(BinOpType::Frac, numer, denom)
+    }
+
+    pub fn new_pow(numer: Expr, denom: Expr) -> Expr {
+        Expr::new_bin(BinOpType::Pow, numer, denom)
+    }
+
+    pub fn new_equals(numer: Expr, denom: Expr) -> Expr {
+        Expr::new_bin(BinOpType::Equals, numer, denom)
+    }
+
+    pub fn new_of(property: &str, expr: Expr) -> Expr {
+        let property = property.to_owned();
+        let expr = Box::new(expr);
+        Expr::Of { property, expr }
+    }
+
+    pub fn new_suffix(suffix: Degree, expr: Expr) -> Expr {
+        let expr = Box::new(expr);
+        Expr::Suffix { suffix, expr }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::Expr::{self, *};
@@ -426,11 +524,32 @@ mod test {
 
     #[test]
     fn test_display_call() {
-        check(Call(Function::Sin, vec![]), "sin()");
-        check(Call(Function::Sin, vec![1.into()]), "sin(1)");
-        check(Call(Function::Sin, vec![1.into(), 2.into()]), "sin(1, 2)");
         check(
-            Call(Function::Sin, vec![1.into(), 2.into(), 3.into()]),
+            Call {
+                func: Function::Sin,
+                args: vec![],
+            },
+            "sin()",
+        );
+        check(
+            Call {
+                func: Function::Sin,
+                args: vec![1.into()],
+            },
+            "sin(1)",
+        );
+        check(
+            Call {
+                func: Function::Sin,
+                args: vec![1.into(), 2.into()],
+            },
+            "sin(1, 2)",
+        );
+        check(
+            Call {
+                func: Function::Sin,
+                args: vec![1.into(), 2.into(), 3.into()],
+            },
             "sin(1, 2, 3)",
         );
     }

@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{Conversion, Digits, Expr, Function, Query};
+use crate::ast::{BinOp, BinOpType, Conversion, Digits, Expr, Function, Query};
 use crate::bigint::BigInt;
 use crate::context::Context;
 use crate::date;
@@ -26,21 +26,6 @@ impl Context {
     /// conversions.
     pub fn eval(&self, expr: &Expr) -> Result<Value, QueryError> {
         use std::ops::*;
-        macro_rules! operator {
-            ($left:ident $op:ident $opname:tt $right:ident) => {{
-                let left = self.eval(&**$left)?;
-                let right = self.eval(&**$right)?;
-                ((&left).$op(&right)).map_err(|e| {
-                    QueryError::Generic(format!(
-                        "{}: <{}> {} <{}>",
-                        e,
-                        left.show(self),
-                        stringify!($opname),
-                        right.show(self)
-                    ))
-                })
-            }};
-        }
 
         match *expr {
             Expr::Unit(ref name) if name == "now" => {
@@ -66,38 +51,75 @@ impl Context {
             }),
             Expr::Plus(ref expr) => self.eval(&**expr),
 
-            Expr::Frac(ref left, ref right) => operator!(left div / right),
-            Expr::Add(ref left, ref right) => operator!(left add + right),
-            Expr::Sub(ref left, ref right) => operator!(left sub - right),
-            Expr::Pow(ref left, ref right) => operator!(left pow ^ right),
+            Expr::BinOp(BinOp {
+                op: BinOpType::Equals,
+                ref left,
+                ref right,
+            }) => {
+                match **left {
+                    Expr::Unit(_) => (),
+                    ref x => {
+                        return Err(QueryError::Generic(format!(
+                            "= is currently only used for inline unit definitions: \
+                             expected unit, got {}",
+                            x
+                        )))
+                    }
+                };
+                self.eval(right)
+            }
 
-            Expr::Suffix(ref deg, ref left) => {
-                let (name, base, scale) = deg.name_base_scale();
+            Expr::BinOp(ref binop) => {
+                let left = self.eval(&binop.left)?;
+                let right = self.eval(&binop.right)?;
+                let result = match binop.op {
+                    BinOpType::Add => left.add(&right),
+                    BinOpType::Sub => left.sub(&right),
+                    BinOpType::Frac => left.div(&right),
+                    BinOpType::Pow => left.pow(&right),
+                    BinOpType::Equals => panic!("Should be unreachable"),
+                };
+                result.map_err(|e| {
+                    QueryError::Generic(format!(
+                        "{}: <{}> {} <{}>",
+                        e,
+                        left.show(self),
+                        binop.op.symbol().trim(),
+                        right.show(self)
+                    ))
+                })
+            }
 
-                let left = self.eval(&**left)?;
-                let left = match left {
-                    Value::Number(left) => left,
+            Expr::Suffix {
+                ref suffix,
+                ref expr,
+            } => {
+                let (name, base, scale) = suffix.name_base_scale();
+
+                let expr = self.eval(&**expr)?;
+                let expr = match expr {
+                    Value::Number(expr) => expr,
                     _ => {
                         return Err(QueryError::Generic(format!(
                             "Expected number, got: <{}> °{}",
-                            left.show(self),
+                            expr.show(self),
                             name
                         )))
                     }
                 };
-                if left.unit != BTreeMap::new() {
+                if expr.unit != BTreeMap::new() {
                     Err(QueryError::Generic(format!(
                         "Expected dimensionless, got: <{}>",
-                        left.show(self)
+                        expr.show(self)
                     )))
                 } else {
-                    let left = (&left
+                    let expr = (&expr
                         * &self
                             .lookup(scale)
                             .expect(&*format!("Missing {} unit", scale)))
                         .unwrap();
                     Ok(Value::Number(
-                        (&left
+                        (&expr
                             + &self
                                 .lookup(base)
                                 .expect(&*format!("Missing {} constant", base)))
@@ -119,39 +141,29 @@ impl Context {
                     })
                 })
             }),
-            Expr::Equals(ref left, ref right) => {
-                match **left {
-                    Expr::Unit(_) => (),
-                    ref x => {
-                        return Err(QueryError::Generic(format!(
-                            "= is currently only used for inline unit definitions: \
-                             expected unit, got {}",
-                            x
-                        )))
-                    }
-                };
-                self.eval(right)
-            }
-            Expr::Of(ref field, ref val) => {
-                let val = self.eval(val)?;
-                let val = match val {
+            Expr::Of {
+                ref property,
+                ref expr,
+            } => {
+                let expr = self.eval(expr)?;
+                let expr = match expr {
                     Value::Substance(sub) => sub,
                     x => {
                         return Err(QueryError::Generic(format!(
                             "Not defined: {} of <{}>",
-                            field,
+                            property,
                             x.show(self)
                         )))
                     }
                 };
-                val.get(&**field).map(Value::Number).map_err(|e| match e {
+                expr.get(property).map(Value::Number).map_err(|e| match e {
                     SubstanceGetError::Generic(s) => QueryError::Generic(s),
                     SubstanceGetError::Conformance(l, r) => {
                         QueryError::Conformance(Box::new(self.conformance_err(&l, &r)))
                     }
                 })
             }
-            Expr::Call(ref func, ref args) => {
+            Expr::Call { ref func, ref args } => {
                 let args = args
                     .iter()
                     .map(|x| self.eval(x))
@@ -386,18 +398,7 @@ impl Context {
         expr: &Expr,
     ) -> Result<(BTreeMap<String, isize>, Numeric), QueryError> {
         match *expr {
-            Expr::Equals(ref left, ref _right) => match **left {
-                Expr::Unit(ref name) => {
-                    let mut map = BTreeMap::new();
-                    map.insert(name.clone(), 1);
-                    Ok((map, Numeric::one()))
-                }
-                ref x => Err(QueryError::Generic(format!(
-                    "Expected identifier, got {:?}",
-                    x
-                ))),
-            },
-            Expr::Call(_, _) => Err(QueryError::Generic(
+            Expr::Call { .. } => Err(QueryError::Generic(
                 "Calls are not allowed in the right hand side of conversions".to_string(),
             )),
             Expr::Unit(ref name) | Expr::Quote(ref name) => {
@@ -409,22 +410,83 @@ impl Context {
                 Ok((map, Numeric::one()))
             }
             Expr::Const(ref i) => Ok((BTreeMap::new(), i.clone())),
-            Expr::Frac(ref left, ref right) => {
-                let (left, lv) = self.eval_unit_name(left)?;
-                let (right, rv) = self.eval_unit_name(right)?;
-                let right = right
-                    .into_iter()
-                    .map(|(k, v)| (k, -v))
-                    .collect::<BTreeMap<_, _>>();
-                Ok((
-                    crate::btree_merge(
-                        &left,
-                        &right,
-                        |a, b| if a + b != 0 { Some(a + b) } else { None },
-                    ),
-                    &lv / &rv,
-                ))
-            }
+            Expr::BinOp(ref binop) => match binop.op {
+                BinOpType::Equals => match *binop.left {
+                    Expr::Unit(ref name) => {
+                        let mut map = BTreeMap::new();
+                        map.insert(name.clone(), 1);
+                        Ok((map, Numeric::one()))
+                    }
+                    ref x => Err(QueryError::Generic(format!(
+                        "Expected identifier, got {:?}",
+                        x
+                    ))),
+                },
+                BinOpType::Add | BinOpType::Sub => {
+                    let (left_unit, left) = self.eval_unit_name(&binop.left)?;
+                    let (right_unit, _right) = self.eval_unit_name(&binop.right)?;
+
+                    if left_unit != right_unit {
+                        return Err(QueryError::Generic(
+                            "Add of values with differing \
+                                 dimensions is not meaningful"
+                                .to_string(),
+                        ));
+                    }
+                    Ok((left_unit, left))
+                }
+                BinOpType::Frac => {
+                    let (left_unit, left) = self.eval_unit_name(&binop.left)?;
+                    let (right_unit, right) = self.eval_unit_name(&binop.right)?;
+
+                    let right_unit = right_unit
+                        .into_iter()
+                        .map(|(k, v)| (k, -v))
+                        .collect::<BTreeMap<_, _>>();
+                    Ok((
+                        crate::btree_merge(&left_unit, &right_unit, |a, b| {
+                            if a + b != 0 {
+                                Some(a + b)
+                            } else {
+                                None
+                            }
+                        }),
+                        &left / &right,
+                    ))
+                }
+                BinOpType::Pow => {
+                    let right = self.eval(&binop.right)?;
+                    let right = match right {
+                        Value::Number(ref num) => num,
+                        _ => {
+                            return Err(QueryError::Generic(
+                                "Exponents must be numbers".to_string(),
+                            ))
+                        }
+                    };
+                    if !right.dimless() {
+                        return Err(QueryError::Generic(
+                            "Exponents must be dimensionless".to_string(),
+                        ));
+                    }
+                    let right = right.value.to_f64();
+                    let (left_unit, left_value) = self.eval_unit_name(&binop.left)?;
+                    Ok((
+                        left_unit
+                            .into_iter()
+                            .filter_map(|(k, v)| {
+                                let v = v * right as isize;
+                                if v != 0 {
+                                    Some((k, v))
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect::<BTreeMap<_, _>>(),
+                        pow(&left_value, right as i32),
+                    ))
+                }
+            },
             Expr::Mul(ref args) => {
                 args[1..]
                     .iter()
@@ -443,34 +505,10 @@ impl Context {
                         ))
                     })
             }
-            Expr::Pow(ref left, ref exp) => {
-                let res = self.eval(exp)?;
-                let res = match res {
-                    Value::Number(num) => num,
-                    _ => return Err(QueryError::Generic("Exponents must be numbers".to_string())),
-                };
-                if !res.dimless() {
-                    return Err(QueryError::Generic(
-                        "Exponents must be dimensionless".to_string(),
-                    ));
-                }
-                let res = res.value.to_f64();
-                let (left, lv) = self.eval_unit_name(left)?;
-                Ok((
-                    left.into_iter()
-                        .filter_map(|(k, v)| {
-                            let v = v * res as isize;
-                            if v != 0 {
-                                Some((k, v))
-                            } else {
-                                None
-                            }
-                        })
-                        .collect::<BTreeMap<_, _>>(),
-                    pow(&lv, res as i32),
-                ))
-            }
-            Expr::Of(ref name, ref expr) => {
+            Expr::Of {
+                ref property,
+                ref expr,
+            } => {
                 let res = self.eval(expr)?;
                 let res = match res {
                     Value::Substance(sub) => sub,
@@ -480,37 +518,26 @@ impl Context {
                         ))
                     }
                 };
-                let name = if let Some(prop) = res.properties.properties.get(name) {
+                let property = if let Some(prop) = res.properties.properties.get(property) {
                     if prop.input == Number::one() {
                         &prop.input_name
                     } else {
-                        name
+                        property
                     }
                 } else {
-                    name
+                    property
                 };
                 let mut map = BTreeMap::new();
                 map.insert(
-                    self.canonicalize(&**name).unwrap_or_else(|| name.clone()),
+                    self.canonicalize(property)
+                        .unwrap_or_else(|| property.clone()),
                     1,
                 );
                 Ok((map, Numeric::one()))
             }
-            Expr::Add(ref left, ref right) | Expr::Sub(ref left, ref right) => {
-                let left = self.eval_unit_name(left)?;
-                let right = self.eval_unit_name(right)?;
-                if left != right {
-                    return Err(QueryError::Generic(
-                        "Add of values with differing \
-                         dimensions is not meaningful"
-                            .to_string(),
-                    ));
-                }
-                Ok(left)
-            }
             Expr::Neg(ref v) => self.eval_unit_name(v).map(|(u, v)| (u, -&v)),
             Expr::Plus(ref v) => self.eval_unit_name(v),
-            Expr::Suffix(_, _) => Err(QueryError::Generic(
+            Expr::Suffix { .. } => Err(QueryError::Generic(
                 "Temperature conversions must not be compound units".to_string(),
             )),
             Expr::Date(_) => Err(QueryError::Generic(
