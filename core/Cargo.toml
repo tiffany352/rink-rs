@@ -20,7 +20,7 @@ chrono = "0.2.25"
 strsim = "0.5.1"
 chrono-tz = "0.2.2"
 chrono-humanize = { version = "0.0.6", optional = true }
-xml-rs = { version = "0.3.4" }
-json = { version = "0.10.2" }
+xml-rs = "0.3.4"
+json = "0.10.2"
 serde = { version = "1", features = ["rc"] }
 serde_derive = "1"
