@@ -7,7 +7,8 @@ use chrono_tz::Tz;
 use std::fmt;
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum Degree {
     Celsius,
     Fahrenheit,
@@ -17,7 +18,7 @@ pub enum Degree {
     Newton,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DateToken {
     Literal(String),
     Number(String, Option<String>),
@@ -28,10 +29,13 @@ pub enum DateToken {
     Error(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(tag = "type", content = "value")]
 pub enum Expr {
     Unit(String),
     Quote(String),
+    #[serde(skip_deserializing)]
     Const(Numeric),
     Date(Vec<DateToken>),
     Frac(Box<Expr>, Box<Expr>),
@@ -48,7 +52,8 @@ pub enum Expr {
     Error(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum Function {
     Sqrt,
     Exp,
@@ -126,24 +131,27 @@ impl Function {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Conversion {
     None,
     Expr(Expr),
     Degree(Degree),
     List(Vec<String>),
     Offset(i64),
+    #[serde(skip)]
     Timezone(Tz),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum Digits {
     Default,
     FullInt,
     Digits(u64),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(tag = "type", content = "value")]
 pub enum Query {
     Expr(Expr),
     Convert(Expr, Conversion, Option<u8>, Digits),

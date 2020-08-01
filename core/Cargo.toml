@@ -24,3 +24,6 @@ xml-rs = "0.3.4"
 json = "0.10.2"
 serde = { version = "1", features = ["rc"] }
 serde_derive = "1"
+
+[dev_dependencies]
+serde_json = "1"
