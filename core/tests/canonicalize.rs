@@ -6,7 +6,7 @@ use rink_core::*;
 
 #[test]
 fn canonicalizations() {
-    let ctx = load().unwrap();
+    let ctx = simple_context().unwrap();
     for (name, value) in &ctx.units {
         let canon = match ctx.canonicalize(&*name) {
             Some(x) => x,

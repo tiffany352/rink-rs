@@ -6,7 +6,7 @@ use rink_core::*;
 
 thread_local! {
     static CONTEXT: Context = {
-        let mut ctx = load().unwrap();
+        let mut ctx = simple_context().unwrap();
         ctx.use_humanize = false;
         ctx
     };
@@ -493,8 +493,7 @@ fn test_attributes() {
 fn test_search() {
     test(
         "search cm",
-        "Search results: CM¥ (money), cmil (area), cminv (energy), \
-         cmcapacitance (capacitance), sccm (power)",
+        "Search results: cmil (area), cminv (energy), cmcapacitance (capacitance), sccm (power), mcm (area)",
     );
 }
 
