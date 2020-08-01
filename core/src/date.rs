@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{show_datepattern, DatePattern, DateToken};
+use crate::ast::{DatePattern, DateToken};
 use crate::bigint::BigInt;
 use crate::bigrat::BigRat;
 use crate::context::Context;
@@ -376,7 +376,6 @@ fn attempt(date: &[DateToken], pat: &[DatePattern]) -> Result<GenericDateTime, (
 pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTime, String> {
     let mut best = None;
     for pat in &context.datepatterns {
-        //println!("Tring {:?} against {}", date, show_datepattern(pat));
         match attempt(date, pat) {
             Ok(datetime) => return Ok(datetime),
             Err((e, c)) => {
@@ -395,7 +394,7 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTi
     if let Some((_, pat, err)) = best {
         Err(format!(
             "Most likely pattern `{}` failed: {}",
-            show_datepattern(pat),
+            DatePattern::show(pat),
             err
         ))
     } else {
