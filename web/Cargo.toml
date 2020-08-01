@@ -1,36 +1,14 @@
 [package]
 name = "rink-web"
-version = "0.4.0"
-authors = ["Tiffany Bennett <tiffany@stormbit.net>"]
-description = "Web interface to Rink"
-homepage = "https://github.com/tiffany352/rink-rs"
+version = "0.5.0"
+authors = ["Tiffany Bennett <tiffnixen@gmail.com>"]
+description = "Web interface to Rink, a unit conversion tool"
+homepage = "https://rinkcalc.app"
 repository = "https://github.com/tiffany352/rink-rs"
 readme = "README.md"
 license = "MPL-2.0"
+edition = "2018"
 
-[features]
-watch = ["handlebars-iron/watch"]
-
-[dependencies.rink-core]
-path = "../core"
-
-[dependencies]
-ipc-channel = "0.5.1"
-libc = "0.2.14"
-chrono = { version = "*", features = ["serde"] }
-rustc-serialize = "*"
-serde_json = "0.8"
-serde_derive = "0.8"
-serde = "0.8.16"
-url = "1.2.0"
-toml = { version = "0.2", features = ["serde"] }
-# iron crates
-iron = "0.5"
-router = "0.5"
-mount = "0.3"
-params = "0.6"
-handlebars = "0.25"
-handlebars-iron = "0.23"
-staticfile = "0.4"
-limiter = "0.3"
-logger = "0.3"
+[dependencies.rink]
+path = "../"
+version = "0.5"
