@@ -8,21 +8,11 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::bigint::BigInt;
 use crate::bigrat::BigRat;
 
-mod ser {
-    use crate::bigrat::BigRat;
-    use serde::Serializer;
-
-    pub fn serialize<S: Serializer>(rat: &BigRat, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&rat.to_string())
-    }
-}
-
 /// Number type.
 #[derive(Clone, PartialEq, Debug, Serialize)]
 #[serde(untagged)]
 pub enum Numeric {
     /// Arbitrary-precision rational fraction.
-    #[serde(with = "ser")]
     Rational(BigRat),
     /// Machine floats.
     Float(f64),
