@@ -41,7 +41,9 @@ impl Context {
                         .map(Value::Substance)
                 })
                 .ok_or_else(|| QueryError::NotFound(self.unknown_unit_err(name))),
-            Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dimension::new(&**name)))),
+            Expr::Quote { ref string } => {
+                Ok(Value::Number(Number::one_unit(Dimension::new(string))))
+            }
             Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
             Expr::Date { ref tokens } => match date::try_decode(tokens, self) {
                 Ok(date) => Ok(Value::DateTime(date)),
@@ -403,7 +405,7 @@ impl Context {
             Expr::Call { .. } => Err(QueryError::Generic(
                 "Calls are not allowed in the right hand side of conversions".to_string(),
             )),
-            Expr::Unit { ref name } | Expr::Quote(ref name) => {
+            Expr::Unit { ref name } | Expr::Quote { string: ref name } => {
                 let mut map = BTreeMap::new();
                 map.insert(
                     self.canonicalize(&**name).unwrap_or_else(|| name.clone()),

@@ -152,7 +152,7 @@ impl ExprReply {
             }
             match *expr {
                 Expr::Unit { ref name } => parts.push(ExprParts::Unit(name.clone())),
-                Expr::Quote(ref name) => literal!(format!("'{}'", name)),
+                Expr::Quote { ref string } => literal!(format!("'{}'", string)),
                 Expr::Const { ref value } => {
                     let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
                     literal!(val)

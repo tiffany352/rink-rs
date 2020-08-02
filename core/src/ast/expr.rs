@@ -5,7 +5,7 @@ use super::*;
 #[serde(tag = "type")]
 pub enum Expr {
     Unit { name: String },
-    Quote(String),
+    Quote { string: String },
     Const { value: Numeric },
     Date { tokens: Vec<DateToken> },
     BinOp(BinOpExpr),
@@ -126,7 +126,7 @@ impl fmt::Display for Expr {
         fn recurse(expr: &Expr, fmt: &mut fmt::Formatter<'_>, prec: Precedence) -> fmt::Result {
             match *expr {
                 Expr::Unit { ref name } => write!(fmt, "{}", name),
-                Expr::Quote(ref name) => write!(fmt, "'{}'", name),
+                Expr::Quote { ref string } => write!(fmt, "'{}'", string),
                 Expr::Const { ref value } => {
                     let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
                     write!(fmt, "{}", val)
