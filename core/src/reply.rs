@@ -119,7 +119,7 @@ pub struct DateReply {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
 pub enum QueryReply {
     Number(NumberParts),
@@ -148,11 +148,18 @@ pub struct NotFoundError {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", content = "error")]
+#[serde(tag = "type")]
+#[serde(rename_all = "camelCase")]
 pub enum QueryError {
     Conformance(Box<ConformanceError>),
     NotFound(NotFoundError),
-    Generic(String),
+    Generic { message: String },
+}
+
+impl QueryError {
+    pub fn generic(message: String) -> QueryError {
+        QueryError::Generic { message }
+    }
 }
 
 impl ExprReply {
@@ -266,8 +273,8 @@ impl From<NotFoundError> for QueryError {
 }
 
 impl From<String> for QueryError {
-    fn from(s: String) -> Self {
-        QueryError::Generic(s)
+    fn from(message: String) -> Self {
+        QueryError::Generic { message }
     }
 }
 
@@ -291,7 +298,7 @@ impl Display for QueryReply {
 impl Display for QueryError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match *self {
-            QueryError::Generic(ref v) => write!(fmt, "{}", v),
+            QueryError::Generic { ref message } => write!(fmt, "{}", message),
             QueryError::Conformance(ref v) => write!(fmt, "{}", v),
             QueryError::NotFound(ref v) => write!(fmt, "{}", v),
         }

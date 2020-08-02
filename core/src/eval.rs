@@ -47,7 +47,7 @@ impl Context {
             Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
             Expr::Date { ref tokens } => match date::try_decode(tokens, self) {
                 Ok(date) => Ok(Value::DateTime(date)),
-                Err(e) => Err(QueryError::Generic(e)),
+                Err(e) => Err(QueryError::generic(e)),
             },
 
             Expr::BinOp(BinOpExpr {
@@ -58,7 +58,7 @@ impl Context {
                 match **left {
                     Expr::Unit { .. } => (),
                     ref x => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "= is currently only used for inline unit definitions: \
                              expected unit, got {}",
                             x
@@ -79,7 +79,7 @@ impl Context {
                     BinOpType::Equals => panic!("Should be unreachable"),
                 };
                 result.map_err(|e| {
-                    QueryError::Generic(format!(
+                    QueryError::generic(format!(
                         "{}: <{}> {} <{}>",
                         e,
                         left.show(self),
@@ -92,7 +92,7 @@ impl Context {
             Expr::UnaryOp(ref unaryop) => match unaryop.op {
                 UnaryOpType::Positive => self.eval(&unaryop.expr),
                 UnaryOpType::Negative => self.eval(&unaryop.expr).and_then(|v| {
-                    (-&v).map_err(|e| QueryError::Generic(format!("{}: - <{}>", e, v.show(self))))
+                    (-&v).map_err(|e| QueryError::generic(format!("{}: - <{}>", e, v.show(self))))
                 }),
                 UnaryOpType::Degree(ref suffix) => {
                     let (name, base, scale) = suffix.name_base_scale();
@@ -101,7 +101,7 @@ impl Context {
                     let expr = match expr {
                         Value::Number(expr) => expr,
                         _ => {
-                            return Err(QueryError::Generic(format!(
+                            return Err(QueryError::generic(format!(
                                 "Expected number, got: <{}> °{}",
                                 expr.show(self),
                                 name
@@ -109,7 +109,7 @@ impl Context {
                         }
                     };
                     if expr.unit != BTreeMap::new() {
-                        Err(QueryError::Generic(format!(
+                        Err(QueryError::generic(format!(
                             "Expected dimensionless, got: <{}>",
                             expr.show(self)
                         )))
@@ -135,7 +135,7 @@ impl Context {
                     a.and_then(|a| {
                         let b = self.eval(b)?;
                         (&a * &b).map_err(|e| {
-                            QueryError::Generic(format!(
+                            QueryError::generic(format!(
                                 "{}: <{}> * <{}>",
                                 e,
                                 a.show(self),
@@ -153,7 +153,7 @@ impl Context {
                 let expr = match expr {
                     Value::Substance(sub) => sub,
                     x => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Not defined: {} of <{}>",
                             property,
                             x.show(self)
@@ -161,7 +161,7 @@ impl Context {
                     }
                 };
                 expr.get(property).map(Value::Number).map_err(|e| match e {
-                    SubstanceGetError::Generic(s) => QueryError::Generic(s),
+                    SubstanceGetError::Generic(s) => QueryError::generic(s),
                     SubstanceGetError::Conformance(l, r) => {
                         QueryError::Conformance(Box::new(self.conformance_err(&l, &r)))
                     }
@@ -181,13 +181,13 @@ impl Context {
                         $(
                             let $name = match iter.next() {
                                 Some(&Value::$ty(ref v)) => v,
-                                Some(x) => return Err(QueryError::Generic(
+                                Some(x) => return Err(QueryError::generic(
                                     format!(
                                         "Expected {}, got <{}>",
                                         stringify!($ty), x.show(self)
                                     )
                                 )),
-                                None => return Err(QueryError::Generic(format!(
+                                None => return Err(QueryError::generic(format!(
                                     "Argument number mismatch for {}: \
                                      Expected {}, got {}",
                                     stringify!($fname), count, args.len()
@@ -195,7 +195,7 @@ impl Context {
                             };
                         )*
                         if iter.next().is_some() {
-                            return Err(QueryError::Generic(format!(
+                            return Err(QueryError::generic(format!(
                                 "Argument number mismatch for {}: \
                                  Expected {}, got {}",
                                 stringify!($fname), count, args.len()
@@ -205,7 +205,7 @@ impl Context {
                             $block
                         };
                         res.map_err(|e| {
-                            QueryError::Generic(format!(
+                            QueryError::generic(format!(
                                 "{}: {}({})",
                                 e, stringify!($fname),
                                 args.iter()
@@ -393,7 +393,7 @@ impl Context {
                     ),
                 }
             }
-            Expr::Error { ref message } => Err(QueryError::Generic(message.clone())),
+            Expr::Error { ref message } => Err(QueryError::generic(message.clone())),
         }
     }
 
@@ -402,7 +402,7 @@ impl Context {
         expr: &Expr,
     ) -> Result<(BTreeMap<String, isize>, Numeric), QueryError> {
         match *expr {
-            Expr::Call { .. } => Err(QueryError::Generic(
+            Expr::Call { .. } => Err(QueryError::generic(
                 "Calls are not allowed in the right hand side of conversions".to_string(),
             )),
             Expr::Unit { ref name } | Expr::Quote { string: ref name } => {
@@ -421,7 +421,7 @@ impl Context {
                         map.insert(name.clone(), 1);
                         Ok((map, Numeric::one()))
                     }
-                    ref x => Err(QueryError::Generic(format!(
+                    ref x => Err(QueryError::generic(format!(
                         "Expected identifier, got {:?}",
                         x
                     ))),
@@ -431,7 +431,7 @@ impl Context {
                     let (right_unit, _right) = self.eval_unit_name(&binop.right)?;
 
                     if left_unit != right_unit {
-                        return Err(QueryError::Generic(
+                        return Err(QueryError::generic(
                             "Add of values with differing \
                                  dimensions is not meaningful"
                                 .to_string(),
@@ -463,13 +463,13 @@ impl Context {
                     let right = match right {
                         Value::Number(ref num) => num,
                         _ => {
-                            return Err(QueryError::Generic(
+                            return Err(QueryError::generic(
                                 "Exponents must be numbers".to_string(),
                             ))
                         }
                     };
                     if !right.dimless() {
-                        return Err(QueryError::Generic(
+                        return Err(QueryError::generic(
                             "Exponents must be dimensionless".to_string(),
                         ));
                     }
@@ -517,7 +517,7 @@ impl Context {
                 let res = match res {
                     Value::Substance(sub) => sub,
                     _ => {
-                        return Err(QueryError::Generic(
+                        return Err(QueryError::generic(
                             "Property access on non-substance".to_string(),
                         ))
                     }
@@ -542,14 +542,14 @@ impl Context {
             Expr::UnaryOp(ref unaryop) => match unaryop.op {
                 UnaryOpType::Positive => self.eval_unit_name(&unaryop.expr),
                 UnaryOpType::Negative => self.eval_unit_name(&unaryop.expr).map(|(u, v)| (u, -&v)),
-                UnaryOpType::Degree(_) => Err(QueryError::Generic(
+                UnaryOpType::Degree(_) => Err(QueryError::generic(
                     "Temperature conversions must not be compound units".to_string(),
                 )),
             },
-            Expr::Date { .. } => Err(QueryError::Generic(
+            Expr::Date { .. } => Err(QueryError::generic(
                 "Dates are not allowed in the right hand side of conversions".to_string(),
             )),
-            Expr::Error { ref message } => Err(QueryError::Generic(message.clone())),
+            Expr::Error { ref message } => Err(QueryError::generic(message.clone())),
         }
     }
 
@@ -783,7 +783,7 @@ impl Context {
                 let top = match top {
                     Value::Number(top) => top,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "<{}> in base {} is not defined",
                             top.show(self),
                             base
@@ -806,7 +806,7 @@ impl Context {
                 let top = match top {
                     Value::Number(top) => top,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "<{}> to {} is not defined",
                             top.show(self),
                             match digits {
@@ -837,7 +837,7 @@ impl Context {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
                             None => {
-                                return Err(QueryError::Generic(format!(
+                                return Err(QueryError::generic(format!(
                                     "Division by zero: {} / {}",
                                     top.show(self),
                                     bottom.show(self)
@@ -867,7 +867,7 @@ impl Context {
                         base.unwrap_or(10),
                         digits,
                     )
-                    .map_err(QueryError::Generic)
+                    .map_err(QueryError::generic)
                     .map(QueryReply::Substance),
                 (Value::Number(top), Value::Substance(mut sub), (bottom_name, bottom_const)) => {
                     let unit = sub.amount.clone();
@@ -880,10 +880,10 @@ impl Context {
                         base.unwrap_or(10),
                         digits,
                     )
-                    .map_err(QueryError::Generic)
+                    .map_err(QueryError::generic)
                     .map(QueryReply::Substance)
                 }
-                (x, y, _) => Err(QueryError::Generic(format!(
+                (x, y, _) => Err(QueryError::generic(format!(
                     "Operation is not defined: <{}> -> <{}>",
                     x.show(self),
                     y.show(self)
@@ -894,7 +894,7 @@ impl Context {
                 let top = match top {
                     Value::Number(num) => num,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Cannot convert <{}> to {:?}",
                             top.show(self),
                             list
@@ -917,7 +917,7 @@ impl Context {
                 let top = match top {
                     Value::DateTime(date) => date,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Cannot convert <{}> to timezone offset {:+}",
                             top.show(self),
                             off
@@ -932,7 +932,7 @@ impl Context {
                 let top = match top {
                     Value::DateTime(date) => date,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Cannot convert <{}> to timezone {:?}",
                             top.show(self),
                             tz
@@ -949,7 +949,7 @@ impl Context {
                 let top = match top {
                     Value::Number(ref num) => num,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Cannot convert <{}> to °{}",
                             top.show(self),
                             name
@@ -982,17 +982,17 @@ impl Context {
                     ))))
                 }
             }
-            Query::Convert(ref _expr, ref which, Some(base), _digits) => Err(QueryError::Generic(
+            Query::Convert(ref _expr, ref which, Some(base), _digits) => Err(QueryError::generic(
                 format!("Conversion to {} is not defined in base {}", which, base),
             )),
             Query::Convert(ref _expr, ref which, _base, Digits::Digits(digits)) => {
-                Err(QueryError::Generic(format!(
+                Err(QueryError::generic(format!(
                     "Conversion to {} is not defined to {} digits",
                     which, digits
                 )))
             }
             Query::Convert(ref _expr, ref which, _base, Digits::FullInt) => Err(
-                QueryError::Generic(format!("Conversion to digits of {} is not defined", which)),
+                QueryError::generic(format!("Conversion to digits of {} is not defined", which)),
             ),
             Query::Factorize(ref expr) => {
                 let mut val = None;
@@ -1013,7 +1013,7 @@ impl Context {
                         match val {
                             Value::Number(val) => val,
                             _ => {
-                                return Err(QueryError::Generic(format!(
+                                return Err(QueryError::generic(format!(
                                     "Cannot find derivatives of <{}>",
                                     val.show(self)
                                 )))
@@ -1063,7 +1063,7 @@ impl Context {
                         match val {
                             Value::Number(val) => val,
                             _ => {
-                                return Err(QueryError::Generic(format!(
+                                return Err(QueryError::generic(format!(
                                     "Cannot find units for <{}>",
                                     val.show(self)
                                 )))
@@ -1201,11 +1201,11 @@ impl Context {
                         }
                     },
                     Value::Substance(s) => Ok(QueryReply::Substance(
-                        s.to_reply(self).map_err(QueryError::Generic)?,
+                        s.to_reply(self).map_err(QueryError::generic)?,
                     )),
                 }
             }
-            Query::Error(ref e) => Err(QueryError::Generic(e.clone())),
+            Query::Error(ref e) => Err(QueryError::generic(e.clone())),
         }
     }
 }
