@@ -1,3 +1,5 @@
+import wasm from "../../rink-js/Cargo.toml";
+import Rink from "./util/rink";
 import sirv from "sirv";
 import polka from "polka";
 import compression from "compression";
@@ -15,3 +17,10 @@ polka() // You can also use Express
   .listen(PORT, (err) => {
     if (err) console.log("error", err);
   });
+
+async function loadRink() {
+  let rink = await wasm();
+  Rink.setRink(rink);
+}
+
+loadRink();

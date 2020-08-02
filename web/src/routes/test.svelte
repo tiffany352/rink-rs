@@ -1,11 +1,11 @@
 <script context="module">
-  import wasm from "../../../rink-js/Cargo.toml";
+  import Rink from "../util/rink";
   import Result from "../components/Result.svelte";
 
   export async function preload() {
-    const rink = await wasm();
-    const expr = new rink.Query("meter");
-    const context = new rink.Context();
+    const rink = await Rink.getRink();
+    const expr = rink.parse("meter");
+    const context = rink.createContext();
     context.setTime(new Date());
     const value = context.eval(expr);
 

@@ -22,6 +22,10 @@ export default {
     input: config.client.input(),
     output: config.client.output(),
     plugins: [
+      rust({
+        serverPath: "/client/",
+        debug: false,
+      }),
       typescript({
         typescript: require("typescript"),
       }),
@@ -34,9 +38,6 @@ export default {
         hydratable: true,
         emitCss: true,
         preprocess: sveltePreprocess(),
-      }),
-      rust({
-        serverPath: "/client/",
       }),
       resolve({
         browser: true,
@@ -58,6 +59,11 @@ export default {
     input: config.server.input(),
     output: config.server.output(),
     plugins: [
+      rust({
+        nodejs: true,
+        serverPath: config.server.output().dir + "/",
+        debug: false,
+      }),
       typescript({
         typescript: require("typescript"),
       }),
@@ -69,10 +75,6 @@ export default {
         generate: "ssr",
         dev,
         preprocess: sveltePreprocess(),
-      }),
-      rust({
-        nodejs: true,
-        serverPath: config.server.output().dir + "/",
       }),
       resolve({
         dedupe: ["svelte"],

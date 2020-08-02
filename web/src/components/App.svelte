@@ -1,26 +1,17 @@
 <script lang="typescript">
-  import wasm from "../../../rink-js/Cargo.toml";
+  import Rink from "../util/rink";
   import Result from "./Result.svelte";
 
   export let queryText: string = "";
   export let result: any = null;
-  let rink: any = null;
-
-  async function loadRink() {
-    if (rink != null) {
-      return rink;
-    }
-    rink = await wasm();
-    return rink;
-  }
 
   export async function handleChange(
     event: Event & { target: EventTarget & HTMLInputElement }
   ) {
     console.log("handleChange");
-    const exports = await loadRink();
-    let expr = new exports.Query(queryText);
-    let context = new exports.Context();
+    const rink = await Rink.getRink();
+    let expr = rink.parse(queryText);
+    let context = rink.createContext();
     context.setTime(new Date());
     result = context.eval(expr);
     //result = expr.getExpr();
