@@ -478,7 +478,12 @@ fn parse_function(iter: &mut Iter<'_>, func: Function) -> Expr {
                         iter.next();
                     }
                     Token::RPar => (),
-                    x => return Expr::Error(format!("Expected `,` or `)`, got {}", describe(&x))),
+                    x => {
+                        return Expr::new_error(format!(
+                            "Expected `,` or `)`, got {}",
+                            describe(&x)
+                        ))
+                    }
                 }
             }
             args
@@ -493,7 +498,7 @@ fn parse_radix(num: &str, base: u32, description: &str) -> Expr {
         .map(|x| BigRat::ratio(&x, &BigInt::one()))
         .map(Numeric::Rational)
         .map(Expr::new_const)
-        .unwrap_or_else(|_| Expr::Error(format!("Failed to parse {}", description)))
+        .unwrap_or_else(|_| Expr::new_error(format!("Failed to parse {}", description)))
 }
 
 fn parse_term(iter: &mut Iter<'_>) -> Expr {
@@ -507,7 +512,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
                         iter.next();
                         Expr::Unit(format!("{}{}", attr, name))
                     }
-                    x => Expr::Error(format!(
+                    x => Expr::new_error(format!(
                         "Attribute must be followed by ident, got {}",
                         describe(&x)
                     )),
@@ -529,7 +534,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             exp.as_ref().map(|x| &**x),
         )
         .map(Expr::new_const)
-        .unwrap_or_else(Expr::Error),
+        .unwrap_or_else(Expr::new_error),
         Token::Hex(num) => parse_radix(&*num, 16, "hex"),
         Token::Oct(num) => parse_radix(&*num, 8, "octal"),
         Token::Bin(num) => parse_radix(&*num, 2, "binary"),
@@ -539,13 +544,13 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
                 Token::RPar => res,
-                x => Expr::Error(format!("Expected `)`, got {}", describe(&x))),
+                x => Expr::new_error(format!("Expected `)`, got {}", describe(&x))),
             }
         }
         Token::Percent => Expr::Unit("percent".to_owned()),
         Token::Date(toks) => Expr::Date(toks),
         Token::Comment(_) => parse_term(iter),
-        x => Expr::Error(format!("Expected term, got {}", describe(&x))),
+        x => Expr::new_error(format!("Expected term, got {}", describe(&x))),
     }
 }
 

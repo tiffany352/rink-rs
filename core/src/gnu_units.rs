@@ -225,7 +225,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             exp.as_ref().map(|x| &**x),
         )
         .map(Expr::new_const)
-        .unwrap_or_else(Expr::Error),
+        .unwrap_or_else(Expr::new_error),
         Token::Plus => Expr::new_plus(parse_term(iter)),
         Token::Dash => Expr::new_negate(parse_term(iter)),
         Token::Slash => Expr::new_frac(Expr::new_const(Numeric::one()), parse_term(iter)),
@@ -233,10 +233,10 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
                 Token::RPar => res,
-                x => Expr::Error(format!("Expected ), got {:?}", x)),
+                x => Expr::new_error(format!("Expected ), got {:?}", x)),
             }
         }
-        x => Expr::Error(format!("Expected term, got {:?}", x)),
+        x => Expr::new_error(format!("Expected term, got {:?}", x)),
     }
 }
 
@@ -571,9 +571,9 @@ mod tests {
     }
 
     macro_rules! expect {
-        ($expr:expr, $pattern:path, $expected:expr) => {
+        ($expr:expr, $pattern:pat, $var:ident, $expected:expr) => {
             match do_parse($expr) {
-                $pattern(s) => assert_eq!(s, $expected),
+                $pattern => assert_eq!($var, $expected),
                 x => panic!("{}", x),
             }
         };
@@ -602,32 +602,29 @@ mod tests {
 
     #[test]
     fn test_missing_bracket() {
-        match do_parse("(") {
-            Expr::Error(ref s) => assert_eq!(s, "Expected ), got Eof"),
-            x => panic!("Wrong result: {}", x),
-        }
+        expect!("(", Expr::Error { ref message }, message, "Expected ), got Eof");
     }
 
     #[test]
     fn test_escapes() {
         expect!(
             "\\\r",
-            Expr::Error,
+            Expr::Error { ref message },
+            message,
             "Expected term, got Error(\"Expected LF or CRLF line endings\")"
         );
-        match do_parse("\\\r\n1") {
-            Expr::Const { value: s } => assert_eq!(s, 1.into()),
-            x => panic!("Expected const, got {}", x),
-        }
+        expect!("\\\r\n1", Expr::Const { ref value }, value, 1.into() as Numeric);
 
         expect!(
             "\\a",
-            Expr::Error,
+            Expr::Error { ref message },
+            message,
             "Expected term, got Error(\"Invalid escape: \\\\a\")"
         );
         expect!(
             "\\",
-            Expr::Error,
+            Expr::Error { ref message },
+            message,
             "Expected term, got Error(\"Unexpected EOF\")"
         );
     }
@@ -635,16 +632,11 @@ mod tests {
     #[test]
     fn test_float_leading_dot() {
         use crate::bigrat::BigRat;
-        match do_parse(".123") {
-            Expr::Const { value: s } => {
-                assert_eq!(s, Numeric::Rational(BigRat::small_ratio(123, 1000)))
-            }
-            x => panic!("Expected const, got {}", x),
-        }
+        expect!(".123", Expr::Const { ref value }, value, Numeric::Rational(BigRat::small_ratio(123, 1000)));
     }
 
     #[test]
     fn test_escaped_quotes() {
-        expect!("\"ab\\\"\"", Expr::Unit, "ab\"")
+        expect!("\"ab\\\"\"", Expr::Unit(unit), unit, "ab\"")
     }
 }

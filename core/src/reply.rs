@@ -227,7 +227,7 @@ impl ExprReply {
                         literal!(")");
                     }
                 }
-                Expr::Error(ref err) => parts.push(ExprParts::Error(err.to_owned())),
+                Expr::Error { ref message } => parts.push(ExprParts::Error(message.to_owned())),
             }
         }
 

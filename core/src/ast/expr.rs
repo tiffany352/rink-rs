@@ -13,12 +13,16 @@ pub enum Expr {
     Mul(Vec<Expr>),
     Of { property: String, expr: Box<Expr> },
     Call { func: Function, args: Vec<Expr> },
-    Error(String),
+    Error { message: String },
 }
 
 impl Expr {
     pub fn new_const(value: Numeric) -> Expr {
         Expr::Const { value }
+    }
+
+    pub fn new_error(message: String) -> Expr {
+        Expr::Error { message }
     }
 
     pub fn new_call(func: Function, args: Vec<Expr>) -> Expr {
@@ -196,7 +200,7 @@ impl fmt::Display for Expr {
                     }
                     Ok(())
                 }
-                Expr::Error(ref err) => write!(fmt, "<error: {}>", err),
+                Expr::Error { ref message } => write!(fmt, "<error: {}>", message),
             }
         }
 

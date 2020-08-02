@@ -389,7 +389,7 @@ impl Context {
                     ),
                 }
             }
-            Expr::Error(ref e) => Err(QueryError::Generic(e.clone())),
+            Expr::Error { ref message } => Err(QueryError::Generic(message.clone())),
         }
     }
 
@@ -545,7 +545,7 @@ impl Context {
             Expr::Date(_) => Err(QueryError::Generic(
                 "Dates are not allowed in the right hand side of conversions".to_string(),
             )),
-            Expr::Error(ref e) => Err(QueryError::Generic(e.clone())),
+            Expr::Error { ref message } => Err(QueryError::Generic(message.clone())),
         }
     }
 
