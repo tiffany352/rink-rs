@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "module": "es6",
+    "moduleResolution": "node",
+    "target": "es5",
+    "allowJs": true,
+    "baseUrl": "./web/src/",
+    "paths": {
+      "~/../rink-js/Cargo.toml": ["../../rink-js/pkg"]
+    }
+  },
+  "include": ["./web/src/**/*"]
+}

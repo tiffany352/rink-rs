@@ -1,0 +1,21 @@
+{
+  "author": "Tiffany Bennett <tiffnixen@gmail.com>",
+  "name": "rink-web",
+  "version": "0.5.0",
+  "repository": "https://github.com/tiffany352/rink-rs",
+  "homepage": "https://rinkcalc.app",
+  "license": "MPL-2.0",
+  "scripts": {
+    "start": "parcel web/index.html",
+    "build": "parcel build web/index.html"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4",
+    "parcel-plugin-wasm-pack": "^6.0.1",
+    "typescript": "^3.9.7"
+  },
+  "browserslist": [
+    "last 3 chrome versions",
+    "last 3 firefox versions"
+  ]
+}
