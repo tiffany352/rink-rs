@@ -129,7 +129,7 @@ impl Context {
                 return Some((*k.id).clone());
             }
             if let Some(v) = ctx.definitions.get(name) {
-                if let Expr::Unit(ref name) = *v {
+                if let Expr::Unit { ref name } = *v {
                     if let Some(r) = ctx.canonicalize(&*name) {
                         return Some(r);
                     } else {

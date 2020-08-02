@@ -510,7 +510,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
                 match iter.peek().cloned().unwrap() {
                     Token::Ident(ref name) => {
                         iter.next();
-                        Expr::Unit(format!("{}{}", attr, name))
+                        Expr::new_unit(format!("{}{}", attr, name))
                     }
                     x => Expr::new_error(format!(
                         "Attribute must be followed by ident, got {}",
@@ -523,7 +523,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
                         iter.next();
                         Expr::new_of(id, parse_juxt(iter))
                     }
-                    _ => Expr::Unit(id.to_string()),
+                    _ => Expr::new_unit(id.to_string()),
                 }
             }
         }
@@ -547,7 +547,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
                 x => Expr::new_error(format!("Expected `)`, got {}", describe(&x))),
             }
         }
-        Token::Percent => Expr::Unit("percent".to_owned()),
+        Token::Percent => Expr::new_unit("percent".to_owned()),
         Token::Date(toks) => Expr::Date(toks),
         Token::Comment(_) => parse_term(iter),
         x => Expr::new_error(format!("Expected term, got {}", describe(&x))),
@@ -561,7 +561,7 @@ fn parse_suffix(iter: &mut Iter<'_>) -> Expr {
             let mut left = left;
             while let Some(&Token::Percent) = iter.peek() {
                 iter.next();
-                left = Expr::Mul(vec![left, Expr::Unit("percent".to_owned())]);
+                left = Expr::Mul(vec![left, Expr::new_unit("percent".to_owned())]);
             }
             left
         }

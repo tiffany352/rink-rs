@@ -4,7 +4,7 @@ use super::*;
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "type")]
 pub enum Expr {
-    Unit(String),
+    Unit { name: String },
     Quote(String),
     Const { value: Numeric },
     Date(Vec<DateToken>),
@@ -23,6 +23,10 @@ impl Expr {
 
     pub fn new_error(message: String) -> Expr {
         Expr::Error { message }
+    }
+
+    pub fn new_unit(name: String) -> Expr {
+        Expr::Unit { name }
     }
 
     pub fn new_call(func: Function, args: Vec<Expr>) -> Expr {
@@ -117,7 +121,7 @@ impl fmt::Display for Expr {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fn recurse(expr: &Expr, fmt: &mut fmt::Formatter<'_>, prec: Precedence) -> fmt::Result {
             match *expr {
-                Expr::Unit(ref name) => write!(fmt, "{}", name),
+                Expr::Unit { ref name } => write!(fmt, "{}", name),
                 Expr::Quote(ref name) => write!(fmt, "'{}'", name),
                 Expr::Const { ref value } => {
                     let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);

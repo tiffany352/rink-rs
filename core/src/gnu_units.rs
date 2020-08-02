@@ -217,7 +217,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
                     expr: Box::new(parse_mul(iter)),
                 }
             }
-            _ => Expr::Unit(name),
+            _ => Expr::new_unit(name),
         },
         Token::Number(num, frac, exp) => crate::number::Number::from_parts(
             &*num,
@@ -613,7 +613,7 @@ mod tests {
             message,
             "Expected term, got Error(\"Expected LF or CRLF line endings\")"
         );
-        expect!("\\\r\n1", Expr::Const { ref value }, value, 1.into() as Numeric);
+        expect!("\\\r\n1", Expr::Const { value }, value, Numeric::from(1));
 
         expect!(
             "\\a",
@@ -632,11 +632,16 @@ mod tests {
     #[test]
     fn test_float_leading_dot() {
         use crate::bigrat::BigRat;
-        expect!(".123", Expr::Const { ref value }, value, Numeric::Rational(BigRat::small_ratio(123, 1000)));
+        expect!(
+            ".123",
+            Expr::Const { value },
+            value,
+            Numeric::Rational(BigRat::small_ratio(123, 1000))
+        );
     }
 
     #[test]
     fn test_escaped_quotes() {
-        expect!("\"ab\\\"\"", Expr::Unit(unit), unit, "ab\"")
+        expect!("\"ab\\\"\"", Expr::Unit { ref name }, name, "ab\"")
     }
 }

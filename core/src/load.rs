@@ -95,7 +95,7 @@ impl Resolver {
 
     fn eval(&mut self, expr: &Expr) {
         match *expr {
-            Expr::Unit(ref name) => {
+            Expr::Unit { ref name } => {
                 let name = self.intern(name);
                 self.lookup(&name);
             }
@@ -241,7 +241,7 @@ impl Context {
                     match self.lookup(of) {
                         Some(v) => {
                             self.definitions
-                                .insert(name.clone(), Expr::Unit(of.clone()));
+                                .insert(name.clone(), Expr::new_unit(of.clone()));
                             self.units.insert(name.clone(), v);
                         }
                         None => {

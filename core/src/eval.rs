@@ -29,10 +29,10 @@ impl Context {
         use std::ops::*;
 
         match *expr {
-            Expr::Unit(ref name) if name == "now" => Ok(Value::DateTime(
+            Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(
                 date::GenericDateTime::Fixed(self.now.with_timezone(&FixedOffset::east(0))),
             )),
-            Expr::Unit(ref name) => self
+            Expr::Unit { ref name } => self
                 .lookup(name)
                 .map(Value::Number)
                 .or_else(|| self.substances.get(name).cloned().map(Value::Substance))
@@ -54,7 +54,7 @@ impl Context {
                 ref right,
             }) => {
                 match **left {
-                    Expr::Unit(_) => (),
+                    Expr::Unit { .. } => (),
                     ref x => {
                         return Err(QueryError::Generic(format!(
                             "= is currently only used for inline unit definitions: \
@@ -401,7 +401,7 @@ impl Context {
             Expr::Call { .. } => Err(QueryError::Generic(
                 "Calls are not allowed in the right hand side of conversions".to_string(),
             )),
-            Expr::Unit(ref name) | Expr::Quote(ref name) => {
+            Expr::Unit { ref name } | Expr::Quote(ref name) => {
                 let mut map = BTreeMap::new();
                 map.insert(
                     self.canonicalize(&**name).unwrap_or_else(|| name.clone()),
@@ -412,7 +412,7 @@ impl Context {
             Expr::Const { ref value } => Ok((BTreeMap::new(), value.clone())),
             Expr::BinOp(ref binop) => match binop.op {
                 BinOpType::Equals => match *binop.left {
-                    Expr::Unit(ref name) => {
+                    Expr::Unit { ref name } => {
                         let mut map = BTreeMap::new();
                         map.insert(name.clone(), 1);
                         Ok((map, Numeric::one()))
@@ -695,7 +695,7 @@ impl Context {
     /// Evaluates an expression, include `->` conversions.
     pub fn eval_outer(&self, expr: &Query) -> Result<QueryReply, QueryError> {
         match *expr {
-            Query::Expr(Expr::Unit(ref name))
+            Query::Expr(Expr::Unit { ref name })
                 if {
                     let a = self.definitions.contains_key(name);
                     let b = self
@@ -712,7 +712,7 @@ impl Context {
             {
                 let mut name = name.clone();
                 let mut canon = self.canonicalize(&name).unwrap_or_else(|| name.clone());
-                while let Some(&Expr::Unit(ref unit)) = {
+                while let Some(&Expr::Unit { name: ref unit }) = {
                     self.definitions
                         .get(&name)
                         .or_else(|| self.definitions.get(&*canon))
@@ -992,7 +992,7 @@ impl Context {
             ),
             Query::Factorize(ref expr) => {
                 let mut val = None;
-                if let Expr::Unit(ref name) = *expr {
+                if let Expr::Unit { ref name } = *expr {
                     for (u, k) in &self.quantities {
                         if name == k {
                             val = Some(Number {
@@ -1042,7 +1042,7 @@ impl Context {
             }
             Query::UnitsFor(ref expr) => {
                 let mut val = None;
-                if let Expr::Unit(ref name) = *expr {
+                if let Expr::Unit { ref name } = *expr {
                     for (u, k) in &self.quantities {
                         if name == k {
                             val = Some(Number {
@@ -1071,7 +1071,7 @@ impl Context {
                 let dim_name;
                 let mut out = vec![];
                 for (name, unit) in self.units.iter() {
-                    if let Some(&Expr::Unit(_)) = self.definitions.get(name) {
+                    if let Some(&Expr::Unit { .. }) = self.definitions.get(name) {
                         continue;
                     }
                     let category = self.categories.get(name);

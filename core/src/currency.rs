@@ -42,7 +42,7 @@ pub fn parse<R: Read>(reader: R) -> Result<Defs, String> {
                                     Expr::new_const(Numeric::one()),
                                     Expr::new_const(num),
                                 ),
-                                Expr::Unit("EUR".to_string()),
+                                Expr::new_unit("EUR".to_string()),
                             ]))),
                             doc: Some("Sourced from European Central Bank.".to_string()),
                             category: Some("currencies".to_owned()),
