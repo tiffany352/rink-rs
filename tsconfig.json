@@ -7,7 +7,7 @@
     "noImplicitAny": true,
     "module": "es6",
     "moduleResolution": "node",
-    "target": "es5",
+    "target": "ES2015",
     "allowJs": true,
     "baseUrl": "./web/src/",
     "paths": {
