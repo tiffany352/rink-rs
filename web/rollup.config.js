@@ -72,6 +72,7 @@ export default {
       }),
       rust({
         nodejs: true,
+        serverPath: config.server.output().dir + "/",
       }),
       resolve({
         dedupe: ["svelte"],
