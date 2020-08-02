@@ -10,7 +10,6 @@
     "build": "parcel build web/index.html"
   },
   "devDependencies": {
-    "@webcomponents/webcomponentsjs": "^2.4.4",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-svelte": "^4.0.6",
     "parcel-plugin-wasm-pack": "^6.0.1",
