@@ -3,6 +3,7 @@ use js_sys::Date;
 use rink_core;
 use rink_core::ast;
 use rink_core::text_query;
+use serde_derive::*;
 use wasm_bindgen::prelude::*;
 
 // Use `wee_alloc` as the global allocator.
@@ -18,6 +19,24 @@ pub fn set_panic_hook() {
     // https://github.com/rustwasm/console_error_panic_hook#readme
     #[cfg(feature = "console_error_panic_hook")]
     console_error_panic_hook::set_once();
+}
+
+/// Wrapper around Result because serde produces ugly output by default.
+#[derive(Serialize)]
+#[serde(rename_all = "lowercase")]
+#[serde(tag = "result")]
+enum Success<Ok, Err> {
+    Ok(Ok),
+    Err(Err),
+}
+
+impl<Ok, Err> From<Result<Ok, Err>> for Success<Ok, Err> {
+    fn from(result: Result<Ok, Err>) -> Success<Ok, Err> {
+        match result {
+            Ok(value) => Success::Ok(value),
+            Err(value) => Success::Err(value),
+        }
+    }
 }
 
 #[wasm_bindgen]
@@ -74,6 +93,6 @@ impl Context {
 
     #[wasm_bindgen]
     pub fn eval(&mut self, expr: &Query) -> JsValue {
-        JsValue::from_serde(&self.context.eval_outer(&expr.query)).unwrap()
+        JsValue::from_serde(&Success::from(self.context.eval_outer(&expr.query))).unwrap()
     }
 }

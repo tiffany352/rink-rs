@@ -25,6 +25,8 @@ wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 js-sys = "0.3.44"
 wee_alloc = "0.4.5"
 chrono = "0.4.13"
+serde = "1"
+serde_derive = "1"
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires

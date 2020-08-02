@@ -107,6 +107,8 @@ pub struct DateReply {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
+#[serde(rename_all = "lowercase")]
+#[serde(tag = "type")]
 pub enum QueryReply {
     Number(NumberParts),
     Date(DateReply),
@@ -134,6 +136,7 @@ pub struct NotFoundError {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "error")]
 pub enum QueryError {
     Conformance(Box<ConformanceError>),
     NotFound(NotFoundError),
