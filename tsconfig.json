@@ -7,6 +7,7 @@
     "noImplicitAny": true,
     "module": "es6",
     "moduleResolution": "node",
+    "experimentalDecorators": true,
     "target": "ES2015",
     "allowJs": true,
     "baseUrl": "./web/src/",
