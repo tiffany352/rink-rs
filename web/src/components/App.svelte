@@ -1,5 +1,6 @@
 <script lang="typescript">
   import wasm from "../../../rink-js/Cargo.toml";
+  import Result from "./Result.svelte";
 
   export let queryText: string = "";
   export let result: any = null;
@@ -18,7 +19,11 @@
   ) {
     console.log("handleChange");
     const exports = await loadRink();
-    result = new exports.Query(queryText);
+    let expr = new exports.Query(queryText);
+    //let context = new exports.Context();
+    //result = context.eval(expr);
+    result = expr.getExpr();
+    console.log("result", result);
   }
 </script>
 
@@ -28,4 +33,4 @@
 
 <p>hello from svelte</p>
 <input bind:value={queryText} on:change={handleChange} />
-<pre>{JSON.stringify(result && result.getExpr(), null, 2)}</pre>
+<Result value={result} />
