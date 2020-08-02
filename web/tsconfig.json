@@ -10,11 +10,8 @@
     "experimentalDecorators": true,
     "target": "ES2015",
     "allowJs": true,
-    "baseUrl": "./web/src/",
-    "types": ["svelte"],
-    "paths": {
-      "~/../rink-js/Cargo.toml": ["../../rink-js/pkg"]
-    }
+    "baseUrl": "./src/",
+    "types": ["svelte"]
   },
-  "include": ["./web/src/**/*"]
+  "include": ["./src/**/*"]
 }

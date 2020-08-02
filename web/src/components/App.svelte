@@ -1,14 +1,15 @@
 <script lang="typescript">
-  import { Query } from "~/../rink-js/Cargo.toml";
+  import wasm from "../../../rink-js/Cargo.toml";
 
   export let queryText: string = "";
-  export let result: Query | null = null;
+  export let result: any = null;
 
-  export function handleChange(
+  export async function handleChange(
     event: Event & { target: EventTarget & HTMLInputElement }
   ) {
     console.log("handleChange");
-    result = new Query(queryText);
+    const exports = await wasm();
+    result = new exports.Query(queryText);
   }
 </script>
 
@@ -18,4 +19,4 @@
 
 <p>hello from svelte</p>
 <input bind:value={queryText} on:change={handleChange} />
-<pre>{JSON.stringify(result?.getExpr(), null, 2)}</pre>
+<pre>{JSON.stringify(result && result.getExpr(), null, 2)}</pre>
