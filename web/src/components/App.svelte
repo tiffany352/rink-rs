@@ -3,12 +3,21 @@
 
   export let queryText: string = "";
   export let result: any = null;
+  let rink: any = null;
+
+  async function loadRink() {
+    if (rink != null) {
+      return rink;
+    }
+    rink = await wasm();
+    return rink;
+  }
 
   export async function handleChange(
     event: Event & { target: EventTarget & HTMLInputElement }
   ) {
     console.log("handleChange");
-    const exports = await wasm();
+    const exports = await loadRink();
     result = new exports.Query(queryText);
   }
 </script>
