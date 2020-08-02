@@ -128,19 +128,21 @@ impl Context {
                 }
             },
 
-            Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
-                a.and_then(|a| {
-                    let b = self.eval(b)?;
-                    (&a * &b).map_err(|e| {
-                        QueryError::Generic(format!(
-                            "{}: <{}> * <{}>",
-                            e,
-                            a.show(self),
-                            b.show(self)
-                        ))
+            Expr::Mul { ref exprs } => {
+                exprs.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
+                    a.and_then(|a| {
+                        let b = self.eval(b)?;
+                        (&a * &b).map_err(|e| {
+                            QueryError::Generic(format!(
+                                "{}: <{}> * <{}>",
+                                e,
+                                a.show(self),
+                                b.show(self)
+                            ))
+                        })
                     })
                 })
-            }),
+            }
             Expr::Of {
                 ref property,
                 ref expr,
@@ -487,10 +489,10 @@ impl Context {
                     ))
                 }
             },
-            Expr::Mul(ref args) => {
-                args[1..]
+            Expr::Mul { ref exprs } => {
+                exprs[1..]
                     .iter()
-                    .fold(self.eval_unit_name(&args[0]), |acc, b| {
+                    .fold(self.eval_unit_name(&exprs[0]), |acc, b| {
                         let (acc, av) = acc?;
                         let (b, bv) = self.eval_unit_name(b)?;
                         Ok((

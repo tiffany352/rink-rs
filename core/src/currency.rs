@@ -37,7 +37,7 @@ pub fn parse<R: Read>(reader: R) -> Result<Defs, String> {
                     if let Ok(num) = crate::number::Number::from_parts(integer, frac, None) {
                         out.push(DefEntry {
                             name: currency.to_owned(),
-                            def: Rc::new(Def::Unit(Expr::Mul(vec![
+                            def: Rc::new(Def::Unit(Expr::new_mul(vec![
                                 Expr::new_frac(
                                     Expr::new_const(Numeric::one()),
                                     Expr::new_const(num),

@@ -17,7 +17,7 @@ pub fn parse(buf: String) -> Result<Defs, String> {
         if let Ok(price) = crate::Number::from_parts(&*integer, None, Some(&*exp.to_string())) {
             out.push(DefEntry {
                 name: "BTC".to_owned(),
-                def: Rc::new(Def::Unit(Expr::Mul(vec![
+                def: Rc::new(Def::Unit(Expr::new_mul(vec![
                     Expr::new_const(price),
                     Expr::new_unit("USD".to_owned()),
                 ]))),

@@ -110,7 +110,7 @@ impl Resolver {
             Expr::UnaryOp(ref unaryop) => self.eval(&unaryop.expr),
             Expr::Of { ref expr, .. } => self.eval(expr),
 
-            Expr::Mul(ref exprs)
+            Expr::Mul { ref exprs }
             | Expr::Call {
                 args: ref exprs, ..
             } => {

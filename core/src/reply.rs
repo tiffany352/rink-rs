@@ -158,7 +158,7 @@ impl ExprReply {
                     literal!(val)
                 }
                 Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
-                Expr::Mul(ref exprs) => {
+                Expr::Mul { ref exprs } => {
                     if prec < Precedence::Mul {
                         literal!("(");
                     }

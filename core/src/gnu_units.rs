@@ -284,7 +284,7 @@ fn parse_mul(iter: &mut Iter<'_>) -> Expr {
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
-        Expr::Mul(terms)
+        Expr::new_mul(terms)
     }
 }
 

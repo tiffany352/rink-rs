@@ -561,7 +561,7 @@ fn parse_suffix(iter: &mut Iter<'_>) -> Expr {
             let mut left = left;
             while let Some(&Token::Percent) = iter.peek() {
                 iter.next();
-                left = Expr::Mul(vec![left, Expr::new_unit("percent".to_owned())]);
+                left = Expr::new_mul(vec![left, Expr::new_unit("percent".to_owned())]);
             }
             left
         }
@@ -610,7 +610,7 @@ fn parse_juxt(iter: &mut Iter<'_>) -> Expr {
             | Token::Eof => break,
             Token::Degree(deg) => {
                 iter.next();
-                terms = vec![Expr::new_suffix(deg, Expr::Mul(terms))]
+                terms = vec![Expr::new_suffix(deg, Expr::new_mul(terms))]
             }
             _ => terms.push(parse_frac(iter)),
         }
@@ -618,7 +618,7 @@ fn parse_juxt(iter: &mut Iter<'_>) -> Expr {
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
-        Expr::Mul(terms)
+        Expr::new_mul(terms)
     }
 }
 
@@ -631,7 +631,7 @@ fn parse_div(iter: &mut Iter<'_>) -> Expr {
                 let left = if terms.len() == 1 {
                     terms.pop().unwrap()
                 } else {
-                    Expr::Mul(terms.drain(..).collect())
+                    Expr::new_mul(terms.drain(..).collect())
                 };
                 terms = vec![Expr::new_frac(left, parse_juxt(iter))];
             }
@@ -645,7 +645,7 @@ fn parse_div(iter: &mut Iter<'_>) -> Expr {
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
-        Expr::Mul(terms)
+        Expr::new_mul(terms)
     }
 }
 

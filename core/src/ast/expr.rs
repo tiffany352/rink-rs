@@ -10,7 +10,7 @@ pub enum Expr {
     Date(Vec<DateToken>),
     BinOp(BinOpExpr),
     UnaryOp(UnaryOpExpr),
-    Mul(Vec<Expr>),
+    Mul { exprs: Vec<Expr> },
     Of { property: String, expr: Box<Expr> },
     Call { func: Function, args: Vec<Expr> },
     Error { message: String },
@@ -31,6 +31,10 @@ impl Expr {
 
     pub fn new_call(func: Function, args: Vec<Expr>) -> Expr {
         Expr::Call { func, args }
+    }
+
+    pub fn new_mul(exprs: Vec<Expr>) -> Expr {
+        Expr::Mul { exprs }
     }
 
     pub fn new_bin(op: BinOpType, numer: Expr, denom: Expr) -> Expr {
@@ -163,7 +167,7 @@ impl fmt::Display for Expr {
                         Ok(())
                     }
                 },
-                Expr::Mul(ref exprs) => {
+                Expr::Mul { ref exprs } => {
                     if prec < Precedence::Mul {
                         write!(fmt, "(")?;
                     }
