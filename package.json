@@ -6,7 +6,7 @@
   "homepage": "https://rinkcalc.app",
   "license": "MPL-2.0",
   "scripts": {
-    "start": "parcel web/index.html",
+    "start": "parcel web/index.html --no-cache",
     "build": "parcel build web/index.html"
   },
   "devDependencies": {
