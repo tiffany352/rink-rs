@@ -59,6 +59,10 @@ impl Context {
         }
     }
 
+    pub fn set_time(&mut self, time: DateTime<Utc>) {
+        self.now = time;
+    }
+
     pub fn update_time(&mut self) {
         self.now = Utc::now();
     }

@@ -1,3 +1,5 @@
+use chrono::{TimeZone, Utc};
+use js_sys::Date;
 use rink_core;
 use rink_core::ast;
 use rink_core::text_query;
@@ -52,6 +54,21 @@ impl Context {
             // Todo: Use a blank context instead.
             context: rink_core::simple_context().unwrap(),
         }
+    }
+
+    #[wasm_bindgen(js_name = setTime)]
+    pub fn set_time(&mut self, date: Date) {
+        let year = date.get_utc_full_year();
+        let month = date.get_utc_month();
+        let day = date.get_utc_date();
+        let hour = date.get_utc_hours();
+        let min = date.get_utc_minutes();
+        let sec = date.get_utc_seconds();
+        let millis = date.get_utc_milliseconds();
+        self.context.set_time(
+            Utc.ymd(year as i32, month, day)
+                .and_hms_milli(hour, min, sec, millis),
+        );
     }
 
     #[wasm_bindgen]

@@ -20,9 +20,10 @@
     console.log("handleChange");
     const exports = await loadRink();
     let expr = new exports.Query(queryText);
-    //let context = new exports.Context();
-    //result = context.eval(expr);
-    result = expr.getExpr();
+    let context = new exports.Context();
+    context.setTime(new Date());
+    result = context.eval(expr);
+    //result = expr.getExpr();
     console.log("result", result);
   }
 </script>
