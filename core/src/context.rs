@@ -8,7 +8,7 @@ use crate::numeric::Numeric;
 use crate::reply::NotFoundError;
 use crate::search;
 use crate::substance::Substance;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The evaluation context that contains unit definitions.
@@ -40,7 +40,7 @@ impl Context {
             short_output: false,
             use_humanize: true,
 
-            now: Utc::now(),
+            now: Utc.ymd(2000, 1, 1).and_hms(0, 0, 0),
 
             dimensions: BTreeSet::new(),
             prefixes: vec![],
