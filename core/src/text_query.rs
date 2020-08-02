@@ -548,7 +548,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             }
         }
         Token::Percent => Expr::new_unit("percent".to_owned()),
-        Token::Date(toks) => Expr::Date(toks),
+        Token::Date(tokens) => Expr::Date { tokens },
         Token::Comment(_) => parse_term(iter),
         x => Expr::new_error(format!("Expected term, got {}", describe(&x))),
     }

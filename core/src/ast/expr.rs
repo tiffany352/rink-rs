@@ -7,7 +7,7 @@ pub enum Expr {
     Unit { name: String },
     Quote(String),
     Const { value: Numeric },
-    Date(Vec<DateToken>),
+    Date { tokens: Vec<DateToken> },
     BinOp(BinOpExpr),
     UnaryOp(UnaryOpExpr),
     Mul { exprs: Vec<Expr> },
@@ -131,7 +131,7 @@ impl fmt::Display for Expr {
                     let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
                     write!(fmt, "{}", val)
                 }
-                Expr::Date(ref _date) => write!(fmt, "NYI: date expr Display"),
+                Expr::Date { .. } => write!(fmt, "NYI: date expr Display"),
                 Expr::BinOp(ref binop) => {
                     let op_prec = Precedence::from(binop.op);
                     let succ = Precedence::next(binop.op);

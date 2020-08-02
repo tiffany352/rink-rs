@@ -43,7 +43,7 @@ impl Context {
                 .ok_or_else(|| QueryError::NotFound(self.unknown_unit_err(name))),
             Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dimension::new(&**name)))),
             Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
-            Expr::Date(ref date) => match date::try_decode(date, self) {
+            Expr::Date { ref tokens } => match date::try_decode(tokens, self) {
                 Ok(date) => Ok(Value::DateTime(date)),
                 Err(e) => Err(QueryError::Generic(e)),
             },
@@ -544,7 +544,7 @@ impl Context {
                     "Temperature conversions must not be compound units".to_string(),
                 )),
             },
-            Expr::Date(_) => Err(QueryError::Generic(
+            Expr::Date { .. } => Err(QueryError::Generic(
                 "Dates are not allowed in the right hand side of conversions".to_string(),
             )),
             Expr::Error { ref message } => Err(QueryError::Generic(message.clone())),

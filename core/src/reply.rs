@@ -157,7 +157,7 @@ impl ExprReply {
                     let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
                     literal!(val)
                 }
-                Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
+                Expr::Date { .. } => literal!("NYI: date expr to expr parts"),
                 Expr::Mul { ref exprs } => {
                     if prec < Precedence::Mul {
                         literal!("(");
