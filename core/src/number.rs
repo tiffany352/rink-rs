@@ -19,6 +19,7 @@ pub type Quantity = BTreeMap<Dimension, i64>;
 
 /// A newtype for a string dimension ID, so that we can implement traits for it.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[serde(transparent)]
 pub struct Dimension {
     pub id: Arc<String>,
 }
@@ -147,6 +148,7 @@ pub fn to_string(rational: &Numeric, base: u8, digits: Digits) -> (bool, String)
 /// Several stringified properties of a number which are useful for
 /// displaying it to a user.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NumberParts {
     /// Present if the number can be concisely represented exactly.
     /// May be decimal, fraction, or scientific notation.

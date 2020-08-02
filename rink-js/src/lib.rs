@@ -22,7 +22,7 @@ pub fn set_panic_hook() {
 }
 
 /// Wrapper around Result because serde produces ugly output by default.
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "result")]
 enum Success<Ok, Err> {
@@ -93,6 +93,10 @@ impl Context {
 
     #[wasm_bindgen]
     pub fn eval(&mut self, expr: &Query) -> JsValue {
-        JsValue::from_serde(&Success::from(self.context.eval_outer(&expr.query))).unwrap()
+        let value = Success::from(self.context.eval_outer(&expr.query));
+        match JsValue::from_serde(&value) {
+            Ok(value) => value,
+            Err(err) => format!("Failed to serialize: {}\n{:#?}", err, value).into(),
+        }
     }
 }

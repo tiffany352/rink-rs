@@ -9,11 +9,22 @@ use std::iter::once;
 use std::rc::Rc;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
 pub enum ExprParts {
-    Literal(String),
-    Unit(String),
-    Property(String, Vec<ExprParts>),
-    Error(String),
+    Literal {
+        text: String,
+    },
+    Unit {
+        name: String,
+    },
+    Property {
+        property: String,
+        subject: Vec<ExprParts>,
+    },
+    Error {
+        message: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,6 +33,7 @@ pub struct ExprReply {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DefReply {
     pub canon_name: String,
     pub def: Option<String>,
@@ -150,11 +162,13 @@ impl ExprReply {
         fn recurse(expr: &Expr, parts: &mut Vec<ExprParts>, prec: Precedence) {
             macro_rules! literal {
                 ($e:expr) => {{
-                    parts.push(ExprParts::Literal($e.to_owned()))
+                    parts.push(ExprParts::Literal {
+                        text: $e.to_owned(),
+                    })
                 }};
             }
             match *expr {
-                Expr::Unit { ref name } => parts.push(ExprParts::Unit(name.clone())),
+                Expr::Unit { ref name } => parts.push(ExprParts::Unit { name: name.clone() }),
                 Expr::Quote { ref string } => literal!(format!("'{}'", string)),
                 Expr::Const { ref value } => {
                     let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
@@ -225,12 +239,17 @@ impl ExprReply {
                     }
                     let mut sub = vec![];
                     recurse(expr, &mut sub, Precedence::Div);
-                    parts.push(ExprParts::Property(property.to_owned(), sub));
+                    parts.push(ExprParts::Property {
+                        property: property.to_owned(),
+                        subject: sub,
+                    });
                     if prec < Precedence::Add {
                         literal!(")");
                     }
                 }
-                Expr::Error { ref message } => parts.push(ExprParts::Error(message.to_owned())),
+                Expr::Error { ref message } => parts.push(ExprParts::Error {
+                    message: message.to_owned(),
+                }),
             }
         }
 

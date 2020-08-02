@@ -2,4 +2,4 @@
   export let value: unknown;
 </script>
 
-<pre>{JSON.stringify(value, null, 2)}</pre>
+<pre>{typeof value == 'string' ? value : JSON.stringify(value, null, 2)}</pre>
