@@ -50,10 +50,11 @@ pub struct Context {
 impl Context {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Context {
-        Context {
-            // Todo: Use a blank context instead.
-            context: rink_core::simple_context().unwrap(),
-        }
+        set_panic_hook();
+        let mut context = rink_core::simple_context().unwrap();
+        // Will panic if this is set.
+        context.use_humanize = false;
+        Context { context }
     }
 
     #[wasm_bindgen(js_name = setTime)]
