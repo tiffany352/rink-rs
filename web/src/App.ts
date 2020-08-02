@@ -19,7 +19,7 @@ export class App extends LitElement {
             @change="${this.handleChange}"
             @input="${this.handleSubmit}"
           />
-          <pre>${JSON.stringify(this.query?.getExpr())}</pre>
+          <pre>${JSON.stringify(this.query?.getExpr(), null, 2)}</pre>
         </div>
       </div>
     `;
