@@ -6,6 +6,7 @@
   import NumberReply from "./NumberReply.svelte";
   import GenericError from "./GenericError.svelte";
   import SearchReply from "./SearchReply.svelte";
+  import UnitsForReply from "./UnitsForReply.svelte";
 
   export let value: reply.QueryResult;
 </script>
@@ -16,6 +17,8 @@
   <DefReply {value} />
 {:else if value.type == 'search'}
   <SearchReply {value} />
+{:else if value.type == 'unitsFor'}
+  <UnitsForReply {value} />
 {:else if value.type == 'notFound'}
   <NotFoundError {value} />
 {:else if value.type == 'conformance'}
