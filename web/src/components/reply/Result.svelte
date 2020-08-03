@@ -12,6 +12,7 @@
   import ConversionReply from "./ConversionReply.svelte";
   import FactorizeReply from "./FactorizeReply.svelte";
   import DateReply from "./DateReply.svelte";
+  import DurationReply from "./DurationReply.svelte";
 
   export let value: reply.QueryResult;
 </script>
@@ -34,6 +35,8 @@
   <FactorizeReply {value} />
 {:else if value.type == 'date'}
   <DateReply {value} />
+{:else if value.type == 'duration'}
+  <DurationReply {value} />
 {:else if value.type == 'notFound'}
   <NotFoundError {value} />
 {:else if value.type == 'conformance'}
