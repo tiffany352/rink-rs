@@ -1,10 +1,12 @@
+import { QueryResult } from "./reply";
+
 export interface Query {
   getExpr(): any;
 }
 
 export interface Context {
   setTime(date: Date): void;
-  eval(query: Query): void;
+  eval(query: Query): QueryResult;
 }
 
 let resolveRink: (rink: any) => void;

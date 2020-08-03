@@ -1,6 +1,6 @@
 export interface NumberParts {
-  exact_value: string | null;
-  approx_value: string | null;
+  exactValue: string | null;
+  approxValue: string | null;
   factor: string | null;
   divfactor: string | null;
   rawUnit: Quantity | null;
@@ -13,7 +13,9 @@ export interface Quantity {
   [dimension: string]: number;
 }
 
-export type NumberReply = NumberParts & { type: "number" };
+export interface NumberReply extends NumberParts {
+  type: "number";
+}
 
 export interface DateReply {
   type: "date";
@@ -154,9 +156,7 @@ export interface GenericError {
 export type QueryError = ConformanceError | NotFoundError | GenericError;
 
 export type Result<Ok, Err> =
-  | ({
-      success: "ok";
-    } & Ok)
+  | ({ success: "ok" } & Ok)
   | ({ success: "err" } & Err);
 
 export type QueryResult = Result<QueryReply, QueryError>;

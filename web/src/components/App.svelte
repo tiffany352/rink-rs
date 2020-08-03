@@ -1,9 +1,10 @@
 <script lang="typescript">
   import Rink from "../util/rink";
   import Result from "./Result.svelte";
+  import * as reply from "util/reply";
 
   export let queryText: string = "";
-  export let result: any = null;
+  export let result: reply.QueryResult | null = null;
 
   export async function handleChange(
     event: Event & { target: EventTarget & HTMLInputElement }
@@ -25,4 +26,6 @@
 
 <p>hello from svelte</p>
 <input bind:value={queryText} on:change={handleChange} />
-<Result value={result} />
+{#if result != null}
+  <Result value={result} />
+{/if}
