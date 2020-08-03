@@ -1,6 +1,6 @@
 <script lang="typescript">
   import Rink from "../util/rink";
-  import Result from "./Result.svelte";
+  import Result from "./reply/Result.svelte";
   import Card from "./Card.svelte";
   import * as reply from "util/reply";
 

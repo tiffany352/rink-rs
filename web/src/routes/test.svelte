@@ -1,6 +1,6 @@
 <script context="module">
   import Rink from "../util/rink";
-  import Result from "../components/Result.svelte";
+  import Result from "../components/reply/Result.svelte";
 
   export async function preload() {
     const rink = await Rink.getRink();
