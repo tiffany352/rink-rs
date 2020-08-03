@@ -1,7 +1,7 @@
 <script lang="typescript">
   import * as reply from "../util/reply";
   import NumberParts from "./NumberParts.svelte";
-  import ExprParts from "./ExprParts.svelte";
+  import Expr from "./Expr.svelte";
 
   export let value: reply.QueryResult;
 </script>
@@ -22,7 +22,7 @@
   {#if value.type == 'def' && value.defExpr && value.value}
     <p>
       Value:
-      <ExprParts expr={value.defExpr.exprs} />
+      <Expr value={value.defExpr.ast} />
       =
       <NumberParts number={value.value} />
     </p>

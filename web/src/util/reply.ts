@@ -1,3 +1,5 @@
+import { Expr } from "./expr";
+
 export interface NumberParts {
   exactValue: string | null;
   approxValue: string | null;
@@ -80,6 +82,7 @@ export type ExprParts = ExprLiteral | ExprUnit | ExprProperty | ExprError;
 
 export interface ExprReply {
   exprs: ExprParts[];
+  ast: Expr;
 }
 
 export interface DefReply {
