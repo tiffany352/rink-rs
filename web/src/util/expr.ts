@@ -8,9 +8,16 @@ export interface QuoteExpr {
   string: string;
 }
 
+export interface NumericParts {
+  numer: string;
+  denom: string;
+  exactValue: string | null;
+  approxValue: string | null;
+}
+
 export interface ConstExpr {
   type: "const";
-  value: string | number;
+  value: NumericParts;
 }
 
 export interface DateExpr {

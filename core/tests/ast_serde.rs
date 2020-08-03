@@ -25,11 +25,21 @@ fn check_simple() {
                 "op": "add",
                 "left": {
                     "type": "const",
-                    "value": "1",
+                    "value": {
+                        "numer": "1",
+                        "denom": "1",
+                        "exactValue": "1",
+                        "approxValue": null
+                    },
                 },
                 "right": {
                     "type": "const",
-                    "value": "2",
+                    "value": {
+                        "numer": "2",
+                        "denom": "1",
+                        "exactValue": "2",
+                        "approxValue": null
+                    },
                 },
             }
         })

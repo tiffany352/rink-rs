@@ -5,7 +5,7 @@
 use crate::ast::*;
 use crate::bigint::BigInt;
 use crate::bigrat::BigRat;
-use crate::numeric::Numeric;
+use crate::numeric::{Digits, Numeric};
 use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::Chars;

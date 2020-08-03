@@ -1,6 +1,7 @@
 <script lang="typescript">
   import * as expr from "../util/expr";
   import PrecedenceWrapper from "./PrecedenceWrapper.svelte";
+  import Numeric from "./Numeric.svelte";
 
   export let value: expr.Expr;
   export let precedence: expr.Precedence = expr.Precedence.Equals;
@@ -76,7 +77,9 @@
 {:else if value.type == 'quote'}
   <span>"{value.string}"</span>
 {:else if value.type == 'const'}
-  <span>{value.value}</span>
+  <span>
+    <Numeric number={value.value} />
+  </span>
 {:else if value.type == 'date'}
   <pre>{(JSON.stringify(value), null, 2)}</pre>
 {:else if value.type == 'binop' && value.op == 'pow'}

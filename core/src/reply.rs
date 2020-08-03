@@ -1,5 +1,6 @@
-use crate::ast::{Digits, Expr, Precedence, UnaryOpType};
+use crate::ast::{Expr, Precedence, UnaryOpType};
 use crate::number::NumberParts;
+use crate::numeric::Digits;
 use chrono::{DateTime, TimeZone};
 use std::collections::BTreeMap;
 use std::convert::From;
@@ -179,7 +180,7 @@ impl ExprReply {
                 Expr::Unit { ref name } => parts.push(ExprParts::Unit { name: name.clone() }),
                 Expr::Quote { ref string } => literal!(format!("'{}'", string)),
                 Expr::Const { ref value } => {
-                    let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
+                    let (_exact, val) = value.to_string(10, Digits::Default);
                     literal!(val)
                 }
                 Expr::Date { .. } => literal!("NYI: date expr to expr parts"),

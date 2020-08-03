@@ -128,7 +128,7 @@ impl fmt::Display for Expr {
                 Expr::Unit { ref name } => write!(fmt, "{}", name),
                 Expr::Quote { ref string } => write!(fmt, "'{}'", string),
                 Expr::Const { ref value } => {
-                    let (_exact, val) = crate::number::to_string(value, 10, Digits::Default);
+                    let (_exact, val) = value.to_string(10, Digits::Default);
                     write!(fmt, "{}", val)
                 }
                 Expr::Date { .. } => write!(fmt, "NYI: date expr Display"),

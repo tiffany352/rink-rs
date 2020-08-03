@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::numeric::Numeric;
+use crate::numeric::{Digits, Numeric};
 use chrono_tz::Tz;
 use std::fmt;
 
@@ -14,7 +14,7 @@ mod test;
 
 pub use def::{DatePattern, Def, DefEntry, Defs, Property};
 pub use expr::{Expr, Precedence};
-pub use query::{Conversion, Digits, Query};
+pub use query::{Conversion, Query};
 
 #[derive(Debug, Clone, Serialize, Copy, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]

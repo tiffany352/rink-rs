@@ -2,14 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{BinOpExpr, BinOpType, Conversion, Digits, Expr, Function, Query, UnaryOpType};
+use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::bigint::BigInt;
 use crate::context::Context;
 use crate::date;
 use crate::factorize::{factorize, Factors};
 use crate::formula::substance_from_formula;
 use crate::number::{pow, Dimension, Number, NumberParts};
-use crate::numeric::Numeric;
+use crate::numeric::{Digits, Numeric};
 use crate::reply::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
     FactorizeReply, QueryError, QueryReply, SearchReply, UnitListReply, UnitsForReply,

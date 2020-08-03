@@ -11,13 +11,6 @@ pub enum Conversion {
     Timezone(Tz),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
-pub enum Digits {
-    Default,
-    FullInt,
-    Digits(u64),
-}
-
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
