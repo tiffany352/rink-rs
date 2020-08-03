@@ -8,6 +8,7 @@
   import SearchReply from "./SearchReply.svelte";
   import UnitsForReply from "./UnitsForReply.svelte";
   import UnitListReply from "./UnitListReply.svelte";
+  import SubstanceReply from "./SubstanceReply.svelte";
 
   export let value: reply.QueryResult;
 </script>
@@ -22,6 +23,8 @@
   <UnitsForReply {value} />
 {:else if value.type == 'unitList'}
   <UnitListReply {value} />
+{:else if value.type == 'substance'}
+  <SubstanceReply {value} />
 {:else if value.type == 'notFound'}
   <NotFoundError {value} />
 {:else if value.type == 'conformance'}

@@ -39,7 +39,7 @@ export interface PropertyReply {
 
 export interface SubstanceReply {
   type: "substance";
-  name: String;
+  name: string;
   doc: string | null;
   amount: NumberParts;
   properties: PropertyReply[];
