@@ -7,5 +7,5 @@
 {#if number.exactValue}
   {number.exactValue}
 {:else if number.approxValue}
-  {number.approxValue}
+  approx. {number.approxValue}
 {:else}{number.numer}/{number.denom}{/if}
