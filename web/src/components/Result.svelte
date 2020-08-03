@@ -6,6 +6,12 @@
   export let value: reply.QueryResult;
 </script>
 
+<style>
+  .capitalize::first-letter {
+    text-transform: capitalize;
+  }
+</style>
+
 {#if value.type == 'number'}
   <p>
     <NumberParts number={value} />
@@ -32,18 +38,19 @@
 {:else if value.type == 'notFound'}
   <p>No such unit {value.got}.</p>
 {:else if value.type == 'conformance'}
+  <h3>Conformance Error</h3>
   <p>
-    Conformance error: {value.left.quantity} ({value.left.dimensions}) != {value.right.quantity}
-    ({value.right.dimensions})
+    {value.left.quantity} ({value.left.dimensions}) != {value.right.quantity} ({value.right.dimensions})
   </p>
-  <h3>Suggestions</h3>
+  <h4>Suggestions</h4>
   <ul>
     {#each value.suggestions as suggestion}
-      <li>{suggestion}</li>
+      <li class="capitalize">{suggestion}</li>
     {/each}
   </ul>
 {:else if value.type == 'generic'}
   <p>{value.message}</p>
+{:else}
+  <h3>Unknown result type</h3>
+  <pre>{JSON.stringify(value, null, 2)}</pre>
 {/if}
-
-<pre>{JSON.stringify(value, null, 2)}</pre>

@@ -1,6 +1,7 @@
 <script lang="typescript">
   import Rink from "../util/rink";
   import Result from "./Result.svelte";
+  import Card from "./Card.svelte";
   import * as reply from "util/reply";
 
   export let queryText: string = "";
@@ -20,12 +21,20 @@
   }
 </script>
 
+<style>
+  input {
+    margin: 0.5em;
+    font-size: 1.25em;
+  }
+</style>
+
 <svelte:head>
   <title>Rink</title>
 </svelte:head>
 
-<p>hello from svelte</p>
 <input bind:value={queryText} on:change={handleChange} />
 {#if result != null}
-  <Result value={result} />
+  <Card>
+    <Result value={result} />
+  </Card>
 {/if}
