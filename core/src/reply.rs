@@ -8,7 +8,7 @@ use std::fmt::{Display, Formatter};
 use std::iter::once;
 use std::rc::Rc;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 pub enum ExprParts {
@@ -27,12 +27,13 @@ pub enum ExprParts {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ExprReply {
     exprs: Vec<ExprParts>,
+    ast: Expr,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DefReply {
     pub canon_name: String,
@@ -42,36 +43,36 @@ pub struct DefReply {
     pub doc: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ConversionReply {
     pub value: NumberParts,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FactorizeReply {
     pub factorizations: Vec<BTreeMap<Rc<String>, usize>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UnitsInCategory {
     pub category: Option<String>,
     pub units: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UnitsForReply {
     pub units: Vec<UnitsInCategory>,
     /// Dimensions and quantity are set.
     pub of: NumberParts,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UnitListReply {
     pub rest: NumberParts,
     pub list: Vec<NumberParts>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct DurationReply {
     pub raw: NumberParts,
     pub years: NumberParts,
@@ -83,19 +84,19 @@ pub struct DurationReply {
     pub seconds: NumberParts,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SearchReply {
     pub results: Vec<NumberParts>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct PropertyReply {
     pub name: String,
     pub value: NumberParts,
     pub doc: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SubstanceReply {
     pub name: String,
     pub doc: Option<String>,
@@ -103,7 +104,7 @@ pub struct SubstanceReply {
     pub properties: Vec<PropertyReply>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct DateReply {
     pub year: i32,
     pub month: i32,
@@ -117,7 +118,7 @@ pub struct DateReply {
     pub string: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[allow(clippy::large_enum_variant)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
@@ -134,20 +135,20 @@ pub enum QueryReply {
     Search(SearchReply),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ConformanceError {
     pub left: NumberParts,
     pub right: NumberParts,
     pub suggestions: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct NotFoundError {
     pub got: String,
     pub suggestion: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
 pub enum QueryError {
@@ -262,7 +263,10 @@ impl ExprReply {
 
         recurse(expr, &mut parts, Precedence::Equals);
 
-        ExprReply { exprs: parts }
+        ExprReply {
+            exprs: parts,
+            ast: expr.clone(),
+        }
     }
 }
 
