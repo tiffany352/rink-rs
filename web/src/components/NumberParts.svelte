@@ -6,6 +6,6 @@
 
 {#if number.exactValue}
   {number.exactValue}
-{:else}approx. {number.approxValue}{/if}
+{:else if number.approxValue}approx. {number.approxValue}{/if}
 {#if number.unit}{number.unit}{/if}
 {#if number.quantity}({number.quantity}){/if}
