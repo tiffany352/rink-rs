@@ -9,6 +9,9 @@
   import UnitsForReply from "./UnitsForReply.svelte";
   import UnitListReply from "./UnitListReply.svelte";
   import SubstanceReply from "./SubstanceReply.svelte";
+  import ConversionReply from "./ConversionReply.svelte";
+  import FactorizeReply from "./FactorizeReply.svelte";
+  import DateReply from "./DateReply.svelte";
 
   export let value: reply.QueryResult;
 </script>
@@ -25,6 +28,12 @@
   <UnitListReply {value} />
 {:else if value.type == 'substance'}
   <SubstanceReply {value} />
+{:else if value.type == 'conversion'}
+  <ConversionReply {value} />
+{:else if value.type == 'factorize'}
+  <FactorizeReply {value} />
+{:else if value.type == 'date'}
+  <DateReply {value} />
 {:else if value.type == 'notFound'}
   <NotFoundError {value} />
 {:else if value.type == 'conformance'}

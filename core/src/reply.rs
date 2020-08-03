@@ -117,6 +117,7 @@ pub struct DateReply {
     /// chrono-humanize output, if enabled.
     pub human: Option<String>,
     pub string: String,
+    pub rfc3339: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -335,6 +336,7 @@ impl DateReply {
         use chrono::{Datelike, Timelike};
         DateReply {
             string: date.to_string(),
+            rfc3339: date.to_rfc3339(),
             year: date.year(),
             month: date.month() as i32,
             day: date.day() as i32,

@@ -29,6 +29,7 @@ export interface DateReply {
   second: number;
   nanosecond: number;
   string: string;
+  rfc3339: string;
 }
 
 export interface PropertyReply {
