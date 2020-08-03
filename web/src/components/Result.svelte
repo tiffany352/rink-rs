@@ -18,12 +18,17 @@
   </p>
 {:else if value.type == 'def'}
   <h3>{value.canonName}</h3>
-  <p>Definition: {value.def}</p>
+  {#if value.type == 'def' && value.defExpr}
+    <p>
+      Definition:
+      <Expr value={value.defExpr.ast} />
+    </p>
+  {:else if value.type == 'def'}
+    <p>Definition: {value.def}</p>
+  {/if}
   {#if value.type == 'def' && value.defExpr && value.value}
     <p>
       Value:
-      <Expr value={value.defExpr.ast} />
-      =
       <NumberParts number={value.value} />
     </p>
   {:else if value.type == 'def' && value.defExpr}
