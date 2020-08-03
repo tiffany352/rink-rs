@@ -7,6 +7,7 @@
   import GenericError from "./GenericError.svelte";
   import SearchReply from "./SearchReply.svelte";
   import UnitsForReply from "./UnitsForReply.svelte";
+  import UnitListReply from "./UnitListReply.svelte";
 
   export let value: reply.QueryResult;
 </script>
@@ -19,6 +20,8 @@
   <SearchReply {value} />
 {:else if value.type == 'unitsFor'}
   <UnitsForReply {value} />
+{:else if value.type == 'unitList'}
+  <UnitListReply {value} />
 {:else if value.type == 'notFound'}
   <NotFoundError {value} />
 {:else if value.type == 'conformance'}
