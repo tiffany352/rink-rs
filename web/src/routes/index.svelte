@@ -26,7 +26,7 @@
 <Container header="normal">
   <h1 slot="header">Rink</h1>
 
-  <nav>
+  <nav role="navigation" aria-label="Links">
     <NavButton
       text="GitHub"
       icon="/svg/GitHub.svg"

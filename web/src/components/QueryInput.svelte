@@ -47,7 +47,7 @@
     stroke: rgb(60, 60, 60);
   }
 
-  .header {
+  header {
     margin-top: 1em;
     display: flex;
     flex-direction: row;
@@ -70,8 +70,8 @@
   }
 </style>
 
-<div class="header">
-  <a href="/" class="home" title="Home" role="navigation" alt="Home">
+<header role="navigation">
+  <a href="/" class="home" title="Home" alt="Home">
     <svg
       role="figure"
       xmlns="http://www.w3.org/2000/svg"
@@ -95,6 +95,7 @@
     method="get"
     on:submit={handleSubmit}
     on:click={handleFormClick}
+    role="search"
     aria-label="Search">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -120,4 +121,4 @@
       bind:value={text}
       placeholder="Enter a query..." />
   </form>
-</div>
+</header>

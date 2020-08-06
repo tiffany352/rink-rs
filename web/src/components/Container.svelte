@@ -42,7 +42,7 @@
   <div class={`header ${header}`}>
     <slot name="header" />
   </div>
-  <div class="content">
+  <div class="content" role="main">
     <slot />
   </div>
 </div>
