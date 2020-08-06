@@ -3,9 +3,9 @@
 body {
   font-family: "Roboto", sans-serif;
   background-color: rgb(238, 238, 238);
+  padding: 0;
 }
 
-h1,
 h2,
 h3,
 h4,

@@ -11,8 +11,7 @@
     grid-template-columns: 1fr 5fr 4fr;
     box-sizing: border-box;
     width: fit-content(100%);
-    margin: -0.5em;
-    margin-top: 0;
+    margin: 0 -0.5em;
   }
 
   .table > div {
