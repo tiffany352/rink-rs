@@ -1,10 +1,11 @@
 <script lang="typescript">
-  import * as prec from "../../util/precedence";
+  import { Precedence } from "../../util/precedence";
+  import type { PowExpr } from "../../util/precedence";
   import PrecedenceWrapper from "../PrecedenceWrapper.svelte";
   import Node from "./Node.svelte";
 
-  export let value: prec.PowExpr;
-  export let precedence: prec.Precedence;
+  export let value: PowExpr;
+  export let precedence: Precedence;
 </script>
 
 <style>
@@ -15,11 +16,11 @@
 </style>
 
 <!-- prettier-ignore -->
-<PrecedenceWrapper {precedence} expected={prec.Precedence.Pow}
-  ><Node value={value.left} precedence={prec.Precedence.Term}
+<PrecedenceWrapper {precedence} expected={Precedence.Pow}
+  ><Node value={value.left} precedence={Precedence.Term}
     /><span class="hidden">^</span
     ><sup
-      ><Node value={value.right} precedence={prec.Precedence.Term}
+      ><Node value={value.right} precedence={Precedence.Term}
     /></sup
   ></PrecedenceWrapper
 >

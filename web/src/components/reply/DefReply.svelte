@@ -1,9 +1,9 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { DefReply } from "../../util/reply";
   import NumberParts from "../NumberParts.svelte";
   import Expr from "../expr/Expr.svelte";
 
-  export let value: reply.DefReply;
+  export let value: DefReply;
 </script>
 
 <h3>{value.canonName}</h3>

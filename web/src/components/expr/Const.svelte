@@ -1,8 +1,8 @@
 <script lang="typescript">
-  import * as expr from "../../util/expr";
+  import type { ConstExpr } from "../../util/expr";
   import Numeric from "../Numeric.svelte";
 
-  export let value: expr.ConstExpr;
+  export let value: ConstExpr;
 </script>
 
 <span>

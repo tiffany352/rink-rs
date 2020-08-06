@@ -1,10 +1,9 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
-  import NumberParts from "../NumberParts.svelte";
+  import type { DurationReply, NumberParts } from "../../util/reply";
 
-  export let value: reply.DurationReply;
+  export let value: DurationReply;
 
-  let keys: (keyof reply.DurationReply)[] = [
+  let keys: (keyof DurationReply)[] = [
     "years",
     "months",
     "weeks",
@@ -14,12 +13,12 @@
     "seconds",
   ];
 
-  function describe(value: reply.DurationReply): string {
+  function describe(value: DurationReply): string {
     let out = [];
 
     for (const key of keys) {
       console.log(key);
-      const entry = (value[key] as any) as reply.NumberParts;
+      const entry = (value[key] as any) as NumberParts;
       if (entry.exactValue != "0") {
         out.push(entry.exactValue + " " + key);
       }

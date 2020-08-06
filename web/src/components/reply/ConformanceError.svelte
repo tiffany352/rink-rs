@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { ConformanceError } from "../../util/reply";
 
-  export let value: reply.ConformanceError;
+  export let value: ConformanceError;
 </script>
 
 <style>

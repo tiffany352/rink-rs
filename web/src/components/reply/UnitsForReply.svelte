@@ -1,8 +1,8 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { UnitsForReply } from "../../util/reply";
   import NumberParts from "../NumberParts.svelte";
 
-  export let value: reply.UnitsForReply;
+  export let value: UnitsForReply;
 </script>
 
 <h2>

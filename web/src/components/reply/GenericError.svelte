@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { GenericError } from "../../util/reply";
 
-  export let value: reply.GenericError;
+  export let value: GenericError;
 </script>
 
 <p>{value.message}</p>

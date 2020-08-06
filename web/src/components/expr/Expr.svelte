@@ -1,9 +1,8 @@
 <script lang="typescript">
   import Node from "./Node.svelte";
-  import * as expr from "../../util/expr";
+  import type { Expr } from "../../util/expr";
 
-  export let value: expr.Expr;
-  console.log("expr", value);
+  export let value: Expr;
 </script>
 
 <span>

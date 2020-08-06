@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as expr from "../../util/expr";
+  import type { QuoteExpr } from "../../util/expr";
 
-  export let value: expr.QuoteExpr;
+  export let value: QuoteExpr;
 </script>
 
 <span>"{value.string}"</span>

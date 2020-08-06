@@ -1,14 +1,14 @@
 <script lang="typescript">
-  import * as expr from "../../util/expr";
-  import * as prec from "../../util/precedence";
+  import type { OfExpr } from "../../util/expr";
+  import { Precedence } from "../../util/precedence";
   import PrecedenceWrapper from "../PrecedenceWrapper.svelte";
   import Node from "./Node.svelte";
 
-  export let value: expr.OfExpr;
-  export let precedence: prec.Precedence;
+  export let value: OfExpr;
+  export let precedence: Precedence;
 </script>
 
-<PrecedenceWrapper {precedence} expected={prec.Precedence.Term}>
+<PrecedenceWrapper {precedence} expected={Precedence.Term}>
   <span>{value.property}</span>
   <span>of</span>
   <Node value={value.expr} />

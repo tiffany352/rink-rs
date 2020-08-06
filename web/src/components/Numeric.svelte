@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as expr from "../util/expr";
+  import type { NumericParts } from "../util/expr";
 
-  export let number: expr.NumericParts;
+  export let number: NumericParts;
 </script>
 
 {#if number.exactValue}

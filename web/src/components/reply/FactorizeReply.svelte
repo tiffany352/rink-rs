@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { FactorizeReply } from "../../util/reply";
 
-  export let value: reply.FactorizeReply;
+  export let value: FactorizeReply;
 </script>
 
 <style>

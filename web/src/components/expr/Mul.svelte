@@ -1,20 +1,20 @@
 <script lang="typescript">
-  import * as expr from "../../util/expr";
-  import * as prec from "../../util/precedence";
+  import type { MulExpr } from "../../util/expr";
+  import { Precedence } from "../../util/precedence";
   import PrecedenceWrapper from "../PrecedenceWrapper.svelte";
   import Node from "./Node.svelte";
 
-  export let value: expr.MulExpr;
-  export let precedence: prec.Precedence;
+  export let value: MulExpr;
+  export let precedence: Precedence;
 </script>
 
 <!-- prettier-ignore -->
-<PrecedenceWrapper {precedence} expected={prec.Precedence.Mul}
+<PrecedenceWrapper {precedence} expected={Precedence.Mul}
   >{#each value.exprs as item, i
     }{#if i != 0
       }<span
         >&ThinSpace;</span
       >{/if
-    }<Node value={item} precedence={prec.Precedence.Mul}
+    }<Node value={item} precedence={Precedence.Mul}
   />{/each
 }</PrecedenceWrapper>

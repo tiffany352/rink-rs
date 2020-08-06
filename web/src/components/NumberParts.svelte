@@ -1,12 +1,12 @@
 <script lang="typescript">
-  import * as reply from "../util/reply";
+  import type { NumberParts } from "../util/reply";
 
-  export let number: reply.NumberParts;
+  export let number: NumberParts;
 
   type QuantityArray = [string, number][];
 
   function readUnits(
-    number: reply.NumberParts
+    number: NumberParts
   ): { numer: QuantityArray; denom: QuantityArray } {
     const numer: QuantityArray = [];
     const denom: QuantityArray = [];

@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { NotFoundError } from "../../util/reply";
 
-  export let value: reply.NotFoundError;
+  export let value: NotFoundError;
 </script>
 
 {#if value.suggestion != null}

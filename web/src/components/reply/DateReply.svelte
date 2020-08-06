@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { DateReply } from "../../util/reply";
 
-  export let value: reply.DateReply;
+  export let value: DateReply;
 
   const format = new Intl.DateTimeFormat(undefined, {
     year: "numeric",

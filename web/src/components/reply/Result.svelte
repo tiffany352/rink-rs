@@ -1,5 +1,5 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { QueryResult } from "../../util/reply";
   import DefReply from "./DefReply.svelte";
   import ConformanceError from "./ConformanceError.svelte";
   import NotFoundError from "./NotFoundError.svelte";
@@ -14,7 +14,7 @@
   import DateReply from "./DateReply.svelte";
   import DurationReply from "./DurationReply.svelte";
 
-  export let value: reply.QueryResult;
+  export let value: QueryResult;
 </script>
 
 {#if value.type == 'number'}

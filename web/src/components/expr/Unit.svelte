@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as expr from "../../util/expr";
+  import type { UnitExpr } from "../../util/expr";
 
-  export let value: expr.UnitExpr;
+  export let value: UnitExpr;
 </script>
 
 <a href={`/unit/${value.name}`}>{value.name}</a>

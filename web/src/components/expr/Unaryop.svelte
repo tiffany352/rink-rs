@@ -1,8 +1,8 @@
 <script lang="typescript">
-  import * as expr from "../../util/expr";
+  import type { UnaryOpExpr } from "../../util/expr";
   import Node from "./Node.svelte";
 
-  export let value: expr.UnaryOpExpr;
+  export let value: UnaryOpExpr;
 </script>
 
 <span>{value.op}</span>

@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as expr from "../../util/expr";
+  import type { CallExpr } from "../../util/expr";
 
-  export let value: expr.CallExpr;
+  export let value: CallExpr;
 </script>
 
 <span>{value.func}</span>

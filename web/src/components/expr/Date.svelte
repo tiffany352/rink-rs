@@ -1,7 +1,7 @@
 <script lang="typescript">
-  import * as expr from "../../util/expr";
+  import type { DateExpr } from "../../util/expr";
 
-  export let value: expr.DateExpr;
+  export let value: DateExpr;
 </script>
 
 <pre>{(JSON.stringify(value), null, 2)}</pre>

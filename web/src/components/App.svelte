@@ -2,10 +2,10 @@
   import Rink from "../util/rink";
   import Result from "./reply/Result.svelte";
   import Card from "./Card.svelte";
-  import * as reply from "util/reply";
+  import type { QueryResult } from "util/reply";
 
   export let queryText: string = "";
-  export let result: reply.QueryResult | null = null;
+  export let result: QueryResult | null = null;
 
   export async function handleChange(
     event: Event & { target: EventTarget & HTMLInputElement }

@@ -1,8 +1,8 @@
 <script lang="typescript">
-  import * as reply from "../../util/reply";
+  import type { ConversionReply } from "../../util/reply";
   import NumberParts from "../NumberParts.svelte";
 
-  export let value: reply.ConversionReply;
+  export let value: ConversionReply;
 </script>
 
 <p>

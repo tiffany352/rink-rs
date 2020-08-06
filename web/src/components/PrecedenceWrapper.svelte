@@ -1,8 +1,8 @@
 <script lang="typescript">
-  import * as expr from "../util/expr";
+  import { Precedence } from "../util/precedence";
 
-  export let precedence: expr.Precedence;
-  export let expected: expr.Precedence;
+  export let precedence: Precedence;
+  export let expected: Precedence;
 </script>
 
 {#if precedence < expected}
