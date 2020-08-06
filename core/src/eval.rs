@@ -2,14 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{Conversion, Digits, Expr, Function, Query};
+use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::bigint::BigInt;
 use crate::context::Context;
 use crate::date;
 use crate::factorize::{factorize, Factors};
 use crate::formula::substance_from_formula;
 use crate::number::{pow, Dimension, Number, NumberParts};
-use crate::numeric::Numeric;
+use crate::numeric::{Digits, Numeric};
 use crate::reply::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
     FactorizeReply, QueryError, QueryReply, SearchReply, UnitListReply, UnitsForReply,
@@ -18,6 +18,7 @@ use crate::reply::{
 use crate::search;
 use crate::substance::SubstanceGetError;
 use crate::value::{Show, Value};
+use chrono::FixedOffset;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
@@ -26,27 +27,12 @@ impl Context {
     /// conversions.
     pub fn eval(&self, expr: &Expr) -> Result<Value, QueryError> {
         use std::ops::*;
-        macro_rules! operator {
-            ($left:ident $op:ident $opname:tt $right:ident) => {{
-                let left = self.eval(&**$left)?;
-                let right = self.eval(&**$right)?;
-                ((&left).$op(&right)).map_err(|e| {
-                    QueryError::Generic(format!(
-                        "{}: <{}> {} <{}>",
-                        e,
-                        left.show(self),
-                        stringify!($opname),
-                        right.show(self)
-                    ))
-                })
-            }};
-        }
 
         match *expr {
-            Expr::Unit(ref name) if name == "now" => {
-                Ok(Value::DateTime(date::GenericDateTime::Fixed(date::now())))
-            }
-            Expr::Unit(ref name) => self
+            Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(
+                date::GenericDateTime::Fixed(self.now.with_timezone(&FixedOffset::east(0))),
+            )),
+            Expr::Unit { ref name } => self
                 .lookup(name)
                 .map(Value::Number)
                 .or_else(|| self.substances.get(name).cloned().map(Value::Substance))
@@ -55,75 +41,24 @@ impl Context {
                         .map(Value::Substance)
                 })
                 .ok_or_else(|| QueryError::NotFound(self.unknown_unit_err(name))),
-            Expr::Quote(ref name) => Ok(Value::Number(Number::one_unit(Dimension::new(&**name)))),
-            Expr::Const(ref num) => Ok(Value::Number(Number::new(num.clone()))),
-            Expr::Date(ref date) => match date::try_decode(date, self) {
-                Ok(date) => Ok(Value::DateTime(date)),
-                Err(e) => Err(QueryError::Generic(e)),
-            },
-            Expr::Neg(ref expr) => self.eval(&**expr).and_then(|v| {
-                (-&v).map_err(|e| QueryError::Generic(format!("{}: - <{}>", e, v.show(self))))
-            }),
-            Expr::Plus(ref expr) => self.eval(&**expr),
-
-            Expr::Frac(ref left, ref right) => operator!(left div / right),
-            Expr::Add(ref left, ref right) => operator!(left add + right),
-            Expr::Sub(ref left, ref right) => operator!(left sub - right),
-            Expr::Pow(ref left, ref right) => operator!(left pow ^ right),
-
-            Expr::Suffix(ref deg, ref left) => {
-                let (name, base, scale) = deg.name_base_scale();
-
-                let left = self.eval(&**left)?;
-                let left = match left {
-                    Value::Number(left) => left,
-                    _ => {
-                        return Err(QueryError::Generic(format!(
-                            "Expected number, got: <{}> °{}",
-                            left.show(self),
-                            name
-                        )))
-                    }
-                };
-                if left.unit != BTreeMap::new() {
-                    Err(QueryError::Generic(format!(
-                        "Expected dimensionless, got: <{}>",
-                        left.show(self)
-                    )))
-                } else {
-                    let left = (&left
-                        * &self
-                            .lookup(scale)
-                            .expect(&*format!("Missing {} unit", scale)))
-                        .unwrap();
-                    Ok(Value::Number(
-                        (&left
-                            + &self
-                                .lookup(base)
-                                .expect(&*format!("Missing {} constant", base)))
-                            .unwrap(),
-                    ))
-                }
+            Expr::Quote { ref string } => {
+                Ok(Value::Number(Number::one_unit(Dimension::new(string))))
             }
+            Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
+            Expr::Date { ref tokens } => match date::try_decode(tokens, self) {
+                Ok(date) => Ok(Value::DateTime(date)),
+                Err(e) => Err(QueryError::generic(e)),
+            },
 
-            Expr::Mul(ref args) => args.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
-                a.and_then(|a| {
-                    let b = self.eval(b)?;
-                    (&a * &b).map_err(|e| {
-                        QueryError::Generic(format!(
-                            "{}: <{}> * <{}>",
-                            e,
-                            a.show(self),
-                            b.show(self)
-                        ))
-                    })
-                })
-            }),
-            Expr::Equals(ref left, ref right) => {
+            Expr::BinOp(BinOpExpr {
+                op: BinOpType::Equals,
+                ref left,
+                ref right,
+            }) => {
                 match **left {
-                    Expr::Unit(_) => (),
+                    Expr::Unit { .. } => (),
                     ref x => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "= is currently only used for inline unit definitions: \
                              expected unit, got {}",
                             x
@@ -132,26 +67,107 @@ impl Context {
                 };
                 self.eval(right)
             }
-            Expr::Of(ref field, ref val) => {
-                let val = self.eval(val)?;
-                let val = match val {
+
+            Expr::BinOp(ref binop) => {
+                let left = self.eval(&binop.left)?;
+                let right = self.eval(&binop.right)?;
+                let result = match binop.op {
+                    BinOpType::Add => left.add(&right),
+                    BinOpType::Sub => left.sub(&right),
+                    BinOpType::Frac => left.div(&right),
+                    BinOpType::Pow => left.pow(&right),
+                    BinOpType::Equals => panic!("Should be unreachable"),
+                };
+                result.map_err(|e| {
+                    QueryError::generic(format!(
+                        "{}: <{}> {} <{}>",
+                        e,
+                        left.show(self),
+                        binop.op.symbol().trim(),
+                        right.show(self)
+                    ))
+                })
+            }
+
+            Expr::UnaryOp(ref unaryop) => match unaryop.op {
+                UnaryOpType::Positive => self.eval(&unaryop.expr),
+                UnaryOpType::Negative => self.eval(&unaryop.expr).and_then(|v| {
+                    (-&v).map_err(|e| QueryError::generic(format!("{}: - <{}>", e, v.show(self))))
+                }),
+                UnaryOpType::Degree(ref suffix) => {
+                    let (name, base, scale) = suffix.name_base_scale();
+
+                    let expr = self.eval(&unaryop.expr)?;
+                    let expr = match expr {
+                        Value::Number(expr) => expr,
+                        _ => {
+                            return Err(QueryError::generic(format!(
+                                "Expected number, got: <{}> °{}",
+                                expr.show(self),
+                                name
+                            )))
+                        }
+                    };
+                    if expr.unit != BTreeMap::new() {
+                        Err(QueryError::generic(format!(
+                            "Expected dimensionless, got: <{}>",
+                            expr.show(self)
+                        )))
+                    } else {
+                        let expr = (&expr
+                            * &self
+                                .lookup(scale)
+                                .expect(&*format!("Missing {} unit", scale)))
+                            .unwrap();
+                        Ok(Value::Number(
+                            (&expr
+                                + &self
+                                    .lookup(base)
+                                    .expect(&*format!("Missing {} constant", base)))
+                                .unwrap(),
+                        ))
+                    }
+                }
+            },
+
+            Expr::Mul { ref exprs } => {
+                exprs.iter().fold(Ok(Value::Number(Number::one())), |a, b| {
+                    a.and_then(|a| {
+                        let b = self.eval(b)?;
+                        (&a * &b).map_err(|e| {
+                            QueryError::generic(format!(
+                                "{}: <{}> * <{}>",
+                                e,
+                                a.show(self),
+                                b.show(self)
+                            ))
+                        })
+                    })
+                })
+            }
+            Expr::Of {
+                ref property,
+                ref expr,
+            } => {
+                let expr = self.eval(expr)?;
+                let expr = match expr {
                     Value::Substance(sub) => sub,
                     x => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Not defined: {} of <{}>",
-                            field,
+                            property,
                             x.show(self)
                         )))
                     }
                 };
-                val.get(&**field).map(Value::Number).map_err(|e| match e {
-                    SubstanceGetError::Generic(s) => QueryError::Generic(s),
+                expr.get(property).map(Value::Number).map_err(|e| match e {
+                    SubstanceGetError::Generic(s) => QueryError::generic(s),
                     SubstanceGetError::Conformance(l, r) => {
                         QueryError::Conformance(Box::new(self.conformance_err(&l, &r)))
                     }
                 })
             }
-            Expr::Call(ref func, ref args) => {
+            Expr::Call { ref func, ref args } => {
                 let args = args
                     .iter()
                     .map(|x| self.eval(x))
@@ -165,13 +181,13 @@ impl Context {
                         $(
                             let $name = match iter.next() {
                                 Some(&Value::$ty(ref v)) => v,
-                                Some(x) => return Err(QueryError::Generic(
+                                Some(x) => return Err(QueryError::generic(
                                     format!(
                                         "Expected {}, got <{}>",
                                         stringify!($ty), x.show(self)
                                     )
                                 )),
-                                None => return Err(QueryError::Generic(format!(
+                                None => return Err(QueryError::generic(format!(
                                     "Argument number mismatch for {}: \
                                      Expected {}, got {}",
                                     stringify!($fname), count, args.len()
@@ -179,7 +195,7 @@ impl Context {
                             };
                         )*
                         if iter.next().is_some() {
-                            return Err(QueryError::Generic(format!(
+                            return Err(QueryError::generic(format!(
                                 "Argument number mismatch for {}: \
                                  Expected {}, got {}",
                                 stringify!($fname), count, args.len()
@@ -189,7 +205,7 @@ impl Context {
                             $block
                         };
                         res.map_err(|e| {
-                            QueryError::Generic(format!(
+                            QueryError::generic(format!(
                                 "{}: {}({})",
                                 e, stringify!($fname),
                                 args.iter()
@@ -377,7 +393,7 @@ impl Context {
                     ),
                 }
             }
-            Expr::Error(ref e) => Err(QueryError::Generic(e.clone())),
+            Expr::Error { ref message } => Err(QueryError::generic(message.clone())),
         }
     }
 
@@ -386,21 +402,10 @@ impl Context {
         expr: &Expr,
     ) -> Result<(BTreeMap<String, isize>, Numeric), QueryError> {
         match *expr {
-            Expr::Equals(ref left, ref _right) => match **left {
-                Expr::Unit(ref name) => {
-                    let mut map = BTreeMap::new();
-                    map.insert(name.clone(), 1);
-                    Ok((map, Numeric::one()))
-                }
-                ref x => Err(QueryError::Generic(format!(
-                    "Expected identifier, got {:?}",
-                    x
-                ))),
-            },
-            Expr::Call(_, _) => Err(QueryError::Generic(
+            Expr::Call { .. } => Err(QueryError::generic(
                 "Calls are not allowed in the right hand side of conversions".to_string(),
             )),
-            Expr::Unit(ref name) | Expr::Quote(ref name) => {
+            Expr::Unit { ref name } | Expr::Quote { string: ref name } => {
                 let mut map = BTreeMap::new();
                 map.insert(
                     self.canonicalize(&**name).unwrap_or_else(|| name.clone()),
@@ -408,27 +413,88 @@ impl Context {
                 );
                 Ok((map, Numeric::one()))
             }
-            Expr::Const(ref i) => Ok((BTreeMap::new(), i.clone())),
-            Expr::Frac(ref left, ref right) => {
-                let (left, lv) = self.eval_unit_name(left)?;
-                let (right, rv) = self.eval_unit_name(right)?;
-                let right = right
-                    .into_iter()
-                    .map(|(k, v)| (k, -v))
-                    .collect::<BTreeMap<_, _>>();
-                Ok((
-                    crate::btree_merge(
-                        &left,
-                        &right,
-                        |a, b| if a + b != 0 { Some(a + b) } else { None },
-                    ),
-                    &lv / &rv,
-                ))
-            }
-            Expr::Mul(ref args) => {
-                args[1..]
+            Expr::Const { ref value } => Ok((BTreeMap::new(), value.clone())),
+            Expr::BinOp(ref binop) => match binop.op {
+                BinOpType::Equals => match *binop.left {
+                    Expr::Unit { ref name } => {
+                        let mut map = BTreeMap::new();
+                        map.insert(name.clone(), 1);
+                        Ok((map, Numeric::one()))
+                    }
+                    ref x => Err(QueryError::generic(format!(
+                        "Expected identifier, got {:?}",
+                        x
+                    ))),
+                },
+                BinOpType::Add | BinOpType::Sub => {
+                    let (left_unit, left) = self.eval_unit_name(&binop.left)?;
+                    let (right_unit, _right) = self.eval_unit_name(&binop.right)?;
+
+                    if left_unit != right_unit {
+                        return Err(QueryError::generic(
+                            "Add of values with differing \
+                                 dimensions is not meaningful"
+                                .to_string(),
+                        ));
+                    }
+                    Ok((left_unit, left))
+                }
+                BinOpType::Frac => {
+                    let (left_unit, left) = self.eval_unit_name(&binop.left)?;
+                    let (right_unit, right) = self.eval_unit_name(&binop.right)?;
+
+                    let right_unit = right_unit
+                        .into_iter()
+                        .map(|(k, v)| (k, -v))
+                        .collect::<BTreeMap<_, _>>();
+                    Ok((
+                        crate::btree_merge(&left_unit, &right_unit, |a, b| {
+                            if a + b != 0 {
+                                Some(a + b)
+                            } else {
+                                None
+                            }
+                        }),
+                        &left / &right,
+                    ))
+                }
+                BinOpType::Pow => {
+                    let right = self.eval(&binop.right)?;
+                    let right = match right {
+                        Value::Number(ref num) => num,
+                        _ => {
+                            return Err(QueryError::generic(
+                                "Exponents must be numbers".to_string(),
+                            ))
+                        }
+                    };
+                    if !right.dimless() {
+                        return Err(QueryError::generic(
+                            "Exponents must be dimensionless".to_string(),
+                        ));
+                    }
+                    let right = right.value.to_f64();
+                    let (left_unit, left_value) = self.eval_unit_name(&binop.left)?;
+                    Ok((
+                        left_unit
+                            .into_iter()
+                            .filter_map(|(k, v)| {
+                                let v = v * right as isize;
+                                if v != 0 {
+                                    Some((k, v))
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect::<BTreeMap<_, _>>(),
+                        pow(&left_value, right as i32),
+                    ))
+                }
+            },
+            Expr::Mul { ref exprs } => {
+                exprs[1..]
                     .iter()
-                    .fold(self.eval_unit_name(&args[0]), |acc, b| {
+                    .fold(self.eval_unit_name(&exprs[0]), |acc, b| {
                         let (acc, av) = acc?;
                         let (b, bv) = self.eval_unit_name(b)?;
                         Ok((
@@ -443,80 +509,47 @@ impl Context {
                         ))
                     })
             }
-            Expr::Pow(ref left, ref exp) => {
-                let res = self.eval(exp)?;
-                let res = match res {
-                    Value::Number(num) => num,
-                    _ => return Err(QueryError::Generic("Exponents must be numbers".to_string())),
-                };
-                if !res.dimless() {
-                    return Err(QueryError::Generic(
-                        "Exponents must be dimensionless".to_string(),
-                    ));
-                }
-                let res = res.value.to_f64();
-                let (left, lv) = self.eval_unit_name(left)?;
-                Ok((
-                    left.into_iter()
-                        .filter_map(|(k, v)| {
-                            let v = v * res as isize;
-                            if v != 0 {
-                                Some((k, v))
-                            } else {
-                                None
-                            }
-                        })
-                        .collect::<BTreeMap<_, _>>(),
-                    pow(&lv, res as i32),
-                ))
-            }
-            Expr::Of(ref name, ref expr) => {
+            Expr::Of {
+                ref property,
+                ref expr,
+            } => {
                 let res = self.eval(expr)?;
                 let res = match res {
                     Value::Substance(sub) => sub,
                     _ => {
-                        return Err(QueryError::Generic(
+                        return Err(QueryError::generic(
                             "Property access on non-substance".to_string(),
                         ))
                     }
                 };
-                let name = if let Some(prop) = res.properties.properties.get(name) {
+                let property = if let Some(prop) = res.properties.properties.get(property) {
                     if prop.input == Number::one() {
                         &prop.input_name
                     } else {
-                        name
+                        property
                     }
                 } else {
-                    name
+                    property
                 };
                 let mut map = BTreeMap::new();
                 map.insert(
-                    self.canonicalize(&**name).unwrap_or_else(|| name.clone()),
+                    self.canonicalize(property)
+                        .unwrap_or_else(|| property.clone()),
                     1,
                 );
                 Ok((map, Numeric::one()))
             }
-            Expr::Add(ref left, ref right) | Expr::Sub(ref left, ref right) => {
-                let left = self.eval_unit_name(left)?;
-                let right = self.eval_unit_name(right)?;
-                if left != right {
-                    return Err(QueryError::Generic(
-                        "Add of values with differing \
-                         dimensions is not meaningful"
-                            .to_string(),
-                    ));
-                }
-                Ok(left)
-            }
-            Expr::Neg(ref v) => self.eval_unit_name(v).map(|(u, v)| (u, -&v)),
-            Expr::Plus(ref v) => self.eval_unit_name(v),
-            Expr::Suffix(_, _) => Err(QueryError::Generic(
-                "Temperature conversions must not be compound units".to_string(),
-            )),
-            Expr::Date(_) => Err(QueryError::Generic(
+            Expr::UnaryOp(ref unaryop) => match unaryop.op {
+                UnaryOpType::Positive => self.eval_unit_name(&unaryop.expr),
+                UnaryOpType::Negative => self.eval_unit_name(&unaryop.expr).map(|(u, v)| (u, -&v)),
+                UnaryOpType::Degree(_) => Err(QueryError::generic(
+                    "Temperature conversions must not be compound units".to_string(),
+                )),
+            },
+            Expr::Date { .. } => Err(QueryError::generic(
                 "Dates are not allowed in the right hand side of conversions".to_string(),
             )),
-            Expr::Error(ref e) => Err(QueryError::Generic(e.clone())),
+            Expr::Error { ref message } => Err(QueryError::generic(message.clone())),
         }
     }
 
@@ -666,7 +699,7 @@ impl Context {
     /// Evaluates an expression, include `->` conversions.
     pub fn eval_outer(&self, expr: &Query) -> Result<QueryReply, QueryError> {
         match *expr {
-            Query::Expr(Expr::Unit(ref name))
+            Query::Expr(Expr::Unit { ref name })
                 if {
                     let a = self.definitions.contains_key(name);
                     let b = self
@@ -683,7 +716,7 @@ impl Context {
             {
                 let mut name = name.clone();
                 let mut canon = self.canonicalize(&name).unwrap_or_else(|| name.clone());
-                while let Some(&Expr::Unit(ref unit)) = {
+                while let Some(&Expr::Unit { name: ref unit }) = {
                     self.definitions
                         .get(&name)
                         .or_else(|| self.definitions.get(&*canon))
@@ -750,7 +783,7 @@ impl Context {
                 let top = match top {
                     Value::Number(top) => top,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "<{}> in base {} is not defined",
                             top.show(self),
                             base
@@ -773,7 +806,7 @@ impl Context {
                 let top = match top {
                     Value::Number(top) => top,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "<{}> to {} is not defined",
                             top.show(self),
                             match digits {
@@ -804,7 +837,7 @@ impl Context {
                         let raw = match &top / &bottom {
                             Some(raw) => raw,
                             None => {
-                                return Err(QueryError::Generic(format!(
+                                return Err(QueryError::generic(format!(
                                     "Division by zero: {} / {}",
                                     top.show(self),
                                     bottom.show(self)
@@ -834,7 +867,7 @@ impl Context {
                         base.unwrap_or(10),
                         digits,
                     )
-                    .map_err(QueryError::Generic)
+                    .map_err(QueryError::generic)
                     .map(QueryReply::Substance),
                 (Value::Number(top), Value::Substance(mut sub), (bottom_name, bottom_const)) => {
                     let unit = sub.amount.clone();
@@ -847,10 +880,10 @@ impl Context {
                         base.unwrap_or(10),
                         digits,
                     )
-                    .map_err(QueryError::Generic)
+                    .map_err(QueryError::generic)
                     .map(QueryReply::Substance)
                 }
-                (x, y, _) => Err(QueryError::Generic(format!(
+                (x, y, _) => Err(QueryError::generic(format!(
                     "Operation is not defined: <{}> -> <{}>",
                     x.show(self),
                     y.show(self)
@@ -861,7 +894,7 @@ impl Context {
                 let top = match top {
                     Value::Number(num) => num,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Cannot convert <{}> to {:?}",
                             top.show(self),
                             list
@@ -880,13 +913,11 @@ impl Context {
                     })
             }
             Query::Convert(ref top, Conversion::Offset(off), None, Digits::Default) => {
-                use chrono::FixedOffset;
-
                 let top = self.eval(top)?;
                 let top = match top {
                     Value::DateTime(date) => date,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Cannot convert <{}> to timezone offset {:+}",
                             top.show(self),
                             off
@@ -901,7 +932,7 @@ impl Context {
                 let top = match top {
                     Value::DateTime(date) => date,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Cannot convert <{}> to timezone {:?}",
                             top.show(self),
                             tz
@@ -918,7 +949,7 @@ impl Context {
                 let top = match top {
                     Value::Number(ref num) => num,
                     _ => {
-                        return Err(QueryError::Generic(format!(
+                        return Err(QueryError::generic(format!(
                             "Cannot convert <{}> to °{}",
                             top.show(self),
                             name
@@ -951,21 +982,21 @@ impl Context {
                     ))))
                 }
             }
-            Query::Convert(ref _expr, ref which, Some(base), _digits) => Err(QueryError::Generic(
+            Query::Convert(ref _expr, ref which, Some(base), _digits) => Err(QueryError::generic(
                 format!("Conversion to {} is not defined in base {}", which, base),
             )),
             Query::Convert(ref _expr, ref which, _base, Digits::Digits(digits)) => {
-                Err(QueryError::Generic(format!(
+                Err(QueryError::generic(format!(
                     "Conversion to {} is not defined to {} digits",
                     which, digits
                 )))
             }
             Query::Convert(ref _expr, ref which, _base, Digits::FullInt) => Err(
-                QueryError::Generic(format!("Conversion to digits of {} is not defined", which)),
+                QueryError::generic(format!("Conversion to digits of {} is not defined", which)),
             ),
             Query::Factorize(ref expr) => {
                 let mut val = None;
-                if let Expr::Unit(ref name) = *expr {
+                if let Expr::Unit { ref name } = *expr {
                     for (u, k) in &self.quantities {
                         if name == k {
                             val = Some(Number {
@@ -982,7 +1013,7 @@ impl Context {
                         match val {
                             Value::Number(val) => val,
                             _ => {
-                                return Err(QueryError::Generic(format!(
+                                return Err(QueryError::generic(format!(
                                     "Cannot find derivatives of <{}>",
                                     val.show(self)
                                 )))
@@ -1015,7 +1046,7 @@ impl Context {
             }
             Query::UnitsFor(ref expr) => {
                 let mut val = None;
-                if let Expr::Unit(ref name) = *expr {
+                if let Expr::Unit { ref name } = *expr {
                     for (u, k) in &self.quantities {
                         if name == k {
                             val = Some(Number {
@@ -1032,7 +1063,7 @@ impl Context {
                         match val {
                             Value::Number(val) => val,
                             _ => {
-                                return Err(QueryError::Generic(format!(
+                                return Err(QueryError::generic(format!(
                                     "Cannot find units for <{}>",
                                     val.show(self)
                                 )))
@@ -1044,7 +1075,7 @@ impl Context {
                 let dim_name;
                 let mut out = vec![];
                 for (name, unit) in self.units.iter() {
-                    if let Some(&Expr::Unit(_)) = self.definitions.get(name) {
+                    if let Some(&Expr::Unit { .. }) = self.definitions.get(name) {
                         continue;
                     }
                     let category = self.categories.get(name);
@@ -1093,11 +1124,7 @@ impl Context {
                 let parts = val.to_parts(self);
                 Ok(QueryReply::UnitsFor(UnitsForReply {
                     units: categories,
-                    of: NumberParts {
-                        dimensions: parts.dimensions,
-                        quantity: parts.quantity,
-                        ..Default::default()
-                    },
+                    of: parts,
                 }))
             }
             Query::Search(ref string) => Ok(QueryReply::Search(SearchReply {
@@ -1170,11 +1197,11 @@ impl Context {
                         }
                     },
                     Value::Substance(s) => Ok(QueryReply::Substance(
-                        s.to_reply(self).map_err(QueryError::Generic)?,
+                        s.to_reply(self).map_err(QueryError::generic)?,
                     )),
                 }
             }
-            Query::Error(ref e) => Err(QueryError::Generic(e.clone())),
+            Query::Error(ref e) => Err(QueryError::generic(e.clone())),
         }
     }
 }

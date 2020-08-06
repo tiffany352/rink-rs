@@ -3,14 +3,14 @@ use std::sync::{Arc, Mutex};
 
 use linefeed::{Interface, ReadResult, Signal};
 
-use rink_core::{load, one_line};
+use rink_core::one_line;
 
 use crate::RinkCompleter;
 
 pub fn noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
     use std::io::{stdout, Write};
 
-    let mut ctx = match load() {
+    let mut ctx = match crate::config::load() {
         Ok(ctx) => ctx,
         Err(e) => {
             println!("{}", e);
@@ -53,7 +53,7 @@ pub fn interactive() {
     };
     rl.set_prompt("> ").unwrap();
 
-    let ctx = match load() {
+    let ctx = match crate::config::load() {
         Ok(ctx) => ctx,
         Err(e) => {
             println!("{}", e);
@@ -64,7 +64,7 @@ pub fn interactive() {
     let completer = RinkCompleter::new(ctx.clone());
     rl.set_completer(Arc::new(completer));
 
-    let mut hpath = rink_core::config_dir();
+    let mut hpath = crate::config::config_dir();
     if let Ok(ref mut path) = hpath {
         path.push("history.txt");
         rl.load_history(path).unwrap_or_else(|e| {

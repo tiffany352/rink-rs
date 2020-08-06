@@ -1,5 +1,6 @@
-use crate::ast::{Digits, Expr};
+use crate::ast::{Expr, Precedence, UnaryOpType};
 use crate::number::NumberParts;
+use crate::numeric::Digits;
 use chrono::{DateTime, TimeZone};
 use std::collections::BTreeMap;
 use std::convert::From;
@@ -8,20 +9,33 @@ use std::fmt::{Display, Formatter};
 use std::iter::once;
 use std::rc::Rc;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
 pub enum ExprParts {
-    Literal(String),
-    Unit(String),
-    Property(String, Vec<ExprParts>),
-    Error(String),
+    Literal {
+        text: String,
+    },
+    Unit {
+        name: String,
+    },
+    Property {
+        property: String,
+        subject: Vec<ExprParts>,
+    },
+    Error {
+        message: String,
+    },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ExprReply {
     exprs: Vec<ExprParts>,
+    ast: Expr,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DefReply {
     pub canon_name: String,
     pub def: Option<String>,
@@ -30,36 +44,36 @@ pub struct DefReply {
     pub doc: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ConversionReply {
     pub value: NumberParts,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FactorizeReply {
     pub factorizations: Vec<BTreeMap<Rc<String>, usize>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UnitsInCategory {
     pub category: Option<String>,
     pub units: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UnitsForReply {
     pub units: Vec<UnitsInCategory>,
     /// Dimensions and quantity are set.
     pub of: NumberParts,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UnitListReply {
     pub rest: NumberParts,
     pub list: Vec<NumberParts>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct DurationReply {
     pub raw: NumberParts,
     pub years: NumberParts,
@@ -71,19 +85,19 @@ pub struct DurationReply {
     pub seconds: NumberParts,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SearchReply {
     pub results: Vec<NumberParts>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct PropertyReply {
     pub name: String,
     pub value: NumberParts,
     pub doc: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SubstanceReply {
     pub name: String,
     pub doc: Option<String>,
@@ -91,7 +105,7 @@ pub struct SubstanceReply {
     pub properties: Vec<PropertyReply>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct DateReply {
     pub year: i32,
     pub month: i32,
@@ -103,10 +117,13 @@ pub struct DateReply {
     /// chrono-humanize output, if enabled.
     pub human: Option<String>,
     pub string: String,
+    pub rfc3339: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[allow(clippy::large_enum_variant)]
+#[serde(rename_all = "camelCase")]
+#[serde(tag = "type")]
 pub enum QueryReply {
     Number(NumberParts),
     Date(DateReply),
@@ -120,133 +137,138 @@ pub enum QueryReply {
     Search(SearchReply),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ConformanceError {
     pub left: NumberParts,
     pub right: NumberParts,
     pub suggestions: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct NotFoundError {
     pub got: String,
     pub suggestion: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "camelCase")]
 pub enum QueryError {
     Conformance(Box<ConformanceError>),
     NotFound(NotFoundError),
-    Generic(String),
+    Generic { message: String },
+}
+
+impl QueryError {
+    pub fn generic(message: String) -> QueryError {
+        QueryError::Generic { message }
+    }
 }
 
 impl ExprReply {
     pub fn from(expr: &Expr) -> ExprReply {
         let mut parts = vec![];
 
-        #[derive(PartialOrd, Ord, PartialEq, Eq)]
-        enum Prec {
-            Term,
-            Plus,
-            Pow,
-            Mul,
-            Div,
-            Add,
-            Equals,
-        }
-
-        fn recurse(expr: &Expr, parts: &mut Vec<ExprParts>, prec: Prec) {
+        fn recurse(expr: &Expr, parts: &mut Vec<ExprParts>, prec: Precedence) {
             macro_rules! literal {
                 ($e:expr) => {{
-                    parts.push(ExprParts::Literal($e.to_owned()))
-                }};
-            }
-            macro_rules! binop {
-                ($left:expr, $right:expr, $prec:expr, $succ:expr, $sym:expr) => {{
-                    if prec < $prec {
-                        literal!("(");
-                    }
-                    recurse($left, parts, $succ);
-                    literal!($sym);
-                    recurse($right, parts, $prec);
-                    if prec < $prec {
-                        literal!(")");
-                    }
+                    parts.push(ExprParts::Literal {
+                        text: $e.to_owned(),
+                    })
                 }};
             }
             match *expr {
-                Expr::Unit(ref name) => parts.push(ExprParts::Unit(name.clone())),
-                Expr::Quote(ref name) => literal!(format!("'{}'", name)),
-                Expr::Const(ref num) => {
-                    let (_exact, val) = crate::number::to_string(num, 10, Digits::Default);
+                Expr::Unit { ref name } => parts.push(ExprParts::Unit { name: name.clone() }),
+                Expr::Quote { ref string } => literal!(format!("'{}'", string)),
+                Expr::Const { ref value } => {
+                    let (_exact, val) = value.to_string(10, Digits::Default);
                     literal!(val)
                 }
-                Expr::Date(ref _date) => literal!("NYI: date expr to expr parts"),
-                Expr::Mul(ref exprs) => {
-                    if prec < Prec::Mul {
+                Expr::Date { .. } => literal!("NYI: date expr to expr parts"),
+                Expr::Mul { ref exprs } => {
+                    if prec < Precedence::Mul {
                         literal!("(");
                     }
                     for expr in exprs.iter() {
-                        recurse(expr, parts, Prec::Pow);
+                        recurse(expr, parts, Precedence::Pow);
                     }
-                    if prec < Prec::Mul {
+                    if prec < Precedence::Mul {
                         literal!(")");
                     }
                 }
-                Expr::Call(ref func, ref args) => {
+                Expr::Call { ref func, ref args } => {
                     literal!(format!("{}(", func.name()));
                     if let Some(first) = args.first() {
-                        recurse(first, parts, Prec::Equals);
+                        recurse(first, parts, Precedence::Equals);
                     }
                     for arg in args.iter().skip(1) {
                         literal!(",");
-                        recurse(arg, parts, Prec::Equals);
+                        recurse(arg, parts, Precedence::Equals);
                     }
                     literal!(")")
                 }
-                Expr::Pow(ref left, ref right) => binop!(left, right, Prec::Pow, Prec::Term, "^"),
-                Expr::Frac(ref left, ref right) => binop!(left, right, Prec::Div, Prec::Mul, " / "),
-                Expr::Add(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " + "),
-                Expr::Sub(ref left, ref right) => binop!(left, right, Prec::Add, Prec::Div, " - "),
-                Expr::Plus(ref expr) => {
-                    literal!("+");
-                    recurse(expr, parts, Prec::Plus)
-                }
-                Expr::Neg(ref expr) => {
-                    literal!("-");
-                    recurse(expr, parts, Prec::Plus)
-                }
-                Expr::Equals(ref left, ref right) => {
-                    binop!(left, right, Prec::Equals, Prec::Add, " = ")
-                }
-                Expr::Suffix(ref op, ref expr) => {
-                    if prec < Prec::Mul {
+                Expr::BinOp(ref binop) => {
+                    let op_prec = Precedence::from(binop.op);
+                    let succ = Precedence::next(binop.op);
+                    if prec < op_prec {
                         literal!("(");
                     }
-                    recurse(expr, parts, Prec::Mul);
-                    literal!(op.to_string());
-                    if prec < Prec::Mul {
+                    recurse(&binop.left, parts, succ);
+                    literal!(binop.op.symbol());
+                    recurse(&binop.right, parts, op_prec);
+                    if prec < op_prec {
                         literal!(")");
                     }
                 }
-                Expr::Of(ref field, ref expr) => {
-                    if prec < Prec::Add {
+                Expr::UnaryOp(ref unaryop) => match unaryop.op {
+                    UnaryOpType::Positive => {
+                        literal!("+");
+                        recurse(expr, parts, Precedence::Plus)
+                    }
+                    UnaryOpType::Negative => {
+                        literal!("-");
+                        recurse(expr, parts, Precedence::Plus)
+                    }
+                    UnaryOpType::Degree(ref suffix) => {
+                        if prec < Precedence::Mul {
+                            literal!("(");
+                        }
+                        recurse(&unaryop.expr, parts, Precedence::Mul);
+                        literal!(suffix.to_string());
+                        if prec < Precedence::Mul {
+                            literal!(")");
+                        }
+                    }
+                },
+                Expr::Of {
+                    ref property,
+                    ref expr,
+                } => {
+                    if prec < Precedence::Add {
                         literal!("(");
                     }
                     let mut sub = vec![];
-                    recurse(expr, &mut sub, Prec::Div);
-                    parts.push(ExprParts::Property(field.to_owned(), sub));
-                    if prec < Prec::Add {
+                    recurse(expr, &mut sub, Precedence::Div);
+                    parts.push(ExprParts::Property {
+                        property: property.to_owned(),
+                        subject: sub,
+                    });
+                    if prec < Precedence::Add {
                         literal!(")");
                     }
                 }
-                Expr::Error(ref err) => parts.push(ExprParts::Error(err.to_owned())),
+                Expr::Error { ref message } => parts.push(ExprParts::Error {
+                    message: message.to_owned(),
+                }),
             }
         }
 
-        recurse(expr, &mut parts, Prec::Equals);
+        recurse(expr, &mut parts, Precedence::Equals);
 
-        ExprReply { exprs: parts }
+        ExprReply {
+            exprs: parts,
+            ast: expr.clone(),
+        }
     }
 }
 
@@ -257,8 +279,8 @@ impl From<NotFoundError> for QueryError {
 }
 
 impl From<String> for QueryError {
-    fn from(s: String) -> Self {
-        QueryError::Generic(s)
+    fn from(message: String) -> Self {
+        QueryError::Generic { message }
     }
 }
 
@@ -282,7 +304,7 @@ impl Display for QueryReply {
 impl Display for QueryError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match *self {
-            QueryError::Generic(ref v) => write!(fmt, "{}", v),
+            QueryError::Generic { ref message } => write!(fmt, "{}", message),
             QueryError::Conformance(ref v) => write!(fmt, "{}", v),
             QueryError::NotFound(ref v) => write!(fmt, "{}", v),
         }
@@ -314,6 +336,7 @@ impl DateReply {
         use chrono::{Datelike, Timelike};
         DateReply {
             string: date.to_string(),
+            rfc3339: date.to_rfc3339(),
             year: date.year(),
             month: date.month() as i32,
             day: date.day() as i32,

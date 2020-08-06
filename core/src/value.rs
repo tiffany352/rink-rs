@@ -86,10 +86,10 @@ impl<'a, 'b> Add<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::Number(ref right))
             | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
                 GenericDateTime::Fixed(left) => left
-                    .checked_add(date::to_duration(right)?)
+                    .checked_add_signed(date::to_duration(right)?)
                     .map(GenericDateTime::Fixed),
                 GenericDateTime::Timezone(left) => left
-                    .checked_add(date::to_duration(right)?)
+                    .checked_add_signed(date::to_duration(right)?)
                     .map(GenericDateTime::Timezone),
             }
             .ok_or_else(|| {
@@ -117,10 +117,10 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::Number(ref right))
             | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
                 GenericDateTime::Fixed(left) => left
-                    .checked_sub(date::to_duration(right)?)
+                    .checked_sub_signed(date::to_duration(right)?)
                     .map(GenericDateTime::Fixed),
                 GenericDateTime::Timezone(left) => left
-                    .checked_sub(date::to_duration(right)?)
+                    .checked_sub_signed(date::to_duration(right)?)
                     .map(GenericDateTime::Timezone),
             }
             .ok_or_else(|| {
@@ -133,14 +133,14 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
                         *left - *right
                     }
                     (&GenericDateTime::Fixed(ref left), &GenericDateTime::Timezone(ref right)) => {
-                        *left - *right
+                        *left - right.with_timezone(left.offset())
                     }
                     (
                         &GenericDateTime::Timezone(ref left),
                         &GenericDateTime::Timezone(ref right),
                     ) => *left - *right,
                     (&GenericDateTime::Timezone(ref left), &GenericDateTime::Fixed(ref right)) => {
-                        *left - *right
+                        left.with_timezone(right.offset()) - *right
                     }
                 })
                 .map(Value::Number)

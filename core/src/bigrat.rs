@@ -5,7 +5,9 @@
 use num::cast::ToPrimitive;
 use num::rational::BigRational as NumRat;
 use num::traits::{sign::Signed, One, Zero};
+use serde::ser;
 use std::cmp::Ord;
+use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use crate::bigint::BigInt;
@@ -76,6 +78,21 @@ impl From<f64> for BigRat {
     fn from(value: f64) -> BigRat {
         let inner = NumRat::from_float(value).unwrap();
         BigRat { inner }
+    }
+}
+
+impl fmt::Display for BigRat {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        self.inner.fmt(fmt)
+    }
+}
+
+impl ser::Serialize for BigRat {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
     }
 }
 

@@ -4,16 +4,15 @@
 
 use crate::ast::{Def, DefEntry, Defs, Expr};
 use crate::numeric::Numeric;
-use std::fs::File;
+use std::io::Read;
 use std::rc::Rc;
-use std::time::Duration;
 use xml::reader::XmlEvent;
 use xml::EventReader;
 
-static URL: &str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
+pub static URL: &str = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 
-pub fn parse(f: File) -> Result<Defs, String> {
-    let reader = EventReader::new(f);
+pub fn parse<R: Read>(reader: R) -> Result<Defs, String> {
+    let reader = EventReader::new(reader);
     let mut out = vec![];
     for ev in reader {
         match ev {
@@ -38,12 +37,12 @@ pub fn parse(f: File) -> Result<Defs, String> {
                     if let Ok(num) = crate::number::Number::from_parts(integer, frac, None) {
                         out.push(DefEntry {
                             name: currency.to_owned(),
-                            def: Rc::new(Def::Unit(Expr::Mul(vec![
-                                Expr::Frac(
-                                    Box::new(Expr::Const(Numeric::one())),
-                                    Box::new(Expr::Const(num)),
+                            def: Rc::new(Def::Unit(Expr::new_mul(vec![
+                                Expr::new_frac(
+                                    Expr::new_const(Numeric::one()),
+                                    Expr::new_const(num),
                                 ),
-                                Expr::Unit("EUR".to_string()),
+                                Expr::new_unit("EUR".to_string()),
                             ]))),
                             doc: Some("Sourced from European Central Bank.".to_string()),
                             category: Some("currencies".to_owned()),
@@ -56,8 +55,4 @@ pub fn parse(f: File) -> Result<Defs, String> {
         }
     }
     Ok(Defs { defs: out })
-}
-
-pub fn load() -> Result<Defs, String> {
-    crate::cached("currency.xml", URL, Duration::from_secs(23 * 60 * 60)).and_then(parse)
 }

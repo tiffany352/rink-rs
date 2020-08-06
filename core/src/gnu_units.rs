@@ -212,31 +212,31 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
         Token::Ident(name) => match iter.peek().cloned().unwrap() {
             Token::Ident(ref s) if s == "of" => {
                 iter.next();
-                Expr::Of(name, Box::new(parse_mul(iter)))
+                Expr::Of {
+                    property: name,
+                    expr: Box::new(parse_mul(iter)),
+                }
             }
-            _ => Expr::Unit(name),
+            _ => Expr::new_unit(name),
         },
         Token::Number(num, frac, exp) => crate::number::Number::from_parts(
             &*num,
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),
         )
-        .map(Expr::Const)
-        .unwrap_or_else(Expr::Error),
-        Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
-        Token::Dash => Expr::Neg(Box::new(parse_term(iter))),
-        Token::Slash => Expr::Frac(
-            Box::new(Expr::Const(Numeric::one())),
-            Box::new(parse_term(iter)),
-        ),
+        .map(Expr::new_const)
+        .unwrap_or_else(Expr::new_error),
+        Token::Plus => Expr::new_plus(parse_term(iter)),
+        Token::Dash => Expr::new_negate(parse_term(iter)),
+        Token::Slash => Expr::new_frac(Expr::new_const(Numeric::one()), parse_term(iter)),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
                 Token::RPar => res,
-                x => Expr::Error(format!("Expected ), got {:?}", x)),
+                x => Expr::new_error(format!("Expected ), got {:?}", x)),
             }
         }
-        x => Expr::Error(format!("Expected term, got {:?}", x)),
+        x => Expr::new_error(format!("Expected term, got {:?}", x)),
     }
 }
 
@@ -246,12 +246,20 @@ fn parse_pow(iter: &mut Iter<'_>) -> Expr {
         Token::Caret => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::Pow(Box::new(left), Box::new(right))
+            Expr::BinOp(BinOpExpr {
+                op: BinOpType::Pow,
+                left: Box::new(left),
+                right: Box::new(right),
+            })
         }
         Token::Pipe => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::Frac(Box::new(left), Box::new(right))
+            Expr::BinOp(BinOpExpr {
+                op: BinOpType::Frac,
+                left: Box::new(left),
+                right: Box::new(right),
+            })
         }
         _ => left,
     }
@@ -276,7 +284,7 @@ fn parse_mul(iter: &mut Iter<'_>) -> Expr {
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
-        Expr::Mul(terms)
+        Expr::new_mul(terms)
     }
 }
 
@@ -285,7 +293,7 @@ fn parse_div(iter: &mut Iter<'_>) -> Expr {
     while let Token::Slash = *iter.peek().unwrap() {
         iter.next();
         let right = parse_mul(iter);
-        left = Expr::Frac(Box::new(left), Box::new(right));
+        left = Expr::new_frac(left, right);
     }
     left
 }
@@ -296,12 +304,12 @@ fn parse_add(iter: &mut Iter<'_>) -> Expr {
         Token::Plus => {
             iter.next();
             let right = parse_add(iter);
-            Expr::Add(Box::new(left), Box::new(right))
+            Expr::new_add(left, right)
         }
         Token::Dash => {
             iter.next();
             let right = parse_add(iter);
-            Expr::Sub(Box::new(left), Box::new(right))
+            Expr::new_sub(left, right)
         }
         _ => left,
     }
@@ -469,7 +477,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                     props.push(Property {
                                         output_name: name.clone(),
                                         name,
-                                        input: Expr::Const(Numeric::one()),
+                                        input: Expr::new_const(Numeric::one()),
                                         input_name,
                                         output,
                                         doc: prop_doc.take(),
@@ -563,9 +571,9 @@ mod tests {
     }
 
     macro_rules! expect {
-        ($expr:expr, $pattern:path, $expected:expr) => {
+        ($expr:expr, $pattern:pat, $var:ident, $expected:expr) => {
             match do_parse($expr) {
-                $pattern(s) => assert_eq!(s, $expected),
+                $pattern => assert_eq!($var, $expected),
                 x => panic!("{}", x),
             }
         };
@@ -575,13 +583,17 @@ mod tests {
     fn test_parse_term_plus() {
         let expr = do_parse("+1");
 
-        if let Expr::Plus(x) = expr {
-            if let Expr::Const(x) = *x {
+        if let Expr::UnaryOp(UnaryOpExpr {
+            op: UnaryOpType::Positive,
+            expr: x,
+        }) = expr
+        {
+            if let Expr::Const { value: x } = *x {
                 if x != 1.into() {
                     panic!("number != 1");
                 }
             } else {
-                panic!("argument of x is not Expr::Const");
+                panic!("argument of x is not Expr::new_const");
             }
         } else {
             panic!("missing plus");
@@ -590,29 +602,29 @@ mod tests {
 
     #[test]
     fn test_missing_bracket() {
-        match do_parse("(") {
-            Expr::Error(ref s) => assert_eq!(s, "Expected ), got Eof"),
-            x => panic!("Wrong result: {}", x),
-        }
+        expect!("(", Expr::Error { ref message }, message, "Expected ), got Eof");
     }
 
     #[test]
     fn test_escapes() {
         expect!(
             "\\\r",
-            Expr::Error,
+            Expr::Error { ref message },
+            message,
             "Expected term, got Error(\"Expected LF or CRLF line endings\")"
         );
-        expect!("\\\r\n1", Expr::Const, 1.into());
+        expect!("\\\r\n1", Expr::Const { value }, value, Numeric::from(1));
 
         expect!(
             "\\a",
-            Expr::Error,
+            Expr::Error { ref message },
+            message,
             "Expected term, got Error(\"Invalid escape: \\\\a\")"
         );
         expect!(
             "\\",
-            Expr::Error,
+            Expr::Error { ref message },
+            message,
             "Expected term, got Error(\"Unexpected EOF\")"
         );
     }
@@ -622,13 +634,14 @@ mod tests {
         use crate::bigrat::BigRat;
         expect!(
             ".123",
-            Expr::Const,
+            Expr::Const { value },
+            value,
             Numeric::Rational(BigRat::small_ratio(123, 1000))
         );
     }
 
     #[test]
     fn test_escaped_quotes() {
-        expect!("\"ab\\\"\"", Expr::Unit, "ab\"")
+        expect!("\"ab\\\"\"", Expr::Unit { ref name }, name, "ab\"")
     }
 }

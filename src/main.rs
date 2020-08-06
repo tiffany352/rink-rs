@@ -3,13 +3,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use clap::{App, Arg};
-use rink_core::load;
 use std::fs::File;
 use std::io::{stdin, BufReader};
 
 pub use completer::RinkCompleter;
 
 pub mod completer;
+pub mod config;
 pub mod repl;
 
 fn main() {
@@ -47,7 +47,7 @@ fn main() {
             }
         }
     } else if let Some(exprs) = matches.values_of("EXPR") {
-        let mut ctx = match load() {
+        let mut ctx = match config::load() {
             Ok(ctx) => ctx,
             Err(e) => {
                 println!("{}", e);

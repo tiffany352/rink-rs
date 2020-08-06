@@ -2,10 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::Digits;
 use crate::context::Context;
 use crate::number::{Dimension, Number};
-use crate::numeric::Numeric;
+use crate::numeric::{Digits, Numeric};
 use crate::reply::{PropertyReply, SubstanceReply};
 use crate::value::Show;
 use std::collections::BTreeMap;

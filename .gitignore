@@ -1,3 +1,7 @@
-/target/
-/web/rink-web.toml
-.idea
+**/target
+**/.idea
+**/node_modules
+**/.cache
+**/dist
+**/__sapper__
+**/.rpt2_cache

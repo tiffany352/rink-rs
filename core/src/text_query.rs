@@ -5,7 +5,7 @@
 use crate::ast::*;
 use crate::bigint::BigInt;
 use crate::bigrat::BigRat;
-use crate::numeric::Numeric;
+use crate::numeric::{Digits, Numeric};
 use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -97,7 +97,9 @@ impl<'a> Iterator for TokenIterator<'a> {
             '=' => Token::Equals,
             '^' => Token::Caret,
             ',' => Token::Comma,
-            '|' => Token::Pipe,
+            // U+2215 ∕ DIVISION SLASH
+            // Used by rink-web to render these tight fractions.
+            '|' | '\u{2215}' => Token::Pipe,
             ':' => Token::Colon,
             '→' => Token::DashArrow,
             '*' => {
@@ -478,22 +480,27 @@ fn parse_function(iter: &mut Iter<'_>, func: Function) -> Expr {
                         iter.next();
                     }
                     Token::RPar => (),
-                    x => return Expr::Error(format!("Expected `,` or `)`, got {}", describe(&x))),
+                    x => {
+                        return Expr::new_error(format!(
+                            "Expected `,` or `)`, got {}",
+                            describe(&x)
+                        ))
+                    }
                 }
             }
             args
         }
         _ => vec![parse_pow(iter)],
     };
-    Expr::Call(func, args)
+    Expr::new_call(func, args)
 }
 
 fn parse_radix(num: &str, base: u32, description: &str) -> Expr {
     BigInt::from_str_radix(num, base)
         .map(|x| BigRat::ratio(&x, &BigInt::one()))
         .map(Numeric::Rational)
-        .map(Expr::Const)
-        .unwrap_or_else(|_| Expr::Error(format!("Failed to parse {}", description)))
+        .map(Expr::new_const)
+        .unwrap_or_else(|_| Expr::new_error(format!("Failed to parse {}", description)))
 }
 
 fn parse_term(iter: &mut Iter<'_>) -> Expr {
@@ -505,9 +512,9 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
                 match iter.peek().cloned().unwrap() {
                     Token::Ident(ref name) => {
                         iter.next();
-                        Expr::Unit(format!("{}{}", attr, name))
+                        Expr::new_unit(format!("{}{}", attr, name))
                     }
-                    x => Expr::Error(format!(
+                    x => Expr::new_error(format!(
                         "Attribute must be followed by ident, got {}",
                         describe(&x)
                     )),
@@ -516,36 +523,36 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
                 match iter.peek().cloned().unwrap() {
                     Token::Ident(ref s) if s == "of" => {
                         iter.next();
-                        Expr::Of(id.clone(), Box::new(parse_juxt(iter)))
+                        Expr::new_of(id, parse_juxt(iter))
                     }
-                    _ => Expr::Unit(id.to_string()),
+                    _ => Expr::new_unit(id.to_string()),
                 }
             }
         }
-        Token::Quote(name) => Expr::Quote(name),
+        Token::Quote(string) => Expr::Quote { string },
         Token::Decimal(num, frac, exp) => crate::number::Number::from_parts(
             &*num,
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),
         )
-        .map(Expr::Const)
-        .unwrap_or_else(Expr::Error),
+        .map(Expr::new_const)
+        .unwrap_or_else(Expr::new_error),
         Token::Hex(num) => parse_radix(&*num, 16, "hex"),
         Token::Oct(num) => parse_radix(&*num, 8, "octal"),
         Token::Bin(num) => parse_radix(&*num, 2, "binary"),
-        Token::Plus => Expr::Plus(Box::new(parse_term(iter))),
-        Token::Minus => Expr::Neg(Box::new(parse_term(iter))),
+        Token::Plus => Expr::new_plus(parse_term(iter)),
+        Token::Minus => Expr::new_negate(parse_term(iter)),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
                 Token::RPar => res,
-                x => Expr::Error(format!("Expected `)`, got {}", describe(&x))),
+                x => Expr::new_error(format!("Expected `)`, got {}", describe(&x))),
             }
         }
-        Token::Percent => Expr::Unit("percent".to_owned()),
-        Token::Date(toks) => Expr::Date(toks),
+        Token::Percent => Expr::new_unit("percent".to_owned()),
+        Token::Date(tokens) => Expr::Date { tokens },
         Token::Comment(_) => parse_term(iter),
-        x => Expr::Error(format!("Expected term, got {}", describe(&x))),
+        x => Expr::new_error(format!("Expected term, got {}", describe(&x))),
     }
 }
 
@@ -556,7 +563,7 @@ fn parse_suffix(iter: &mut Iter<'_>) -> Expr {
             let mut left = left;
             while let Some(&Token::Percent) = iter.peek() {
                 iter.next();
-                left = Expr::Mul(vec![left, Expr::Unit("percent".to_owned())]);
+                left = Expr::new_mul(vec![left, Expr::new_unit("percent".to_owned())]);
             }
             left
         }
@@ -570,7 +577,7 @@ fn parse_pow(iter: &mut Iter<'_>) -> Expr {
         Token::Caret => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::Pow(Box::new(left), Box::new(right))
+            Expr::new_pow(left, right)
         }
         _ => left,
     }
@@ -582,7 +589,7 @@ fn parse_frac(iter: &mut Iter<'_>) -> Expr {
         Token::Pipe => {
             iter.next();
             let right = parse_pow(iter);
-            Expr::Frac(Box::new(left), Box::new(right))
+            Expr::new_frac(left, right)
         }
         _ => left,
     }
@@ -605,7 +612,7 @@ fn parse_juxt(iter: &mut Iter<'_>) -> Expr {
             | Token::Eof => break,
             Token::Degree(deg) => {
                 iter.next();
-                terms = vec![Expr::Suffix(deg, Box::new(Expr::Mul(terms)))]
+                terms = vec![Expr::new_suffix(deg, Expr::new_mul(terms))]
             }
             _ => terms.push(parse_frac(iter)),
         }
@@ -613,7 +620,7 @@ fn parse_juxt(iter: &mut Iter<'_>) -> Expr {
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
-        Expr::Mul(terms)
+        Expr::new_mul(terms)
     }
 }
 
@@ -626,9 +633,9 @@ fn parse_div(iter: &mut Iter<'_>) -> Expr {
                 let left = if terms.len() == 1 {
                     terms.pop().unwrap()
                 } else {
-                    Expr::Mul(terms.drain(..).collect())
+                    Expr::new_mul(terms.drain(..).collect())
                 };
-                terms = vec![Expr::Frac(Box::new(left), Box::new(parse_juxt(iter)))];
+                terms = vec![Expr::new_frac(left, parse_juxt(iter))];
             }
             Token::Asterisk => {
                 iter.next();
@@ -640,7 +647,7 @@ fn parse_div(iter: &mut Iter<'_>) -> Expr {
     if terms.len() == 1 {
         terms.pop().unwrap()
     } else {
-        Expr::Mul(terms)
+        Expr::new_mul(terms)
     }
 }
 
@@ -651,12 +658,12 @@ fn parse_add(iter: &mut Iter<'_>) -> Expr {
             Token::Plus => {
                 iter.next();
                 let right = parse_div(iter);
-                left = Expr::Add(Box::new(left), Box::new(right))
+                left = Expr::new_add(left, right)
             }
             Token::Minus => {
                 iter.next();
                 let right = parse_div(iter);
-                left = Expr::Sub(Box::new(left), Box::new(right))
+                left = Expr::new_sub(left, right)
             }
             _ => return left,
         }
@@ -669,7 +676,7 @@ fn parse_eq(iter: &mut Iter<'_>) -> Expr {
         Token::Equals => {
             iter.next();
             let right = parse_add(iter);
-            Expr::Equals(Box::new(left), Box::new(right))
+            Expr::new_equals(left, right)
         }
         _ => left,
     }

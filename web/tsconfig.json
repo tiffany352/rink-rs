@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "module": "es6",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "target": "ES2015",
+    "allowJs": true,
+    "baseUrl": "./src/",
+    "types": ["svelte"]
+  },
+  "include": ["./src/**/*"]
+}

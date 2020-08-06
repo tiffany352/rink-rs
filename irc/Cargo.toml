@@ -7,9 +7,6 @@ homepage = "https://github.com/tiffany352/rink-rs"
 repository = "https://github.com/tiffany352/rink-rs"
 license = "MPL-2.0"
 
-[features]
-sandbox = ["rink-core/sandbox"]
-
 [dependencies.rink-core]
 path = "../core"
 

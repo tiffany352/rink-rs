@@ -6,7 +6,7 @@ use rink_core::*;
 
 thread_local! {
     static CONTEXT: Context = {
-        let mut ctx = load().unwrap();
+        let mut ctx = simple_context().unwrap();
         ctx.use_humanize = false;
         ctx
     };
@@ -493,8 +493,7 @@ fn test_attributes() {
 fn test_search() {
     test(
         "search cm",
-        "Search results: CM¥ (money), cmil (area), cminv (energy), \
-         cmcapacitance (capacitance), sccm (power)",
+        "Search results: cmil (area), cminv (energy), cmcapacitance (capacitance), sccm (power), mcm (area)",
     );
 }
 
@@ -531,26 +530,11 @@ fn test_missing_base() {
 }
 
 #[test]
-#[cfg(not(windows))]
-fn test_date_difference() {
-    test_starts_with("now - (now - 3days)", "2 day, 23 hour, 59 minute, 59.99");
-}
-
-#[test]
-#[cfg(windows)]
 fn test_date_difference() {
     test_starts_with("now - (now - 3days)", "3 day, 0 second (time)");
 }
 
 #[test]
-#[cfg(not(windows))]
-fn test_date_time_formats() {
-    test_starts_with("#1970-01-01 10:30 GMT#", "1970-01-01 10:30:00 GMT");
-    test_starts_with("(now-#10:30#) - (now-#11:30#)", "59 minute, 59.99");
-}
-
-#[test]
-#[cfg(windows)]
 fn test_date_time_formats() {
     test_starts_with("#1970-01-01 10:30 GMT#", "1970-01-01 10:30:00 GMT");
     test_starts_with("(now-#10:30#) - (now-#11:30#)", "1 hour, 0 second (time)");
