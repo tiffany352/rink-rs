@@ -1,6 +1,6 @@
 <script lang="typescript">
   import type { DefReply } from "../../util/reply";
-  import NumberParts from "../NumberParts.svelte";
+  import Number from "../Number.svelte";
   import Expr from "../expr/Expr.svelte";
 
   export let value: DefReply;
@@ -20,7 +20,7 @@
 {#if value.defExpr && value.value}
   <p>
     Value:
-    <NumberParts number={value.value} />
+    <Number number={value.value} />
   </p>
 {:else if value.defExpr}
   <p>Value: {value.defExpr}</p>

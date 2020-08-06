@@ -1,13 +1,13 @@
 <script lang="typescript">
   import type { UnitsForReply } from "../../util/reply";
-  import NumberParts from "../NumberParts.svelte";
+  import Number from "../Number.svelte";
 
   export let value: UnitsForReply;
 </script>
 
 <h2>
   Units for
-  <NumberParts number={value.of} />
+  <Number number={value.of} />
 </h2>
 
 {#each value.units as category}

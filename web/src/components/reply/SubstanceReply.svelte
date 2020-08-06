@@ -1,6 +1,6 @@
 <script lang="typescript">
   import type { SubstanceReply } from "../../util/reply";
-  import NumberParts from "../NumberParts.svelte";
+  import Number from "../Number.svelte";
 
   export let value: SubstanceReply;
 </script>
@@ -53,7 +53,7 @@
 </style>
 
 <h3>
-  <NumberParts number={value.amount} />
+  <Number number={value.amount} />
   of {value.name}
 </h3>
 
@@ -65,7 +65,7 @@
   {#each value.properties as property}
     <div class="name">{property.name}</div>
     <div class="value">
-      <NumberParts number={property.value} />
+      <Number number={property.value} />
     </div>
     <div class="doc">{property.doc || ''}</div>
   {/each}

@@ -1,6 +1,6 @@
 <script lang="typescript">
   import type { UnitListReply } from "../../util/reply";
-  import NumberParts from "../NumberParts.svelte";
+  import Number from "../Number.svelte";
 
   export let value: UnitListReply;
 </script>
@@ -9,7 +9,7 @@
   {#if i != 0}
     <span>,</span>
   {/if}
-  <NumberParts number={unit} />
+  <Number number={unit} />
 {/each}
 
-<NumberParts number={value.rest} />
+<Number number={value.rest} />

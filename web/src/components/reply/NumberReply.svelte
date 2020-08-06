@@ -1,10 +1,10 @@
 <script lang="typescript">
   import type { NumberReply } from "../../util/reply";
-  import NumberParts from "../NumberParts.svelte";
+  import Number from "../Number.svelte";
 
   export let value: NumberReply;
 </script>
 
 <p>
-  <NumberParts number={value} />
+  <Number number={value} />
 </p>
