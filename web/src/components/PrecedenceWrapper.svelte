@@ -5,10 +5,15 @@
   export let expected: Precedence;
 </script>
 
-{#if precedence < expected}
-  <span>(</span>
-{/if}
-<slot />
-{#if precedence < expected}
-  <span>)</span>
+<!-- prettier-ignore -->
+{#if true
+  }{#if precedence < expected
+    }<span
+      >(</span
+  >{/if
+  }<slot
+  />{#if precedence < expected
+    }<span
+      >)</span
+  >{/if}
 {/if}
