@@ -28,11 +28,7 @@
 </script>
 
 <style>
-  .rawUnit {
-    display: inline-flex;
-  }
-
-  .rawUnit > a {
+  .unit > a {
     display: contents;
   }
 
@@ -46,30 +42,37 @@
   {number.exactValue}
 {:else if number.approxValue}approx. {number.approxValue}{/if}
 {#if number.rawUnit}
-  <div class="rawUnit">
-    {#each unit.numer as [dim, pow]}
-      <a href={`/unit/${dim}`}>
-        <span>{dim}</span>
-        {#if pow != 1}
-          <span class="hidden">^</span>
-          <sup>{pow}</sup>
-        {/if}
-      </a>
-    {/each}
-
-    {#if unit.denom.length > 0}
-      <span>&MediumSpace;/&MediumSpace;</span>
-      {#each unit.denom as [dim, pow]}
-        <a href={`/unit/${dim}`}>
-          <span>{dim}</span>
-          {#if pow != -1}
-            <span class="hidden">^</span>
-            <sup>{-pow}</sup>
-          {/if}
-        </a>
-      {/each}
-    {/if}
-  </div>
+  <!-- prettier-ignore -->
+  <span class="unit"
+    >{#each unit.numer as [dim, pow]
+      }<a href={`/unit/${dim}`}
+        ><span
+          >{dim}</span
+        >{#if pow != 1
+          }<span class="hidden"
+            >^</span
+          ><sup
+            >{pow}</sup
+        >{/if
+      }</a
+    >{/each
+    }{#if unit.denom.length > 0
+      }<span
+        >&MediumSpace;/&MediumSpace;</span
+      >{#each unit.denom as [dim, pow]
+        }<a href={`/unit/${dim}`}
+          ><span
+            >{dim}</span
+          >{#if pow != -1
+            }<span class="hidden"
+              >^</span
+            ><sup
+              >{-pow}</sup
+          >{/if
+        }</a
+      >{/each
+    }{/if
+  }</span>
 {/if}
 <!-- prettier-ignore -->
 {#if number.quantity}
