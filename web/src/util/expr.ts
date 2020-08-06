@@ -85,13 +85,3 @@ export type Expr =
   | OfExpr
   | CallExpr
   | ErrorExpr;
-
-export enum Precedence {
-  Term = 0,
-  Plus = 1,
-  Pow = 2,
-  Mul = 3,
-  Div = 4,
-  Add = 5,
-  Equals = 6,
-}

@@ -1,7 +1,7 @@
 <script lang="typescript">
   import * as reply from "../../util/reply";
   import NumberParts from "../NumberParts.svelte";
-  import Expr from "../Expr.svelte";
+  import Expr from "../expr/Expr.svelte";
 
   export let value: reply.DefReply;
 </script>
