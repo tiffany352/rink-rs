@@ -3,6 +3,7 @@
   import * as expr from "../../util/expr";
 
   export let value: expr.Expr;
+  console.log("expr", value);
 </script>
 
 <span>

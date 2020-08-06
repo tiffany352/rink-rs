@@ -8,7 +8,7 @@
   export let precedence: prec.Precedence;
 </script>
 
-<PrecedenceWrapper {precedence} expected={prec.Precedence.Add}>
+<PrecedenceWrapper {precedence} expected={prec.Precedence.Term}>
   <span>{value.property}</span>
   <span>of</span>
   <Node value={value.expr} />

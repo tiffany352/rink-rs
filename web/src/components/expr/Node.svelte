@@ -29,7 +29,7 @@
 />{:else if prec.isPow(value)
   }<Pow {value} {precedence}
 />{:else if prec.isFraction(value)
-  }<Fraction {value}
+  }<Fraction {value} {precedence}
 />{:else if value.type == 'binop'
   }<Binop {value} {precedence}
 />{:else if value.type == 'unaryop'

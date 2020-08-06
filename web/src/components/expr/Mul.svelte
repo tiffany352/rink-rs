@@ -15,6 +15,6 @@
       }<span
         >&ThinSpace;</span
       >{/if
-    }<Node value={item} precedence={prec.Precedence.Div}
+    }<Node value={item} precedence={prec.Precedence.Mul}
   />{/each
 }</PrecedenceWrapper>

@@ -1,21 +1,24 @@
 <script lang="typescript">
+  import type { Fraction } from "../../util/precedence";
+  import { Precedence } from "../../util/precedence";
   import Node from "./Node.svelte";
-  import * as prec from "../../util/precedence";
+  import PrecedenceWrapper from "../PrecedenceWrapper.svelte";
 
-  export let value: prec.Fraction;
+  export let value: Fraction;
+  export let precedence: Precedence;
 </script>
 
 <!-- prettier-ignore -->
-{#if true
-  }<sup
+<PrecedenceWrapper {precedence} expected={Precedence.Mul}
+><sup
     ><Node
       value={value.left}
-      precedence={prec.expectedPrecedence(value.op) - 1}
+      precedence={Precedence.Mul}
     /></sup
   ><span>&#x2215;</span
   ><sub
     ><Node
       value={value.right}
-      precedence={prec.expectedPrecedence(value.op) - 1}
+      precedence={Precedence.Mul}
   /></sub
->{/if}
+></PrecedenceWrapper>
