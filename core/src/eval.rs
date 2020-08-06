@@ -1124,11 +1124,7 @@ impl Context {
                 let parts = val.to_parts(self);
                 Ok(QueryReply::UnitsFor(UnitsForReply {
                     units: categories,
-                    of: NumberParts {
-                        dimensions: parts.dimensions,
-                        quantity: parts.quantity,
-                        ..Default::default()
-                    },
+                    of: parts,
                 }))
             }
             Query::Search(ref string) => Ok(QueryReply::Search(SearchReply {

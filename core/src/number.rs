@@ -87,6 +87,8 @@ pub struct NumberParts {
     pub quantity: Option<String>,
     /// The dimensionality of the unit.
     pub dimensions: Option<String>,
+    /// Map of base units and their dimensions.
+    pub raw_dimensions: Option<Quantity>,
 }
 
 impl NumberParts {
@@ -514,6 +516,7 @@ impl Number {
             },
             quantity,
             dimensions: Some(Number::unit_to_string(&self.unit)),
+            raw_dimensions: Some(self.unit.clone()),
             ..Default::default()
         }
     }

@@ -9,6 +9,7 @@ export interface NumberParts {
   unit: string | null;
   quantity: string | null;
   dimensions: string | null;
+  rawDimensions: Quantity | null;
 }
 
 export interface Quantity {

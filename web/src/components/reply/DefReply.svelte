@@ -26,4 +26,6 @@
   <p>Value: {value.defExpr}</p>
 {/if}
 
-<p>{value.doc}</p>
+{#if value.doc}
+  <p>{value.doc}</p>
+{/if}

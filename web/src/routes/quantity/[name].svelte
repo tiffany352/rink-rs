@@ -7,7 +7,7 @@
   export async function preload(page, session) {
     let { name } = page.params;
     const rink = await Rink.getRink();
-    const expr = rink.parse(name || "");
+    const expr = rink.parse("units for " + name);
     const context = rink.createContext();
     context.setTime(new Date());
     const value = context.eval(expr);
@@ -20,7 +20,6 @@
   export let value = null;
   export let name = "";
 </script>
-
 
 <svelte:head>
   <title>Rink - {name}</title>
