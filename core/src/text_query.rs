@@ -97,7 +97,9 @@ impl<'a> Iterator for TokenIterator<'a> {
             '=' => Token::Equals,
             '^' => Token::Caret,
             ',' => Token::Comma,
-            '|' => Token::Pipe,
+            // U+2215 ∕ DIVISION SLASH
+            // Used by rink-web to render these tight fractions.
+            '|' | '\u{2215}' => Token::Pipe,
             ':' => Token::Colon,
             '→' => Token::DashArrow,
             '*' => {
