@@ -5,7 +5,11 @@
 </script>
 
 {#if value.suggestion != null}
-  <p>No such unit {value.got}, did you mean {value.suggestion}?</p>
+  <!-- prettier-ignore -->
+  <p>
+    No such unit {value.got}, did you mean
+    <a href={`/unit/${value.suggestion}`}>{value.suggestion}</a>?
+  </p>
 {:else}
   <p>No such unit {value.got}.</p>
 {/if}
