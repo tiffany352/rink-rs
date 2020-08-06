@@ -71,4 +71,7 @@
     {/if}
   </div>
 {/if}
-{#if number.quantity}({number.quantity}){/if}
+<!-- prettier-ignore -->
+{#if number.quantity}
+    (<a href={`/quantity/${number.quantity}`}>{number.quantity}</a>)
+{/if}
