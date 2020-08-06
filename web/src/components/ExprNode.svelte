@@ -54,9 +54,6 @@
 </script>
 
 <style>
-  .highlight {
-    font-weight: 500;
-  }
   span {
     white-space: pre;
   }
@@ -73,7 +70,7 @@
 </style>
 
 {#if value.type == 'unit'}
-  <span class="highlight">{value.name}</span>
+  <a href={`/unit/${value.name}`}>{value.name}</a>
 {:else if value.type == 'quote'}
   <span>"{value.string}"</span>
 {:else if value.type == 'const'}
