@@ -22,4 +22,4 @@ version = "0.5"
 path = "./core"
 
 [workspace]
-members = ["core", "rink-js", "irc"]
+members = ["core", "rink-js"]
