@@ -5,7 +5,6 @@
   export let text: string = "";
 
   query.subscribe((value) => {
-    console.log("query updated", value);
     text = value;
   });
 

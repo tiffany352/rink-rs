@@ -17,7 +17,6 @@
     let out = [];
 
     for (const key of keys) {
-      console.log(key);
       const entry = (value[key] as any) as NumberParts;
       if (entry.exactValue != "0") {
         out.push(entry.exactValue + " " + key);
