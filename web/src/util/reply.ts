@@ -165,3 +165,30 @@ export type Result<Ok, Err> =
   | ({ success: "err" } & Err);
 
 export type QueryResult = Result<QueryReply, QueryError>;
+
+export function describe(result: QueryResult): string {
+  switch (result.type) {
+    case "conformance":
+      return "Conformance error";
+    case "def":
+      return `Definition of ${result.canonName}`;
+    case "generic":
+      return `Error: ${result.message}`;
+    case "notFound":
+      return `No such unit ${result.got}.`;
+    case "search":
+      return "Search results";
+    case "substance":
+      return `Definition of substance "${result.name}"`;
+    case "unitsFor":
+      return `Units for ${result.of.quantity}`;
+    case "conversion":
+    case "date":
+    case "duration":
+    case "factorize":
+    case "number":
+    case "unitList":
+      return "";
+  }
+  return "";
+}

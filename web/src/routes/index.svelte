@@ -1,6 +1,9 @@
 <script lang="typescript">
   import NavButton from "../components/NavButton.svelte";
   import Container from "../components/Container.svelte";
+  import OpenGraph from "../components/OpenGraph.svelte";
+
+  const description: string = `Rink is a unit-aware calculator. It can be used for physics and engineering calculations, as well as dimensionality analysis.`;
 </script>
 
 <style>
@@ -20,7 +23,7 @@
 </style>
 
 <svelte:head>
-  <title>Rink</title>
+  <OpenGraph title="Rink" type="article" {description} />
 </svelte:head>
 
 <Container header="normal">
@@ -37,10 +40,7 @@
       href="https://github.com/tiffany352/rink-rs/wiki/Rink-Manual" />
   </nav>
 
-  <p>
-    Rink is a unit-aware calculator. It can be used for physics and engineering
-    calculations, as well as dimensionality analysis.
-  </p>
+  <p>{description}</p>
 
   <p>
     Rink supports most systems of measurements including SI, CGS, natural,

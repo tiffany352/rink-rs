@@ -3,6 +3,8 @@
   import Result from "../../components/reply/Result.svelte";
   import Card from "../../components/Card.svelte";
   import Container from "../../components/Container.svelte";
+  import OpenGraph from "../../components/OpenGraph.svelte";
+  import { describe } from "../../util/reply";
   import { query } from "../../stores";
 
   export async function preload(page, session) {
@@ -31,7 +33,9 @@
 </script>
 
 <svelte:head>
-  <title>Rink - query</title>
+  <OpenGraph
+    title="Rink - {input}"
+    description={value ? describe(value) : ''} />
 </svelte:head>
 
 <Container>

@@ -3,6 +3,8 @@
   import Result from "../../components/reply/Result.svelte";
   import Card from "../../components/Card.svelte";
   import Container from "../../components/Container.svelte";
+  import OpenGraph from "../../components/OpenGraph.svelte";
+  import { describe } from "../../util/reply";
 
   export async function preload(page, session) {
     let { name } = page.params;
@@ -22,7 +24,7 @@
 </script>
 
 <svelte:head>
-  <title>Rink - {name}</title>
+  <OpenGraph title="Rink - {name}" description={value ? describe(value) : ''} />
 </svelte:head>
 
 <Container>
