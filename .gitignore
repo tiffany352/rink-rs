@@ -1,7 +1,9 @@
 **/target
 **/.idea
 **/node_modules
+**/node_modules.*
 **/.cache
 **/dist
 **/__sapper__
 **/.rpt2_cache
+**/build

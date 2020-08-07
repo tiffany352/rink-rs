@@ -8,6 +8,7 @@ import rust from "@wasm-tool/rollup-plugin-rust";
 import sveltePreprocess from "svelte-preprocess";
 import config from "sapper/config/rollup.js";
 import pkg from "./package.json";
+import path from "path";
 
 const mode = process.env.NODE_ENV;
 const dev = mode === "development";
@@ -61,7 +62,10 @@ export default {
     plugins: [
       rust({
         nodejs: true,
-        serverPath: config.server.output().dir + "/",
+        serverPath:
+          path
+            .relative(process.cwd(), config.server.output().dir)
+            .replace("\\", "/") + "/",
         debug: false,
       }),
       typescript({
