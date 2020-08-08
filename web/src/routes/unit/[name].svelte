@@ -10,7 +10,7 @@
     let { name } = page.params;
     const rink = await Rink.getRink();
     const expr = rink.parse(name || "");
-    const context = rink.createContext();
+    const context = await rink.createFullContext(this.fetch);
     context.setTime(new Date());
     const value = context.eval(expr);
 

@@ -12,7 +12,7 @@
     query.set(input);
     const rink = await Rink.getRink();
     const expr = rink.parse(input || "");
-    const context = rink.createContext();
+    const context = await rink.createFullContext(this.fetch);
     context.setTime(new Date());
     const value = context.eval(expr);
 
