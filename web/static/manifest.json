@@ -3,7 +3,7 @@
   "short_name": "Rink",
   "theme_color": "#2196f3",
   "background_color": "#2196f3",
-  "display": "minimal-ui",
+  "display": "standalone",
   "scope": "/",
   "start_url": "/",
   "description": "A unit calculator and dimensional analysis tool.",
