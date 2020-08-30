@@ -503,6 +503,15 @@ fn test_digits() {
         "ln(1234) -> digits 100",
         "approx. 7.11801620446533345187845043255947530269622802734375 (dimensionless)",
     );
+    test(
+        "1/7 -> digits 50",
+        "1/7, approx. 0.1428571428571428571428571428571428571428571428571428 (dimensionless)",
+    );
+    test("trillion / 7", "approx. 1.428571e11 (dimensionless)");
+    test(
+        "trillion / 7 to digits",
+        "approx. 142857142857.1 (dimensionless)",
+    );
 }
 
 #[test]
