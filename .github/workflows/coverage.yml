@@ -16,7 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: sudo apt-get install libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc
+        run: |
+          sudo apt-get update
+          sudo apt-get install libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc
       - name: Build kcov
         run: |
           wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
