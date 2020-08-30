@@ -1,0 +1,40 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt-get install libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc
+      - name: Build kcov
+        run: |
+          wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
+          tar xzf master.tar.gz
+          cd kcov-master
+          mkdir build
+          cd build
+          cmake ..
+          make
+          sudo make install
+      - name: Install cargo-kcov
+        run: cargo install cargo-kcov
+      - name: Build
+        run: cargo build --all --verbose
+      - name: Run tests
+        run: cargo kcov --all --verbose
+      - uses: codecov/codecov-action@v1
+        with:
+          directory: ./target/cov
+          name: Rink
+          fail_ci_if_error: true
