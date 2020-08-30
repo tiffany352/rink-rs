@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc
+          sudo apt-get install libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc libbfd-dev
       - name: Build kcov
         run: |
           wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
