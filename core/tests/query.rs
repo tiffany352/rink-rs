@@ -610,5 +610,24 @@ fn test_offset_date_math() {
     test(
         "#2020-01-01 05:00:00 +05:00# - #2020-01-01 00:00:00 +00:00#",
         "0 second (time)",
-    )
+    );
+}
+
+#[test]
+fn test_bad_floats() {
+    // Log10
+    test("log10(-1)", "approx. NaN (dimensionless)");
+    test("log10(0)", "approx. -Inf (dimensionless)");
+    test("-log10(0)", "approx. Inf (dimensionless)");
+    test("(log10(-1) * 12 + 2) meters", "approx. NaN meter (length)");
+
+    // Log2
+    test("log2(-1)", "approx. NaN (dimensionless)");
+    test("log2(0)", "approx. -Inf (dimensionless)");
+
+    // Sqrt
+    test(
+        "sqrt(-1)",
+        "Complex numbers are not implemented: sqrt(-1 (dimensionless))",
+    );
 }

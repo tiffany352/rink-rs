@@ -98,6 +98,12 @@ impl Numeric {
         match *self {
             Numeric::Rational(ref rational) => (rational.numer(), rational.denom()),
             Numeric::Float(mut x) => {
+                if x.is_nan() {
+                    panic!("Attempted to convert NaN to rational");
+                }
+                if x.is_infinite() {
+                    panic!("Attempted to convert Inf to rational");
+                }
                 let mut m = [[1, 0], [0, 1]];
                 let maxden = 1_000_000;
 
@@ -133,7 +139,7 @@ impl Numeric {
         match *self {
             Numeric::Rational(ref rational) => (&rational.numer() / &rational.denom()).as_int(),
             Numeric::Float(f) => {
-                if f.abs() < i64::max_value() as f64 {
+                if !f.is_nan() && !f.is_infinite() && f.abs() < i64::max_value() as f64 {
                     Some(f as i64)
                 } else {
                     None
@@ -146,8 +152,22 @@ impl Numeric {
         self.into()
     }
 
+    /// Returns (is_exact, repr).
     pub fn to_string(&self, base: u8, digits: Digits) -> (bool, String) {
         use std::char::from_digit;
+        use std::num::FpCategory;
+
+        if let Numeric::Float(value) = *self {
+            match value.classify() {
+                FpCategory::Nan => return (false, "NaN".to_owned()),
+                FpCategory::Infinite if value.is_sign_positive() => {
+                    return (false, "Inf".to_owned())
+                }
+                FpCategory::Infinite => return (false, "-Inf".to_owned()),
+                _ => (),
+            }
+        }
+
         let sign = *self < Numeric::zero();
         let rational = self.abs();
         let (num, den) = rational.to_rational();
