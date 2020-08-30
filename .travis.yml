@@ -6,8 +6,8 @@ cache: cargo
 
 script:
   - rm -f target/debug/rink-* target/debug/query-* target/debug/canonicalize-*
-  - cargo build --verbose
-  - cargo test --verbose
+  - cargo build --all --verbose
+  - cargo test --all --verbose
 
 addons:
   apt:
