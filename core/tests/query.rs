@@ -631,3 +631,8 @@ fn test_bad_floats() {
         "Complex numbers are not implemented: sqrt(-1 (dimensionless))",
     );
 }
+
+#[test]
+fn test_large_floats() {
+    test("5.2*10^15*300^(3/2)", "approx. 2.701999e19 (dimensionless)");
+}

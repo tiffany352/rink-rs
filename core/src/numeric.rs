@@ -97,40 +97,9 @@ impl Numeric {
     pub fn to_rational(&self) -> (BigInt, BigInt) {
         match *self {
             Numeric::Rational(ref rational) => (rational.numer(), rational.denom()),
-            Numeric::Float(mut x) => {
-                if x.is_nan() {
-                    panic!("Attempted to convert NaN to rational");
-                }
-                if x.is_infinite() {
-                    panic!("Attempted to convert Inf to rational");
-                }
-                let mut m = [[1, 0], [0, 1]];
-                let maxden = 1_000_000;
-
-                // loop finding terms until denom gets too big
-                loop {
-                    let ai = x as i64;
-                    if m[1][0] * ai + m[1][1] > maxden {
-                        break;
-                    }
-                    let mut t;
-                    t = m[0][0] * ai + m[0][1];
-                    m[0][1] = m[0][0];
-                    m[0][0] = t;
-                    t = m[1][0] * ai + m[1][1];
-                    m[1][1] = m[1][0];
-                    m[1][0] = t;
-                    let tmp = x - ai as f64;
-                    if tmp == 0.0 {
-                        break; // division by zero
-                    }
-                    x = tmp.recip();
-                    if x as i64 > i64::max_value() / 2 {
-                        break; // representation failure
-                    }
-                }
-
-                (BigInt::from(m[0][0]), BigInt::from(m[1][0]))
+            Numeric::Float(x) => {
+                let rational = BigRat::from(x);
+                (rational.numer(), rational.denom())
             }
         }
     }
