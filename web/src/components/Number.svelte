@@ -5,7 +5,9 @@
   export let number: NumberParts;
 </script>
 
-{#if number.exactValue}
+{#if number.exactValue && number.exactValue.indexOf('/') != -1}
+  {number.exactValue}, approx. {number.approxValue}
+{:else if number.exactValue}
   {number.exactValue}
 {:else if number.approxValue}approx. {number.approxValue}{/if}
 {#if number.rawUnit}
