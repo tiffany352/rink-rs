@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { Request, Response } from "express";
 
 let cache: {
   body: string;
@@ -6,7 +7,7 @@ let cache: {
 } | null = null;
 const url = "https://blockchain.info/stats?format=json";
 
-export async function get(req: any, res: any) {
+export async function get(req: Request, res: Response) {
   // Only cache the file for 1 day.
   if (!cache || cache.time.getTime() - new Date().getTime() > 86400 * 1000) {
     const response = await fetch(url);
