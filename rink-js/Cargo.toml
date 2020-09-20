@@ -36,3 +36,6 @@ console_error_panic_hook = { version = "0.1.1", optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.2"
+
+[package.metadata.wasm-pack.profile.profiling]
+wasm-opt = ['-g', '-O']

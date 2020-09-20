@@ -23,3 +23,6 @@ path = "./core"
 
 [workspace]
 members = ["core", "rink-js"]
+
+[package.metadata.wasm-pack.profile.profiling]
+wasm-opt = ['-g', '-O']

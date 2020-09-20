@@ -131,12 +131,12 @@ impl Resolver {
             self.temp_marks.insert(name.clone());
             if let Some(v) = self.input.get(name).cloned() {
                 match *v {
-                    Def::Prefix(ref e)
-                    | Def::SPrefix(ref e)
-                    | Def::Unit(ref e)
-                    | Def::Quantity(ref e) => self.eval(e),
-                    Def::Canonicalization(ref e) => {
-                        self.lookup(&Rc::new(e.clone()));
+                    Def::Prefix { ref expr }
+                    | Def::SPrefix { ref expr }
+                    | Def::Unit { ref expr }
+                    | Def::Quantity { ref expr } => self.eval(expr),
+                    Def::Canonicalization { ref of } => {
+                        self.lookup(&Rc::new(of.clone()));
                     }
                     Def::Substance { ref properties, .. } => {
                         for prop in properties {
@@ -176,9 +176,9 @@ impl Context {
         {
             let name = resolver.intern(&name);
             let unit = match *def {
-                Def::Prefix(_) | Def::SPrefix(_) => Name::Prefix(name),
-                Def::Quantity(_) => Name::Quantity(name),
-                Def::Category(_) => Name::Category(name),
+                Def::Prefix { .. } | Def::SPrefix { .. } => Name::Prefix(name),
+                Def::Quantity { .. } => Name::Quantity(name),
+                Def::Category { .. } => Name::Category(name),
                 _ => Name::Unit(name),
             };
             if let Some(doc) = doc {
@@ -236,9 +236,9 @@ impl Context {
                 Def::Dimension => {
                     self.dimensions.insert(Dimension::new(&*name));
                 }
-                Def::Canonicalization(ref of) => {
+                Def::Canonicalization { ref of } => {
                     self.canonicalizations.insert(of.clone(), name.clone());
-                    match self.lookup(of) {
+                    match self.lookup(&of) {
                         Some(v) => {
                             self.definitions
                                 .insert(name.clone(), Expr::new_unit(of.clone()));
@@ -249,12 +249,12 @@ impl Context {
                         }
                     }
                 }
-                Def::Unit(ref expr) => match self.eval(expr) {
+                Def::Unit { ref expr } => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
                         if v.value == Numeric::one() && reverse.contains(&*name) {
                             self.reverse.insert(v.unit.clone(), name.clone());
                         }
-                        self.definitions.insert(name.clone(), expr.clone());
+                        self.definitions.insert(name.clone(), expr.0.clone());
                         self.units.insert(name.clone(), v);
                     }
                     Ok(Value::Substance(sub)) => {
@@ -270,14 +270,14 @@ impl Context {
                     Ok(_) => println!("Unit {} is not a number", name),
                     Err(e) => println!("Unit {} is malformed: {}", name, e),
                 },
-                Def::Prefix(ref expr) => match self.eval(expr) {
+                Def::Prefix { ref expr } => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
                         self.prefixes.push((name.clone(), v));
                     }
                     Ok(_) => println!("Prefix {} is not a number", name),
                     Err(e) => println!("Prefix {} is malformed: {}", name, e),
                 },
-                Def::SPrefix(ref expr) => match self.eval(expr) {
+                Def::SPrefix { ref expr } => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
                         self.prefixes.push((name.clone(), v.clone()));
                         self.units.insert(name.clone(), v);
@@ -285,11 +285,11 @@ impl Context {
                     Ok(_) => println!("Prefix {} is not a number", name),
                     Err(e) => println!("Prefix {} is malformed: {}", name, e),
                 },
-                Def::Quantity(ref expr) => match self.eval(expr) {
+                Def::Quantity { ref expr } => match self.eval(expr) {
                     Ok(Value::Number(v)) => {
                         let res = self.quantities.insert(v.unit, name.clone());
                         if !self.definitions.contains_key(&name) {
-                            self.definitions.insert(name.clone(), expr.clone());
+                            self.definitions.insert(name.clone(), expr.0.clone());
                         }
                         if let Some(old) = res {
                             println!("Warning: Conflicting quantities {} and {}", name, old);
@@ -396,10 +396,11 @@ impl Context {
                         Err(e) => println!("Substance {} is malformed: {}", name, e),
                     }
                 }
-                Def::Category(ref desc) => {
-                    self.category_names.insert(name.clone(), desc.clone());
+                Def::Category { ref display_name } => {
+                    self.category_names
+                        .insert(name.clone(), display_name.clone());
                 }
-                Def::Error(ref err) => println!("Def {}: {}", name, err),
+                Def::Error { ref message } => println!("Def {}: {}", name, message),
             };
         }
 

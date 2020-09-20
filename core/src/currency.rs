@@ -2,10 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{Def, DefEntry, Defs, Expr};
+use crate::ast::{DefEntry, Defs, Expr};
 use crate::numeric::Numeric;
 use std::io::Read;
-use std::rc::Rc;
 use xml::reader::XmlEvent;
 use xml::EventReader;
 
@@ -35,18 +34,18 @@ pub fn parse<R: Read>(reader: R) -> Result<Defs, String> {
                     let integer = iter.next().unwrap();
                     let frac = iter.next();
                     if let Ok(num) = crate::number::Number::from_parts(integer, frac, None) {
-                        out.push(DefEntry {
-                            name: currency.to_owned(),
-                            def: Rc::new(Def::Unit(Expr::new_mul(vec![
+                        out.push(DefEntry::new_unit(
+                            currency,
+                            Some("Sourced from European Central Bank."),
+                            Some("currencies"),
+                            Expr::new_mul(vec![
                                 Expr::new_frac(
                                     Expr::new_const(Numeric::one()),
                                     Expr::new_const(num),
                                 ),
                                 Expr::new_unit("EUR".to_string()),
-                            ]))),
-                            doc: Some("Sourced from European Central Bank.".to_string()),
-                            category: Some("currencies".to_owned()),
-                        });
+                            ]),
+                        ));
                     }
                 }
             }
