@@ -36,9 +36,15 @@ interface. Useful for doing calculations on mobile.
 
 ## Install
 
-`cargo install rink`
+The most common version of Rink is the command line interface `rink`.
 
-Running `rink` will give you a CLI interface for you to enter queries.
+| Package Manager | Command              |
+| --------------- | -------------------- |
+| Cargo           | `cargo install rink` |
+| Pacman          | `pacman -S rink`     |
+| Nix             | `nix-env -i rink`    |
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/rink.svg)](https://repology.org/project/rink/versions)
 
 ## Examples
 
@@ -74,8 +80,7 @@ rink-core = "0.5"
 
 ## License
 
-Rink source code is licensed under the Mozilla Public License, version
-2. See [LICENSE-MPL](./LICENSE-MPL) for details.
+Rink source code is licensed under the Mozilla Public License, version 2. See [LICENSE-MPL](./LICENSE-MPL) for details.
 
 The data file `definitions.units` is licensed under the GNU General
 Public License, version 3. See [LICENSE-GPL](./LICENSE-GPL) for details.
