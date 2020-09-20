@@ -47,9 +47,7 @@ export interface SubstanceReply {
   properties: PropertyReply[];
 }
 
-export interface DurationReply {
-  type: "duration";
-  raw: NumberParts;
+export interface Duration {
   years: NumberParts;
   months: NumberParts;
   weeks: NumberParts;
@@ -57,6 +55,11 @@ export interface DurationReply {
   hours: NumberParts;
   minutes: NumberParts;
   seconds: NumberParts;
+}
+
+export interface DurationReply extends Duration {
+  type: "duration";
+  raw: NumberParts;
 }
 
 export interface ExprLiteral {

@@ -1,9 +1,10 @@
 <script lang="typescript">
-  import type { DurationReply, NumberParts } from "../../util/reply";
+  import type { Duration, DurationReply, NumberParts } from "../../util/reply";
+  import Dimensionality from "../Dimensionality.svelte";
 
   export let value: DurationReply;
 
-  let keys: (keyof DurationReply)[] = [
+  let keys: (keyof Duration)[] = [
     "years",
     "months",
     "weeks",
@@ -13,20 +14,16 @@
     "seconds",
   ];
 
-  function describe(value: DurationReply): string {
-    let out = [];
-
-    for (const key of keys) {
-      const entry = (value[key] as any) as NumberParts;
-      if (entry.exactValue != "0") {
-        out.push(entry.exactValue + " " + key);
-      }
-    }
-
-    return out.join(", ");
-  }
-
-  $: description = describe(value);
+  $: values = keys
+    .map((key) => value[key])
+    .filter((value) => value.exactValue != "0");
 </script>
 
-{description}
+{#each values as value, i}
+  {#if i != 0}<span>, </span>{/if}
+  <span>{value.exactValue}</span>
+  <Dimensionality quantity={value.rawUnit} />
+{:else}
+  <span>0</span>
+  <Dimensionality quantity={{ seconds: 1 }} />
+{/each}
