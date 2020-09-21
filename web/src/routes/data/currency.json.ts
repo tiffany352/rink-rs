@@ -73,7 +73,7 @@ async function btc() {
 
 async function ecb() {
   const response = await fetch(
-    "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
+    "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
   );
   console.log("Fetched", response.url, response.status, response.statusText);
   if (response.status != 200) {
