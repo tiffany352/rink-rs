@@ -19,6 +19,7 @@
     "@rollup/plugin-commonjs": "^12.0.0",
     "@rollup/plugin-node-resolve": "^8.0.0",
     "@rollup/plugin-replace": "^2.2.0",
+    "@types/elementtree": "^0.1.0",
     "@types/express": "^4.17.7",
     "@types/node-fetch": "^2.5.7",
     "@wasm-tool/rollup-plugin-rust": "^1.0.5",
@@ -38,6 +39,7 @@
   },
   "dependencies": {
     "compression": "^1.7.1",
+    "elementtree": "^0.1.7",
     "express": "^4.17.1",
     "node-fetch": "^2.6.1",
     "sirv": "^1.0.0"

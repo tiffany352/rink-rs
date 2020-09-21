@@ -1,3 +1,4 @@
+import { Def } from "./defs";
 import { QueryResult } from "./reply";
 
 export interface Query {
@@ -7,7 +8,7 @@ export interface Query {
 export interface Context {
   setTime(date: Date): void;
   eval(query: Query): QueryResult;
-  loadCurrency(ecb: string, btc: string): void;
+  loadCurrency(defs: string): void;
   loadBtc(file: string): void;
 }
 
@@ -58,14 +59,11 @@ export default class Rink {
   async createFullContext(fetchFunc: typeof fetch): Promise<Context> {
     const context = this.createContext();
     try {
-      const [currency, btc] = await withTimeout(
+      const currency = await withTimeout(
         2000,
-        Promise.all([
-          fetchFunc("data/currency.xml").then((res) => res.text()),
-          fetchFunc("data/btc.json").then((res) => res.text()),
-        ])
+        fetchFunc("data/currency.json").then((res) => res.text())
       );
-      context.loadCurrency(currency, btc);
+      context.loadCurrency(currency);
     } catch (err) {
       console.log("Loading currency data failed:", err);
     }

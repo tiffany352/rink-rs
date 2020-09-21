@@ -1,5 +1,5 @@
 use super::*;
-use crate::text_query::{parse_expr, TokenIterator};
+use crate::text_query::{parse_expr, Token, TokenIterator};
 use std::convert::TryFrom;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -31,10 +31,10 @@ impl TryFrom<String> for ExprString {
     fn try_from(input: String) -> Result<Self, Self::Error> {
         let mut iter = TokenIterator::new(&input).peekable();
         let expr = parse_expr(&mut iter);
-        if iter.next().is_some() {
-            Err("Expected EOF".to_owned())
-        } else {
+        if let Some(Token::Eof) = iter.next() {
             Ok(ExprString(expr))
+        } else {
+            Err("Expected EOF".to_owned())
         }
     }
 }

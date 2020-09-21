@@ -8,6 +8,7 @@
     "module": "es6",
     "moduleResolution": "node",
     "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
     "target": "ES2015",
     "allowJs": true,
     "baseUrl": "./src/",

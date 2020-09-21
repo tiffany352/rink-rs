@@ -57,6 +57,10 @@
   of {value.name}
 </h3>
 
+{#if value.doc}
+  <p>{value.doc}</p>
+{/if}
+
 <div class="table">
   <div class="name header">Name</div>
   <div class="value header">Value</div>

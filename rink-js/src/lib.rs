@@ -4,6 +4,7 @@ use rink_core;
 use rink_core::ast;
 use rink_core::text_query;
 use serde_derive::*;
+use serde_json;
 use wasm_bindgen::prelude::*;
 
 // Use `wee_alloc` as the global allocator.
@@ -92,25 +93,24 @@ impl Context {
     }
 
     #[wasm_bindgen(js_name = loadCurrency)]
-    pub fn load_currency(&mut self, ecb: String, btc: String) {
-        use std::io::Cursor;
+    pub fn load_currency(&mut self, live_defs: String) -> Result<(), JsValue> {
+        let mut live_defs: Vec<ast::DefEntry> =
+            serde_json::from_str(&live_defs).map_err(|e| e.to_string())?;
 
-        let mut ecb = rink_core::currency::parse(Cursor::new(ecb))
-            .unwrap_or_else(|s| wasm_bindgen::throw_str(&s));
-        let mut btc = rink_core::btc::parse(btc).unwrap_or_else(|s| wasm_bindgen::throw_str(&s));
-        let mut currency_defs = {
+        let mut base_defs = {
             let defs = rink_core::CURRENCY_FILE;
             let mut iter = rink_core::gnu_units::TokenIterator::new(defs).peekable();
             rink_core::gnu_units::parse(&mut iter)
         };
         let currency = {
             let mut defs = vec![];
-            defs.append(&mut ecb.defs);
-            defs.append(&mut btc.defs);
-            defs.append(&mut currency_defs.defs);
+            defs.append(&mut live_defs);
+            defs.append(&mut base_defs.defs);
             ast::Defs { defs }
         };
         self.context.load(currency);
+
+        Ok(())
     }
 
     #[wasm_bindgen]
