@@ -7,14 +7,18 @@ use rink_core::ast;
 use rink_core::context::Context;
 use rink_core::date;
 use rink_core::gnu_units;
-use rink_core::{btc, currency};
 use rink_core::{CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+use serde_json;
 use std::fs::File;
+use std::io::ErrorKind;
+use std::io::Read;
+use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
 
 const DATA_FILE_URL: &str =
     "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
+const CURRENCY_URL: &str = "https://rinkcalc.app/data/currency.json";
 
 pub fn config_dir() -> Result<PathBuf, String> {
     dirs::config_dir()
@@ -25,11 +29,16 @@ pub fn config_dir() -> Result<PathBuf, String> {
         .ok_or_else(|| "Could not find config directory".into())
 }
 
+fn read_to_string(mut file: File) -> Result<String, String> {
+    let mut buf = String::new();
+    match file.read_to_string(&mut buf) {
+        Ok(_size) => Ok(buf),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 /// Creates a context by searching standard directories for definitions.units.
 pub fn load() -> Result<Context, String> {
-    use std::io::Read;
-    use std::path::Path;
-
     let path = config_dir()?;
     let load = |name| {
         File::open(name).and_then(|mut f| {
@@ -65,22 +74,14 @@ pub fn load() -> Result<Context, String> {
     let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
     let units = gnu_units::parse(&mut iter);
     let dates = date::parse_datefile(&*dates);
-    let ecb = cached(
-        "currency.xml",
-        currency::URL,
+    let currency = cached(
+        "currency.json",
+        CURRENCY_URL,
         Duration::from_secs(23 * 60 * 60),
     )
-    .and_then(currency::parse);
-    let btc = cached("btc.json", btc::URL, Duration::from_secs(3 * 60 * 60))
-        .and_then(|mut file| {
-            let mut buf = String::new();
-            match file.read_to_string(&mut buf) {
-                Ok(_size) => Ok(buf),
-                Err(e) => Err(e.to_string()),
-            }
-        })
-        .and_then(btc::parse);
-    let currency_defs = {
+    .and_then(read_to_string)
+    .and_then(|file| serde_json::from_str::<ast::Defs>(&file).map_err(|e| e.to_string()));
+    let mut currency_defs = {
         let defs = load(Path::new("currency.units").to_path_buf())
             .or_else(|_| load(path.join("currency.units")))
             .unwrap_or_else(|_| CURRENCY_FILE.to_owned());
@@ -89,18 +90,12 @@ pub fn load() -> Result<Context, String> {
     };
     let currency = {
         let mut defs = vec![];
-        if let Ok(mut ecb) = ecb {
-            defs.append(&mut ecb.defs)
-        } else if let Err(e) = ecb {
-            println!("Failed to load ECB currency data: {}", e);
+        if let Ok(mut currency) = currency {
+            defs.append(&mut currency.defs);
+            defs.append(&mut currency_defs.defs);
+        } else if let Err(e) = currency {
+            println!("Failed to load live currency data: {}", e);
         }
-        if let Ok(mut btc) = btc {
-            defs.append(&mut btc.defs)
-        } else if let Err(e) = btc {
-            println!("Failed to load BTC currency data: {}", e);
-        }
-        let mut currency_defs = currency_defs;
-        defs.append(&mut currency_defs.defs);
         ast::Defs { defs }
     };
 
@@ -140,7 +135,6 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
         })
         .or_else(|_| {
             fs::create_dir_all(path.parent().unwrap()).map_err(|x| x.to_string())?;
-            let mut f = File::create(tmppath.clone()).map_err(|x| x.to_string())?;
 
             let client = reqwest::Client::builder()
                 .gzip(true)
@@ -148,10 +142,18 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
                 .build()
                 .map_err(|err| format!("Failed to create http client: {}", err))?;
 
-            client
+            let mut response = client
                 .get(url)
                 .send()
-                .map_err(|err| format!("Request failed: {}", err))?
+                .map_err(|err| format!("Request failed: {}", err))?;
+
+            let status = response.status();
+            if !status.is_success() {
+                return Err(format!("Requested failed with {}", status));
+            }
+            let mut f = File::create(tmppath.clone()).map_err(|x| x.to_string())?;
+
+            response
                 .copy_to(&mut f)
                 .map_err(|err| format!("Request failed: {}", err))?;
 
@@ -161,5 +163,9 @@ fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
             File::open(path.clone()).map_err(|x| x.to_string())
         })
         // If the request fails then try to reuse the already cached file
-        .or_else(|_| File::open(path.clone()).map_err(ts))
+        .or_else(|orig| match File::open(path.clone()) {
+            Ok(file) => Ok(file),
+            Err(err) if err.kind() == ErrorKind::NotFound => Err(orig),
+            Err(err) => Err(err.to_string()),
+        })
 }
