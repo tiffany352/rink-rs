@@ -32,18 +32,13 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 // Maybe someday we can be clean against this.
 #![allow(clippy::cognitive_complexity)]
 
-extern crate json;
-extern crate serde;
-
 #[macro_use]
 extern crate serde_derive;
 
 pub mod ast;
 pub mod bigint;
 pub mod bigrat;
-pub mod btc;
 pub mod context;
-pub mod currency;
 pub mod date;
 pub mod eval;
 pub mod factorize;

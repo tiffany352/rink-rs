@@ -12,7 +12,7 @@ mod query;
 #[cfg(test)]
 mod test;
 
-pub use def::{DatePattern, Def, DefEntry, Defs, Property};
+pub use def::{DatePattern, Def, DefEntry, Defs, ExprString, Property};
 pub use expr::{Expr, Precedence};
 pub use query::{Conversion, Query};
 

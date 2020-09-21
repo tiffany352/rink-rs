@@ -322,8 +322,8 @@ pub fn parse_expr(iter: &mut Iter<'_>) -> Expr {
 pub fn parse(iter: &mut Iter<'_>) -> Defs {
     let mut map = vec![];
     let mut line = 1;
-    let mut doc = None;
-    let mut category = None;
+    let mut doc: Option<String> = None;
+    let mut category: Option<String> = None;
     let mut symbols = BTreeMap::new();
     loop {
         match iter.next().unwrap() {
@@ -332,14 +332,14 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
             Token::Bang => match iter.next().unwrap() {
                 Token::Ident(ref s) if s == "category" => {
                     match (iter.next().unwrap(), iter.next().unwrap()) {
-                        (Token::Ident(s), Token::Ident(d)) => {
+                        (Token::Ident(short), Token::Ident(display_name)) => {
                             map.push(DefEntry {
-                                name: s.clone(),
-                                def: Rc::new(Def::Category(d)),
+                                name: short.clone(),
+                                def: Rc::new(Def::Category { display_name }),
                                 doc: None,
                                 category: None,
                             });
-                            category = Some(s);
+                            category = Some(short);
                         }
                         _ => println!("Malformed category directive"),
                     }
@@ -383,14 +383,18 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                         name.pop();
                         map.push(DefEntry {
                             name,
-                            def: Rc::new(Def::Prefix(expr)),
+                            def: Rc::new(Def::Prefix {
+                                expr: ExprString(expr),
+                            }),
                             doc: doc.take(),
                             category: category.clone(),
                         });
                     } else {
                         map.push(DefEntry {
                             name,
-                            def: Rc::new(Def::SPrefix(expr)),
+                            def: Rc::new(Def::SPrefix {
+                                expr: ExprString(expr),
+                            }),
                             doc: doc.take(),
                             category: category.clone(),
                         });
@@ -410,7 +414,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             });
                             map.push(DefEntry {
                                 name: long.clone(),
-                                def: Rc::new(Def::Canonicalization(name.clone())),
+                                def: Rc::new(Def::Canonicalization { of: name.clone() }),
                                 doc: doc.take(),
                                 category: category.clone(),
                             });
@@ -428,7 +432,9 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                         let expr = parse_expr(iter);
                         map.push(DefEntry {
                             name,
-                            def: Rc::new(Def::Quantity(expr)),
+                            def: Rc::new(Def::Quantity {
+                                expr: ExprString(expr),
+                            }),
                             doc: doc.take(),
                             category: category.clone(),
                         });
@@ -477,9 +483,9 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                     props.push(Property {
                                         output_name: name.clone(),
                                         name,
-                                        input: Expr::new_const(Numeric::one()),
+                                        input: ExprString(Expr::new_const(Numeric::one())),
                                         input_name,
-                                        output,
+                                        output: ExprString(output),
                                         doc: prop_doc.take(),
                                     });
                                     continue;
@@ -508,9 +514,9 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             let input = parse_mul(iter);
                             props.push(Property {
                                 name,
-                                input,
+                                input: ExprString(input),
                                 input_name,
-                                output,
+                                output: ExprString(output),
                                 output_name,
                                 doc: prop_doc.take(),
                             });
@@ -529,7 +535,9 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                         let expr = parse_expr(iter);
                         map.push(DefEntry {
                             name,
-                            def: Rc::new(Def::Unit(expr)),
+                            def: Rc::new(Def::Unit {
+                                expr: ExprString(expr),
+                            }),
                             doc: doc.take(),
                             category: category.clone(),
                         });

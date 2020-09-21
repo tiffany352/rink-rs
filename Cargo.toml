@@ -16,6 +16,7 @@ clap = "2.33.1"
 dirs = "3.0.1"
 reqwest = "0.9.2"
 chrono = "0.2.25"
+serde_json = "1"
 
 [dependencies.rink-core]
 version = "0.5"
@@ -23,3 +24,6 @@ path = "./core"
 
 [workspace]
 members = ["core", "rink-js"]
+
+[package.metadata.wasm-pack.profile.profiling]
+wasm-opt = ['-g', '-O']
