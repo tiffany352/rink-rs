@@ -87,6 +87,8 @@ Public License, version 3. See [LICENSE-GPL](./LICENSE-GPL) for details.
 
 ### Contribution
 
+Contribution guide can be found on the wiki: https://github.com/tiffany352/rink-rs/wiki#contribution-guide
+
 Unless you explicitly state otherwise, any contribution intentionally
 submitted for inclusion in the work will grant the rights lined out in
 the MPL, including larger works with secondary licenses.
