@@ -1,0 +1,36 @@
+name: Build Release Binaries
+
+on:
+  release:
+    types: [created]
+  push:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          - os: ubuntu-latest
+            input-name: rink
+            artifact-name: Rink CLI - Linux
+          - os: macos-latest
+            input-name: rink
+            artifact-name: Rink CLI - macOS
+          - os: windows-latest
+            input-name: rink.exe
+            artifact-name: Rink CLI - Windows
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --release --verbose
+      - name: Upload Binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.config.artifact-name }}
+          path: target/release/${{ matrix.config.input-name }}
