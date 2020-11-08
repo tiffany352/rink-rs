@@ -17,13 +17,13 @@ jobs:
         config:
           - os: ubuntu-latest
             input-name: rink
-            output-name: rink-linux
+            artifact-name: Rink CLI - Linux
           - os: macos-latest
             input-name: rink
-            output-name: rink-mac
+            artifact-name: Rink CLI - macOS
           - os: windows-latest
             input-name: rink.exe
-            output-name: rink.exe
+            artifact-name: Rink CLI - Windows
 
     steps:
       - uses: actions/checkout@v2
@@ -32,5 +32,5 @@ jobs:
       - name: Upload Binary
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.config.output-name }}
+          name: ${{ matrix.config.artifact-name }}
           path: target/release/${{ matrix.config.input-name }}
