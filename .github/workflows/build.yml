@@ -16,11 +16,14 @@ jobs:
       matrix:
         config:
           - os: ubuntu-latest
-            asset-name: rink
+            input-name: rink
+            output-name: rink-linux
           - os: macos-latest
-            asset-name: rink
+            input-name: rink
+            output-name: rink-mac
           - os: windows-latest
-            asset-name: rink.exe
+            input-name: rink.exe
+            output-name: rink.exe
 
     steps:
       - uses: actions/checkout@v2
@@ -29,5 +32,5 @@ jobs:
       - name: Upload Binary
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.config.asset-name }}
-          path: target/release/${{ matrix.config.asset-name }}
+          name: ${{ matrix.config.output-name }}
+          path: target/release/${{ matrix.config.input-name }}
