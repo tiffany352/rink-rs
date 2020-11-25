@@ -80,7 +80,7 @@ impl Context {
     #[wasm_bindgen(js_name = setTime)]
     pub fn set_time(&mut self, date: Date) {
         let year = date.get_utc_full_year();
-        let month = date.get_utc_month();
+        let month = date.get_utc_month() + 1;
         let day = date.get_utc_date();
         let hour = date.get_utc_hours();
         let min = date.get_utc_minutes();
