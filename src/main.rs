@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use clap::{App, Arg};
+use eyre::{Result, WrapErr};
 use std::fs::File;
 use std::io::{stdin, BufReader};
 
@@ -12,7 +13,9 @@ pub mod completer;
 pub mod config;
 pub mod repl;
 
-fn main() {
+fn main() -> Result<()> {
+    color_eyre::install()?;
+
     let matches = App::new("Rink")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Rink Contributors")
@@ -32,28 +35,21 @@ fn main() {
         )
         .get_matches();
 
+    let config = config::read_config()?;
+
     if let Some(filename) = matches.value_of("file") {
         match filename {
             "-" => {
                 let stdin_handle = stdin();
-                repl::noninteractive(stdin_handle.lock(), false);
+                repl::noninteractive(stdin_handle.lock(), &config, false)
             }
             _ => {
-                let file = File::open(&filename).unwrap_or_else(|e| {
-                    eprintln!("Could not open input file '{}': {}", filename, e);
-                    std::process::exit(1);
-                });
-                repl::noninteractive(BufReader::new(file), false);
+                let file = File::open(&filename).wrap_err("Failed to open input file")?;
+                repl::noninteractive(BufReader::new(file), &config, false)
             }
         }
     } else if let Some(exprs) = matches.values_of("EXPR") {
-        let mut ctx = match config::load() {
-            Ok(ctx) => ctx,
-            Err(e) => {
-                println!("{}", e);
-                return;
-            }
-        };
+        let mut ctx = config::load(&config)?;
         for expr in exprs {
             println!("> {}", expr);
             match rink_core::one_line(&mut ctx, expr) {
@@ -61,7 +57,8 @@ fn main() {
                 Err(e) => println!("{}", e),
             }
         }
+        Ok(())
     } else {
-        repl::interactive()
+        repl::interactive(&config)
     }
 }
