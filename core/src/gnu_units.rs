@@ -557,6 +557,11 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
     Defs { defs: map }
 }
 
+pub fn parse_str(input: &str) -> Defs {
+    let mut iter = TokenIterator::new(&*input).peekable();
+    parse(&mut iter)
+}
+
 pub fn tokens(iter: &mut Iter<'_>) -> Vec<Token> {
     let mut out = vec![];
     loop {

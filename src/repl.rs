@@ -1,22 +1,17 @@
+use crate::config::Config;
+use eyre::Result;
+use linefeed::{Interface, ReadResult, Signal};
 use std::io::{stdin, BufRead};
 use std::sync::{Arc, Mutex};
-
-use linefeed::{Interface, ReadResult, Signal};
 
 use rink_core::one_line;
 
 use crate::RinkCompleter;
 
-pub fn noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
+pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) -> Result<()> {
     use std::io::{stdout, Write};
 
-    let mut ctx = match crate::config::load() {
-        Ok(ctx) => ctx,
-        Err(e) => {
-            println!("{}", e);
-            return;
-        }
-    };
+    let mut ctx = crate::config::load(config)?;
     let mut line = String::new();
     loop {
         if show_prompt {
@@ -24,13 +19,13 @@ pub fn noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
         }
         stdout().flush().unwrap();
         if f.read_line(&mut line).is_err() {
-            return;
+            return Ok(());
         }
         // the underlying file object has hit an EOF if we try to read a
         // line but do not find the newline at the end, so let's break
         // out of the loop
         if line.find('\n').is_none() {
-            return;
+            return Ok(());
         }
         match one_line(&mut ctx, &*line) {
             Ok(v) => println!("{}", v),
@@ -40,33 +35,30 @@ pub fn noninteractive<T: BufRead>(mut f: T, show_prompt: bool) {
     }
 }
 
-pub fn interactive() {
+pub fn interactive(config: &Config) -> Result<()> {
     let rl = match Interface::new("rink") {
         Err(_) => {
             // If we can't initialize linefeed on this terminal for some reason,
             // e.g. it being a pipe instead of a tty, use the noninteractive version
             // with prompt instead.
             let stdin_handle = stdin();
-            return noninteractive(stdin_handle.lock(), true);
+            return noninteractive(stdin_handle.lock(), config, true);
         }
         Ok(rl) => rl,
     };
-    rl.set_prompt("> ").unwrap();
+    rl.set_prompt(&config.rink.prompt).unwrap();
 
-    let ctx = match crate::config::load() {
-        Ok(ctx) => ctx,
-        Err(e) => {
-            println!("{}", e);
-            return;
-        }
-    };
+    let ctx = crate::config::load(config)?;
     let ctx = Arc::new(Mutex::new(ctx));
     let completer = RinkCompleter::new(ctx.clone());
     rl.set_completer(Arc::new(completer));
 
-    let mut hpath = crate::config::config_dir();
-    if let Ok(ref mut path) = hpath {
+    let mut hpath = dirs::data_local_dir().map(|mut path| {
+        path.push("rink");
         path.push("history.txt");
+        path
+    });
+    if let Some(ref mut path) = hpath {
         rl.load_history(path).unwrap_or_else(|e| {
             // ignore "not found" error
             if e.kind() != std::io::ErrorKind::NotFound {
@@ -76,7 +68,7 @@ pub fn interactive() {
     }
 
     let save_history = || {
-        if let Ok(ref path) = hpath {
+        if let Some(ref path) = hpath {
             // ignore error - if this fails, the next line will as well.
             let _ = std::fs::create_dir_all(path.parent().unwrap());
             rl.save_history(path).unwrap_or_else(|e| {
@@ -123,4 +115,5 @@ pub fn interactive() {
             }
         }
     }
+    Ok(())
 }

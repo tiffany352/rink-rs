@@ -2,170 +2,240 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use dirs;
-use rink_core::ast;
+use color_eyre::Result;
+use eyre::{eyre, Report, WrapErr};
 use rink_core::context::Context;
-use rink_core::date;
-use rink_core::gnu_units;
-use rink_core::{CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+use rink_core::{ast, date, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+use serde_derive::Deserialize;
 use serde_json;
-use std::fs::File;
-use std::io::ErrorKind;
-use std::io::Read;
+use std::fs::{read_to_string, File};
+use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
 
-const DATA_FILE_URL: &str =
-    "https://raw.githubusercontent.com/tiffany352/rink-rs/master/definitions.units";
-const CURRENCY_URL: &str = "https://rinkcalc.app/data/currency.json";
-
-pub fn config_dir() -> Result<PathBuf, String> {
-    dirs::config_dir()
-        .map(|mut x: PathBuf| {
-            x.push("rink");
-            x
-        })
-        .ok_or_else(|| "Could not find config directory".into())
+fn file_to_string(mut file: File) -> Result<String> {
+    let mut string = String::new();
+    let _ = file.read_to_string(&mut string)?;
+    Ok(string)
 }
 
-fn read_to_string(mut file: File) -> Result<String, String> {
-    let mut buf = String::new();
-    match file.read_to_string(&mut buf) {
-        Ok(_size) => Ok(buf),
-        Err(e) => Err(e.to_string()),
+pub fn config_path(name: &'static str) -> Result<PathBuf> {
+    let mut path = dirs::config_dir().ok_or_else(|| eyre!("Could not find config directory"))?;
+    path.push("rink");
+    path.push(name);
+    Ok(path)
+}
+
+#[derive(Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+pub struct Config {
+    pub rink: Rink,
+    pub currency: Currency,
+}
+
+#[derive(Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Rink {
+    /// Which prompt to render when run interactively.
+    pub prompt: String,
+}
+
+#[derive(Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Currency {
+    /// Set to false to disable currency fetching entirely.
+    pub enabled: bool,
+    /// Which web endpoint should be used to download currency data?
+    pub endpoint: String,
+    /// How long to cache for.
+    #[serde(with = "humantime_serde")]
+    pub cache_duration: Duration,
+    /// How long to wait before timing out requests.
+    #[serde(with = "humantime_serde")]
+    pub timeout: Duration,
+}
+
+impl Default for Currency {
+    fn default() -> Self {
+        Currency {
+            enabled: true,
+            endpoint: "https://rinkcalc.app/data/currency.json".to_owned(),
+            cache_duration: Duration::from_secs(60 * 60), // 1 hour
+            timeout: Duration::from_secs(2),
+        }
     }
 }
 
-/// Creates a context by searching standard directories for definitions.units.
-pub fn load() -> Result<Context, String> {
-    let path = config_dir()?;
-    let load = |name| {
-        File::open(name).and_then(|mut f| {
-            let mut buf = vec![];
-            f.read_to_end(&mut buf)?;
-            Ok(String::from_utf8_lossy(&*buf).into_owned())
-        })
-    };
-    let units = load(Path::new("definitions.units").to_path_buf())
-        .or_else(|_| load(path.join("definitions.units")))
-        .or_else(|_| {
-            DEFAULT_FILE.map(|x| x.to_owned()).ok_or_else(|| {
-                "Did not exist in search path and binary is not compiled with `gpl` feature"
-                    .to_string()
-            })
-        })
-        .map_err(|e| {
-            format!(
-                "Failed to open definitions.units: {}\n\
-                 If you installed with `gpl` disabled, then you need to obtain definitions.units \
-                 separately. Here is the URL, download it and put it in {:?}.\n\
-                 \n\
-                 {}\n\
-                 \n",
-                e, &path, DATA_FILE_URL
-            )
-        });
-    let units = units?;
-    let dates = load(Path::new("datepatterns.txt").to_path_buf())
-        .or_else(|_| load(path.join("datepatterns.txt")))
+impl Default for Rink {
+    fn default() -> Self {
+        Rink {
+            prompt: "> ".to_owned(),
+        }
+    }
+}
+
+fn read_from_search_path(filename: &str, paths: &[PathBuf]) -> Result<String> {
+    for path in paths {
+        let mut buf = PathBuf::from(path);
+        buf.push(filename);
+        if let Ok(result) = read_to_string(buf) {
+            return Ok(result);
+        }
+    }
+
+    Err(eyre!(
+        "Could not find {} in search path. Paths:{}",
+        filename,
+        paths
+            .iter()
+            .map(|path| format!("{}", path.display()))
+            .collect::<Vec<String>>()
+            .join("\n  ")
+    ))
+}
+
+fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
+    let file = cached(
+        "currency.json",
+        &config.endpoint,
+        config.cache_duration,
+        config.timeout,
+    )?;
+    let contents = file_to_string(file)?;
+    serde_json::from_str(&contents).wrap_err("Invalid JSON")
+}
+
+pub fn read_config() -> Result<Config> {
+    match read_to_string(config_path("config.toml")?) {
+        // Hard fail if the file has invalid TOML.
+        Ok(result) => toml::from_str(&result).wrap_err("While parsing config.toml"),
+        // Use default config if it doesn't exist.
+        Err(err) if err.kind() == ErrorKind::NotFound => Ok(Config::default()),
+        // Hard fail for other IO errors (e.g. permissions).
+        Err(err) => Err(eyre!(err).wrap_err("Failed to read config.toml")),
+    }
+}
+
+/// Creates a context by searching standard directories
+pub fn load(config: &Config) -> Result<Context> {
+    let mut search_path = vec![PathBuf::from("./")];
+    if let Some(config_dir) = dirs::config_dir() {
+        search_path.push(config_dir);
+    }
+
+    // Read definitions.units
+    let units = read_from_search_path("definitions.units", &search_path)
+        .or_else(|err| DEFAULT_FILE.map(ToOwned::to_owned).ok_or(err).wrap_err("Rink was not built with a bundled definitions file, and one was not found in the search path."))?;
+
+    // Read datepatterns.txt
+    let dates = read_from_search_path("datepatterns.txt", &search_path)
         .unwrap_or_else(|_| DATES_FILE.to_owned());
 
-    let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
-    let units = gnu_units::parse(&mut iter);
-    let dates = date::parse_datefile(&*dates);
-    let currency = cached(
-        "currency.json",
-        CURRENCY_URL,
-        Duration::from_secs(23 * 60 * 60),
-    )
-    .and_then(read_to_string)
-    .and_then(|file| serde_json::from_str::<ast::Defs>(&file).map_err(|e| e.to_string()));
-    let mut currency_defs = {
-        let defs = load(Path::new("currency.units").to_path_buf())
-            .or_else(|_| load(path.join("currency.units")))
-            .unwrap_or_else(|_| CURRENCY_FILE.to_owned());
-        let mut iter = gnu_units::TokenIterator::new(&*defs).peekable();
-        gnu_units::parse(&mut iter)
-    };
-    let currency = {
-        let mut defs = vec![];
-        if let Ok(mut currency) = currency {
-            defs.append(&mut currency.defs);
-            defs.append(&mut currency_defs.defs);
-        } else if let Err(e) = currency {
-            println!("Failed to load live currency data: {}", e);
-        }
-        ast::Defs { defs }
-    };
-
     let mut ctx = Context::new();
-    ctx.load(units);
-    ctx.load_dates(dates);
-    ctx.load(currency);
+    ctx.load(gnu_units::parse_str(&units));
+    ctx.load_dates(date::parse_datefile(&dates));
+
+    // Load currency data.
+    if config.currency.enabled {
+        match load_live_currency(&config.currency) {
+            Ok(mut live_defs) => {
+                let mut base_defs = gnu_units::parse_str(
+                    &read_from_search_path("currency.units", &search_path)
+                        .unwrap_or_else(|_| CURRENCY_FILE.to_owned()),
+                );
+                let mut defs = vec![];
+                defs.append(&mut base_defs.defs);
+                defs.append(&mut live_defs.defs);
+                ctx.load(ast::Defs { defs });
+            }
+            Err(err) => {
+                println!("{:?}", err.wrap_err("Failed to load currency data"));
+            }
+        }
+    }
+
     Ok(ctx)
 }
 
-fn cached(file: &str, url: &str, expiration: Duration) -> Result<File, String> {
-    use std::fmt::Display;
-    use std::fs;
+fn read_if_current(file: File, expiration: Duration) -> Result<File> {
     use std::time::SystemTime;
 
-    fn ts<T: Display>(x: T) -> String {
-        x.to_string()
+    let stats = file.metadata()?;
+    let mtime = stats.modified()?;
+    let now = SystemTime::now();
+    let elapsed = now.duration_since(mtime)?;
+    if elapsed > expiration {
+        Err(eyre!("File is out of date"))
+    } else {
+        Ok(file)
     }
-    let mut path = config_dir()?;
-    let mut tmppath = path.clone();
-    path.push(file);
-    let tmpfile = format!("{}.part", file);
-    tmppath.push(tmpfile);
+}
 
-    File::open(path.clone())
-        .map_err(ts)
-        .and_then(|f| {
-            let stats = f.metadata().map_err(ts)?;
-            let mtime = stats.modified().map_err(ts)?;
-            let now = SystemTime::now();
-            let elapsed = now.duration_since(mtime).map_err(ts)?;
-            if elapsed > expiration {
-                Err("File is out of date".to_string())
-            } else {
-                Ok(f)
-            }
-        })
-        .or_else(|_| {
-            fs::create_dir_all(path.parent().unwrap()).map_err(|x| x.to_string())?;
+fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
+    use std::fs::create_dir_all;
 
-            let client = reqwest::Client::builder()
-                .gzip(true)
-                .timeout(Duration::from_secs(2))
-                .build()
-                .map_err(|err| format!("Failed to create http client: {}", err))?;
+    create_dir_all(path.parent().unwrap())?;
 
-            let mut response = client
-                .get(url)
-                .send()
-                .map_err(|err| format!("Request failed: {}", err))?;
+    let client = reqwest::Client::builder()
+        .gzip(true)
+        .timeout(timeout)
+        .build()
+        .wrap_err("Creating HTTP client")?;
 
-            let status = response.status();
-            if !status.is_success() {
-                return Err(format!("Requested failed with {}", status));
-            }
-            let mut f = File::create(tmppath.clone()).map_err(|x| x.to_string())?;
+    let mut response = client.get(url).send()?;
 
-            response
-                .copy_to(&mut f)
-                .map_err(|err| format!("Request failed: {}", err))?;
+    let status = response.status();
+    if !status.is_success() {
+        return Err(eyre!(
+            "Received status {} while downloading {}",
+            status,
+            url
+        ));
+    }
+    let mut temp_file = tempfile::NamedTempFile::new()?;
+    response
+        .copy_to(temp_file.as_file_mut())
+        .wrap_err_with(|| format!("While dowloading {}", url))?;
 
-            f.sync_all().map_err(|x| format!("{}", x))?;
-            drop(f);
-            fs::rename(tmppath.clone(), path.clone()).map_err(|x| x.to_string())?;
-            File::open(path.clone()).map_err(|x| x.to_string())
-        })
-        // If the request fails then try to reuse the already cached file
-        .or_else(|orig| match File::open(path.clone()) {
-            Ok(file) => Ok(file),
-            Err(err) if err.kind() == ErrorKind::NotFound => Err(orig),
-            Err(err) => Err(err.to_string()),
-        })
+    temp_file.as_file_mut().sync_all()?;
+    temp_file.as_file_mut().seek(SeekFrom::Start(0))?;
+    Ok(temp_file
+        .persist(path)
+        .wrap_err("Failed to write to cache dir")?)
+}
+
+fn cached(filename: &str, url: &str, expiration: Duration, timeout: Duration) -> Result<File> {
+    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
+    path.push("rink");
+    path.push(filename);
+
+    // 1. Return file if it exists and is up to date.
+    // 2. Try to download a new version of the file and return it.
+    // 3. If that fails, return the stale file if it exists.
+
+    if let Ok(file) = File::open(&path) {
+        if let Ok(result) = read_if_current(file, expiration) {
+            return Ok(result);
+        }
+    }
+
+    let err = match download_to_file(&path, url, timeout) {
+        Ok(result) => return Ok(result),
+        Err(err) => err,
+    };
+
+    if let Ok(file) = File::open(&path) {
+        // Indicate error even though we're returning success.
+        println!(
+            "{:?}",
+            Report::wrap_err(
+                err,
+                format!("Failed to refresh {}, using stale version", filename)
+            )
+        );
+        Ok(file)
+    } else {
+        Err(err).wrap_err_with(|| format!("Failed to fetch {}", filename))
+    }
 }
