@@ -42,7 +42,8 @@
     "elementtree": "^0.1.7",
     "express": "^4.17.1",
     "node-fetch": "^2.6.1",
-    "sirv": "^1.0.0"
+    "sirv": "^1.0.0",
+    "atomically": "1.7.0"
   },
   "browserslist": [
     "last 3 chrome versions",

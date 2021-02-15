@@ -7,3 +7,4 @@
 **/__sapper__
 **/.rpt2_cache
 **/build
+/web/data

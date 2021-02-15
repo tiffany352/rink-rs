@@ -1,7 +1,8 @@
-import cached from "./_cached";
 import { Def } from "util/defs";
 import fetch from "node-fetch";
 import { parse } from "elementtree";
+import { writeFile } from "atomically";
+import { mkdir } from "fs/promises";
 
 async function btc() {
   interface Format {
@@ -104,10 +105,17 @@ async function ecb() {
   return defs;
 }
 
-export const get = cached(3600 * 1000, async () => {
-  const [btcDefs, ecbDefs] = await Promise.all([btc(), ecb()]);
+const DATA_DIR = process.env.DATA_DIR || "data";
+export const currencyPath = `${DATA_DIR}/currency.json`;
 
+export async function updateCurrency() {
+  const [btcDefs, ecbDefs] = await Promise.all([btc(), ecb()]);
   const defs: Def[] = [...btcDefs, ...ecbDefs];
 
-  return defs;
-});
+  await mkdir(DATA_DIR, { recursive: true });
+
+  await writeFile(currencyPath, JSON.stringify(defs, undefined, "\t"), {
+    encoding: "utf8",
+  });
+  console.log("Successfully updated file.");
+}
