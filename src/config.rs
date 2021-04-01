@@ -178,8 +178,7 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
 
     create_dir_all(path.parent().unwrap())?;
 
-    let client = reqwest::Client::builder()
-        .gzip(true)
+    let client = reqwest::blocking::Client::builder()
         .timeout(timeout)
         .build()
         .wrap_err("Creating HTTP client")?;
