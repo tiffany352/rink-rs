@@ -15,7 +15,7 @@ default = ["chrono-humanize", "gpl"]
 gpl = []
 
 [dependencies]
-num = "0.3.0"
+num = "0.4.0"
 chrono = "0.4.13"
 strsim = "0.5.1"
 chrono-tz = "0.5.2"
