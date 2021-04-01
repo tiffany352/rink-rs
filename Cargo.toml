@@ -1,7 +1,6 @@
 [package]
 name = "rink"
 version = "0.5.1"
-authors = ["Tiffany Bennett <tiffany@stormbit.net>"]
 description = "Unit conversion tool, similar to frink"
 homepage = "https://rinkcalc.app"
 repository = "https://github.com/tiffany352/rink-rs"

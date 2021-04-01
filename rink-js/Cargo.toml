@@ -1,7 +1,6 @@
 [package]
 name = "rink-js"
 version = "0.5.0"
-authors = ["Tiffany Bennett <tiffnixen@gmail.com>"]
 description = "Wasm bindings to Rink, for use in rink-web"
 homepage = "https://github.com/tiffany352/rink-rs"
 repository = "https://github.com/tiffany352/rink-rs"
