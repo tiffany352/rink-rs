@@ -4,6 +4,7 @@
 
 use color_eyre::Result;
 use eyre::{eyre, Report, WrapErr};
+use reqwest::header::USER_AGENT;
 use rink_core::context::Context;
 use rink_core::{ast, date, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::Deserialize;
@@ -183,7 +184,17 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
         .build()
         .wrap_err("Creating HTTP client")?;
 
-    let mut response = client.get(url).send()?;
+    let mut response = client
+        .get(url)
+        .header(
+            USER_AGENT,
+            format!(
+                "rink-cli {} <{}>",
+                env!("CARGO_PKG_VERSION"),
+                env!("CARGO_PKG_REPOSITORY")
+            ),
+        )
+        .send()?;
 
     let status = response.status();
     if !status.is_success() {
