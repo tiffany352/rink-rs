@@ -1,7 +1,6 @@
 [package]
 name = "rink-core"
 version = "0.5.1"
-authors = ["Tiffany Bennett <tiffany@stormbit.net>"]
 description = "Unit conversion library behind rink"
 homepage = "https://github.com/tiffany352/rink-rs"
 repository = "https://github.com/tiffany352/rink-rs"
@@ -15,14 +14,14 @@ default = ["chrono-humanize", "gpl"]
 gpl = []
 
 [dependencies]
-num = "0.3.0"
-chrono = "0.4.13"
-strsim = "0.5.1"
+num = "0.4.0"
+chrono = "0.4.19"
+strsim = "0.10.0"
 chrono-tz = "0.5.2"
-chrono-humanize = { version = "0.0.11", optional = true }
+chrono-humanize = { version = "0.1.2", optional = true }
 serde = { version = "1", features = ["rc"] }
 serde_derive = "1"
 
 [dev_dependencies]
 serde_json = "1"
-assert-json-diff = "1.1"
+assert-json-diff = "2.0.1"
