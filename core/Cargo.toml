@@ -16,7 +16,7 @@ gpl = []
 
 [dependencies]
 num = "0.4.0"
-chrono = "0.4.13"
+chrono = "0.4.19"
 strsim = "0.10.0"
 chrono-tz = "0.5.2"
 chrono-humanize = { version = "0.1.2", optional = true }

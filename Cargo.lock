@@ -132,16 +132,6 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.2.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9213f7cd7c27e95c2b57c49f0e69b1ea65b27138da84a170133fd21b07659c00"
-dependencies = [
- "num 0.1.42",
- "time",
-]
-
-[[package]]
-name = "chrono"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
@@ -159,7 +149,7 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8164ae3089baf04ff71f32aeb70213283dcd236dce8bc976d00b17a458f5f71c"
 dependencies = [
- "chrono 0.4.19",
+ "chrono",
 ]
 
 [[package]]
@@ -168,7 +158,7 @@ version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2554a3155fec064362507487171dcc4edc3df60cb10f3a1fb10ed8094822b120"
 dependencies = [
- "chrono 0.4.19",
+ "chrono",
  "parse-zoneinfo",
 ]
 
@@ -735,17 +725,6 @@ dependencies = [
 
 [[package]]
 name = "num"
-version = "0.1.42"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4703ad64153382334aa8db57c637364c322d3372e097840c72000dabdcf6156e"
-dependencies = [
- "num-integer",
- "num-iter",
- "num-traits",
-]
-
-[[package]]
-name = "num"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43db66d1170d347f9a065114077f7dccb00c1b9478c89384490a3425279a4606"
@@ -1175,7 +1154,7 @@ dependencies = [
 name = "rink"
 version = "0.5.1"
 dependencies = [
- "chrono 0.2.25",
+ "chrono",
  "clap",
  "color-eyre",
  "dirs 3.0.1",
@@ -1196,10 +1175,10 @@ name = "rink-core"
 version = "0.5.1"
 dependencies = [
  "assert-json-diff",
- "chrono 0.4.19",
+ "chrono",
  "chrono-humanize",
  "chrono-tz",
- "num 0.4.0",
+ "num",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1210,7 +1189,7 @@ dependencies = [
 name = "rink-js"
 version = "0.5.0"
 dependencies = [
- "chrono 0.4.19",
+ "chrono",
  "console_error_panic_hook",
  "js-sys",
  "rink-core",
