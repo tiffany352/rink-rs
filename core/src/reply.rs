@@ -2,12 +2,12 @@ use crate::ast::{Expr, Precedence, UnaryOpType};
 use crate::number::NumberParts;
 use crate::numeric::Digits;
 use chrono::{DateTime, TimeZone};
-use std::collections::BTreeMap;
-use std::convert::From;
 use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
 use std::iter::once;
 use std::rc::Rc;
+use std::{borrow::Cow, collections::BTreeMap};
+use std::{convert::From, iter::Peekable};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type")]
@@ -51,7 +51,13 @@ pub struct ConversionReply {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct FactorizeReply {
-    pub factorizations: Vec<BTreeMap<Rc<String>, usize>>,
+    pub factorizations: Vec<Factorization>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(transparent)]
+pub struct Factorization {
+    pub units: BTreeMap<Rc<String>, usize>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -416,7 +422,8 @@ impl Display for FactorizeReply {
             self.factorizations
                 .iter()
                 .map(|x| {
-                    x.iter()
+                    x.units
+                        .iter()
                         .map(|(u, p)| {
                             if *p == 1 {
                                 u.to_string()
@@ -509,5 +516,442 @@ impl Display for SearchReply {
                 .collect::<Vec<_>>()
                 .join(", ")
         )
+    }
+}
+
+#[derive(Clone)]
+pub enum Span<'a> {
+    Content { text: Cow<'a, str>, token: FmtToken },
+    Child(&'a dyn TokenFmt<'a>),
+}
+
+impl<'a> Span<'a> {
+    pub fn new(text: impl Into<Cow<'a, str>>, token: FmtToken) -> Span<'a> {
+        Span::Content {
+            text: text.into(),
+            token,
+        }
+    }
+
+    pub fn plain(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::Plain)
+    }
+
+    pub fn unit(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::Unit)
+    }
+
+    pub fn quantity(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::Quantity)
+    }
+
+    pub fn prop_name(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::PropName)
+    }
+
+    pub fn user_input(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::UserInput)
+    }
+
+    pub fn list_begin(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::ListBegin)
+    }
+
+    pub fn list_sep(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::ListSep)
+    }
+
+    pub fn doc_string(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::DocString)
+    }
+
+    pub fn pow(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::Pow)
+    }
+
+    pub fn child(obj: &'a dyn TokenFmt<'a>) -> Span<'a> {
+        Span::Child(obj)
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
+pub enum FmtToken {
+    /// Indicator text that isn't based on user input. Generally displayed without any formatting.
+    Plain,
+    /// The name of a unit, like `kilogram`.
+    Unit,
+    /// A quantity like length or time.
+    Quantity,
+    /// A number in any context.
+    Number,
+    /// A string that's derived in some way from user input, but doesn't
+    /// have a more specific usage.
+    UserInput,
+    /// Text indicating the start of a list, usually a string followed
+    /// by a colon.
+    ListBegin,
+    /// A separator between items in a list, usually a comma or
+    /// semicolon. When a lot of vertical space is available, these can
+    /// be turned into a bulleted list.
+    ListSep,
+    /// A documentation string.
+    DocString,
+    /// A number raised to a power, could be substituted with
+    /// superscript.
+    Pow,
+    /// The name of a property in a substance.
+    PropName,
+}
+
+pub trait TokenFmt<'a> {
+    fn to_spans(&'a self) -> Vec<Span<'a>>;
+}
+
+struct JoinIter<'a, I>
+where
+    I: Iterator,
+{
+    iter: Peekable<I>,
+    sep: Span<'a>,
+    last_was_sep: bool,
+}
+
+fn join<'a, I>(iter: I, sep: Span<'a>) -> impl Iterator<Item = Span<'a>>
+where
+    I: Iterator<Item = Span<'a>>,
+{
+    JoinIter {
+        iter: iter.peekable(),
+        sep,
+        last_was_sep: true,
+    }
+}
+
+impl<'a, I> Iterator for JoinIter<'a, I>
+where
+    I: Iterator<Item = Span<'a>>,
+{
+    type Item = Span<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.iter.peek().is_some() {
+            if self.last_was_sep {
+                self.last_was_sep = false;
+                self.iter.next()
+            } else {
+                self.last_was_sep = true;
+                Some(self.sep.clone())
+            }
+        } else {
+            None
+        }
+    }
+}
+
+struct FlatJoinIter<'a, I, I2>
+where
+    I: Iterator<Item = I2>,
+    I2: IntoIterator<Item = Span<'a>>,
+{
+    iter: Peekable<I>,
+    sep: Span<'a>,
+    last_was_sep: bool,
+    current: Option<I2::IntoIter>,
+}
+
+fn flat_join<'a, I, I2>(iter: I, sep: Span<'a>) -> impl Iterator<Item = Span<'a>>
+where
+    I: Iterator<Item = I2>,
+    I2: IntoIterator<Item = Span<'a>>,
+{
+    FlatJoinIter {
+        iter: iter.peekable(),
+        sep,
+        last_was_sep: true,
+        current: None,
+    }
+}
+
+impl<'a, I, I2> Iterator for FlatJoinIter<'a, I, I2>
+where
+    I: Iterator<Item = I2>,
+    I2: IntoIterator<Item = Span<'a>>,
+{
+    type Item = Span<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(ref mut current) = self.current {
+            if let Some(next) = current.next() {
+                return Some(next);
+            }
+        }
+        if self.iter.peek().is_some() {
+            if self.last_was_sep {
+                self.last_was_sep = false;
+                let mut new_current = self.iter.next().unwrap().into_iter();
+                let next = new_current.next();
+                self.current = Some(new_current);
+                next
+            } else {
+                self.last_was_sep = true;
+                Some(self.sep.clone())
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> TokenFmt<'a> for QueryReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        match self {
+            QueryReply::Number(reply) => reply.to_spans(),
+            QueryReply::Date(reply) => reply.to_spans(),
+            QueryReply::Substance(reply) => reply.to_spans(),
+            QueryReply::Duration(reply) => reply.to_spans(),
+            QueryReply::Def(reply) => reply.to_spans(),
+            QueryReply::Conversion(reply) => reply.to_spans(),
+            QueryReply::Factorize(reply) => reply.to_spans(),
+            QueryReply::UnitsFor(reply) => reply.to_spans(),
+            QueryReply::UnitList(reply) => reply.to_spans(),
+            QueryReply::Search(reply) => reply.to_spans(),
+        }
+    }
+}
+
+impl<'a> TokenFmt<'a> for NumberParts {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        vec![Span::plain(self.format("n u w"))]
+    }
+}
+
+impl<'a> TokenFmt<'a> for DateReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        if let Some(ref human) = self.human {
+            vec![
+                Span::user_input(&self.string),
+                Span::plain(" ("),
+                Span::user_input(human),
+                Span::plain(")"),
+            ]
+        } else {
+            vec![Span::user_input(&self.string)]
+        }
+    }
+}
+
+impl<'a> TokenFmt<'a> for SubstanceReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut tokens = vec![Span::unit(&self.name), Span::plain(": ")];
+        if let Some(ref doc) = self.doc {
+            tokens.push(Span::doc_string(doc));
+            tokens.push(Span::plain(" "));
+        }
+        tokens.push(Span::list_begin(""));
+        tokens.extend(join(
+            self.properties.iter().map(|prop| Span::child(prop)),
+            Span::list_sep("; "),
+        ));
+        tokens
+    }
+}
+
+impl<'a> TokenFmt<'a> for PropertyReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut tokens = vec![
+            Span::prop_name(&self.name),
+            Span::plain(" = "),
+            Span::plain(self.value.format("n u")),
+        ];
+        if let Some(ref doc) = self.doc {
+            tokens.push(Span::plain(" ("));
+            tokens.push(Span::doc_string(doc));
+            tokens.push(Span::plain(")"));
+        }
+        tokens
+    }
+}
+
+impl<'a> TokenFmt<'a> for DurationReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let parts = [
+            &self.years,
+            &self.months,
+            &self.weeks,
+            &self.days,
+            &self.hours,
+            &self.minutes,
+        ];
+
+        let res = join(
+            parts
+                .iter()
+                .map(|x| *x)
+                .filter(|x| x.exact_value.as_ref().map(|x| &**x) != Some("0"))
+                .chain(once(&self.seconds))
+                .map(|x| Span::plain(x.to_string())),
+            Span::list_sep(", "),
+        );
+
+        if let Some(ref q) = self.raw.quantity {
+            res.chain(once(Span::plain(" (")))
+                .chain(once(Span::quantity(q)))
+                .chain(once(Span::plain(")")))
+                .collect()
+        } else {
+            res.collect()
+        }
+    }
+}
+
+impl<'a> TokenFmt<'a> for DefReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut tokens = vec![Span::plain("Definition: "), Span::unit(&self.canon_name)];
+        if let Some(ref def) = self.def {
+            tokens.push(Span::plain(" = "));
+            tokens.push(Span::plain(def));
+        }
+        if let Some(ref value) = self.value {
+            tokens.push(Span::plain(" = "));
+            tokens.push(Span::plain(value.format("n u p")));
+        }
+        if let Some(ref doc) = self.doc {
+            tokens.push(Span::plain(". "));
+            tokens.push(Span::doc_string(doc));
+        }
+        tokens
+    }
+}
+
+impl<'a> TokenFmt<'a> for ConversionReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        self.value.to_spans()
+    }
+}
+
+impl<'a> TokenFmt<'a> for FactorizeReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        once(Span::list_begin("Factorizations: "))
+            .chain(join(
+                self.factorizations.iter().map(|fac| Span::child(fac)),
+                Span::list_sep("; "),
+            ))
+            .collect()
+    }
+}
+
+impl<'a> TokenFmt<'a> for Factorization {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        flat_join(
+            self.units.iter().map(|(unit, pow)| {
+                if *pow == 1 {
+                    vec![Span::unit(&**unit)]
+                } else {
+                    vec![Span::unit(&**unit), Span::pow(format!("^{}", pow))]
+                }
+            }),
+            Span::plain(" "),
+        )
+        .collect()
+    }
+}
+
+impl<'a> TokenFmt<'a> for UnitsForReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut tokens = vec![
+            Span::plain("Units for "),
+            Span::plain(self.of.format("D w")),
+            Span::list_begin(": "),
+        ];
+        tokens.extend(join(
+            self.units.iter().map(|cat| Span::child(cat)),
+            Span::list_sep("; "),
+        ));
+
+        tokens
+    }
+}
+
+impl<'a> TokenFmt<'a> for UnitsInCategory {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut tokens = vec![];
+        if let Some(ref category) = self.category {
+            tokens.push(Span::plain(category));
+            tokens.push(Span::list_begin(": "));
+        }
+        tokens.extend(join(
+            self.units.iter().map(Span::unit),
+            Span::list_sep(", "),
+        ));
+        tokens
+    }
+}
+
+impl<'a> TokenFmt<'a> for UnitListReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut tokens: Vec<Span<'a>> = join(
+            self.list.iter().map(|x| Span::plain(x.to_string())),
+            Span::list_sep(", "),
+        )
+        .collect();
+        if let Some(ref quantity) = self.rest.quantity {
+            tokens.push(Span::plain(" ("));
+            tokens.push(Span::quantity(quantity));
+            tokens.push(Span::plain(")"));
+        }
+        tokens
+    }
+}
+
+impl<'a> TokenFmt<'a> for SearchReply {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        once(Span::list_begin("Search results: "))
+            .chain(join(
+                self.results
+                    .iter()
+                    .map(|x| x.format("u p"))
+                    .map(Span::plain),
+                Span::list_sep(", "),
+            ))
+            .collect()
+    }
+}
+
+impl<'a> TokenFmt<'a> for QueryError {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        match self {
+            QueryError::Conformance(err) => err.to_spans(),
+            QueryError::NotFound(err) => err.to_spans(),
+            QueryError::Generic { message } => vec![Span::plain(message)],
+        }
+    }
+}
+
+impl<'a> TokenFmt<'a> for ConformanceError {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut tokens = vec![
+            Span::plain("Conformance error: "),
+            Span::plain(self.left.to_string()),
+            Span::plain(" != "),
+            Span::plain(self.right.to_string()),
+            Span::list_begin("\nSuggestions: "),
+        ];
+        tokens.extend(join(
+            self.suggestions.iter().map(Span::plain),
+            Span::list_sep(", "),
+        ));
+        tokens
+    }
+}
+
+impl<'a> TokenFmt<'a> for NotFoundError {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut tokens = vec![Span::plain("No such unit "), Span::user_input(&self.got)];
+        if let Some(ref suggestion) = self.suggestion {
+            tokens.push(Span::plain(", did you mean "));
+            tokens.push(Span::unit(suggestion));
+            tokens.push(Span::plain("?"));
+        }
+        tokens
     }
 }

@@ -12,8 +12,8 @@ use crate::number::{pow, Dimension, Number, NumberParts};
 use crate::numeric::{Digits, Numeric};
 use crate::reply::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
-    FactorizeReply, QueryError, QueryReply, SearchReply, UnitListReply, UnitsForReply,
-    UnitsInCategory,
+    Factorization, FactorizeReply, QueryError, QueryReply, SearchReply, UnitListReply,
+    UnitsForReply, UnitsInCategory,
 };
 use crate::search;
 use crate::substance::SubstanceGetError;
@@ -1037,7 +1037,7 @@ impl Context {
                         for name in names.into_iter() {
                             *next.entry(name).or_insert(0) += 1;
                         }
-                        next
+                        Factorization { units: next }
                     })
                     .collect::<Vec<_>>();
                 Ok(QueryReply::Factorize(FactorizeReply {
