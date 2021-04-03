@@ -4,10 +4,8 @@ use linefeed::{Interface, ReadResult, Signal};
 use std::io::{stdin, BufRead};
 use std::sync::{Arc, Mutex};
 
-use rink_core::{
-    eval, one_line,
-    reply::{FmtToken, Span, TokenFmt},
-};
+use rink_core::fmt::{FmtToken, Span, TokenFmt};
+use rink_core::{eval, one_line};
 
 use crate::RinkCompleter;
 

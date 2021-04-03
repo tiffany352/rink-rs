@@ -1,13 +1,13 @@
 use crate::ast::{Expr, Precedence, UnaryOpType};
+use crate::fmt::{flat_join, join, Span, TokenFmt};
 use crate::number::NumberParts;
 use crate::numeric::Digits;
 use chrono::{DateTime, TimeZone};
-use std::fmt::Result as FmtResult;
-use std::fmt::{Display, Formatter};
+use std::collections::BTreeMap;
+use std::convert::From;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::iter::once;
 use std::rc::Rc;
-use std::{borrow::Cow, collections::BTreeMap};
-use std::{convert::From, iter::Peekable};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type")]
@@ -519,189 +519,6 @@ impl Display for SearchReply {
     }
 }
 
-#[derive(Clone)]
-pub enum Span<'a> {
-    Content { text: Cow<'a, str>, token: FmtToken },
-    Child(&'a dyn TokenFmt<'a>),
-}
-
-impl<'a> Span<'a> {
-    pub fn new(text: impl Into<Cow<'a, str>>, token: FmtToken) -> Span<'a> {
-        Span::Content {
-            text: text.into(),
-            token,
-        }
-    }
-
-    pub fn plain(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::Plain)
-    }
-
-    pub fn unit(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::Unit)
-    }
-
-    pub fn quantity(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::Quantity)
-    }
-
-    pub fn prop_name(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::PropName)
-    }
-
-    pub fn user_input(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::UserInput)
-    }
-
-    pub fn list_begin(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::ListBegin)
-    }
-
-    pub fn list_sep(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::ListSep)
-    }
-
-    pub fn doc_string(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::DocString)
-    }
-
-    pub fn pow(text: impl Into<Cow<'a, str>>) -> Span<'a> {
-        Span::new(text, FmtToken::Pow)
-    }
-
-    pub fn child(obj: &'a dyn TokenFmt<'a>) -> Span<'a> {
-        Span::Child(obj)
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-pub enum FmtToken {
-    /// Indicator text that isn't based on user input. Generally displayed without any formatting.
-    Plain,
-    /// The name of a unit, like `kilogram`.
-    Unit,
-    /// A quantity like length or time.
-    Quantity,
-    /// A number in any context.
-    Number,
-    /// A string that's derived in some way from user input, but doesn't
-    /// have a more specific usage.
-    UserInput,
-    /// Text indicating the start of a list, usually a string followed
-    /// by a colon.
-    ListBegin,
-    /// A separator between items in a list, usually a comma or
-    /// semicolon. When a lot of vertical space is available, these can
-    /// be turned into a bulleted list.
-    ListSep,
-    /// A documentation string.
-    DocString,
-    /// A number raised to a power, could be substituted with
-    /// superscript.
-    Pow,
-    /// The name of a property in a substance.
-    PropName,
-}
-
-pub trait TokenFmt<'a> {
-    fn to_spans(&'a self) -> Vec<Span<'a>>;
-}
-
-struct JoinIter<'a, I>
-where
-    I: Iterator,
-{
-    iter: Peekable<I>,
-    sep: Span<'a>,
-    last_was_sep: bool,
-}
-
-fn join<'a, I>(iter: I, sep: Span<'a>) -> impl Iterator<Item = Span<'a>>
-where
-    I: Iterator<Item = Span<'a>>,
-{
-    JoinIter {
-        iter: iter.peekable(),
-        sep,
-        last_was_sep: true,
-    }
-}
-
-impl<'a, I> Iterator for JoinIter<'a, I>
-where
-    I: Iterator<Item = Span<'a>>,
-{
-    type Item = Span<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.iter.peek().is_some() {
-            if self.last_was_sep {
-                self.last_was_sep = false;
-                self.iter.next()
-            } else {
-                self.last_was_sep = true;
-                Some(self.sep.clone())
-            }
-        } else {
-            None
-        }
-    }
-}
-
-struct FlatJoinIter<'a, I, I2>
-where
-    I: Iterator<Item = I2>,
-    I2: IntoIterator<Item = Span<'a>>,
-{
-    iter: Peekable<I>,
-    sep: Span<'a>,
-    last_was_sep: bool,
-    current: Option<I2::IntoIter>,
-}
-
-fn flat_join<'a, I, I2>(iter: I, sep: Span<'a>) -> impl Iterator<Item = Span<'a>>
-where
-    I: Iterator<Item = I2>,
-    I2: IntoIterator<Item = Span<'a>>,
-{
-    FlatJoinIter {
-        iter: iter.peekable(),
-        sep,
-        last_was_sep: true,
-        current: None,
-    }
-}
-
-impl<'a, I, I2> Iterator for FlatJoinIter<'a, I, I2>
-where
-    I: Iterator<Item = I2>,
-    I2: IntoIterator<Item = Span<'a>>,
-{
-    type Item = Span<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(ref mut current) = self.current {
-            if let Some(next) = current.next() {
-                return Some(next);
-            }
-        }
-        if self.iter.peek().is_some() {
-            if self.last_was_sep {
-                self.last_was_sep = false;
-                let mut new_current = self.iter.next().unwrap().into_iter();
-                let next = new_current.next();
-                self.current = Some(new_current);
-                next
-            } else {
-                self.last_was_sep = true;
-                Some(self.sep.clone())
-            }
-        } else {
-            None
-        }
-    }
-}
-
 impl<'a> TokenFmt<'a> for QueryReply {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
         match self {
@@ -716,12 +533,6 @@ impl<'a> TokenFmt<'a> for QueryReply {
             QueryReply::UnitList(reply) => reply.to_spans(),
             QueryReply::Search(reply) => reply.to_spans(),
         }
-    }
-}
-
-impl<'a> TokenFmt<'a> for NumberParts {
-    fn to_spans(&'a self) -> Vec<Span<'a>> {
-        vec![Span::plain(self.format("n u w"))]
     }
 }
 
@@ -761,12 +572,11 @@ impl<'a> TokenFmt<'a> for PropertyReply {
         let mut tokens = vec![
             Span::prop_name(&self.name),
             Span::plain(" = "),
-            Span::plain(self.value.format("n u")),
+            Span::child(&self.value),
         ];
         if let Some(ref doc) = self.doc {
-            tokens.push(Span::plain(" ("));
+            tokens.push(Span::plain(". "));
             tokens.push(Span::doc_string(doc));
-            tokens.push(Span::plain(")"));
         }
         tokens
     }
@@ -789,8 +599,8 @@ impl<'a> TokenFmt<'a> for DurationReply {
                 .map(|x| *x)
                 .filter(|x| x.exact_value.as_ref().map(|x| &**x) != Some("0"))
                 .chain(once(&self.seconds))
-                .map(|x| Span::plain(x.to_string())),
-            Span::list_sep(", "),
+                .map(|x| Span::child(x)),
+            Span::plain(", "),
         );
 
         if let Some(ref q) = self.raw.quantity {
@@ -813,7 +623,7 @@ impl<'a> TokenFmt<'a> for DefReply {
         }
         if let Some(ref value) = self.value {
             tokens.push(Span::plain(" = "));
-            tokens.push(Span::plain(value.format("n u p")));
+            tokens.extend(value.token_format("n u p").to_spans());
         }
         if let Some(ref doc) = self.doc {
             tokens.push(Span::plain(". "));
@@ -858,11 +668,9 @@ impl<'a> TokenFmt<'a> for Factorization {
 
 impl<'a> TokenFmt<'a> for UnitsForReply {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
-        let mut tokens = vec![
-            Span::plain("Units for "),
-            Span::plain(self.of.format("D w")),
-            Span::list_begin(": "),
-        ];
+        let mut tokens = vec![Span::plain("Units for ")];
+        tokens.extend(self.of.token_format("D w").to_spans());
+        tokens.push(Span::list_begin(": "));
         tokens.extend(join(
             self.units.iter().map(|cat| Span::child(cat)),
             Span::list_sep("; "),
@@ -909,11 +717,10 @@ impl<'a> TokenFmt<'a> for UnitListReply {
 impl<'a> TokenFmt<'a> for SearchReply {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
         once(Span::list_begin("Search results: "))
-            .chain(join(
+            .chain(flat_join(
                 self.results
                     .iter()
-                    .map(|x| x.format("u p"))
-                    .map(Span::plain),
+                    .map(|x| x.token_format("u p").to_spans()),
                 Span::list_sep(", "),
             ))
             .collect()
@@ -934,9 +741,9 @@ impl<'a> TokenFmt<'a> for ConformanceError {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
         let mut tokens = vec![
             Span::plain("Conformance error: "),
-            Span::plain(self.left.to_string()),
+            Span::child(&self.left),
             Span::plain(" != "),
-            Span::plain(self.right.to_string()),
+            Span::child(&self.right),
             Span::list_begin("\nSuggestions: "),
         ];
         tokens.extend(join(

@@ -42,6 +42,7 @@ pub mod context;
 pub mod date;
 pub mod eval;
 pub mod factorize;
+pub mod fmt;
 pub mod formula;
 pub mod gnu_units;
 pub mod load;

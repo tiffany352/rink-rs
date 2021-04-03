@@ -7,8 +7,9 @@ use ansi_term::{Color, Style};
 use color_eyre::Result;
 use eyre::{eyre, Report, WrapErr};
 use reqwest::header::USER_AGENT;
+use rink_core::context::Context;
+use rink_core::fmt::FmtToken;
 use rink_core::{ast, date, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
-use rink_core::{context::Context, reply::FmtToken};
 use serde_derive::Deserialize;
 use serde_json;
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
@@ -42,6 +43,7 @@ pub struct Config {
     pub themes: HashMap<String, Theme>,
     // Hack because none of ansi-term's functionality is const safe.
     default_theme: Theme,
+    disabled_theme: Theme,
 }
 
 #[derive(Deserialize)]
@@ -127,13 +129,14 @@ impl Default for Config {
             default_theme: Theme {
                 plain: Style::default(),
                 unit: Style::new().fg(Color::Cyan),
-                quantity: Style::default(),
-                number: Style::new().fg(Color::Red),
+                quantity: Style::new().fg(Color::Cyan).dimmed(),
+                number: Style::default(),
                 user_input: Style::new().bold(),
                 doc_string: Style::new().italic(),
                 pow: Style::default(),
-                prop_name: Style::default(),
+                prop_name: Style::new().fg(Color::Cyan),
             },
+            disabled_theme: Theme::default(),
         }
     }
 }
@@ -161,7 +164,7 @@ impl Default for Rink {
 impl Default for Colors {
     fn default() -> Self {
         Colors {
-            enabled: true,
+            enabled: false,
             theme: "default".to_owned(),
         }
     }
@@ -169,9 +172,13 @@ impl Default for Colors {
 
 impl Config {
     pub fn get_theme(&self) -> &Theme {
-        let name = &self.colors.theme;
-        let theme = self.themes.get(name);
-        theme.unwrap_or(&self.default_theme)
+        if self.colors.enabled == false {
+            &self.disabled_theme
+        } else {
+            let name = &self.colors.theme;
+            let theme = self.themes.get(name);
+            theme.unwrap_or(&self.default_theme)
+        }
     }
 }
 
