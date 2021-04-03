@@ -43,6 +43,7 @@ fn print_fmt_inner<'a>(
     obj: &'a dyn TokenFmt<'a>,
 ) {
     let spans = obj.to_spans();
+    let mut nothing_printed = true;
     for span in spans {
         match span {
             Span::Content {
@@ -50,18 +51,30 @@ fn print_fmt_inner<'a>(
                 text,
             } if long_output => {
                 indent += 1;
-                print!("{}\n{:width$}• ", text, "", width = indent * 2 - 2);
+                if text.is_empty() && nothing_printed {
+                    print!("{:width$}• ", "", width = indent * 2 - 2);
+                } else {
+                    print!("{}\n{:width$}• ", text, "", width = indent * 2 - 2);
+                }
+                nothing_printed = false;
             }
             Span::Content {
                 token: FmtToken::ListSep,
                 ..
-            } if long_output => print!("\n{:width$}• ", "", width = indent * 2 - 2),
+            } if long_output => {
+                nothing_printed = false;
+                print!("\n{:width$}• ", "", width = indent * 2 - 2);
+            }
 
             Span::Content { text, token } => {
+                nothing_printed = false;
                 print!("{}", theme.get_style(token).paint(text));
             }
 
-            Span::Child(obj) => print_fmt_inner(theme, long_output, indent, obj),
+            Span::Child(obj) => {
+                nothing_printed = false;
+                print_fmt_inner(theme, long_output, indent, obj);
+            }
         }
     }
 }

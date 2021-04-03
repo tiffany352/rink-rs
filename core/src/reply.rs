@@ -540,13 +540,13 @@ impl<'a> TokenFmt<'a> for DateReply {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
         if let Some(ref human) = self.human {
             vec![
-                Span::user_input(&self.string),
+                Span::date_time(&self.string),
                 Span::plain(" ("),
-                Span::user_input(human),
+                Span::plain(human),
                 Span::plain(")"),
             ]
         } else {
-            vec![Span::user_input(&self.string)]
+            vec![Span::date_time(&self.string)]
         }
     }
 }
@@ -700,11 +700,11 @@ impl<'a> TokenFmt<'a> for UnitsInCategory {
 
 impl<'a> TokenFmt<'a> for UnitListReply {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
-        let mut tokens: Vec<Span<'a>> = join(
-            self.list.iter().map(|x| Span::plain(x.to_string())),
+        let mut tokens = vec![Span::list_begin("")];
+        tokens.extend(join(
+            self.list.iter().map(|num| Span::child(num)),
             Span::list_sep(", "),
-        )
-        .collect();
+        ));
         if let Some(ref quantity) = self.rest.quantity {
             tokens.push(Span::plain(" ("));
             tokens.push(Span::quantity(quantity));

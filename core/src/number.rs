@@ -413,8 +413,9 @@ impl<'a> NumberPartsFmt<'a> {
                         let mut frac = vec![];
 
                         if let Some(ref f) = parts.factor {
-                            tokens.push(Span::plain(" * "));
+                            tokens.push(Span::plain("* "));
                             tokens.push(Span::number(f));
+                            tokens.push(Span::plain(" "));
                         }
                         for (dim, &exp) in unit {
                             if exp < 0 {
@@ -426,7 +427,7 @@ impl<'a> NumberPartsFmt<'a> {
                                 }
                             }
                         }
-                        if !frac.is_empty() {
+                        if !frac.is_empty() || parts.divfactor.is_some() {
                             tokens.push(Span::plain(" /"));
                             if let Some(ref d) = parts.divfactor {
                                 tokens.push(Span::plain(" "));
@@ -467,8 +468,6 @@ impl<'a> NumberPartsFmt<'a> {
                             tokens.push(Span::number(d));
                         }
                         tokens.push(Span::unit(dim));
-                    } else {
-                        continue;
                     }
                 }
                 PatternToken::Quantity => {
@@ -533,6 +532,14 @@ impl<'a> NumberPartsFmt<'a> {
                     tokens.push(Span::plain(text));
                 }
             }
+        }
+        // Remove trailing whitespace
+        loop {
+            match tokens.last() {
+                Some(Span::Content { text, .. }) if text.trim().is_empty() => (),
+                _ => break,
+            }
+            tokens.pop();
         }
         tokens
     }

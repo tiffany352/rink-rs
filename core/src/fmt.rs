@@ -1,4 +1,4 @@
-use std::{borrow::Cow, iter::Peekable};
+use std::{borrow::Cow, fmt, iter::Peekable};
 
 /// Represents a node in a token tree. Each token is tagged with a hint
 /// for how it should be displayed.
@@ -90,10 +90,26 @@ impl<'a> Span<'a> {
         Span::new(text, FmtToken::Pow)
     }
 
+    pub fn date_time(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::DateTime)
+    }
+
     /// Creates a node with children in the token tree, given any object
     /// that implements TokenFmt.
     pub fn child(obj: &'a dyn TokenFmt<'a>) -> Span<'a> {
         Span::Child(obj)
+    }
+}
+
+impl<'a> fmt::Debug for Span<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Span::Content { text, token } => write!(f, "({:?}, {:?})", text, token),
+            Span::Child(obj) => {
+                let spans = obj.to_spans();
+                spans.fmt(f)
+            }
+        }
     }
 }
 
@@ -126,6 +142,8 @@ pub enum FmtToken {
     Pow,
     /// The name of a property in a substance.
     PropName,
+    /// A date time, either being printed, or from user input.
+    DateTime,
 }
 
 /// Allows an object to be converted into a token tree.

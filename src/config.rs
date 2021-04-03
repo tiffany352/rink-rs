@@ -98,6 +98,8 @@ pub struct Theme {
     pow: Style,
     #[serde(deserialize_with = "deserialize_style")]
     prop_name: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    date_time: Style,
 }
 
 impl Theme {
@@ -111,6 +113,7 @@ impl Theme {
             FmtToken::DocString => self.doc_string,
             FmtToken::Pow => self.pow,
             FmtToken::PropName => self.prop_name,
+            FmtToken::DateTime => self.date_time,
 
             // Default styling since these are handled specially.
             FmtToken::ListBegin => self.plain,
@@ -135,6 +138,7 @@ impl Default for Config {
                 doc_string: Style::new().italic(),
                 pow: Style::default(),
                 prop_name: Style::new().fg(Color::Cyan),
+                date_time: Style::default(),
             },
             disabled_theme: Theme::default(),
         }
