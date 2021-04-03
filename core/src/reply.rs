@@ -874,11 +874,14 @@ impl<'a> TokenFmt<'a> for UnitsForReply {
 
 impl<'a> TokenFmt<'a> for UnitsInCategory {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
-        let mut tokens = vec![];
-        if let Some(ref category) = self.category {
-            tokens.push(Span::plain(category));
-            tokens.push(Span::list_begin(": "));
-        }
+        let mut tokens = vec![
+            if let Some(ref cat) = self.category {
+                Span::plain(cat)
+            } else {
+                Span::plain("Uncategorized")
+            },
+            Span::list_begin(": "),
+        ];
         tokens.extend(join(
             self.units.iter().map(Span::unit),
             Span::list_sep(", "),

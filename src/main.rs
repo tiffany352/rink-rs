@@ -12,6 +12,7 @@ pub use completer::RinkCompleter;
 pub mod completer;
 pub mod config;
 pub mod repl;
+pub(crate) mod style_de;
 
 fn main() -> Result<()> {
     color_eyre::install()?;

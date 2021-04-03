@@ -53,6 +53,8 @@ pub mod substance;
 pub mod text_query;
 pub mod value;
 
+use reply::{QueryError, QueryReply};
+
 pub use crate::context::Context;
 pub use crate::number::Number;
 pub use crate::value::Value;
@@ -67,13 +69,17 @@ pub static DEFAULT_FILE: Option<&'static str> = None;
 pub static DATES_FILE: &str = include_str!("../datepatterns.txt");
 pub static CURRENCY_FILE: &str = include_str!("../currency.units");
 
-/// Evaluates a single line within a context.
-pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
+pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
     ctx.update_time();
     let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
-    let res = ctx.eval_outer(&expr);
-    res.as_ref()
+    ctx.eval_outer(&expr)
+}
+
+/// Evaluates a single line within a context.
+pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
+    eval(ctx, line)
+        .as_ref()
         .map(ToString::to_string)
         .map_err(ToString::to_string)
 }

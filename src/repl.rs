@@ -1,10 +1,13 @@
-use crate::config::Config;
+use crate::config::{Config, Theme};
 use eyre::Result;
 use linefeed::{Interface, ReadResult, Signal};
 use std::io::{stdin, BufRead};
 use std::sync::{Arc, Mutex};
 
-use rink_core::one_line;
+use rink_core::{
+    eval, one_line,
+    reply::{FmtToken, Span, TokenFmt},
+};
 
 use crate::RinkCompleter;
 
@@ -33,6 +36,40 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
         };
         line.clear();
     }
+}
+
+fn print_fmt_inner<'a>(
+    theme: &Theme,
+    long_output: bool,
+    mut indent: usize,
+    obj: &'a dyn TokenFmt<'a>,
+) {
+    let spans = obj.to_spans();
+    for span in spans {
+        match span {
+            Span::Content {
+                token: FmtToken::ListBegin,
+                text,
+            } if long_output => {
+                indent += 1;
+                print!("{}\n{:width$}• ", text, "", width = indent * 2 - 2);
+            }
+            Span::Content {
+                token: FmtToken::ListSep,
+                ..
+            } if long_output => print!("\n{:width$}• ", "", width = indent * 2 - 2),
+
+            Span::Content { text, token } => {
+                print!("{}", theme.get_style(token).paint(text));
+            }
+
+            Span::Child(obj) => print_fmt_inner(theme, long_output, indent, obj),
+        }
+    }
+}
+
+fn print_fmt<'a>(config: &Config, obj: &'a dyn TokenFmt<'a>) {
+    print_fmt_inner(config.get_theme(), config.rink.long_output, 0, obj)
 }
 
 pub fn interactive(config: &Config) -> Result<()> {
@@ -97,10 +134,11 @@ pub fn interactive(config: &Config) -> Result<()> {
             }
             Ok(ReadResult::Input(line)) => {
                 rl.add_history(line.clone());
-                match one_line(&mut *ctx.lock().unwrap(), &*line) {
-                    Ok(v) => println!("{}", v),
-                    Err(e) => println!("{}", e),
+                match eval(&mut *ctx.lock().unwrap(), &*line) {
+                    Ok(v) => print_fmt(config, &v),
+                    Err(e) => print_fmt(config, &e),
                 };
+                println!();
             }
             Ok(ReadResult::Eof)
             | Ok(ReadResult::Signal(Signal::Interrupt))
