@@ -45,6 +45,11 @@ impl<'a> Span<'a> {
         Span::new(text, FmtToken::Plain)
     }
 
+    /// Creates a new span with FmtToken::Error
+    pub fn error(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::Error)
+    }
+
     /// Creates a new span with FmtToken::Unit
     pub fn unit(text: impl Into<Cow<'a, str>>) -> Span<'a> {
         Span::new(text, FmtToken::Unit)
@@ -90,6 +95,7 @@ impl<'a> Span<'a> {
         Span::new(text, FmtToken::Pow)
     }
 
+    /// Creates a new span with FmtToken::DateTime
     pub fn date_time(text: impl Into<Cow<'a, str>>) -> Span<'a> {
         Span::new(text, FmtToken::DateTime)
     }
@@ -119,6 +125,8 @@ impl<'a> fmt::Debug for Span<'a> {
 pub enum FmtToken {
     /// Indicator text that isn't based on user input. Generally displayed without any formatting.
     Plain,
+    /// Similar to plain, but indicates text that is used in an error context. Generally displayed in red.
+    Error,
     /// The name of a unit, like `kilogram`.
     Unit,
     /// A quantity like length or time.
@@ -126,7 +134,8 @@ pub enum FmtToken {
     /// A number in any context.
     Number,
     /// A string that's derived in some way from user input, but doesn't
-    /// have a more specific usage.
+    /// have a more specific usage. This is used for unit not found
+    /// errors.
     UserInput,
     /// Text indicating the start of a list, usually a string followed
     /// by a colon.

@@ -85,6 +85,8 @@ pub struct Theme {
     #[serde(deserialize_with = "deserialize_style")]
     plain: Style,
     #[serde(deserialize_with = "deserialize_style")]
+    error: Style,
+    #[serde(deserialize_with = "deserialize_style")]
     unit: Style,
     #[serde(deserialize_with = "deserialize_style")]
     quantity: Style,
@@ -106,6 +108,7 @@ impl Theme {
     pub fn get_style(&self, token: FmtToken) -> Style {
         match token {
             FmtToken::Plain => self.plain,
+            FmtToken::Error => self.error,
             FmtToken::Unit => self.unit,
             FmtToken::Quantity => self.quantity,
             FmtToken::Number => self.number,
@@ -131,6 +134,7 @@ impl Default for Config {
             themes: Default::default(),
             default_theme: Theme {
                 plain: Style::default(),
+                error: Style::new().fg(Color::Red),
                 unit: Style::new().fg(Color::Cyan),
                 quantity: Style::new().fg(Color::Cyan).dimmed(),
                 number: Style::default(),

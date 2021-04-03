@@ -740,7 +740,7 @@ impl<'a> TokenFmt<'a> for QueryError {
 impl<'a> TokenFmt<'a> for ConformanceError {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
         let mut tokens = vec![
-            Span::plain("Conformance error: "),
+            Span::error("Conformance error: "),
             Span::child(&self.left),
             Span::plain(" != "),
             Span::child(&self.right),
@@ -756,11 +756,11 @@ impl<'a> TokenFmt<'a> for ConformanceError {
 
 impl<'a> TokenFmt<'a> for NotFoundError {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
-        let mut tokens = vec![Span::plain("No such unit "), Span::user_input(&self.got)];
+        let mut tokens = vec![Span::error("No such unit "), Span::user_input(&self.got)];
         if let Some(ref suggestion) = self.suggestion {
-            tokens.push(Span::plain(", did you mean "));
+            tokens.push(Span::error(", did you mean "));
             tokens.push(Span::unit(suggestion));
-            tokens.push(Span::plain("?"));
+            tokens.push(Span::error("?"));
         }
         tokens
     }
