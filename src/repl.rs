@@ -1,13 +1,13 @@
 use crate::config::Config;
 use eyre::Result;
-use linefeed::{Interface, ReadResult, Signal};
-use std::io::{stdin, BufRead};
+use rustyline::{config::Configurer, error::ReadlineError, CompletionType, Editor};
+use std::io::{BufRead, ErrorKind};
 use std::sync::{Arc, Mutex};
 
 use rink_core::{eval, one_line};
 
 use crate::fmt::print_fmt;
-use crate::RinkCompleter;
+use crate::RinkHelper;
 
 pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) -> Result<()> {
     use std::io::{stdout, Write};
@@ -37,22 +37,13 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
 }
 
 pub fn interactive(config: &Config) -> Result<()> {
-    let rl = match Interface::new("rink") {
-        Err(_) => {
-            // If we can't initialize linefeed on this terminal for some reason,
-            // e.g. it being a pipe instead of a tty, use the noninteractive version
-            // with prompt instead.
-            let stdin_handle = stdin();
-            return noninteractive(stdin_handle.lock(), config, true);
-        }
-        Ok(rl) => rl,
-    };
-    rl.set_prompt(&config.rink.prompt).unwrap();
+    let mut rl = Editor::<RinkHelper>::new();
 
     let ctx = crate::config::load(config)?;
     let ctx = Arc::new(Mutex::new(ctx));
-    let completer = RinkCompleter::new(ctx.clone(), config.clone());
-    rl.set_completer(Arc::new(completer));
+    let helper = RinkHelper::new(ctx.clone(), config.clone());
+    rl.set_helper(Some(helper));
+    rl.set_completion_type(CompletionType::List);
 
     let mut hpath = dirs::data_local_dir().map(|mut path| {
         path.push("rink");
@@ -60,15 +51,15 @@ pub fn interactive(config: &Config) -> Result<()> {
         path
     });
     if let Some(ref mut path) = hpath {
-        rl.load_history(path).unwrap_or_else(|e| {
-            // ignore "not found" error
-            if e.kind() != std::io::ErrorKind::NotFound {
-                eprintln!("Loading history failed: {}", e);
-            }
-        });
+        match rl.load_history(path) {
+            // Ignore file not found errors.
+            Err(ReadlineError::Io(ref err)) if err.kind() == ErrorKind::NotFound => (),
+            Err(err) => eprintln!("Loading history failed: {}", err),
+            _ => (),
+        };
     }
 
-    let save_history = || {
+    let save_history = |rl: &mut Editor<RinkHelper>| {
         if let Some(ref path) = hpath {
             // ignore error - if this fails, the next line will as well.
             let _ = std::fs::create_dir_all(path.parent().unwrap());
@@ -79,38 +70,33 @@ pub fn interactive(config: &Config) -> Result<()> {
     };
 
     loop {
-        let readline = rl.read_line();
+        let readline = rl.readline(&config.rink.prompt);
         match readline {
-            Ok(ReadResult::Input(ref line)) if line == "quit" => {
-                println!();
-                break;
-            }
-            Ok(ReadResult::Input(ref line)) if line == "help" => {
+            Ok(ref line) if line == "help" => {
                 println!(
                     "For information on how to use Rink, see the manual: \
                      https://github.com/tiffany352/rink-rs/wiki/Rink-Manual\n\
                      To quit, type `quit`."
                 );
             }
-            Ok(ReadResult::Input(ref line)) if line == "quit" || line == ":q" || line == "exit" => {
-                save_history();
+            Ok(ref line) if line == "quit" || line == ":q" || line == "exit" => {
+                save_history(&mut rl);
                 break;
             }
-            Ok(ReadResult::Input(line)) => {
-                rl.add_history(line.clone());
+            Ok(line) => {
                 match eval(&mut *ctx.lock().unwrap(), &*line) {
-                    Ok(v) => print_fmt(config, &v),
+                    Ok(v) => {
+                        rl.add_history_entry(line);
+                        print_fmt(config, &v)
+                    }
                     Err(e) => print_fmt(config, &e),
                 };
                 println!();
             }
-            Ok(ReadResult::Eof)
-            | Ok(ReadResult::Signal(Signal::Interrupt))
-            | Ok(ReadResult::Signal(Signal::Quit)) => {
-                save_history();
+            Err(ReadlineError::Eof) | Err(ReadlineError::Interrupted) => {
+                save_history(&mut rl);
                 break;
             }
-            Ok(ReadResult::Signal(_)) => (),
             Err(err) => {
                 println!("Readline: {:?}", err);
                 break;
