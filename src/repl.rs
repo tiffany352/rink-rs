@@ -1,12 +1,12 @@
-use crate::config::{Config, Theme};
+use crate::config::Config;
 use eyre::Result;
 use linefeed::{Interface, ReadResult, Signal};
 use std::io::{stdin, BufRead};
 use std::sync::{Arc, Mutex};
 
-use rink_core::fmt::{FmtToken, Span, TokenFmt};
 use rink_core::{eval, one_line};
 
+use crate::fmt::print_fmt;
 use crate::RinkCompleter;
 
 pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) -> Result<()> {
@@ -36,53 +36,6 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
     }
 }
 
-fn print_fmt_inner<'a>(
-    theme: &Theme,
-    long_output: bool,
-    mut indent: usize,
-    obj: &'a dyn TokenFmt<'a>,
-) {
-    let spans = obj.to_spans();
-    let mut nothing_printed = true;
-    for span in spans {
-        match span {
-            Span::Content {
-                token: FmtToken::ListBegin,
-                text,
-            } if long_output => {
-                indent += 1;
-                if text.is_empty() && nothing_printed {
-                    print!("{:width$}• ", "", width = indent * 2 - 2);
-                } else {
-                    print!("{}\n{:width$}• ", text, "", width = indent * 2 - 2);
-                }
-                nothing_printed = false;
-            }
-            Span::Content {
-                token: FmtToken::ListSep,
-                ..
-            } if long_output => {
-                nothing_printed = false;
-                print!("\n{:width$}• ", "", width = indent * 2 - 2);
-            }
-
-            Span::Content { text, token } => {
-                nothing_printed = false;
-                print!("{}", theme.get_style(token).paint(text));
-            }
-
-            Span::Child(obj) => {
-                nothing_printed = false;
-                print_fmt_inner(theme, long_output, indent, obj);
-            }
-        }
-    }
-}
-
-fn print_fmt<'a>(config: &Config, obj: &'a dyn TokenFmt<'a>) {
-    print_fmt_inner(config.get_theme(), config.rink.long_output, 0, obj)
-}
-
 pub fn interactive(config: &Config) -> Result<()> {
     let rl = match Interface::new("rink") {
         Err(_) => {
@@ -98,7 +51,7 @@ pub fn interactive(config: &Config) -> Result<()> {
 
     let ctx = crate::config::load(config)?;
     let ctx = Arc::new(Mutex::new(ctx));
-    let completer = RinkCompleter::new(ctx.clone());
+    let completer = RinkCompleter::new(ctx.clone(), config.clone());
     rl.set_completer(Arc::new(completer));
 
     let mut hpath = dirs::data_local_dir().map(|mut path| {

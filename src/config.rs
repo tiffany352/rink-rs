@@ -34,7 +34,7 @@ pub fn config_path(name: &'static str) -> Result<PathBuf> {
     Ok(path)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Config {
     pub rink: Rink,
@@ -46,7 +46,7 @@ pub struct Config {
     disabled_theme: Theme,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Rink {
     /// Which prompt to render when run interactively.
@@ -55,7 +55,7 @@ pub struct Rink {
     pub long_output: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Currency {
     /// Set to false to disable currency fetching entirely.
@@ -70,7 +70,7 @@ pub struct Currency {
     pub timeout: Duration,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Colors {
     /// Whether support for colored output should be enabled.
@@ -79,7 +79,7 @@ pub struct Colors {
     pub theme: String,
 }
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Default, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Theme {
     #[serde(deserialize_with = "deserialize_style")]

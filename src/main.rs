@@ -11,6 +11,7 @@ pub use completer::RinkCompleter;
 
 pub mod completer;
 pub mod config;
+pub(crate) mod fmt;
 pub mod repl;
 pub(crate) mod style_de;
 

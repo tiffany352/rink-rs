@@ -2,9 +2,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::context::Context;
-use std::cmp::{Ord, Ordering, PartialOrd};
+use crate::{
+    context::Context,
+    number::{Dimension, NumberParts},
+    reply::SearchReply,
+};
 use std::collections::BinaryHeap;
+use std::{
+    cmp::{Ord, Ordering, PartialOrd},
+    collections::BTreeMap,
+};
 use strsim::jaro_winkler;
 
 #[derive(PartialEq, Eq, Debug, Clone)]
@@ -29,7 +36,7 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
     let mut results = BinaryHeap::new();
     let query = query.to_lowercase();
     {
-        let mut r#try = |x: &'a str| {
+        let mut scan = |x: &'a str| {
             let borrow = x;
             let x = x.to_lowercase();
             let modifier = if x == query {
@@ -54,16 +61,16 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         };
 
         for k in &ctx.dimensions {
-            r#try(&**k.id);
+            scan(&**k.id);
         }
         for k in ctx.units.keys() {
-            r#try(&**k);
+            scan(&**k);
         }
         for k in ctx.quantities.values() {
-            r#try(&**k);
+            scan(&**k);
         }
         for k in ctx.substances.keys() {
-            r#try(&**k);
+            scan(&**k);
         }
     }
     results
@@ -71,4 +78,36 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         .into_iter()
         .filter_map(|x| if x.score > 800 { Some(x.value) } else { None })
         .collect()
+}
+
+pub fn query(ctx: &Context, query: &str, num_results: usize) -> SearchReply {
+    SearchReply {
+        results: search(ctx, query, num_results)
+            .into_iter()
+            .map(|name| {
+                let parts = ctx
+                    .lookup(name)
+                    .map(|x| x.to_parts(ctx))
+                    .or_else(|| {
+                        if ctx.substances.get(name).is_some() {
+                            Some(NumberParts {
+                                quantity: Some("substance".to_owned()),
+                                ..Default::default()
+                            })
+                        } else {
+                            None
+                        }
+                    })
+                    .expect("Search returned non-existent result");
+                let mut raw = BTreeMap::new();
+                raw.insert(Dimension::new(name), 1);
+                NumberParts {
+                    unit: Some(name.to_owned()),
+                    raw_unit: Some(raw),
+                    quantity: parts.quantity,
+                    ..Default::default()
+                }
+            })
+            .collect(),
+    }
 }
