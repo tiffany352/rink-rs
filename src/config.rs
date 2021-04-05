@@ -2,18 +2,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::style_de::deserialize_style;
+use ansi_term::{Color, Style};
 use color_eyre::Result;
 use eyre::{eyre, Report, WrapErr};
 use reqwest::header::USER_AGENT;
 use rink_core::context::Context;
+use rink_core::fmt::FmtToken;
 use rink_core::{ast, date, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::Deserialize;
 use serde_json;
-use std::fs::{read_to_string, File};
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
+use std::{
+    collections::HashMap,
+    fs::{read_to_string, File},
+};
 
 fn file_to_string(mut file: File) -> Result<String> {
     let mut string = String::new();
@@ -28,21 +34,28 @@ pub fn config_path(name: &'static str) -> Result<PathBuf> {
     Ok(path)
 }
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Config {
     pub rink: Rink,
     pub currency: Currency,
+    pub colors: Colors,
+    pub themes: HashMap<String, Theme>,
+    // Hack because none of ansi-term's functionality is const safe.
+    default_theme: Theme,
+    disabled_theme: Theme,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Rink {
     /// Which prompt to render when run interactively.
     pub prompt: String,
+    /// Use multi-line output for lists.
+    pub long_output: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Currency {
     /// Set to false to disable currency fetching entirely.
@@ -55,6 +68,85 @@ pub struct Currency {
     /// How long to wait before timing out requests.
     #[serde(with = "humantime_serde")]
     pub timeout: Duration,
+}
+
+#[derive(Deserialize, Clone)]
+#[serde(default, deny_unknown_fields)]
+pub struct Colors {
+    /// Whether support for colored output should be enabled.
+    pub enabled: bool,
+    /// The name of the current theme.
+    pub theme: String,
+}
+
+#[derive(Deserialize, Default, Clone)]
+#[serde(default, deny_unknown_fields)]
+pub struct Theme {
+    #[serde(deserialize_with = "deserialize_style")]
+    plain: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    error: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    unit: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    quantity: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    number: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    user_input: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    doc_string: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    pow: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    prop_name: Style,
+    #[serde(deserialize_with = "deserialize_style")]
+    date_time: Style,
+}
+
+impl Theme {
+    pub fn get_style(&self, token: FmtToken) -> Style {
+        match token {
+            FmtToken::Plain => self.plain,
+            FmtToken::Error => self.error,
+            FmtToken::Unit => self.unit,
+            FmtToken::Quantity => self.quantity,
+            FmtToken::Number => self.number,
+            FmtToken::UserInput => self.user_input,
+            FmtToken::DocString => self.doc_string,
+            FmtToken::Pow => self.pow,
+            FmtToken::PropName => self.prop_name,
+            FmtToken::DateTime => self.date_time,
+
+            // Default styling since these are handled specially.
+            FmtToken::ListBegin => self.plain,
+            FmtToken::ListSep => self.plain,
+        }
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            rink: Default::default(),
+            currency: Default::default(),
+            colors: Default::default(),
+            themes: Default::default(),
+            default_theme: Theme {
+                plain: Style::default(),
+                error: Style::new().fg(Color::Red),
+                unit: Style::new().fg(Color::Cyan),
+                quantity: Style::new().fg(Color::Cyan).dimmed(),
+                number: Style::default(),
+                user_input: Style::new().bold(),
+                doc_string: Style::new().italic(),
+                pow: Style::default(),
+                prop_name: Style::new().fg(Color::Cyan),
+                date_time: Style::default(),
+            },
+            disabled_theme: Theme::default(),
+        }
+    }
 }
 
 impl Default for Currency {
@@ -72,6 +164,28 @@ impl Default for Rink {
     fn default() -> Self {
         Rink {
             prompt: "> ".to_owned(),
+            long_output: false,
+        }
+    }
+}
+
+impl Default for Colors {
+    fn default() -> Self {
+        Colors {
+            enabled: false,
+            theme: "default".to_owned(),
+        }
+    }
+}
+
+impl Config {
+    pub fn get_theme(&self) -> &Theme {
+        if self.colors.enabled == false {
+            &self.disabled_theme
+        } else {
+            let name = &self.colors.theme;
+            let theme = self.themes.get(name);
+            theme.unwrap_or(&self.default_theme)
         }
     }
 }

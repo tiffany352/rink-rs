@@ -12,7 +12,7 @@ use crate::number::{pow, Dimension, Number, NumberParts};
 use crate::numeric::{Digits, Numeric};
 use crate::reply::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
-    FactorizeReply, QueryError, QueryReply, SearchReply, UnitListReply, UnitsForReply,
+    Factorization, FactorizeReply, QueryError, QueryReply, UnitListReply, UnitsForReply,
     UnitsInCategory,
 };
 use crate::search;
@@ -1037,7 +1037,7 @@ impl Context {
                         for name in names.into_iter() {
                             *next.entry(name).or_insert(0) += 1;
                         }
-                        next
+                        Factorization { units: next }
                     })
                     .collect::<Vec<_>>();
                 Ok(QueryReply::Factorize(FactorizeReply {
@@ -1127,35 +1127,7 @@ impl Context {
                     of: parts,
                 }))
             }
-            Query::Search(ref string) => Ok(QueryReply::Search(SearchReply {
-                results: search::search(self, &**string, 5)
-                    .into_iter()
-                    .map(|x| {
-                        let parts = self
-                            .lookup(x)
-                            .map(|x| x.to_parts(self))
-                            .or_else(|| {
-                                if self.substances.get(x).is_some() {
-                                    Some(NumberParts {
-                                        quantity: Some("substance".to_owned()),
-                                        ..Default::default()
-                                    })
-                                } else {
-                                    None
-                                }
-                            })
-                            .expect("Search returned non-existent result");
-                        let mut raw = BTreeMap::new();
-                        raw.insert(Dimension::new(x), 1);
-                        NumberParts {
-                            unit: Some(x.to_owned()),
-                            raw_unit: Some(raw),
-                            quantity: parts.quantity,
-                            ..Default::default()
-                        }
-                    })
-                    .collect(),
-            })),
+            Query::Search(ref string) => Ok(QueryReply::Search(search::query(self, &**string, 5))),
             Query::Expr(ref expr)
             | Query::Convert(ref expr, Conversion::None, None, Digits::Default) => {
                 let val = self.eval(expr)?;
