@@ -44,8 +44,6 @@ The most common version of Rink is the command line interface `rink`.
 | Pacman          | `pacman -S rink`     |
 | Nix             | `nix-env -i rink`    |
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/rink.svg)](https://repology.org/project/rink/versions)
-
 ## Examples
 
 ```
