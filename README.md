@@ -69,11 +69,11 @@ approx. 36.63388 kWh (energy)
 
 ## Library Usage
 
-Add this to your `Cargo.toml`:
+[![docs.rs](https://img.shields.io/docsrs/rink-core)](https://docs.rs/rink-core/latest/rink_core/)
 
 ```toml
 [dependencies]
-rink-core = "0.5"
+rink-core = "0.6"
 ```
 
 ## License

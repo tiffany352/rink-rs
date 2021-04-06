@@ -1,6 +1,6 @@
 [package]
 name = "rink-core"
-version = "0.5.1"
+version = "0.6.0"
 description = "Unit conversion library behind rink"
 homepage = "https://github.com/tiffany352/rink-rs"
 repository = "https://github.com/tiffany352/rink-rs"

@@ -1124,7 +1124,7 @@ dependencies = [
 
 [[package]]
 name = "rink"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "ansi_term 0.12.1",
  "chrono",
@@ -1145,7 +1145,7 @@ dependencies = [
 
 [[package]]
 name = "rink-core"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "assert-json-diff",
  "chrono",
@@ -1161,7 +1161,7 @@ dependencies = [
 
 [[package]]
 name = "rink-js"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "chrono",
  "console_error_panic_hook",

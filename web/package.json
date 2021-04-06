@@ -1,7 +1,7 @@
 {
-  "author": "Tiffany Bennett <tiffnixen@gmail.com>",
+  "author": "Tiffany Bennett (https://tiffnix.com)",
   "name": "rink-web",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "repository": "https://github.com/tiffany352/rink-rs",
   "homepage": "https://rinkcalc.app",
   "description": "Web interface to Rink",

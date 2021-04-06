@@ -1,6 +1,6 @@
 [package]
 name = "rink"
-version = "0.5.1"
+version = "0.6.0"
 description = "Unit conversion tool, similar to frink"
 homepage = "https://rinkcalc.app"
 repository = "https://github.com/tiffany352/rink-rs"
@@ -27,7 +27,7 @@ rustyline = "8.0.0"
 ansi_term = "0.12"
 
 [dependencies.rink-core]
-version = "0.5"
+version = "0.6"
 path = "./core"
 
 [workspace]
