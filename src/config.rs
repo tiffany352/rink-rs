@@ -12,6 +12,7 @@ use rink_core::fmt::FmtToken;
 use rink_core::{ast, date, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::Deserialize;
 use serde_json;
+use std::ffi::OsString;
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::Path;
 use std::path::PathBuf;
@@ -317,7 +318,21 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
             url
         ));
     }
-    let mut temp_file = tempfile::NamedTempFile::new()?;
+
+    // Given a filename like `foo.json`, names the temp file something
+    // similar, like `foo.ABCDEF.json`.
+    let mut prefix = path.file_stem().unwrap().to_owned();
+    prefix.push(".");
+    let mut suffix = OsString::from(".");
+    suffix.push(path.extension().unwrap());
+    // The temp file should be created in the same directory as its
+    // final home, as the default temporary file directory might not be
+    // the same filesystem.
+    let mut temp_file = tempfile::Builder::new()
+        .prefix(&prefix)
+        .suffix(&suffix)
+        .tempfile_in(path.parent().unwrap())?;
+
     response
         .copy_to(temp_file.as_file_mut())
         .wrap_err_with(|| format!("While dowloading {}", url))?;
