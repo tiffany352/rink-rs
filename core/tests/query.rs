@@ -34,10 +34,7 @@ fn test_starts_with(input: &str, output: &str) {
             Ok(v) => v.to_string(),
             Err(v) => v.to_string(),
         };
-        assert!(
-            res.starts_with(output),
-            format!("\n'{}' !=\n'{}'", res, output)
-        );
+        assert!(res.starts_with(output), "\n'{}' !=\n'{}'", res, output);
     });
 }
 

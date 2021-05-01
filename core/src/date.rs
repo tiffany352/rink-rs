@@ -630,7 +630,7 @@ mod tests {
         ];
 
         let (res, parsed) = parse(date, "year adbc hour12 meridiem");
-        assert!(res.is_ok(), res.unwrap_err());
+        assert!(res.is_ok(), "{}", res.unwrap_err());
         assert_eq!(parsed, expected);
     }
 
@@ -697,7 +697,7 @@ mod tests {
 
         let date = vec![DateToken::Literal("Europe/London".into())];
         let (res, parsed, tz) = parse_with_tz(date, "offset");
-        assert!(res.is_ok(), res.unwrap_err());
+        assert!(res.is_ok(), "{}", res.unwrap_err());
         assert_eq!(tz.unwrap(), Tz::Europe__London);
         assert_eq!(parsed.offset, None);
     }
