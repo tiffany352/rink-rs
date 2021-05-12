@@ -93,7 +93,8 @@ pub fn interactive(config: &Config) -> Result<()> {
                 };
                 println!();
             }
-            Err(ReadlineError::Eof) | Err(ReadlineError::Interrupted) => {
+            Err(ReadlineError::Interrupted) => {}
+            Err(ReadlineError::Eof) => {
                 save_history(&mut rl);
                 break;
             }
