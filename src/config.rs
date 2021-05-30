@@ -11,7 +11,6 @@ use rink_core::context::Context;
 use rink_core::fmt::FmtToken;
 use rink_core::{ast, date, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::Deserialize;
-use serde_json;
 use std::ffi::OsString;
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::Path;
@@ -181,7 +180,7 @@ impl Default for Colors {
 
 impl Config {
     pub fn get_theme(&self) -> &Theme {
-        if self.colors.enabled == false {
+        if !self.colors.enabled {
             &self.disabled_theme
         } else {
             let name = &self.colors.theme;
@@ -339,9 +338,10 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
 
     temp_file.as_file_mut().sync_all()?;
     temp_file.as_file_mut().seek(SeekFrom::Start(0))?;
-    Ok(temp_file
+
+    temp_file
         .persist(path)
-        .wrap_err("Failed to write to cache dir")?)
+        .wrap_err("Failed to write to cache dir")
 }
 
 fn cached(filename: &str, url: &str, expiration: Duration, timeout: Duration) -> Result<File> {

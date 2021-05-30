@@ -596,7 +596,7 @@ impl<'a> TokenFmt<'a> for DurationReply {
         let res = join(
             parts
                 .iter()
-                .map(|x| *x)
+                .copied()
                 .filter(|x| x.exact_value.as_ref().map(|x| &**x) != Some("0"))
                 .chain(once(&self.seconds))
                 .map(|x| Span::child(x)),

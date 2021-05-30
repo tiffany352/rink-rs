@@ -48,9 +48,9 @@ fn parse_color(input: &str) -> Option<Color> {
             let value = input.parse::<u8>();
             if let Ok(value) = value {
                 Some(Color::Fixed(value))
-            } else if input.starts_with("rgb(") && input.ends_with(")") {
+            } else if input.starts_with("rgb(") && input.ends_with(')') {
                 let input = &input[4..input.len() - 1];
-                let mut colors = input.split(",").map(|num| num.parse::<u8>().ok()).flatten();
+                let mut colors = input.split(',').map(|num| num.parse::<u8>().ok()).flatten();
                 let r = colors.next();
                 let g = colors.next();
                 let b = colors.next();
@@ -58,8 +58,8 @@ fn parse_color(input: &str) -> Option<Color> {
                     (Some(r), Some(g), Some(b)) => Some(Color::RGB(r, g, b)),
                     _ => None,
                 }
-            } else if input.starts_with("#") {
-                let input = input.trim_start_matches("#");
+            } else if input.starts_with('#') {
+                let input = input.trim_start_matches('#');
                 let value = u32::from_str_radix(input, 16);
                 if let Ok(value) = value {
                     let r = (value >> 16) as u8;
@@ -83,7 +83,7 @@ where
     let string = des.deserialize_str(StringVisitor)?;
     let mut style = Style::new();
     let mut next_color_is_bg = false;
-    for word in string.split(" ") {
+    for word in string.split(' ') {
         match word {
             "bold" => style = style.bold(),
             "italic" => style = style.italic(),

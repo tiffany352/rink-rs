@@ -760,7 +760,7 @@ impl Number {
                 }
             }
             let mut map = BTreeMap::new();
-            map.insert(orig.0.clone(), orig.1.clone());
+            map.insert(orig.0.clone(), *orig.1);
             Number {
                 value: val,
                 unit: map,

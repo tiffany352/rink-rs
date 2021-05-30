@@ -19,9 +19,9 @@ pub enum DatePattern {
 #[serde(into = "String", try_from = "String")]
 pub struct ExprString(pub Expr);
 
-impl Into<String> for ExprString {
-    fn into(self) -> String {
-        format!("{}", self.0)
+impl From<ExprString> for String {
+    fn from(value: ExprString) -> String {
+        format!("{}", value.0)
     }
 }
 

@@ -261,7 +261,7 @@ impl Substance {
                     .chain(self.properties.properties.iter().map(func))
                     .collect::<Result<Vec<Option<PropertyReply>>, String>>()?
                     .into_iter()
-                    .filter_map(|x| x)
+                    .flatten()
                     .collect(),
             })
         }
@@ -353,7 +353,7 @@ impl Substance {
                     .chain(self.properties.properties.iter().map(func))
                     .collect::<Result<Vec<Option<PropertyReply>>, String>>()?
                     .into_iter()
-                    .filter_map(|x| x)
+                    .flatten()
                     .collect(),
             })
         }
@@ -396,6 +396,7 @@ impl<'a, 'b> Div<&'b Number> for &'a Substance {
 impl<'a, 'b> Add<&'b Substance> for &'a Substance {
     type Output = Result<Substance, String>;
 
+    #[allow(clippy::suspicious_arithmetic_impl)]
     fn add(self, other: &'b Substance) -> Self::Output {
         let res = Substance {
             amount: Number::one(),

@@ -29,8 +29,12 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 ```
 */
 
-// Maybe someday we can be clean against this.
+// False positives, or make code harder to understand.
 #![allow(clippy::cognitive_complexity)]
+#![allow(clippy::match_like_matches_macro)]
+#![allow(clippy::from_str_radix_10)]
+#![allow(clippy::option_as_ref_deref)]
+#![allow(clippy::needless_lifetimes)]
 
 #[macro_use]
 extern crate serde_derive;

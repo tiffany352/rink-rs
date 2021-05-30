@@ -33,6 +33,13 @@ pub struct Context {
     pub use_humanize: bool,
 }
 
+impl Default for Context {
+    /// Equivalent to Context::new()
+    fn default() -> Self {
+        Context::new()
+    }
+}
+
 impl Context {
     /// Creates a new, empty context
     pub fn new() -> Context {

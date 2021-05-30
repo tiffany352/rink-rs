@@ -118,11 +118,8 @@ impl<'a> Iterator for TokenIterator<'a> {
                 // integer component
                 if x != '.' {
                     integer.push(x);
-                    while let Some(c) = self.0.peek().cloned() {
-                        match c {
-                            '0'..='9' => integer.push(self.0.next().unwrap()),
-                            _ => break,
-                        }
+                    while let Some('0'..='9') = self.0.peek().cloned() {
+                        integer.push(self.0.next().unwrap());
                     }
                 } else {
                     integer.push('0');
@@ -133,11 +130,8 @@ impl<'a> Iterator for TokenIterator<'a> {
                     if x != '.' {
                         self.0.next();
                     }
-                    while let Some(c) = self.0.peek().cloned() {
-                        match c {
-                            '0'..='9' => buf.push(self.0.next().unwrap()),
-                            _ => break,
-                        }
+                    while let Some('0'..='9') = self.0.peek().cloned() {
+                        buf.push(self.0.next().unwrap());
                     }
                     if !buf.is_empty() {
                         frac = Some(buf)
@@ -158,11 +152,8 @@ impl<'a> Iterator for TokenIterator<'a> {
                             _ => (),
                         }
                     }
-                    while let Some(c) = self.0.peek().cloned() {
-                        match c {
-                            '0'..='9' => buf.push(self.0.next().unwrap()),
-                            _ => break,
-                        }
+                    while let Some('0'..='9') = self.0.peek().cloned() {
+                        buf.push(self.0.next().unwrap());
                     }
                     if !buf.is_empty() {
                         exp = Some(buf)
@@ -195,9 +186,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                         break;
                     }
                 }
-                match &*buf {
-                    _ => Token::Ident(buf),
-                }
+                Token::Ident(buf)
             }
             x => Token::Error(format!("Unknown character: '{}'", x)),
         };

@@ -253,19 +253,19 @@ impl From<i64> for Numeric {
     }
 }
 
-impl<'a> Into<f64> for &'a Numeric {
-    fn into(self) -> f64 {
-        match *self {
+impl<'a> From<&'a Numeric> for f64 {
+    fn from(value: &'a Numeric) -> f64 {
+        match value {
             Numeric::Rational(ref rational) => rational.as_float(),
-            Numeric::Float(f) => f,
+            Numeric::Float(f) => *f,
         }
     }
 }
 
-impl Into<NumericParts> for Numeric {
-    fn into(self) -> NumericParts {
-        let (exact, approx) = self.string_repr(10, Digits::Default);
-        let (num, den) = self.to_rational();
+impl From<Numeric> for NumericParts {
+    fn from(value: Numeric) -> NumericParts {
+        let (exact, approx) = value.string_repr(10, Digits::Default);
+        let (num, den) = value.to_rational();
         NumericParts {
             numer: num.to_string(),
             denom: den.to_string(),
