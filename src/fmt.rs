@@ -70,8 +70,8 @@ pub(crate) fn to_ansi_string<'a>(config: &Config, obj: &'a dyn TokenFmt<'a>) -> 
     format!("{}", strings)
 }
 
-pub(crate) fn print_fmt<'a>(config: &Config, obj: &'a dyn TokenFmt<'a>) {
+pub(crate) fn println_fmt<'a>(config: &Config, obj: &'a dyn TokenFmt<'a>) {
     let strings = to_ansi(config, obj);
     let strings = ANSIStrings(&strings);
-    print!("{}", strings);
+    println!("{}", strings);
 }

@@ -40,6 +40,7 @@ pub struct Config {
     pub rink: Rink,
     pub currency: Currency,
     pub colors: Colors,
+    pub limits: Limits,
     pub themes: HashMap<String, Theme>,
     // Hack because none of ansi-term's functionality is const safe.
     default_theme: Theme,
@@ -77,6 +78,20 @@ pub struct Colors {
     pub enabled: bool,
     /// The name of the current theme.
     pub theme: String,
+}
+
+#[derive(Deserialize, Clone)]
+#[serde(default, deny_unknown_fields)]
+pub struct Limits {
+    /// Whether support for sandboxing is enabled.
+    pub enabled: bool,
+    /// Whether performance metrics are shown after each query.
+    pub show_metrics: bool,
+    /// The maximum amount of heap that can be used per query, in megabytes.
+    pub memory: usize,
+    /// How long to wait before cancelling a query.
+    #[serde(with = "humantime_serde")]
+    pub timeout: Duration,
 }
 
 #[derive(Deserialize, Default, Clone)]
@@ -132,6 +147,7 @@ impl Default for Config {
             currency: Default::default(),
             colors: Default::default(),
             themes: Default::default(),
+            limits: Default::default(),
             default_theme: Theme {
                 plain: Style::default(),
                 error: Style::new().fg(Color::Red),
@@ -174,6 +190,17 @@ impl Default for Colors {
         Colors {
             enabled: false,
             theme: "default".to_owned(),
+        }
+    }
+}
+
+impl Default for Limits {
+    fn default() -> Self {
+        Limits {
+            enabled: false,
+            show_metrics: false,
+            memory: 20_000_000,
+            timeout: Duration::from_secs(5),
         }
     }
 }

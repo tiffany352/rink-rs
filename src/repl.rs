@@ -1,13 +1,56 @@
 use crate::config::Config;
-use eyre::Result;
-use rustyline::{config::Configurer, error::ReadlineError, CompletionType, Editor};
-use std::io::{BufRead, ErrorKind};
-use std::sync::{Arc, Mutex};
-
-use rink_core::{eval, one_line};
-
-use crate::fmt::print_fmt;
+use crate::fmt::println_fmt;
+use crate::sandbox::Sandbox;
+use crate::sandbox::SandboxError;
+use crate::sandbox::SandboxReply;
 use crate::RinkHelper;
+use crate::GLOBAL;
+use async_std::sync::Mutex as AsyncMutex;
+use async_std::task::spawn;
+use eyre::Result;
+use rink_core::{eval, one_line};
+use rustyline::{config::Configurer, error::ReadlineError, CompletionType, Editor};
+use std::io::{stdin, BufRead, ErrorKind};
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
+
+pub fn service(config: &Config) -> Result<()> {
+    use std::io::{stdout, Write};
+
+    let stdin = stdin();
+    let mut stdout = stdout();
+    let mut input = stdin.lock();
+
+    let mut ctx = crate::config::load(config)?;
+    let mut buf = vec![];
+    loop {
+        stdout.flush().unwrap();
+        if input.read_until(b'\0', &mut buf).is_err() {
+            return Ok(());
+        }
+        // Was at eof
+        if buf.last() != Some(&b'\0') {
+            return Ok(());
+        }
+        let start = Instant::now();
+        GLOBAL.reset_max();
+        buf.pop();
+        let string = String::from_utf8(buf.drain(..).collect())?;
+        let result = eval(&mut ctx, &string);
+        let result = result.map(|result| {
+            let stop = Instant::now();
+            SandboxReply {
+                result,
+                memory_used: GLOBAL.get_max(),
+                time_taken: stop - start,
+            }
+        });
+        let mut out = stdout.lock();
+        serde_json::to_writer(&mut out, &result)?;
+        out.write(b"\0")?;
+        buf.clear();
+    }
+}
 
 pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) -> Result<()> {
     use std::io::{stdout, Write};
@@ -36,14 +79,16 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
     }
 }
 
-pub fn interactive(config: &Config) -> Result<()> {
+pub async fn interactive(config: Config) -> Result<()> {
     let mut rl = Editor::<RinkHelper>::new();
 
-    let ctx = crate::config::load(config)?;
+    let ctx = crate::config::load(&config)?;
     let ctx = Arc::new(Mutex::new(ctx));
     let helper = RinkHelper::new(ctx.clone(), config.clone());
     rl.set_helper(Some(helper));
     rl.set_completion_type(CompletionType::List);
+
+    let sandbox = Arc::new(AsyncMutex::new(Sandbox::start()));
 
     let mut hpath = dirs::data_local_dir().map(|mut path| {
         path.push("rink");
@@ -84,14 +129,28 @@ pub fn interactive(config: &Config) -> Result<()> {
                 break;
             }
             Ok(line) => {
-                match eval(&mut *ctx.lock().unwrap(), &*line) {
-                    Ok(v) => {
-                        rl.add_history_entry(line);
-                        print_fmt(config, &v)
-                    }
-                    Err(e) => print_fmt(config, &e),
-                };
-                println!();
+                rl.add_history_entry(&line);
+                let config = config.clone();
+                let sandbox = sandbox.clone();
+                let handle = spawn(async move {
+                    let mut sandbox = sandbox.lock().await;
+                    let pending = sandbox.eval(line, config.limits.timeout);
+                    match pending.await {
+                        Ok(v) => {
+                            println_fmt(&config, &v.result);
+                            if config.limits.show_metrics {
+                                println!(
+                                    "Finished in {:?} using {}K of memory",
+                                    v.time_taken,
+                                    v.memory_used / 1_000
+                                );
+                            }
+                        }
+                        Err(SandboxError::Query(err)) => println_fmt(&config, &err),
+                        Err(err) => println!("{:#}", eyre::eyre!(err)),
+                    };
+                });
+                handle.await;
             }
             Err(ReadlineError::Interrupted) => {}
             Err(ReadlineError::Eof) => {
