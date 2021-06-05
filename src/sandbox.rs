@@ -6,7 +6,6 @@ use async_std::{
 };
 use displaydoc::Display;
 use futures_util::StreamExt;
-use rink_core::reply::{QueryError, QueryReply};
 use serde_derive::{Deserialize, Serialize};
 use std::io::ErrorKind;
 use std::{env, time::Duration};
@@ -20,7 +19,7 @@ pub struct Sandbox {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SandboxReply {
-    pub result: QueryReply,
+    pub result: String,
     pub memory_used: usize,
     pub time_taken: Duration,
 }
@@ -28,7 +27,7 @@ pub struct SandboxReply {
 #[derive(Display, Error, Debug)]
 pub enum SandboxError {
     /// Query error: {0}
-    Query(QueryError),
+    Query(String),
     /// IO error
     Io(#[source] IoError),
     /// Timed out after {0:?}
@@ -37,12 +36,6 @@ pub enum SandboxError {
     Serde(#[source] serde_json::Error),
     /// Child process crashed
     Crashed,
-}
-
-impl From<QueryError> for SandboxError {
-    fn from(err: QueryError) -> Self {
-        SandboxError::Query(err)
-    }
 }
 
 impl From<IoError> for SandboxError {
@@ -130,7 +123,7 @@ impl Sandbox {
                 return Err(SandboxError::Timeout(exec_time));
             }
         };
-        let result = serde_json::from_slice::<Result<SandboxReply, QueryError>>(&response)?;
-        Ok(result?)
+        let result = serde_json::from_slice::<Result<SandboxReply, String>>(&response)?;
+        Ok(result.map_err(SandboxError::Query)?)
     }
 }

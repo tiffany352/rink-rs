@@ -16,7 +16,7 @@ pub use def::{DatePattern, Def, DefEntry, Defs, ExprString, Property};
 pub use expr::{Expr, Precedence};
 pub use query::{Conversion, Query};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Copy, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum Degree {
     Celsius,
@@ -27,7 +27,7 @@ pub enum Degree {
     Newton,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub enum DateToken {
     Literal(String),
     Number(String, Option<String>),
@@ -38,7 +38,7 @@ pub enum DateToken {
     Error(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Copy, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum BinOpType {
     Add,
@@ -60,14 +60,14 @@ impl BinOpType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct BinOpExpr {
     pub op: BinOpType,
     pub left: Box<Expr>,
     pub right: Box<Expr>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Copy, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[serde(untagged)]
 pub enum UnaryOpType {
@@ -85,13 +85,13 @@ impl UnaryOpType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UnaryOpExpr {
     pub op: UnaryOpType,
     pub expr: Box<Expr>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Function {
     Sqrt,

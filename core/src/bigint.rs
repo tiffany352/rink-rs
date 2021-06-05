@@ -9,8 +9,7 @@ use std::cmp::Ord;
 use std::fmt;
 use std::ops::{Div, Mul, Rem};
 
-#[derive(PartialEq, Eq, PartialOrd, Serialize, Deserialize, Ord, Debug)]
-#[serde(transparent)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct BigInt {
     inner: NumInt,
 }

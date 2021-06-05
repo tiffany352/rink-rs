@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::fmt::println_fmt;
+use crate::fmt::to_ansi_string;
 use crate::sandbox::Sandbox;
 use crate::sandbox::SandboxError;
 use crate::sandbox::SandboxReply;
@@ -38,14 +38,16 @@ pub fn service(config: &Config) -> Result<()> {
         buf.pop();
         let string = String::from_utf8(buf.drain(..).collect())?;
         let result = eval(&mut ctx, &string);
-        let result = result.map(|result| {
-            let stop = Instant::now();
-            SandboxReply {
-                result,
-                memory_used: GLOBAL.get_max(),
-                time_taken: stop - start,
-            }
-        });
+        let result = result
+            .map(|result| {
+                let stop = Instant::now();
+                SandboxReply {
+                    result: format!("{}", to_ansi_string(config, &result)),
+                    memory_used: GLOBAL.get_max(),
+                    time_taken: stop - start,
+                }
+            })
+            .map_err(|err| format!("{}", to_ansi_string(config, &err)));
         let mut out = stdout.lock();
         serde_json::to_writer(&mut out, &result)?;
         out.write(b"\0")?;
@@ -150,7 +152,7 @@ pub async fn interactive(config: Config) -> Result<()> {
                     let pending = sandbox.eval(line, config.limits.timeout);
                     match pending.await {
                         Ok(v) => {
-                            println_fmt(&config, &v.result);
+                            println!("{}", v.result);
                             if config.limits.show_metrics {
                                 println!(
                                     "Finished in {:?} using {}K of memory",
@@ -159,7 +161,7 @@ pub async fn interactive(config: Config) -> Result<()> {
                                 );
                             }
                         }
-                        Err(SandboxError::Query(err)) => println_fmt(&config, &err),
+                        Err(SandboxError::Query(err)) => println!("{}", err),
                         Err(err) => println!("{:#}", eyre::eyre!(err)),
                     };
                 };
