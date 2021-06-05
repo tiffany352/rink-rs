@@ -29,6 +29,7 @@ async-std = { version = "1.9", features = ["unstable", "attributes"] }
 futures-util = "0.3"
 displaydoc = "0.2"
 thiserror = "1"
+async-ctrlc = { version = "1.2.0", features = ["stream"] }
 
 [dependencies.rink-core]
 version = "0.6"

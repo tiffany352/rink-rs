@@ -86,6 +86,17 @@ impl Sandbox {
         }
     }
 
+    pub fn kill(&mut self) -> Result<(), IoError> {
+        self.process.kill()
+    }
+
+    pub fn restart_if_dead(&mut self) -> Result<(), IoError> {
+        if self.is_dead() {
+            *self = Self::start();
+        }
+        Ok(())
+    }
+
     pub fn restart(&mut self) -> Result<(), IoError> {
         if let Err(err) = self.process.kill() {
             // PermissionDenied occurs if the process is already dead.

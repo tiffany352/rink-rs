@@ -5,8 +5,9 @@ use crate::sandbox::SandboxError;
 use crate::sandbox::SandboxReply;
 use crate::RinkHelper;
 use crate::GLOBAL;
+use async_ctrlc::CtrlC;
+use async_std::prelude::{FutureExt, StreamExt};
 use async_std::sync::Mutex as AsyncMutex;
-use async_std::task::spawn;
 use eyre::Result;
 use rink_core::{eval, one_line};
 use rustyline::{config::Configurer, error::ReadlineError, CompletionType, Editor};
@@ -87,6 +88,7 @@ pub async fn interactive(config: Config) -> Result<()> {
     let helper = RinkHelper::new(ctx.clone(), config.clone());
     rl.set_helper(Some(helper));
     rl.set_completion_type(CompletionType::List);
+    let mut ctrlc = CtrlC::new()?;
 
     let sandbox = Arc::new(AsyncMutex::new(Sandbox::start()));
 
@@ -131,8 +133,19 @@ pub async fn interactive(config: Config) -> Result<()> {
             Ok(line) => {
                 rl.add_history_entry(&line);
                 let config = config.clone();
-                let sandbox = sandbox.clone();
-                let handle = spawn(async move {
+
+                let interrupted = async {
+                    ctrlc.next().await;
+                    let mut sandbox = sandbox.lock().await;
+                    if let Err(err) = sandbox.kill() {
+                        println!(
+                            "{:#}",
+                            eyre::eyre!(err).wrap_err("Failed to restart child process")
+                        );
+                    }
+                };
+
+                let task = async {
                     let mut sandbox = sandbox.lock().await;
                     let pending = sandbox.eval(line, config.limits.timeout);
                     match pending.await {
@@ -149,8 +162,10 @@ pub async fn interactive(config: Config) -> Result<()> {
                         Err(SandboxError::Query(err)) => println_fmt(&config, &err),
                         Err(err) => println!("{:#}", eyre::eyre!(err)),
                     };
-                });
-                handle.await;
+                };
+
+                interrupted.race(task).await;
+                sandbox.lock().await.restart_if_dead()?;
             }
             Err(ReadlineError::Interrupted) => {}
             Err(ReadlineError::Eof) => {

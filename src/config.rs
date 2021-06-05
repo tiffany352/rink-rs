@@ -200,7 +200,7 @@ impl Default for Limits {
             enabled: false,
             show_metrics: false,
             memory: 20_000_000,
-            timeout: Duration::from_secs(5),
+            timeout: Duration::from_secs(10),
         }
     }
 }
