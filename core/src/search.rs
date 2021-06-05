@@ -81,7 +81,6 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
 }
 
 pub fn query(ctx: &Context, query: &str, num_results: usize) -> SearchReply {
-    None::<i32>.unwrap();
     SearchReply {
         results: search(ctx, query, num_results)
             .into_iter()
