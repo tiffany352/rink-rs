@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use async_std::task::block_on;
-use async_std::task::spawn_blocking;
 use clap::{App, Arg};
 use eyre::{Result, WrapErr};
 use rink_sandbox::Alloc;
@@ -87,6 +85,10 @@ async fn main() -> Result<()> {
         }
         Ok(())
     } else {
-        spawn_blocking(|| block_on(repl::interactive(config))).await
+        if config.limits.enabled {
+            repl::interactive_sandboxed(config).await
+        } else {
+            repl::interactive(&config)
+        }
     }
 }
