@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::style_de::deserialize_style;
+use crate::style_ser;
 use ansi_term::{Color, Style};
 use color_eyre::Result;
 use eyre::{eyre, Report, WrapErr};
@@ -10,7 +10,7 @@ use reqwest::header::USER_AGENT;
 use rink_core::context::Context;
 use rink_core::fmt::FmtToken;
 use rink_core::{ast, date, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
-use serde_derive::Deserialize;
+use serde_derive::{Deserialize, Serialize};
 use std::ffi::OsString;
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::Path;
@@ -34,7 +34,7 @@ pub fn config_path(name: &'static str) -> Result<PathBuf> {
     Ok(path)
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Config {
     pub rink: Rink,
@@ -47,7 +47,7 @@ pub struct Config {
     disabled_theme: Theme,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Rink {
     /// Which prompt to render when run interactively.
@@ -56,7 +56,7 @@ pub struct Rink {
     pub long_output: bool,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Currency {
     /// Set to false to disable currency fetching entirely.
@@ -71,7 +71,7 @@ pub struct Currency {
     pub timeout: Duration,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Colors {
     /// Whether support for colored output should be enabled.
@@ -80,7 +80,7 @@ pub struct Colors {
     pub theme: String,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Limits {
     /// Whether support for sandboxing is enabled.
@@ -94,28 +94,28 @@ pub struct Limits {
     pub timeout: Duration,
 }
 
-#[derive(Deserialize, Default, Clone)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Theme {
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     plain: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     error: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     unit: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     quantity: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     number: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     user_input: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     doc_string: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     pow: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     prop_name: Style,
-    #[serde(deserialize_with = "deserialize_style")]
+    #[serde(with = "style_ser")]
     date_time: Style,
 }
 

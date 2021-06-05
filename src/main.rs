@@ -2,30 +2,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use alloc::RinkAlloc;
+use async_std::task::block_on;
+use async_std::task::spawn_blocking;
 use clap::{App, Arg};
 use eyre::{Result, WrapErr};
+use rink_sandbox::Alloc;
 use std::alloc::System;
 use std::fs::File;
 use std::io::{stdin, BufReader};
 
 pub use helper::RinkHelper;
 
-pub(crate) mod alloc;
 pub mod config;
 pub(crate) mod fmt;
 pub mod helper;
 pub mod repl;
-pub(crate) mod sandbox;
-pub(crate) mod style_de;
+pub(crate) mod service;
+pub(crate) mod style_ser;
 
 #[global_allocator]
-pub static GLOBAL: RinkAlloc = RinkAlloc::new(System, usize::MAX);
+pub(crate) static GLOBAL: Alloc = Alloc::new(System, usize::MAX);
 
 #[async_std::main]
 async fn main() -> Result<()> {
-    color_eyre::install()?;
-
     let matches = App::new("Rink")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Rink Contributors")
@@ -56,14 +55,17 @@ async fn main() -> Result<()> {
         )
         .get_matches();
 
+    if matches.is_present("service") {
+        return service::run_service();
+    }
+    // The panic handler can't be installed if entering service mode, so
+    // it's placed after that check.
+    color_eyre::install()?;
     let config = config::read_config()?;
 
     if matches.is_present("config-path") {
         println!("{}", config::config_path("config.toml").unwrap().display());
         Ok(())
-    } else if matches.is_present("service") {
-        GLOBAL.set_limit(config.limits.memory);
-        repl::service(&config)
     } else if let Some(filename) = matches.value_of("file") {
         match filename {
             "-" => {
@@ -86,6 +88,6 @@ async fn main() -> Result<()> {
         }
         Ok(())
     } else {
-        repl::interactive(config).await
+        spawn_blocking(|| block_on(repl::interactive(config))).await
     }
 }

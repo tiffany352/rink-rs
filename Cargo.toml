@@ -35,8 +35,12 @@ async-ctrlc = { version = "1.2.0", features = ["stream"] }
 version = "0.6"
 path = "./core"
 
+[dependencies.rink-sandbox]
+version = "0.6"
+path = "./sandbox"
+
 [workspace]
-members = ["core", "rink-js"]
+members = ["core", "rink-js", "sandbox"]
 
 [package.metadata.wasm-pack.profile.profiling]
 wasm-opt = ['-g', '-O']

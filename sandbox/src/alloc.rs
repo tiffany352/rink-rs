@@ -4,16 +4,16 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-pub struct RinkAlloc {
+pub struct Alloc {
     system: System,
     used: AtomicUsize,
     max: AtomicUsize,
     limit: AtomicUsize,
 }
 
-impl RinkAlloc {
-    pub const fn new(system: System, limit: usize) -> RinkAlloc {
-        RinkAlloc {
+impl Alloc {
+    pub const fn new(system: System, limit: usize) -> Alloc {
+        Alloc {
             system,
             used: AtomicUsize::new(0),
             max: AtomicUsize::new(0),
@@ -35,7 +35,7 @@ impl RinkAlloc {
     }
 }
 
-unsafe impl GlobalAlloc for RinkAlloc {
+unsafe impl GlobalAlloc for Alloc {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let size = layout.size();
         let limit = self.limit.load(Ordering::Acquire);
