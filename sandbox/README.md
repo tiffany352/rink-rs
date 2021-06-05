@@ -4,6 +4,8 @@ Rink-sandbox was designed to sandbox Rink queries (which can take
 arbitrarily large memory/time). Rink's syntax does not expose any type
 of IO, so a full security sandbox is not required.
 
+This crate supports Windows, macOS, and Linux.
+
 This crate was designed with some effort to making it general purpose
 for other types of applications, but it may not perfectly match some
 usecases.
@@ -23,8 +25,17 @@ There's no platform specific code or unsafe usage in this crate, this is
 handled by other dependencies.
 
 Messages are serialized using bincode and sent through the child
-process's stdin/stdout channels for best portability. Generally the
-child will hold the lock on these channels to prevent stray messages,
-but you should avoid writing to them in app code if possible.
+process's stdin/stdout channels for best portability.
 
-Specifically, avoid using `println!()` in favor of `eprintln!()`.
+## Limitations
+
+- This is not a security solution on its own. All network, disk, and
+  other environment access is still allowed in the child process.
+- Your app code needs to avoid reading from stdin or writing to stdout
+  when becoming the child process. Unfortunately, there's no good
+  solution for redirecting or capturing stdout: gag and stdio-redirect
+  are Linux only, and shh doesn't allow reading without blocking until
+  the pipe is closed. The next best solution is to write a logger and
+  expect all app code to use `log` instead of `println`.
+- This might not work well outside of the usecase of a CLI app, but this
+  could be improved in the future.
