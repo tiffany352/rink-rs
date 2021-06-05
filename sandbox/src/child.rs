@@ -12,6 +12,8 @@ use crate::{
     MessageResponse, Response, Service,
 };
 
+/// When your app is passed the arguments returned by [`Service::args`],
+/// it should call this function to begin servicing requests.
 pub fn become_child<S>(alloc: &Alloc) -> !
 where
     S: Service,

@@ -4,7 +4,9 @@ use serde_derive::{Deserialize, Serialize};
 use std::{io::Error as IoError, time::Duration};
 use thiserror::Error;
 
+/// All of the errors that can result while managing the child process.
 #[derive(Error, Display, Debug)]
+#[non_exhaustive]
 pub enum Error {
     /// IO error
     Io(#[source] IoError),
@@ -20,8 +22,6 @@ pub enum Error {
     Panic(String),
     /// Failed to start child process: {0}
     InitFailure(String),
-    /// Child process crashed
-    Crashed,
     /// Interrupted
     Interrupted,
 }
@@ -49,6 +49,12 @@ impl From<ErrorResponse> for Error {
         match err {
             ErrorResponse::Panic(message) => Error::Panic(message),
         }
+    }
+}
+
+impl From<Error> for IoError {
+    fn from(err: Error) -> IoError {
+        IoError::new(std::io::ErrorKind::Other, format!("{}", err))
     }
 }
 

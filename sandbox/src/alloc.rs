@@ -4,32 +4,58 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-pub struct Alloc {
-    system: System,
+/// Wraps an allocator, adding memory use limits and tracking for peak
+/// memory usage.
+pub struct Alloc<A = System> {
+    parent: A,
     used: AtomicUsize,
     max: AtomicUsize,
     limit: AtomicUsize,
 }
 
-impl Alloc {
-    pub const fn new(system: System, limit: usize) -> Alloc {
+impl Alloc<System> {
+    /// Creates a new wrapper allocator using the system allocator.
+    pub const fn new(limit: usize) -> Alloc<System> {
         Alloc {
-            system,
+            parent: System,
+            used: AtomicUsize::new(0),
+            max: AtomicUsize::new(0),
+            limit: AtomicUsize::new(limit),
+        }
+    }
+}
+
+impl<A> Alloc<A>
+where
+    A: GlobalAlloc,
+{
+    /// Creates a new wrapper allocator using any GlobalAllocator.
+    ///
+    /// Unfortunately, this can't be a const fn, because trait bounds on const fns are unstable.
+    /// <https://github.com/rust-lang/rust/issues/57563>
+    pub fn new_with(parent: A, limit: usize) -> Alloc<A> {
+        Alloc {
+            parent,
             used: AtomicUsize::new(0),
             max: AtomicUsize::new(0),
             limit: AtomicUsize::new(limit),
         }
     }
 
+    /// Clears the current peak value.
     pub fn reset_max(&self) {
         self.max
             .store(self.used.load(Ordering::Acquire), Ordering::Release);
     }
 
+    /// Returns the peak memory that's been used since startup or since
+    /// `reset_max()` was called.
     pub fn get_max(&self) -> usize {
         self.max.load(Ordering::Acquire)
     }
 
+    /// Sets the maximum amount of memory that can be used. This should
+    /// be called early in the application lifecycle.
     pub fn set_limit(&self, limit: usize) {
         self.limit.store(limit, Ordering::Release);
     }
@@ -42,7 +68,7 @@ unsafe impl GlobalAlloc for Alloc {
         let new_size = self.used.fetch_add(size, Ordering::Acquire) + size;
         if new_size <= limit {
             self.max.fetch_max(new_size, Ordering::Relaxed);
-            let result = self.system.alloc(layout);
+            let result = self.parent.alloc(layout);
             if result.is_null() {
                 self.used.fetch_sub(size, Ordering::Release);
             }
@@ -55,7 +81,7 @@ unsafe impl GlobalAlloc for Alloc {
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         let size = layout.size();
-        self.system.dealloc(ptr, layout);
+        self.parent.dealloc(ptr, layout);
         self.used.fetch_sub(size, Ordering::Release);
     }
 
@@ -65,7 +91,7 @@ unsafe impl GlobalAlloc for Alloc {
         let new_size = self.used.fetch_add(size, Ordering::Acquire) + size;
         if new_size <= limit {
             self.max.fetch_max(new_size, Ordering::Relaxed);
-            let result = self.system.alloc_zeroed(layout);
+            let result = self.parent.alloc_zeroed(layout);
             if result.is_null() {
                 self.used.fetch_sub(size, Ordering::Release);
             }
@@ -83,7 +109,7 @@ unsafe impl GlobalAlloc for Alloc {
         let limit = self.limit.load(Ordering::Acquire);
         let new_used = self.used.fetch_add(new_size, Ordering::Acquire) + new_size;
         if new_used <= limit {
-            let result = self.system.realloc(ptr, old_layout, realloc_size);
+            let result = self.parent.realloc(ptr, old_layout, realloc_size);
             if result.is_null() {
                 self.used.fetch_sub(new_size, Ordering::Release);
             } else {

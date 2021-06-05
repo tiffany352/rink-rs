@@ -7,7 +7,6 @@ use async_std::task::spawn_blocking;
 use clap::{App, Arg};
 use eyre::{Result, WrapErr};
 use rink_sandbox::Alloc;
-use std::alloc::System;
 use std::fs::File;
 use std::io::{stdin, BufReader};
 
@@ -21,7 +20,7 @@ pub(crate) mod service;
 pub(crate) mod style_ser;
 
 #[global_allocator]
-pub(crate) static GLOBAL: Alloc = Alloc::new(System, usize::MAX);
+pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
 
 #[async_std::main]
 async fn main() -> Result<()> {

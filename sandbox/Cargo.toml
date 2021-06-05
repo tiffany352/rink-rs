@@ -2,6 +2,13 @@
 name = "rink-sandbox"
 version = "0.6.1"
 edition = "2018"
+description = "Library for limiting memory usage and time spent of code, and allowing interrupts (ctrl+C)."
+homepage = "https://rinkcalc.app"
+repository = "https://github.com/tiffany352/rink-rs"
+readme = "README.md"
+license = "MPL-2.0"
+keywords = ["cli", "sandbox"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 async-std = { version = "1.9", features = ["unstable", "attributes"] }

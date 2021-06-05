@@ -128,6 +128,8 @@ where
         }
     }
 
+    /// Creates a new sandbox. This will start up an asynchronous task
+    /// that creates the child process.
     pub async fn new(config: S::Config) -> Result<Sandbox<S>, Error> {
         let (send_request, recv_request) = bounded(1);
         let (send_response, recv_response) = bounded(1);
@@ -141,11 +143,13 @@ where
         })
     }
 
+    /// Kill the child process without restarting it.
     pub async fn terminate(&self) -> Result<(), Error> {
         self.join_handle.take().unwrap().cancel().await;
         Ok(())
     }
 
+    /// Pass a query to the child process and return a response once it finishes.
     pub async fn execute(&self, req: S::Req) -> Result<Response<S::Res>, Error> {
         self.send_request.send(req).await.map_err(|_| Error::Send)?;
 
