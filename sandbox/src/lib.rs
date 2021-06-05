@@ -23,14 +23,15 @@ pub struct Response<Data> {
     pub stdout: String,
 }
 
-pub trait Service: Sized + RefUnwindSafe {
+pub trait Service: Sized + RefUnwindSafe + 'static {
     type Req: serde::Serialize + DeserializeOwned;
     type Res: serde::Serialize + DeserializeOwned;
     type Config: serde::Serialize + DeserializeOwned + Clone + 'static;
 
     fn args(config: &Self::Config) -> Vec<OsString>;
-    fn create(config: Self::Config) -> Result<Self, IoError>;
+    fn timeout(config: &Self::Config) -> Duration;
 
+    fn create(config: Self::Config) -> Result<Self, IoError>;
     fn handle(&self, request: Self::Req) -> Self::Res;
 }
 

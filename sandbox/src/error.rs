@@ -1,3 +1,4 @@
+use async_std::channel::RecvError;
 use displaydoc::Display;
 use serde_derive::{Deserialize, Serialize};
 use std::{io::Error as IoError, time::Duration};
@@ -7,6 +8,10 @@ use thiserror::Error;
 pub enum Error {
     /// IO error
     Io(#[source] IoError),
+    /// {0}
+    Recv(RecvError),
+    /// Failed to send
+    Send,
     /// Timed out after {0:?}
     Timeout(Duration),
     /// Bincode
@@ -30,6 +35,12 @@ impl From<IoError> for Error {
 impl From<bincode::Error> for Error {
     fn from(err: bincode::Error) -> Self {
         Error::Bincode(err)
+    }
+}
+
+impl From<RecvError> for Error {
+    fn from(err: RecvError) -> Self {
+        Error::Recv(err)
     }
 }
 

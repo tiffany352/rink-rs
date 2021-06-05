@@ -31,6 +31,10 @@ impl Service for RinkService {
             Err(err) => Err(to_ansi_string(&self.config, &err)),
         }
     }
+
+    fn timeout(config: &Self::Config) -> std::time::Duration {
+        config.limits.timeout
+    }
 }
 
 pub fn run_service() -> eyre::Result<()> {

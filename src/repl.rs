@@ -1,7 +1,6 @@
 use crate::config::Config;
 use crate::service::RinkService;
 use crate::RinkHelper;
-use async_ctrlc::CtrlC;
 use async_std::task;
 use eyre::Result;
 use rink_core::one_line;
@@ -47,7 +46,6 @@ pub async fn interactive(config: Config) -> Result<()> {
         rl.set_completion_type(CompletionType::List);
         rl
     }));
-    let mut ctrlc = CtrlC::new()?;
 
     let sandbox = Sandbox::<RinkService>::new(config.clone()).await?;
     let sandbox = Arc::new(sandbox);
@@ -76,15 +74,6 @@ pub async fn interactive(config: Config) -> Result<()> {
         }
     };
 
-    if config.limits.show_metrics {
-        let res = sandbox.get_startup().await;
-        println!(
-            "Initialized in {:?} using {}K of memory",
-            res.time_taken,
-            res.memory_used / 1_000
-        );
-    }
-
     loop {
         let readline = {
             let rl = rl.clone();
@@ -107,7 +96,7 @@ pub async fn interactive(config: Config) -> Result<()> {
                 rl.lock().unwrap().add_history_entry(&line);
                 let config = config.clone();
 
-                let result = sandbox.eval(line, &mut ctrlc, config.limits.timeout).await;
+                let result = sandbox.execute(line).await;
                 match result {
                     Ok(res) => {
                         match res.result {
@@ -136,5 +125,8 @@ pub async fn interactive(config: Config) -> Result<()> {
             }
         }
     }
+
+    sandbox.terminate().await?;
+
     Ok(())
 }
