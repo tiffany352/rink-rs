@@ -12,16 +12,24 @@ pub enum Error {
     Io(#[source] IoError),
     /// {0}
     Recv(RecvError),
-    /// Failed to send
-    Send,
+    /// Failed to send {0}
+    Send(&'static str),
     /// Timed out after {0:?}
     Timeout(Duration),
     /// Bincode
     Bincode(#[source] bincode::Error),
     /// Panic: {0}
     Panic(String),
+    /// Failed to start child process
+    InitFailure(#[source] IoError),
+    /// Failed to read from child
+    ReadFailed(#[source] IoError),
+    /// Failed to write to child
+    WriteFailed(#[source] IoError),
     /// Failed to start child process: {0}
-    InitFailure(String),
+    HandshakeFailure(String),
+    /// Child process crashed
+    Crashed,
     /// Interrupted
     Interrupted,
 }

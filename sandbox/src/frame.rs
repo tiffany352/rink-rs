@@ -21,11 +21,17 @@ impl Frame {
         R: ReadExt,
     {
         let mut len = [0, 0, 0, 0];
-        reader.read_exact(&mut len).await?;
+        reader
+            .read_exact(&mut len)
+            .await
+            .map_err(Error::ReadFailed)?;
         let len = u32::from_ne_bytes(len);
 
         self.buf.resize(len as usize, 0);
-        reader.read_exact(&mut self.buf).await?;
+        reader
+            .read_exact(&mut self.buf)
+            .await
+            .map_err(Error::ReadFailed)?;
 
         let value = bincode::deserialize(&self.buf)?;
 
@@ -38,11 +44,11 @@ impl Frame {
         R: Read,
     {
         let mut len = [0, 0, 0, 0];
-        Read::read_exact(reader, &mut len)?;
+        Read::read_exact(reader, &mut len).map_err(Error::ReadFailed)?;
         let len = u32::from_ne_bytes(len);
 
         self.buf.resize(len as usize, 0);
-        Read::read_exact(reader, &mut self.buf)?;
+        Read::read_exact(reader, &mut self.buf).map_err(Error::ReadFailed)?;
 
         let value = bincode::deserialize(&self.buf)?;
 
@@ -60,9 +66,9 @@ impl Frame {
     {
         let bytes = bincode::serialize(value)?;
         let len = u32::to_ne_bytes(bytes.len() as u32);
-        writer.write_all(&len).await?;
-        writer.write_all(&bytes).await?;
-        writer.flush().await?;
+        writer.write_all(&len).await.map_err(Error::WriteFailed)?;
+        writer.write_all(&bytes).await.map_err(Error::WriteFailed)?;
+        writer.flush().await.map_err(Error::WriteFailed)?;
 
         Ok(())
     }
@@ -74,9 +80,9 @@ impl Frame {
     {
         let bytes = bincode::serialize(value)?;
         let len = u32::to_ne_bytes(bytes.len() as u32);
-        writer.write_all(&len)?;
-        writer.write_all(&bytes)?;
-        writer.flush()?;
+        writer.write_all(&len).map_err(Error::WriteFailed)?;
+        writer.write_all(&bytes).map_err(Error::WriteFailed)?;
+        writer.flush().map_err(Error::WriteFailed)?;
 
         Ok(())
     }

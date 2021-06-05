@@ -192,7 +192,7 @@ pub async fn interactive_sandboxed(config: Config) -> Result<()> {
                 break;
             }
             Err(err) => {
-                println!("Readline: {:?}", err);
+                println!("{:?}", eyre::eyre!(err).wrap_err("Readline"));
                 break;
             }
         }

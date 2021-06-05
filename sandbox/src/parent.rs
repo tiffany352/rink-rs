@@ -11,6 +11,7 @@ use async_std::{
 };
 use std::cell::Cell;
 use std::env;
+use std::io::ErrorKind;
 use std::marker::PhantomData;
 use std::pin::Pin;
 
@@ -54,7 +55,8 @@ where
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .kill_on_drop(true)
-                .spawn()?;
+                .spawn()
+                .map_err(Error::InitFailure)?;
             let mut stdin = process.stdin.take().unwrap();
             let mut stdout = process.stdout.take().unwrap();
 
@@ -63,7 +65,7 @@ where
             let response = frame
                 .read_async::<HandshakeResponse, _>(Pin::new(&mut stdout))
                 .await?;
-            response.result.map_err(Error::InitFailure)?;
+            response.result.map_err(Error::HandshakeFailure)?;
 
             loop {
                 let request = recv_request.recv().await?;
@@ -78,11 +80,9 @@ where
                 };
 
                 let next_frame = async {
-                    let value = frame
+                    frame
                         .read_async::<MessageResponse<S>, _>(Pin::new(&mut stdout))
-                        .await?;
-
-                    Ok::<MessageResponse<S>, Error>(value)
+                        .await
                 };
 
                 let exec_time = S::timeout(&config);
@@ -92,18 +92,22 @@ where
                 let response = match pending.await {
                     Ok(Ok(Response {
                         result: Ok(result),
-                        time_taken,
                         memory_used,
+                        time_taken,
                         stdout,
                     })) => Ok(Response {
-                        result: result,
-                        time_taken,
+                        result,
                         memory_used,
+                        time_taken,
                         stdout,
                     }),
                     Ok(Ok(Response {
                         result: Err(err), ..
                     })) => Err(err.into()),
+                    Ok(Err(Error::ReadFailed(err))) if err.kind() == ErrorKind::UnexpectedEof => {
+                        break_out = true;
+                        Err(Error::Crashed)
+                    }
                     Ok(Err(Error::Interrupted)) => {
                         break_out = true;
                         Err(Error::Interrupted)
@@ -118,10 +122,17 @@ where
                 send_response
                     .send(response)
                     .await
-                    .map_err(|_| Error::Send)?;
+                    .map_err(|_| Error::Send("response to caller"))?;
 
                 if break_out {
-                    process.kill()?;
+                    match process.kill() {
+                        Ok(()) => {}
+                        // This happens when the process is already dead.
+                        Err(ref err)
+                            if err.kind() == ErrorKind::PermissionDenied
+                                || err.kind() == ErrorKind::InvalidInput => {}
+                        Err(err) => return Err(err.into()),
+                    };
                     break;
                 }
             }
@@ -145,13 +156,19 @@ where
 
     /// Kill the child process without restarting it.
     pub async fn terminate(&self) -> Result<(), Error> {
-        self.join_handle.take().unwrap().cancel().await;
-        Ok(())
+        if let Some(res) = self.join_handle.take().unwrap().cancel().await {
+            res
+        } else {
+            Ok(())
+        }
     }
 
     /// Pass a query to the child process and return a response once it finishes.
     pub async fn execute(&self, req: S::Req) -> Result<Response<S::Res>, Error> {
-        self.send_request.send(req).await.map_err(|_| Error::Send)?;
+        self.send_request
+            .send(req)
+            .await
+            .map_err(|_| Error::Send("request to child"))?;
 
         self.recv_response.recv().await?
     }
