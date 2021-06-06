@@ -1,3 +1,10 @@
+//! This crate provides a way to run code in a context with limited
+//! memory, execution time, and the ability to be interrupted.
+//!
+//! For an example, see `examples/add_two.rs`.
+
+#![deny(missing_docs)]
+
 use serde::de::DeserializeOwned;
 use serde_derive::{Deserialize, Serialize};
 use std::{ffi::OsString, io::Error as IoError, panic::RefUnwindSafe, time::Duration};
@@ -16,7 +23,8 @@ pub(crate) use error::ErrorResponse;
 pub use parent::Sandbox;
 
 /// Contains response data, as well as statistics like memory usage.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[non_exhaustive]
 pub struct Response<Data> {
     /// The response from the service.
     pub result: Data,
@@ -26,6 +34,40 @@ pub struct Response<Data> {
     pub time_taken: Duration,
     /// Logs collected while servicing the query.
     pub stdout: String,
+}
+
+impl<Data> Response<Data> {
+    /// Replaces the [`result`] with a new value.
+    pub fn replace<New>(self, result: New) -> Response<New> {
+        let Response {
+            memory_used,
+            time_taken,
+            stdout,
+            ..
+        } = self;
+        Response {
+            result,
+            memory_used,
+            time_taken,
+            stdout,
+        }
+    }
+
+    /// Replaces the [`result`] with the value returned by func.
+    pub fn map<New>(self, func: impl FnOnce(Data) -> New) -> Response<New> {
+        let Response {
+            result,
+            memory_used,
+            time_taken,
+            stdout,
+        } = self;
+        Response {
+            result: func(result),
+            memory_used,
+            time_taken,
+            stdout,
+        }
+    }
 }
 
 /// In order to sandbox some logic, there needs to be an implementation

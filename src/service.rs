@@ -21,7 +21,7 @@ impl Service for RinkService {
         GLOBAL.set_limit(config.limits.memory);
 
         let ctx = Arc::new(Mutex::new(crate::config::load(&config).unwrap()));
-        Ok(RinkService { ctx, config })
+        Ok(RinkService { config, ctx })
     }
 
     fn handle(&self, request: Self::Req) -> Self::Res {
@@ -38,5 +38,5 @@ impl Service for RinkService {
 }
 
 pub fn run_service() -> eyre::Result<()> {
-    rink_sandbox::become_child::<RinkService>(&crate::GLOBAL);
+    rink_sandbox::become_child::<RinkService, _>(&crate::GLOBAL);
 }

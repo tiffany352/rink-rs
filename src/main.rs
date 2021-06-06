@@ -84,11 +84,9 @@ async fn main() -> Result<()> {
             }
         }
         Ok(())
+    } else if config.limits.enabled {
+        repl::interactive_sandboxed(config).await
     } else {
-        if config.limits.enabled {
-            repl::interactive_sandboxed(config).await
-        } else {
-            repl::interactive(&config)
-        }
+        repl::interactive(&config)
     }
 }

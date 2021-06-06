@@ -11,6 +11,7 @@ use async_std::{
 };
 use std::cell::Cell;
 use std::env;
+use std::fmt;
 use std::io::ErrorKind;
 use std::marker::PhantomData;
 use std::pin::Pin;
@@ -30,6 +31,7 @@ where
     send_request: Sender<S::Req>,
     recv_response: Receiver<Result<Response<S::Res>, Error>>,
     join_handle: Cell<Option<JoinHandle<Result<(), Error>>>>,
+    terminated: bool,
     _phantom: PhantomData<S>,
 }
 
@@ -150,6 +152,7 @@ where
             send_request,
             recv_response,
             join_handle: Cell::new(Some(join_handle)),
+            terminated: false,
             _phantom: PhantomData,
         })
     }
@@ -163,13 +166,57 @@ where
         }
     }
 
-    /// Pass a query to the child process and return a response once it finishes.
+    /// Pass a query to the child process and return a response once it
+    /// finishes.
+    ///
+    /// If the child process crashes or is killed during execution, it
+    /// will be automatically restarted.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called after [`terminate`].
     pub async fn execute(&self, req: S::Req) -> Result<Response<S::Res>, Error> {
+        if self.terminated {
+            panic!("Sandbox::execute() called after terminated");
+        }
+
         self.send_request
             .send(req)
             .await
             .map_err(|_| Error::Send("request to child"))?;
 
         self.recv_response.recv().await?
+    }
+}
+
+impl<S> fmt::Debug for Sandbox<S>
+where
+    S: Service,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let handle = self.join_handle.take();
+        let res = f
+            .debug_struct("Sandbox")
+            .field("send_request", &self.send_request)
+            .field("recv_response", &self.recv_response)
+            .field("terminated", &self.terminated)
+            .field("join_handle", &handle)
+            .finish();
+        self.join_handle.set(handle);
+        res
+    }
+}
+
+impl<S> Drop for Sandbox<S>
+where
+    S: Service,
+{
+    /// When Sandbox is dropped, the task managing the child process is
+    /// cancelled, and the child process is killed.
+    fn drop(&mut self) {
+        let handle = self.join_handle.take();
+        if let Some(handle) = handle {
+            let _ = handle.cancel();
+        }
     }
 }

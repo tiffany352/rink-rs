@@ -21,8 +21,9 @@ This is achieved by running tasks in a child process. Memory is limited
 using `#[global_allocator]`. Execution time is limited using a simple
 timeout, rather than relying on OS scheduler-level timing.
 
-There's no platform specific code or unsafe usage in this crate, this is
-handled by other dependencies.
+There's no platform specific code in this crate, this is handled by
+other dependencies. Unsafe code is limited to only the allocator, where
+it's required.
 
 Messages are serialized using bincode and sent through the child
 process's stdin/stdout channels for best portability.

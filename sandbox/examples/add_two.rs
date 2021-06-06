@@ -51,7 +51,7 @@ impl Service for AddTwoService {
 async fn main() -> Result<(), IoError> {
     let args = env::args().collect::<Vec<_>>();
     if args.len() > 1 && args[1] == "--child" {
-        rink_sandbox::become_child::<AddTwoService>(&GLOBAL);
+        rink_sandbox::become_child::<AddTwoService, _>(&GLOBAL);
     }
 
     // The Sandbox object is how the parent process starts up and manipulates the child process.

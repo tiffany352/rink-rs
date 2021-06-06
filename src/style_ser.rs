@@ -128,7 +128,7 @@ fn color_to_string(color: Color) -> Cow<'static, str> {
     }
 }
 
-pub fn serialize<'de, S>(style: &Style, ser: S) -> Result<S::Ok, S::Error>
+pub fn serialize<S>(style: &Style, ser: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {

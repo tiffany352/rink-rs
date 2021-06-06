@@ -1,5 +1,6 @@
 use color_eyre::config::HookBuilder;
 use std::{
+    alloc::GlobalAlloc,
     io::{stdin, stdout},
     panic,
     process::exit,
@@ -14,9 +15,10 @@ use crate::{
 
 /// When your app is passed the arguments returned by [`Service::args`],
 /// it should call this function to begin servicing requests.
-pub fn become_child<S>(alloc: &Alloc) -> !
+pub fn become_child<S, A>(alloc: &Alloc<A>) -> !
 where
     S: Service,
+    A: GlobalAlloc,
 {
     let start = Instant::now();
 
