@@ -37,7 +37,7 @@ version = "0.6"
 path = "./sandbox"
 
 [workspace]
-members = ["core", "rink-js", "sandbox"]
+members = ["core", "rink-js", "sandbox", "real"]
 
 [package.metadata.wasm-pack.profile.profiling]
 wasm-opt = ['-g', '-O']
