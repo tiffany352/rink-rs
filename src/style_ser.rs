@@ -2,12 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::fmt;
+use std::{borrow::Cow, fmt};
 
 use ansi_term::{Color, Style};
 use serde::{
     de::{Error, Unexpected, Visitor},
-    Deserializer,
+    Deserializer, Serializer,
 };
 
 struct StringVisitor;
@@ -76,7 +76,7 @@ fn parse_color(input: &str) -> Option<Color> {
     }
 }
 
-pub fn deserialize_style<'de, D>(des: D) -> Result<Style, D::Error>
+pub fn deserialize<'de, D>(des: D) -> Result<Style, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -111,4 +111,61 @@ where
         }
     }
     Ok(style)
+}
+
+fn color_to_string(color: Color) -> Cow<'static, str> {
+    match color {
+        Color::Black => "black".into(),
+        Color::Red => "red".into(),
+        Color::Green => "green".into(),
+        Color::Yellow => "yellow".into(),
+        Color::Blue => "blue".into(),
+        Color::Purple => "purple".into(),
+        Color::Cyan => "cyan".into(),
+        Color::White => "white".into(),
+        Color::Fixed(i) => format!("{}", i).into(),
+        Color::RGB(r, g, b) => format!("rgb({},{},{})", r, g, b).into(),
+    }
+}
+
+pub fn serialize<S>(style: &Style, ser: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let mut result: Vec<Cow<'static, str>> = vec![];
+    if style.is_bold {
+        result.push("bold".into());
+    }
+    if style.is_italic {
+        result.push("italic".into());
+    }
+    if style.is_dimmed {
+        result.push("dimmed".into());
+    }
+    if style.is_hidden {
+        result.push("hidden".into());
+    }
+    if style.is_blink {
+        result.push("blink".into());
+    }
+    if style.is_reverse {
+        result.push("reverse".into());
+    }
+    if style.is_strikethrough {
+        result.push("strikethrough".into());
+    }
+    if style.is_underline {
+        result.push("underline".into());
+    }
+    if let Some(fg) = style.foreground {
+        result.push(color_to_string(fg));
+    }
+    if let Some(bg) = style.background {
+        result.push("on".into());
+        result.push(color_to_string(bg));
+    }
+    if result.is_empty() {
+        result.push("plain".into());
+    }
+    ser.serialize_str(&result.join(" "))
 }

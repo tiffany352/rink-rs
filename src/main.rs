@@ -4,6 +4,7 @@
 
 use clap::{App, Arg};
 use eyre::{Result, WrapErr};
+use rink_sandbox::Alloc;
 use std::fs::File;
 use std::io::{stdin, BufReader};
 
@@ -13,11 +14,14 @@ pub mod config;
 pub(crate) mod fmt;
 pub mod helper;
 pub mod repl;
-pub(crate) mod style_de;
+pub(crate) mod service;
+pub(crate) mod style_ser;
 
-fn main() -> Result<()> {
-    color_eyre::install()?;
+#[global_allocator]
+pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
 
+#[async_std::main]
+async fn main() -> Result<()> {
     let matches = App::new("Rink")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Rink Contributors")
@@ -35,11 +39,31 @@ fn main() -> Result<()> {
                 .takes_value(true)
                 .help("Reads expressions from a file"),
         )
+        .arg(
+            Arg::with_name("config-path")
+                .long("config-path")
+                .help("Prints a path to the config file, then exits")
+        )
+        .arg(
+            Arg::with_name("service")
+                .long("service")
+                .help("Start in service mode")
+                .hidden(true)
+        )
         .get_matches();
 
+    if matches.is_present("service") {
+        return service::run_service();
+    }
+    // The panic handler can't be installed if entering service mode, so
+    // it's placed after that check.
+    color_eyre::install()?;
     let config = config::read_config()?;
 
-    if let Some(filename) = matches.value_of("file") {
+    if matches.is_present("config-path") {
+        println!("{}", config::config_path("config.toml").unwrap().display());
+        Ok(())
+    } else if let Some(filename) = matches.value_of("file") {
         match filename {
             "-" => {
                 let stdin_handle = stdin();
@@ -60,6 +84,8 @@ fn main() -> Result<()> {
             }
         }
         Ok(())
+    } else if config.limits.enabled {
+        repl::interactive_sandboxed(config).await
     } else {
         repl::interactive(&config)
     }
