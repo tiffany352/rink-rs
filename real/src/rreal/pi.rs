@@ -52,3 +52,6 @@ impl Term for Pi {
         value.eval(precision)
     }
 }
+
+#[cfg(test)]
+mod tests;

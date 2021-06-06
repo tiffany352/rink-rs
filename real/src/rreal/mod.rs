@@ -1,6 +1,3 @@
-use crate::rreal::rational::ConstRational;
-
-use self::one::ConstOne;
 use num::{BigInt, BigRational};
 use std::{ops, sync::Arc};
 
@@ -10,6 +7,7 @@ mod mul;
 mod one;
 mod pi;
 mod rational;
+mod sqrt;
 mod term;
 
 pub use approx::Approx;
@@ -24,15 +22,19 @@ impl RReal {
     }
 
     pub fn one() -> RReal {
-        RReal(Arc::new(ConstOne))
+        RReal(Arc::new(one::ConstOne))
     }
 
     pub fn rational(value: BigRational) -> RReal {
-        RReal(Arc::new(ConstRational(value)))
+        RReal(Arc::new(rational::ConstRational(value)))
+    }
+
+    pub fn pi() -> RReal {
+        RReal(Arc::new(pi::Pi))
     }
 
     pub fn sqrt(self) -> RReal {
-        todo!()
+        RReal(Arc::new(sqrt::Sqrt(self)))
     }
 }
 
