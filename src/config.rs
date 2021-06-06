@@ -20,6 +20,7 @@ use std::{
     collections::HashMap,
     fs::{read_to_string, File},
 };
+use ubyte::ByteUnit;
 
 fn file_to_string(mut file: File) -> Result<String> {
     let mut string = String::new();
@@ -88,7 +89,7 @@ pub struct Limits {
     /// Whether performance metrics are shown after each query.
     pub show_metrics: bool,
     /// The maximum amount of heap that can be used per query, in megabytes.
-    pub memory: usize,
+    pub memory: ByteUnit,
     /// How long to wait before cancelling a query.
     #[serde(with = "humantime_serde")]
     pub timeout: Duration,
@@ -199,7 +200,7 @@ impl Default for Limits {
         Limits {
             enabled: false,
             show_metrics: false,
-            memory: 20_000_000,
+            memory: ByteUnit::Megabyte(20),
             timeout: Duration::from_secs(10),
         }
     }

@@ -18,7 +18,14 @@ impl Service for RinkService {
     }
 
     fn create(config: Self::Config) -> Result<Self, std::io::Error> {
-        GLOBAL.set_limit(config.limits.memory);
+        let memory = config.limits.memory.as_u64();
+        // Saturate if the value is >4GB, on 32bit OSes.
+        let memory = if memory > (usize::MAX as u64) {
+            usize::MAX
+        } else {
+            memory as usize
+        };
+        GLOBAL.set_limit(memory);
 
         let ctx = Arc::new(Mutex::new(crate::config::load(&config).unwrap()));
         Ok(RinkService { config, ctx })

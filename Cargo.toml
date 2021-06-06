@@ -26,6 +26,7 @@ humantime-serde = "1.0.1"
 rustyline = "8.0.0"
 ansi_term = "0.12"
 async-std = { version = "1.9", features = ["unstable", "attributes"] }
+ubyte = { version = "0.10.1", features = ["serde"] }
 
 [dependencies.rink-core]
 version = "0.6"
