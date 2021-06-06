@@ -24,12 +24,8 @@ eyre = "0.6"
 color-eyre = { version = "0.5", default-features = false }
 humantime-serde = "1.0.1"
 rustyline = "8.0.0"
-ansi_term = { version = "0.12", features = ["serde"] }
+ansi_term = "0.12"
 async-std = { version = "1.9", features = ["unstable", "attributes"] }
-futures-util = "0.3"
-displaydoc = "0.2"
-thiserror = "1"
-async-ctrlc = { version = "1.2.0", features = ["stream"] }
 
 [dependencies.rink-core]
 version = "0.6"
