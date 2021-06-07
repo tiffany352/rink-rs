@@ -15,7 +15,7 @@ struct Vars {
 
 fn initial() -> Vars {
     Vars {
-        i: 0,
+        i: 1,
         a: RReal::one(),
         b: RReal::one() / RReal::from(2).sqrt(),
         t: RReal::rational(BigRational::new(BigInt::from(1), BigInt::from(4))),
@@ -45,7 +45,8 @@ fn approximate(Vars { a, b, t, .. }: Vars) -> RReal {
 impl Term for Pi {
     fn eval(&self, precision: u64) -> Approx {
         let mut vars = initial();
-        for _ in 1..(64 - precision.leading_zeros()) {
+        let extra_eval_prec = (precision as f64).log2().ceil() as u64 + 10;
+        for _ in 0..extra_eval_prec {
             vars = iterate(vars);
         }
         let value = approximate(vars);

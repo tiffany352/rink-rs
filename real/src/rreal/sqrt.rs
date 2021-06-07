@@ -1,4 +1,4 @@
-use num::{BigInt, BigRational, One, Signed};
+use num::{BigInt, One, Signed};
 
 use super::{Approx, RReal, Term};
 

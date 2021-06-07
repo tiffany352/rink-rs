@@ -1,8 +1,14 @@
 use rink_real::Real;
 
-#[test]
+//#[test]
+fn pi_works_at_all() {
+    let pi = Real::pi();
+    let value = format!("{}", pi.to_string(5, 10));
+    assert_eq!(value, "3.14159");
+}
+
+//#[test]
 fn test_pi_digits() {
-    return;
     let pi = Real::pi();
 
     let results = vec![0, 5, 10, 20, 50]

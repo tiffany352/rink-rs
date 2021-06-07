@@ -29,7 +29,7 @@ impl Property {
         match self {
             Property::One => RReal::one(),
             Property::Pi => todo!(),
-            Property::Sqrt(_) => todo!(),
+            Property::Sqrt(arg) => RReal::from(arg.clone()).sqrt(),
             Property::LogN(_) => todo!(),
             Property::Log10(_) => todo!(),
             Property::Euler(_) => todo!(),
@@ -100,11 +100,27 @@ impl Real {
         }
     }
 
+    pub fn zero() -> Real {
+        Real::rational(BigRational::zero())
+    }
+
+    pub fn one() -> Real {
+        Real::rational(BigRational::one())
+    }
+
+    pub fn fraction(numer: impl Into<BigInt>, denom: impl Into<BigInt>) -> Real {
+        Real::rational(BigRational::new(numer.into(), denom.into()))
+    }
+
     pub fn rational(value: BigRational) -> Real {
         Real::new(value, Property::One)
     }
 
     pub fn sample(&self, precision: u64) -> (BigRational, bool) {
+        if self.is_definitely_zero() {
+            return (BigRational::zero(), true);
+        }
+
         let additional = self.rational.denom().bits() - 1;
         let precision = precision + additional;
 
@@ -117,6 +133,20 @@ impl Real {
 
     fn definitely_independent(&self, rhs: &Real) -> bool {
         todo!()
+    }
+
+    fn is_definitely_one(&self) -> bool {
+        self.property == Some(Property::One) && self.rational.is_one()
+    }
+
+    fn is_definitely_zero(&self) -> bool {
+        if self.rational.is_zero() {
+            return true;
+        }
+        match self.property {
+            Some(Property::Sqrt(ref value)) => value.is_zero(),
+            _ => false,
+        }
     }
 
     pub fn is_comparable(&self, rhs: &Real) -> bool {
@@ -237,11 +267,7 @@ impl Real {
                 return Real::rational(BigRational::new(numer, denom));
             }
 
-            Real {
-                rational: BigRational::one(),
-                real: RReal::from(rat.clone()).sqrt(),
-                property: Some(Property::Sqrt(rat.clone())),
-            }
+            Real::new(BigRational::one(), Property::Sqrt(rat.clone()))
         } else {
             let real = if self.rational.is_one() {
                 self.real
@@ -252,6 +278,32 @@ impl Real {
             Real {
                 rational: BigRational::one(),
                 real: real.sqrt(),
+                property: None,
+            }
+        }
+    }
+
+    pub fn reciprocal(self) -> Real {
+        if self.is_definitely_zero() {
+            panic!("Cannot take the reciprocal of zero");
+        }
+
+        if self.property == Some(Property::One) {
+            Real {
+                rational: self.rational.recip(),
+                real: self.real,
+                property: self.property,
+            }
+        } else if self.rational.is_one() {
+            Real {
+                rational: BigRational::one(),
+                real: self.real.reciprocal(),
+                property: None,
+            }
+        } else {
+            Real {
+                rational: BigRational::one(),
+                real: (self.real * RReal::rational(self.rational)).reciprocal(),
                 property: None,
             }
         }
@@ -307,11 +359,34 @@ impl ops::Add for Real {
     }
 }
 
+impl ops::Sub for Real {
+    type Output = Real;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self + -rhs
+    }
+}
+
+impl ops::Neg for Real {
+    type Output = Real;
+
+    fn neg(mut self) -> Self::Output {
+        self.rational = -self.rational;
+        self
+    }
+}
+
 impl ops::Mul for Real {
     type Output = Real;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        if self.property.is_some() && self.property == rhs.property {
+        if self.is_definitely_zero() || rhs.is_definitely_zero() {
+            Real::zero()
+        } else if self.is_definitely_one() {
+            rhs
+        } else if rhs.is_definitely_one() {
+            self
+        } else if self.property.is_some() && self.property == rhs.property {
             let rational = self.rational * rhs.rational;
             Real {
                 rational,
@@ -327,6 +402,14 @@ impl ops::Mul for Real {
                 property: None,
             }
         }
+    }
+}
+
+impl ops::Div for Real {
+    type Output = Real;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self * rhs.reciprocal()
     }
 }
 
