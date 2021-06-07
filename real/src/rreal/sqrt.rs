@@ -1,6 +1,6 @@
 use num::{BigInt, One, Signed};
 
-use super::{Approx, RReal, Term};
+use super::{term::Precedence, Approx, RReal, Term};
 
 #[derive(Debug)]
 pub struct Sqrt(pub RReal);
@@ -63,5 +63,15 @@ impl Term for Sqrt {
             precision,
             exact: false,
         }
+    }
+
+    fn describe(&self, writer: &mut String, _prec: Precedence) {
+        writer.push_str("sqrt(");
+        self.0.describe(writer, Precedence::Add);
+        writer.push_str(")");
+    }
+
+    fn precedence(&self) -> Precedence {
+        Precedence::Term
     }
 }

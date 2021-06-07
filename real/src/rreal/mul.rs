@@ -1,4 +1,4 @@
-use super::{Approx, RReal, Term};
+use super::{term::Precedence, Approx, RReal, Term};
 
 #[derive(Debug)]
 pub struct Mul {
@@ -12,5 +12,15 @@ impl Term for Mul {
         let right = self.right.eval(precision + 1);
         let value = (left.value + right.value) >> 1;
         Approx::new(value, precision, left.exact && right.exact)
+    }
+
+    fn describe(&self, writer: &mut String, prec: Precedence) {
+        self.left.describe(writer, prec);
+        writer.push_str(" * ");
+        self.right.describe(writer, prec);
+    }
+
+    fn precedence(&self) -> Precedence {
+        Precedence::Mul
     }
 }

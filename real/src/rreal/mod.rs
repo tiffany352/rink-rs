@@ -53,6 +53,16 @@ impl RReal {
         approx
     }
 
+    fn describe(&self, writer: &mut String, prec: term::Precedence) {
+        if prec > self.term.precedence() {
+            writer.push('(');
+            self.term.describe(writer, prec);
+            writer.push(')');
+        } else {
+            self.term.describe(writer, prec);
+        }
+    }
+
     fn new(term: impl Term) -> RReal {
         RReal {
             term: Arc::new(term),

@@ -1,4 +1,4 @@
-use super::{Approx, RReal, Term};
+use super::{term::Precedence, Approx, RReal, Term};
 use num::{BigInt, One, Zero};
 
 #[derive(Debug)]
@@ -22,6 +22,15 @@ impl Term for Recip {
             precision,
             exact: sample.exact && exact,
         }
+    }
+
+    fn describe(&self, writer: &mut String, prec: Precedence) {
+        writer.push('/');
+        self.0.describe(writer, prec)
+    }
+
+    fn precedence(&self) -> Precedence {
+        Precedence::Recip
     }
 }
 
