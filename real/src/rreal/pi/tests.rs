@@ -7,24 +7,20 @@ fn find_accurate_digits() {
         .chars()
         .filter(|ch| !ch.is_whitespace())
         .collect::<String>();
-    let mut vars = initial();
-    let mut result = vec![];
-    for _i in 1..2 {
-        vars = iterate(vars);
-        let value = approximate(vars.clone());
-        let value = Real::from_rreal(value);
-        let digits = value.to_string(100, 10);
-        let digits = format!("{}", digits);
+    let mut vars = initial(100);
+    let expected = vec![4, 9, 20, 22, 0, 0, 0];
+    for i in 1..expected.len() {
+        vars = iterate(vars, 100 + i as i64 * 100);
+        let value = approximate(&vars);
+        let digits = format!("{}", value);
 
-        let count = true_digits
-            .chars()
-            .zip(digits.chars())
-            .take_while(|(l, r)| l == r)
-            .count();
-
-        result.push(count);
+        assert_eq!(
+            digits[0..expected[i]],
+            true_digits[0..expected[i]],
+            "iteration {}",
+            i
+        );
     }
-    assert_eq!(result, vec![]);
 }
 
 // First 10,000 digits of pi, from https://www.angio.net/pi/digits.html

@@ -72,6 +72,19 @@ impl BigFloat {
         self.exact
     }
 
+    pub fn is_zero(&self) -> bool {
+        self.mantissa.is_zero()
+    }
+
+    pub fn is_one(&self) -> bool {
+        if self.precision < 0 {
+            false
+        } else {
+            let one = BigInt::one() << self.precision;
+            &self.mantissa == &one
+        }
+    }
+
     /// Returns the most most significant bit of this float.
     pub fn msb(&self) -> i64 {
         self.mantissa.bits() as i64 - self.precision
@@ -96,6 +109,81 @@ impl BigFloat {
 
     pub fn abs(self) -> BigFloat {
         BigFloat::new(self.mantissa.abs(), self.precision, self.exact)
+    }
+
+    pub fn sqrt(self, precision: i64) -> BigFloat {
+        if self.is_one() {
+            return BigFloat::one();
+        }
+        if self.is_zero() {
+            return BigFloat::zero();
+        }
+        if self.is_negative() {
+            panic!(
+                "Can't take the square root of a negative BigFloat: the result would be imaginary."
+            );
+        }
+
+        let (mut min, mut max) = if &self > &BigFloat::one() {
+            (BigFloat::one(), self.clone())
+        } else {
+            (BigFloat::zero(), BigFloat::one())
+        };
+        let mut pivot = (&min + &max) >> 1;
+        let eps = BigFloat::two_pow(precision);
+
+        for _ in 0..10000 {
+            let square = &pivot * &pivot;
+            let delta = &square - &self;
+            let is_negative = delta.is_negative();
+            if !is_negative && &delta < &eps {
+                return pivot.truncate(precision);
+            }
+
+            if is_negative {
+                // Estimate is too low, need to check higher.
+                let new_pivot = (&max + &pivot) >> 1;
+                min = pivot;
+                pivot = new_pivot;
+            } else {
+                // Estimate is too high, need to check lower.
+                let new_pivot = (&min + &pivot) >> 1;
+                max = pivot;
+                pivot = new_pivot;
+            }
+        }
+        panic!(
+            "Failed to converge on a sqrt: self = {}, eps = {:?}",
+            self, eps
+        );
+    }
+
+    fn reciprocal(&self) -> BigFloat {
+        // x / 2^p = 1 / (y / 2^p)
+        // x = 2^(2p) / y
+
+        let one = BigInt::one() << (self.precision.max(0) * 2 + self.mantissa.bits() as i64);
+
+        let value: BigInt = &one / self.mantissa();
+        let exact = (&one % self.mantissa()).is_zero();
+
+        BigFloat::new(
+            value,
+            self.precision + self.mantissa.bits() as i64,
+            self.exact && exact,
+        )
+    }
+
+    fn truncate(self, precision: i64) -> BigFloat {
+        if precision > self.precision {
+            return self.into_inexact();
+        }
+        let delta = self.precision - precision;
+        BigFloat {
+            mantissa: self.mantissa >> delta,
+            precision,
+            exact: false,
+        }
     }
 
     pub fn into_inexact(self) -> BigFloat {
@@ -124,7 +212,7 @@ impl fmt::Debug for BigFloat {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             fmt,
-            "{}{} * 2^{}",
+            "{}{} / 2^{}",
             &self.mantissa,
             if self.exact { "" } else { "..." },
             self.precision
@@ -206,8 +294,6 @@ impl ops::Add for BigFloat {
 impl<'a> ops::Add for &'a BigFloat {
     type Output = BigFloat;
 
-    /// Returns a number with 1 bit less precision than the inputs.
-    /// Panics if the operands don't have the same precision.
     fn add(self, rhs: Self) -> Self::Output {
         let precision = if self.exact && rhs.exact {
             self.precision.max(rhs.precision)
@@ -229,7 +315,7 @@ impl<'a> ops::Add for &'a BigFloat {
 
         let mut mantissa = scale_by(&self.mantissa, self.precision - precision);
         mantissa += scale_by(&rhs.mantissa, rhs.precision - precision);
-        let exact = self.exact && rhs.exact && mantissa.bit(0) == false;
+        let exact = self.exact && rhs.exact;
         let precision = if exact {
             precision
         } else {
@@ -319,6 +405,22 @@ impl<'a> ops::Mul for &'a BigFloat {
     }
 }
 
+impl ops::Div for BigFloat {
+    type Output = BigFloat;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self * rhs.reciprocal()
+    }
+}
+
+impl<'a> ops::Div for &'a BigFloat {
+    type Output = BigFloat;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self * &rhs.reciprocal()
+    }
+}
+
 impl ops::Shr<i64> for BigFloat {
     type Output = BigFloat;
 
@@ -343,6 +445,30 @@ impl ops::Shl<i64> for BigFloat {
     }
 }
 
+impl<'a> ops::Shr<i64> for &'a BigFloat {
+    type Output = BigFloat;
+
+    fn shr(self, rhs: i64) -> Self::Output {
+        BigFloat {
+            mantissa: self.mantissa.clone(),
+            precision: self.precision + rhs,
+            exact: self.exact,
+        }
+    }
+}
+
+impl<'a> ops::Shl<i64> for &'a BigFloat {
+    type Output = BigFloat;
+
+    fn shl(self, rhs: i64) -> Self::Output {
+        BigFloat {
+            mantissa: self.mantissa.clone(),
+            precision: self.precision - rhs,
+            exact: self.exact,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use num::BigInt;
@@ -357,6 +483,8 @@ mod tests {
     fn add() {
         assert_eq!(BigFloat::one() + BigFloat::one(), bf(2, 0));
         assert_eq!(bf(123 << 1, 1) + bf(456 << 1, 1), bf(579 << 1, 1));
+        assert_eq!(bf(123, 1) + bf(456, 1), bf(579, 1));
+        assert_eq!(bf(123, 1) + bf(456 << 1, 2), bf(579 << 1, 2));
     }
 
     #[test]
@@ -393,5 +521,28 @@ mod tests {
 
         assert_eq!(format!("{}", left.clone() * right.clone()), "5.75");
         assert_eq!(format!("{}", left + right), "23.25");
+    }
+
+    #[test]
+    fn reciprocals() {
+        assert_eq!(BigFloat::one().reciprocal(), bf(2, 1));
+        assert_eq!(BigFloat::from_int(2).reciprocal(), bf(2, 2));
+        assert_eq!(BigFloat::from_int(32).reciprocal(), bf(2, 6));
+    }
+
+    #[test]
+    fn test_sqrt() {
+        assert_eq!(
+            format!("{}", BigFloat::from_int(4).sqrt(30)),
+            "2.00000000000000000000..."
+        );
+        assert_eq!(
+            format!("{}", BigFloat::from_int(100).sqrt(30)),
+            "10.00000000000000000000..."
+        );
+        assert_eq!(
+            format!("{}", (BigFloat::from_int(1) >> 2).sqrt(30)),
+            "0.50000000000000000000..."
+        );
     }
 }

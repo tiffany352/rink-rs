@@ -195,7 +195,7 @@ impl Real {
     }
 
     pub fn to_string(&self, digits: u32, radix: u32) -> StringRepr {
-        let bits = log10_int(digits);
+        let bits = log10_int(digits) + 1;
         let (mut result, exact) = self.sample(bits as i64);
         let sign = result.numer().sign();
         result = result.abs();
