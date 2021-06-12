@@ -1,6 +1,7 @@
 use num::{BigInt, BigRational, One};
 
-use super::{term::Precedence, Approx, RReal, Term};
+use super::{term::Precedence, RReal, Term};
+use crate::BigFloat;
 
 #[derive(Debug)]
 pub struct Pi;
@@ -43,7 +44,7 @@ fn approximate(Vars { a, b, t, .. }: Vars) -> RReal {
 }
 
 impl Term for Pi {
-    fn eval(&self, precision: u64) -> Approx {
+    fn eval(&self, precision: i64) -> BigFloat {
         let mut vars = initial();
         let extra_eval_prec = 1; //(precision as f64).log2().ceil() as u64 + 10;
         for _ in 0..extra_eval_prec {

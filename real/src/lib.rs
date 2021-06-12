@@ -1,5 +1,7 @@
+mod float;
 mod real;
 mod rreal;
+pub(crate) mod util;
 
 #[cfg(test)]
 mod tests {
@@ -9,5 +11,6 @@ mod tests {
     }
 }
 
+pub(crate) use float::BigFloat;
 pub use real::Real;
 pub(crate) use rreal::RReal;

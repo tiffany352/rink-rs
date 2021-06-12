@@ -1,4 +1,4 @@
-use super::{term::Precedence, Approx, RReal, Term};
+use super::{term::Precedence, BigFloat, RReal, Term};
 
 #[derive(Debug)]
 pub struct Add {
@@ -7,11 +7,10 @@ pub struct Add {
 }
 
 impl Term for Add {
-    fn eval(&self, precision: u64) -> Approx {
+    fn eval(&self, precision: i64) -> BigFloat {
         let left = self.left.eval(precision + 1);
         let right = self.right.eval(precision + 1);
-        let value = (left.value + right.value) >> 1;
-        Approx::new(value, precision, left.exact && right.exact)
+        left + right
     }
 
     fn describe(&self, writer: &mut String, prec: Precedence) {
@@ -29,7 +28,7 @@ impl Term for Add {
 mod tests {
     use num::{BigInt, BigRational, One, Zero};
 
-    use crate::rreal::{Approx, RReal, Term};
+    use crate::rreal::{BigFloat, RReal, Term};
 
     use super::Add;
 
@@ -39,8 +38,8 @@ mod tests {
             left: RReal::rational(BigRational::one()),
             right: RReal::rational(BigRational::one()),
         };
-        assert_eq!(one.eval(0), Approx::new(BigInt::from(2), 0, true));
-        assert_eq!(one.eval(1), Approx::new(BigInt::from(2 << 1), 1, true));
+        assert_eq!(one.eval(0), BigFloat::new(BigInt::from(2 << 1), 1, true));
+        assert_eq!(one.eval(1), BigFloat::new(BigInt::from(2 << 2), 2, true));
     }
 
     #[test]
@@ -49,9 +48,9 @@ mod tests {
             left: RReal::rational(BigRational::new(BigInt::from(1), BigInt::from(2))),
             right: RReal::rational(BigRational::new(BigInt::from(1), BigInt::from(2))),
         };
-        assert_eq!(half.eval(0), Approx::new(BigInt::one(), 0, true));
-        assert_eq!(half.eval(1), Approx::new(BigInt::from(2), 1, true));
-        assert_eq!(half.eval(2), Approx::new(BigInt::from(4), 2, true));
+        assert_eq!(half.eval(0), BigFloat::new(BigInt::from(2), 1, true));
+        assert_eq!(half.eval(1), BigFloat::new(BigInt::from(4), 2, true));
+        assert_eq!(half.eval(2), BigFloat::new(BigInt::from(8), 3, true));
     }
 
     #[test]
@@ -60,9 +59,9 @@ mod tests {
             left: RReal::rational(BigRational::new(BigInt::from(1), BigInt::from(4))),
             right: RReal::rational(BigRational::new(BigInt::from(1), BigInt::from(4))),
         };
-        assert_eq!(half.eval(0), Approx::new(BigInt::zero(), 0, false));
-        assert_eq!(half.eval(1), Approx::new(BigInt::from(1), 1, true));
-        assert_eq!(half.eval(2), Approx::new(BigInt::from(2), 2, true));
+        assert_eq!(half.eval(0), BigFloat::new(BigInt::from(0), 0, false));
+        assert_eq!(half.eval(1), BigFloat::new(BigInt::from(2), 2, true));
+        assert_eq!(half.eval(2), BigFloat::new(BigInt::from(4), 3, true));
     }
 
     #[test]
@@ -71,10 +70,10 @@ mod tests {
             left: RReal::rational(BigRational::new(BigInt::from(1), BigInt::from(3))),
             right: RReal::rational(BigRational::new(BigInt::from(2), BigInt::from(3))),
         };
-        assert_eq!(half.eval(0), Approx::new(BigInt::zero(), 0, false));
-        assert_eq!(half.eval(1), Approx::new(BigInt::one(), 1, false));
-        assert_eq!(half.eval(2), Approx::new(BigInt::from(3), 2, false));
-        assert_eq!(half.eval(3), Approx::new(BigInt::from(7), 3, false));
-        assert_eq!(half.eval(4), Approx::new(BigInt::from(15), 4, false));
+        assert_eq!(half.eval(0), BigFloat::new(BigInt::zero(), 0, false));
+        assert_eq!(half.eval(1), BigFloat::new(BigInt::one(), 1, false));
+        assert_eq!(half.eval(2), BigFloat::new(BigInt::from(3), 2, false));
+        assert_eq!(half.eval(3), BigFloat::new(BigInt::from(7), 3, false));
+        assert_eq!(half.eval(4), BigFloat::new(BigInt::from(15), 4, false));
     }
 }

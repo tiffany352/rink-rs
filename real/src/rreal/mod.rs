@@ -1,3 +1,4 @@
+use crate::BigFloat;
 use lazy_static::lazy_static;
 use num::{BigInt, BigRational, One, Zero};
 use std::{
@@ -6,7 +7,6 @@ use std::{
 };
 
 mod add;
-mod approx;
 mod mul;
 mod neg;
 mod one;
@@ -16,13 +16,12 @@ mod recip;
 mod sqrt;
 mod term;
 
-pub use approx::Approx;
 pub use term::Term;
 
 #[derive(Clone, Debug)]
 pub struct RReal {
     term: Arc<dyn Term>,
-    cached: Arc<Mutex<Option<Approx>>>,
+    cached: Arc<Mutex<Option<BigFloat>>>,
 }
 
 lazy_static! {
@@ -31,21 +30,17 @@ lazy_static! {
 }
 
 impl RReal {
-    pub fn eval(&self, precision: u64) -> Approx {
+    pub fn eval(&self, precision: i64) -> BigFloat {
         let mut lock = self.cached.lock().unwrap();
         if let Some(ref cached) = *lock {
-            if cached.precision > precision {
-                let delta = cached.precision - precision;
-                let exact = cached.exact && {
+            if cached.precision() > precision {
+                let delta = cached.precision() - precision;
+                let exact = cached.is_exact() && {
                     let mask: BigInt = (BigInt::one() << delta) - 1;
-                    (&cached.value & mask).is_zero()
+                    (cached.mantissa() & mask).is_zero()
                 };
-                let value = &cached.value >> delta;
-                return Approx {
-                    precision,
-                    value,
-                    exact,
-                };
+                let value = cached.mantissa() >> delta;
+                return BigFloat::new(value, precision, exact);
             }
         }
         let approx = self.term.eval(precision);

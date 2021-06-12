@@ -2,7 +2,7 @@ use std::{cmp::Ordering, fmt, ops};
 
 use num::{bigint::Sign, BigInt, BigRational, One, Signed, Zero};
 
-use crate::RReal;
+use crate::{util::log10_int, RReal};
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Property {
@@ -116,19 +116,19 @@ impl Real {
         Real::new(value, Property::One)
     }
 
-    pub fn sample(&self, precision: u64) -> (BigRational, bool) {
+    pub fn sample(&self, precision: i64) -> (BigRational, bool) {
         if self.is_definitely_zero() {
             return (BigRational::zero(), true);
         }
 
-        let additional = self.rational.denom().bits() - 1;
+        let additional = self.rational.denom().bits() as i64 - 1;
         let precision = precision + additional;
 
         let approx = self.real.eval(precision);
-        let mut ratio = BigRational::new(approx.value, BigInt::one() << precision);
+        let mut ratio = approx.to_rational();
         ratio *= &self.rational;
 
-        (ratio, approx.exact)
+        (ratio, approx.is_exact())
     }
 
     fn definitely_independent(&self, rhs: &Real) -> bool {
@@ -194,13 +194,9 @@ impl Real {
         false
     }
 
-    fn log10_int(value: u32) -> u64 {
-        (value as f64 * 10.0f64.log2()).ceil() as u64
-    }
-
     pub fn to_string(&self, digits: u32, radix: u32) -> StringRepr {
-        let bits = Self::log10_int(digits);
-        let (mut result, exact) = self.sample(bits);
+        let bits = log10_int(digits);
+        let (mut result, exact) = self.sample(bits as i64);
         let sign = result.numer().sign();
         result = result.abs();
 
@@ -420,25 +416,6 @@ mod tests {
 
     fn int(i: i32) -> BigInt {
         BigInt::from(i)
-    }
-
-    #[test]
-    fn test_log10_int() {
-        let results = (1..10).map(Real::log10_int).collect::<Vec<_>>();
-        assert_eq!(
-            results,
-            vec![
-                4,  // 1, 2^4  =            16 >            10
-                7,  // 2, 2^7  =           128 >           100
-                10, // 3, 2^10 =          1024 >         1,000
-                14, // 4, 2^14 =        16,384 >        10,000
-                17, // 5, 2^17 =       131,072 >       100,000
-                20, // 6, 2^20 =     1,048,576 >     1,000,000
-                24, // 7, 2^24 =    16,777,216 >    10,000,000
-                27, // 8, 2^27 =   134,217,728 >   100,000,000
-                30, // 9, 2^30 = 1,073,741,824 > 1,000,000,000
-            ]
-        );
     }
 
     #[test]
