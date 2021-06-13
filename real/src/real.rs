@@ -414,7 +414,7 @@ mod tests {
     use crate::Real;
     use num::{BigInt, BigRational};
 
-    fn int(i: i32) -> BigInt {
+    fn int(i: i64) -> BigInt {
         BigInt::from(i)
     }
 
@@ -449,6 +449,16 @@ mod tests {
                 None,         // 19
             ]
         );
+
+        let mut results = vec![];
+        for i in 0..200 {
+            if let Some(square) = Real::find_perfect_square(&int(i)) {
+                results.push(square);
+            }
+        }
+        assert_eq!(results, (0..=14).map(int).collect::<Vec<_>>());
+
+        assert_eq!(Real::find_perfect_square(&int(1 << 60)), Some(int(1 << 30)));
     }
 
     fn rat(numer: i64, denom: i64) -> Real {
