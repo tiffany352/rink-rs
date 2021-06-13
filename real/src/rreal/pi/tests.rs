@@ -1,5 +1,5 @@
 use super::{approximate, initial, iterate};
-use crate::Real;
+use crate::{float::BigFloat, Real};
 
 //#[test]
 fn find_accurate_digits() {
@@ -10,7 +10,7 @@ fn find_accurate_digits() {
     let mut vars = initial(100);
     let expected = vec![4, 9, 20, 22, 0, 0, 0];
     for i in 1..expected.len() {
-        vars = iterate(vars, 100 + i as i64 * 100);
+        vars = iterate(vars, 100 + i as i64 * 100, BigFloat::one());
         let value = approximate(&vars);
         let digits = format!("{}", value);
 

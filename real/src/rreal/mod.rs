@@ -26,7 +26,7 @@ pub struct RReal {
 
 lazy_static! {
     static ref ONE: RReal = RReal::new(one::ConstOne);
-    static ref PI: RReal = RReal::new(pi::Pi);
+    static ref PI: RReal = RReal::new(pi::Pi::new());
 }
 
 impl RReal {

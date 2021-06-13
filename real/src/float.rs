@@ -111,7 +111,7 @@ impl BigFloat {
         BigFloat::new(self.mantissa.abs(), self.precision, self.exact)
     }
 
-    pub fn sqrt(self, precision: i64) -> BigFloat {
+    pub fn sqrt_with_estimate(self, precision: i64, estimate: BigFloat) -> BigFloat {
         if self.is_one() {
             return BigFloat::one();
         }
@@ -124,54 +124,68 @@ impl BigFloat {
             );
         }
 
-        let (mut min, mut max) = if &self > &BigFloat::one() {
-            (BigFloat::one(), self.clone())
-        } else {
-            (BigFloat::zero(), BigFloat::one())
-        };
-        let mut pivot = (&min + &max) >> 1;
+        println!("sqrt({}) with estimate {}", self, estimate);
+        let mut pivot = estimate;
         let eps = BigFloat::two_pow(precision);
 
-        for _ in 0..10000 {
+        for _ in 0..20 {
+            let recip = pivot.reciprocal_with_precision(precision * 3);
+            println!(
+                "{}.reciprocal_with_precision({}) = {}",
+                pivot, precision, recip
+            );
+            pivot = (&self * &recip + pivot) >> 1;
             let square = &pivot * &pivot;
             let delta = &square - &self;
-            let is_negative = delta.is_negative();
-            if !is_negative && &delta < &eps {
+            println!(
+                "pivot = {}, square = {}, self = {}, delta = {}, eps = {:?}",
+                pivot, square, self, delta, eps
+            );
+            if !delta.is_negative() && delta < eps {
                 return pivot.truncate(precision);
             }
-
-            if is_negative {
-                // Estimate is too low, need to check higher.
-                let new_pivot = (&max + &pivot) >> 1;
-                min = pivot;
-                pivot = new_pivot;
-            } else {
-                // Estimate is too high, need to check lower.
-                let new_pivot = (&min + &pivot) >> 1;
-                max = pivot;
-                pivot = new_pivot;
-            }
         }
+
         panic!(
-            "Failed to converge on a sqrt: self = {}, eps = {:?}",
-            self, eps
+            "Failed to converge on a sqrt: self = {}, pivot = {}, eps = {:?}",
+            self, pivot, eps
         );
     }
 
-    fn reciprocal(&self) -> BigFloat {
+    pub fn sqrt(self, precision: i64) -> BigFloat {
+        self.sqrt_with_estimate(precision, BigFloat::one())
+    }
+
+    fn reciprocal_with_precision(&self, extra_precision: i64) -> BigFloat {
         // x / 2^p = 1 / (y / 2^p)
         // x = 2^(2p) / y
 
-        let one = BigInt::one() << (self.precision.max(0) * 2 + self.mantissa.bits() as i64);
+        assert!(
+            self.precision >= 0,
+            "NYI: reciprocal of number with poor precision"
+        );
 
-        let value: BigInt = &one / self.mantissa();
-        let exact = (&one % self.mantissa()).is_zero();
+        let trailing = self
+            .mantissa
+            .trailing_zeros()
+            .expect("reciprocal of 0 is undefined");
+        let mantissa = &self.mantissa >> trailing;
+
+        let shift = 2 * (self.precision - trailing as i64) + extra_precision;
+        let one = BigInt::one() << shift;
+
+        let exact = one.is_multiple_of(&mantissa);
+        let value: BigInt = one.div_ceil(&mantissa);
 
         BigFloat::new(
             value,
-            self.precision + self.mantissa.bits() as i64,
+            self.precision - trailing as i64 + extra_precision,
             self.exact && exact,
         )
+    }
+
+    fn reciprocal(&self) -> BigFloat {
+        self.reciprocal_with_precision(30)
     }
 
     fn truncate(self, precision: i64) -> BigFloat {
@@ -525,9 +539,38 @@ mod tests {
 
     #[test]
     fn reciprocals() {
-        assert_eq!(BigFloat::one().reciprocal(), bf(2, 1));
-        assert_eq!(BigFloat::from_int(2).reciprocal(), bf(2, 2));
-        assert_eq!(BigFloat::from_int(32).reciprocal(), bf(2, 6));
+        assert_eq!(format!("{}", BigFloat::from_int(2).reciprocal()), "0.5");
+        assert_eq!(format!("{}", BigFloat::from_int(4).reciprocal()), "0.25");
+        assert_eq!(
+            format!("{}", BigFloat::from_int(512).reciprocal()),
+            "0.001953125"
+        );
+        assert_eq!(
+            format!("{}", BigFloat::from_int(5).reciprocal()),
+            "0.20000000018626451492..."
+        );
+        assert_eq!(
+            format!("{}", BigFloat::from_int(3).reciprocal()),
+            "0.33333333395421504974..."
+        );
+        assert_eq!(
+            format!("{}", BigFloat::from_int(10).reciprocal()),
+            "0.10000000149011611938..."
+        );
+        assert_eq!(
+            format!("{}", BigFloat::from_int(9).reciprocal()),
+            "0.11111111193895339965..."
+        );
+
+        assert_eq!(
+            format!("{}", bf(10 * 1024 * 1024, 20).reciprocal()),
+            "0.10000000149011611938..."
+        );
+        assert_eq!(format!("{}", bf(5368709120, 30)), "5");
+        assert_eq!(
+            format!("{}", bf(5368709120, 30).reciprocal()),
+            "0.20000000018626451492..."
+        );
     }
 
     #[test]

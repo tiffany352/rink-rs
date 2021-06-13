@@ -1,4 +1,4 @@
-use num::{BigInt, BigRational, One};
+use std::sync::{Arc, Mutex};
 
 use super::{term::Precedence, Term};
 use crate::BigFloat;
@@ -6,7 +6,17 @@ use crate::BigFloat;
 /// An implementation of pi as a recursive real, using the
 /// Gauss–Legendre algorithm.
 #[derive(Debug)]
-pub struct Pi;
+pub struct Pi {
+    terms: Arc<Mutex<Vec<BigFloat>>>,
+}
+
+impl Pi {
+    pub(crate) fn new() -> Pi {
+        Pi {
+            terms: Arc::new(Mutex::new(vec![])),
+        }
+    }
+}
 
 #[derive(Clone)]
 struct Vars {
@@ -25,9 +35,9 @@ fn initial(precision: i64) -> Vars {
     }
 }
 
-fn iterate(Vars { i, a, b, t }: Vars, precision: i64) -> Vars {
+fn iterate(Vars { i, a, b, t }: Vars, precision: i64, b_estimate: BigFloat) -> Vars {
     let a1 = (&a + &b) >> 1;
-    let b1 = (&a * &b).sqrt(precision);
+    let b1 = (&a * &b).sqrt_with_estimate(precision, b_estimate);
     let a_delta = &a - &a1;
     let t1 = t - BigFloat::two_pow(-i) * (&a_delta * &a_delta);
     Vars {
@@ -59,8 +69,23 @@ impl Term for Pi {
             "precision: {}, extra_prec: {}, iterations: {}",
             precision, extra_prec, extra_eval_prec
         );
-        for _ in 0..extra_eval_prec {
-            vars = iterate(vars, extra_prec);
+        let one = BigFloat::one();
+        for i in 0..extra_eval_prec {
+            let b_estimate = {
+                let terms = self.terms.lock().unwrap();
+                terms.get(i as usize).unwrap_or(&one).clone()
+            };
+            vars = iterate(vars, extra_prec, b_estimate);
+            {
+                let mut terms = self.terms.lock().unwrap();
+                if let Some(existing) = terms.get_mut(i as usize) {
+                    if vars.b.precision() > existing.precision() {
+                        *existing = vars.b.clone();
+                    }
+                } else {
+                    terms.push(vars.b.clone());
+                }
+            }
             let approx = approximate(&vars);
             println!(
                 "a = {}, b = {}, t = {}, approx = {}",

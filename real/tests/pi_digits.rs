@@ -28,6 +28,7 @@ fn test_pi_digits() {
         "3.14159265358979323846",
         "20 digits"
     );
+    // Flaky somehow???
     // assert_eq!(
     //     format!("{}", pi.to_string(50, 10)),
     //     &pi_digits[0..52],
