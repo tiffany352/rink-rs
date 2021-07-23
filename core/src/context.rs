@@ -8,7 +8,7 @@ use crate::numeric::Numeric;
 use crate::reply::NotFoundError;
 use crate::search;
 use crate::substance::Substance;
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Local, TimeZone};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The evaluation context that contains unit definitions.
@@ -28,7 +28,7 @@ pub struct Context {
     pub substances: BTreeMap<String, Substance>,
     pub substance_symbols: BTreeMap<String, String>,
     pub temporaries: BTreeMap<String, Number>,
-    pub now: DateTime<Utc>,
+    pub now: DateTime<Local>,
     pub short_output: bool,
     pub use_humanize: bool,
 }
@@ -47,7 +47,7 @@ impl Context {
             short_output: false,
             use_humanize: true,
 
-            now: Utc.ymd(2000, 1, 1).and_hms(0, 0, 0),
+            now: Local.timestamp(0, 0),
 
             dimensions: BTreeSet::new(),
             prefixes: vec![],
@@ -66,12 +66,12 @@ impl Context {
         }
     }
 
-    pub fn set_time(&mut self, time: DateTime<Utc>) {
+    pub fn set_time(&mut self, time: DateTime<Local>) {
         self.now = time;
     }
 
     pub fn update_time(&mut self) {
-        self.now = Utc::now();
+        self.now = Local::now();
     }
 
     pub fn load_dates(&mut self, mut dates: Vec<Vec<DatePattern>>) {

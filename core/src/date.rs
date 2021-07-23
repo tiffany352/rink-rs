@@ -9,7 +9,7 @@ use crate::context::Context;
 use crate::number::{Dimension, Number};
 use crate::numeric::Numeric;
 use chrono::format::Parsed;
-use chrono::{DateTime, Duration, FixedOffset, TimeZone, Utc, Weekday};
+use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
 use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::FromStr;
@@ -288,7 +288,7 @@ impl GenericDateTime {
 }
 
 fn attempt(
-    now: DateTime<Utc>,
+    now: DateTime<Local>,
     date: &[DateToken],
     pat: &[DatePattern],
 ) -> Result<GenericDateTime, (String, usize)> {
@@ -760,7 +760,7 @@ mod tests {
             Number(x.into(), None)
         }
 
-        let now = Utc::now();
+        let now = Local::now();
 
         macro_rules! check_attempt {
             ($date:expr, $pat:expr) => {{

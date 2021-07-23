@@ -1,4 +1,4 @@
-use chrono::{TimeZone, Utc};
+use chrono::{Local, TimeZone};
 use js_sys::Date;
 use rink_core;
 use rink_core::ast;
@@ -87,7 +87,8 @@ impl Context {
         let sec = date.get_utc_seconds();
         let millis = date.get_utc_milliseconds();
         self.context.set_time(
-            Utc.ymd(year as i32, month, day)
+            Local
+                .ymd(year as i32, month, day)
                 .and_hms_milli(hour, min, sec, millis),
         );
     }
