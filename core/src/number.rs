@@ -709,6 +709,7 @@ impl Number {
     pub fn to_parts_simple(&self) -> NumberParts {
         let (exact, approx) = self.numeric_value(10, Digits::Default);
         NumberParts {
+            raw_value: Some(self.clone()),
             exact_value: exact,
             approx_value: approx,
             dimensions: Some(Number::unit_to_string(&self.unit)),
@@ -795,6 +796,7 @@ impl Number {
         });
 
         NumberParts {
+            raw_value: Some(value.clone()),
             exact_value: exact,
             approx_value: approx,
             unit: if value.unit != self.unit {
