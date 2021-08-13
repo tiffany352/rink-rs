@@ -78,7 +78,14 @@ pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
     ctx.update_time();
     let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
-    ctx.eval_outer(&expr)
+    let res = ctx.eval_outer(&expr)?;
+    if let QueryReply::Number(ref number_parts) = res {
+        println!("got number {}", number_parts);
+        if let Some(ref raw) = number_parts.raw_value {
+            ctx.previous_result = Some(raw.clone());
+        }
+    }
+    Ok(res)
 }
 
 /// Evaluates a single line within a context.
