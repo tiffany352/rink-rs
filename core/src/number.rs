@@ -25,7 +25,8 @@ pub struct Dimension {
 }
 
 /// The basic representation of a number with a unit.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Number {
     pub value: Numeric,
     pub unit: Quantity,
@@ -70,6 +71,8 @@ pub fn pow(left: &Numeric, exp: i32) -> Numeric {
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NumberParts {
+    /// Raw numeric value, so precise number can be extracted from then NumberParts again.
+    pub raw_value: Option<Number>,
     /// Present if the number can be concisely represented exactly.
     /// May be decimal, fraction, or scientific notation.
     pub exact_value: Option<String>,
