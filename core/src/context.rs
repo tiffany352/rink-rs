@@ -84,7 +84,7 @@ impl Context {
     /// prefixes, plurals, bare dimensions like length, and quantities.
     pub fn lookup(&self, name: &str) -> Option<Number> {
         fn inner(ctx: &Context, name: &str) -> Option<Number> {
-            if name.eq("ans") {
+            if name == "ans" || name == "ANS" || name == "_" {
                 return ctx.previous_result.clone();
             }
             if let Some(v) = ctx.temporaries.get(name).cloned() {
