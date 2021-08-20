@@ -796,7 +796,7 @@ impl Number {
         });
 
         NumberParts {
-            raw_value: Some(value.clone()),
+            raw_value: Some(self.clone()),
             exact_value: exact,
             approx_value: approx,
             unit: if value.unit != self.unit {
