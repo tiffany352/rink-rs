@@ -31,6 +31,7 @@ pub struct Context {
     pub now: DateTime<Local>,
     pub short_output: bool,
     pub use_humanize: bool,
+    pub previous_result: Option<Number>,
 }
 
 impl Default for Context {
@@ -63,6 +64,7 @@ impl Context {
             substances: BTreeMap::new(),
             substance_symbols: BTreeMap::new(),
             temporaries: BTreeMap::new(),
+            previous_result: None,
         }
     }
 
@@ -82,6 +84,9 @@ impl Context {
     /// prefixes, plurals, bare dimensions like length, and quantities.
     pub fn lookup(&self, name: &str) -> Option<Number> {
         fn inner(ctx: &Context, name: &str) -> Option<Number> {
+            if name == "ans" || name == "ANS" || name == "_" {
+                return ctx.previous_result.clone();
+            }
             if let Some(v) = ctx.temporaries.get(name).cloned() {
                 return Some(v);
             }

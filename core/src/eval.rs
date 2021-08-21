@@ -606,6 +606,7 @@ impl Context {
         let (num, den) = bottom_const.to_rational();
         ConversionReply {
             value: NumberParts {
+                raw_value: Some(raw.clone()),
                 exact_value: exact,
                 approx_value: approx,
                 factor: if num != BigInt::one() {
@@ -671,11 +672,11 @@ impl Context {
             .iter()
             .zip(out.into_iter())
             .map(|(name, value)| {
-                let pretty = Number {
+                let raw_number = Number {
                     value,
                     unit: Number::one_unit(Dimension::new(name)).unit,
-                }
-                .to_parts(self);
+                };
+                let pretty = raw_number.to_parts(self);
                 let unit: String = pretty
                     .unit
                     .or(pretty.dimensions)
@@ -684,6 +685,7 @@ impl Context {
                 let mut raw = BTreeMap::new();
                 raw.insert(Dimension::new(&unit), 1);
                 NumberParts {
+                    raw_value: Some(raw_number),
                     unit: Some(unit),
                     raw_unit: Some(raw),
                     exact_value: Some(
@@ -794,6 +796,7 @@ impl Context {
                 };
                 let (exact, approx) = top.numeric_value(base, digits);
                 let parts = NumberParts {
+                    raw_value: Some(top.clone()),
                     exact_value: exact,
                     approx_value: approx,
                     ..top.to_parts(self)
@@ -821,6 +824,7 @@ impl Context {
                 };
                 let (exact, approx) = top.numeric_value(base.unwrap_or(10), digits);
                 let parts = NumberParts {
+                    raw_value: Some(top.clone()),
                     exact_value: exact,
                     approx_value: approx,
                     ..top.to_parts(self)

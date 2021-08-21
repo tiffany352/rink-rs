@@ -9,7 +9,7 @@ use crate::bigint::BigInt;
 use crate::bigrat::BigRat;
 
 /// Number type.
-#[derive(Clone, PartialEq, Debug, Serialize)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(into = "NumericParts")]
 pub enum Numeric {
     /// Arbitrary-precision rational fraction.
