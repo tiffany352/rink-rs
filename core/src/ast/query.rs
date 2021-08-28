@@ -21,6 +21,7 @@ pub enum Query {
     UnitsFor(Expr),
     Search(String),
     Error(String),
+    Let(String, Expr),
 }
 
 impl fmt::Display for Conversion {

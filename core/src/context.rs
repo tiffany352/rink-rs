@@ -32,6 +32,7 @@ pub struct Context {
     pub short_output: bool,
     pub use_humanize: bool,
     pub previous_result: Option<Number>,
+    pub variables: BTreeMap<String, Number>,
 }
 
 impl Default for Context {
@@ -65,6 +66,7 @@ impl Context {
             substance_symbols: BTreeMap::new(),
             temporaries: BTreeMap::new(),
             previous_result: None,
+            variables: BTreeMap::new(),
         }
     }
 
@@ -86,6 +88,9 @@ impl Context {
         fn inner(ctx: &Context, name: &str) -> Option<Number> {
             if name == "ans" || name == "ANS" || name == "_" {
                 return ctx.previous_result.clone();
+            }
+            if let Some(v) = ctx.variables.get(name).cloned() {
+                return Some(v);
             }
             if let Some(v) = ctx.temporaries.get(name).cloned() {
                 return Some(v);
