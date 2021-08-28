@@ -89,9 +89,6 @@ impl Context {
             if name == "ans" || name == "ANS" || name == "_" {
                 return ctx.previous_result.clone();
             }
-            if let Some(v) = ctx.variables.get(name).cloned() {
-                return Some(v);
-            }
             if let Some(v) = ctx.temporaries.get(name).cloned() {
                 return Some(v);
             }
@@ -108,6 +105,9 @@ impl Context {
                         unit: unit.clone(),
                     });
                 }
+            }
+            if let Some(v) = ctx.variables.get(name).cloned() {
+                return Some(v);
             }
             None
         }
