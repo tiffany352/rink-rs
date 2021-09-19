@@ -43,6 +43,7 @@ The most common version of Rink is the command line interface `rink`.
 | Cargo           | `cargo install rink` |
 | Pacman          | `pacman -S rink`     |
 | Nix             | `nix-env -i rink`    |
+| Scoop           | `scoop install rink` |
 
 ## Examples
 
