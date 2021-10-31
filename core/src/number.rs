@@ -420,10 +420,16 @@ impl<'a> NumberPartsFmt<'a> {
                             tokens.push(Span::number(f));
                             tokens.push(Span::plain(" "));
                         }
+                        let mut first = true;
                         for (dim, &exp) in unit {
                             if exp < 0 {
                                 frac.push((dim, exp));
                             } else {
+                                if first {
+                                    first = false;
+                                } else {
+                                    tokens.push(Span::plain(" "));
+                                }
                                 tokens.push(Span::unit(&*dim.id));
                                 if exp != 1 {
                                     tokens.push(Span::pow(format!("^{}", exp)));
