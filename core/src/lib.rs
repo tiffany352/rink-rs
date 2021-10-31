@@ -79,9 +79,11 @@ pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
     let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     let res = ctx.eval_outer(&expr)?;
-    if let QueryReply::Number(ref number_parts) = res {
-        if let Some(ref raw) = number_parts.raw_value {
-            ctx.previous_result = Some(raw.clone());
+    if ctx.save_previous_result {
+        if let QueryReply::Number(ref number_parts) = res {
+            if let Some(ref raw) = number_parts.raw_value {
+                ctx.previous_result = Some(raw.clone());
+            }
         }
     }
     Ok(res)

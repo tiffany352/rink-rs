@@ -31,6 +31,7 @@ pub struct Context {
     pub now: DateTime<Local>,
     pub short_output: bool,
     pub use_humanize: bool,
+    pub save_previous_result: bool,
     pub previous_result: Option<Number>,
 }
 
@@ -47,6 +48,7 @@ impl Context {
         Context {
             short_output: false,
             use_humanize: true,
+            save_previous_result: false,
 
             now: Local.timestamp(0, 0),
 

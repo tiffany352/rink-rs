@@ -276,6 +276,7 @@ pub fn load(config: &Config) -> Result<Context> {
         .unwrap_or_else(|_| DATES_FILE.to_owned());
 
     let mut ctx = Context::new();
+    ctx.save_previous_result = true;
     ctx.load(gnu_units::parse_str(&units));
     ctx.load_dates(date::parse_datefile(&dates));
 
