@@ -1450,7 +1450,7 @@ dependencies = [
 
 [[package]]
 name = "rink"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "ansi_term 0.12.1",
  "async-std",
@@ -1474,7 +1474,7 @@ dependencies = [
 
 [[package]]
 name = "rink-core"
-version = "0.6.0"
+version = "0.6.2"
 dependencies = [
  "assert-json-diff",
  "chrono",
