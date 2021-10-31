@@ -642,3 +642,11 @@ fn test_bad_floats() {
 fn test_large_floats() {
     test("5.2*10^15*300^(3/2)", "approx. 2.701999e19 (dimensionless)");
 }
+
+#[test]
+fn test_atom_symbol() {
+    test(
+        "Og",
+        "oganesson: atomic_number = 118; molar_mass = approx. 294.2139 gram / mole",
+    );
+}

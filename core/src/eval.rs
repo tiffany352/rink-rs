@@ -39,6 +39,14 @@ impl Context {
                 .map(Value::Number)
                 .or_else(|| self.substances.get(name).cloned().map(Value::Substance))
                 .or_else(|| {
+                    self.substance_symbols.get(name).and_then(|full_name| {
+                        self.substances
+                            .get(full_name)
+                            .cloned()
+                            .map(Value::Substance)
+                    })
+                })
+                .or_else(|| {
                     substance_from_formula(name, &self.substance_symbols, &self.substances)
                         .map(Value::Substance)
                 })

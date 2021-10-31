@@ -6960,21 +6960,34 @@ tungsten {
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
-ununoctium {
+!symbol oganesson Og
+oganesson {
+    atomic_number   const oganesson_atomic_number 118
     molar_mass      mass 294.21392 g / amount mol
 }
 
-ununpentium {
+!symbol moscovium Mc
+moscovium {
+    atomic_number   const moscovium_atomic_number 115
     molar_mass      mass 288.19274 g / amount mol
 }
 
-ununseptium {
+!symbol tennessine Ts
+tennessine {
+    atomic_number   const tennessine_atomic_number 117
     molar_mass      mass 292.20746 g / amount mol
 }
 
-ununtrium {
+!symbol nihonium Nh
+nihonium  {
+    atomic_number   const nihonium_atomic_number 113
     molar_mass      mass 284.17873 g / amount mol
 }
+
+ununtrium    nihonium
+ununseptium  tennessine
+ununpentium  moscovium
+ununoctium   oganesson
 
 !symbol uranium U
 uranium {
