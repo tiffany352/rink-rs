@@ -379,6 +379,7 @@ impl<'a> NumberPartsFmt<'a> {
 
         let parts = self.number;
 
+        let mut last_was_ws = true;
         for tok in parse_pattern(self.pattern) {
             match tok {
                 PatternToken::Exact => {
@@ -419,6 +420,7 @@ impl<'a> NumberPartsFmt<'a> {
                             tokens.push(Span::plain("* "));
                             tokens.push(Span::number(f));
                             tokens.push(Span::plain(" "));
+                            last_was_ws = true;
                         }
                         let mut first = true;
                         for (dim, &exp) in unit {
@@ -434,10 +436,15 @@ impl<'a> NumberPartsFmt<'a> {
                                 if exp != 1 {
                                     tokens.push(Span::pow(format!("^{}", exp)));
                                 }
+                                last_was_ws = false;
                             }
                         }
                         if !frac.is_empty() || parts.divfactor.is_some() {
-                            tokens.push(Span::plain(" /"));
+                            if last_was_ws {
+                                tokens.push(Span::plain("/"));
+                            } else {
+                                tokens.push(Span::plain(" /"));
+                            }
                             if let Some(ref d) = parts.divfactor {
                                 tokens.push(Span::plain(" "));
                                 tokens.push(Span::number(d));
@@ -536,11 +543,14 @@ impl<'a> NumberPartsFmt<'a> {
                 },
                 PatternToken::Whitespace => {
                     tokens.push(Span::plain(" "));
+                    last_was_ws = true;
+                    continue;
                 }
                 PatternToken::Passthrough(text) => {
                     tokens.push(Span::plain(text));
                 }
             }
+            last_was_ws = false;
         }
         // Remove trailing whitespace
         loop {

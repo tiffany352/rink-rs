@@ -41,3 +41,10 @@ fn correct_whitespace() {
     test("m s", "1 meter second");
     test("kg m / s", "1 kilogram meter / second (impulse)");
 }
+
+#[test]
+fn correct_reciprocal_units() {
+    test("1 mpg", "approx. 425143.7 / meter^2 (fuel_efficiency)");
+    test("1 Hz", "1 / second (frequency)");
+    test("1 GHz", "1.0e9 / second (frequency)");
+}
