@@ -92,19 +92,8 @@ fn main() {
         }
     }
 
-    let create_children = |def: &DefEntry| -> (Vec<KdlNode>, String) {
+    let create_children = |def: &DefEntry| -> Vec<KdlNode> {
         let mut children = vec![];
-        let full_name = if let Some(full_name) = canonicalizations.get(&def.name) {
-            children.push(KdlNode {
-                name: "short".to_owned(),
-                values: vec![def.name.to_owned().into()],
-                properties: HashMap::new(),
-                children: vec![],
-            });
-            full_name.clone()
-        } else {
-            def.name.clone()
-        };
         if let Some(aliases) = aliases.get(&def.name) {
             for alias in aliases {
                 children.push(KdlNode {
@@ -130,21 +119,29 @@ fn main() {
             }
         }
 
-        (children, full_name)
+        children
     };
 
     let def_to_kdl = |def: &DefEntry| -> Option<KdlNode> {
-        let (mut children, full_name) = create_children(def);
+        let mut children = create_children(def);
         let mut properties = HashMap::new();
         let (name, values) = match *def.def {
-            Def::Dimension => ("base_unit", vec![full_name.into()]),
+            Def::Dimension => {
+                let full_name = if let Some(long) = canonicalizations.get(&def.name) {
+                    properties.insert("short".to_owned(), def.name.clone().into());
+                    long.clone()
+                } else {
+                    def.name.clone()
+                };
+                ("base_unit", vec![full_name.into()])
+            }
             Def::Canonicalization { .. } => return None,
             // Prefixes that are simple aliases of another prefix are inlined.
             Def::Prefix {
                 expr: ExprString(Expr::Unit { .. }),
             } => return None,
             Def::Prefix { ref expr } => {
-                properties.insert("short".to_owned(), full_name.into());
+                properties.insert("short".to_owned(), def.name.clone().into());
                 ("prefix", vec![String::from(expr.clone()).into()])
             }
             Def::SPrefix { ref expr } => {
@@ -161,16 +158,16 @@ fn main() {
                         properties.insert("short".to_owned(), aliases[0].clone().into());
                     }
                 }
-                properties.insert("long".to_owned(), full_name.into());
+                properties.insert("long".to_owned(), def.name.clone().into());
                 ("prefix", vec![String::from(expr.clone()).into()])
             }
             Def::Unit { ref expr } => (
                 "unit",
-                vec![full_name.into(), String::from(expr.clone()).into()],
+                vec![def.name.clone().into(), String::from(expr.clone()).into()],
             ),
             Def::Quantity { ref expr } => (
                 "quantity",
-                vec![full_name.into(), String::from(expr.clone()).into()],
+                vec![def.name.clone().into(), String::from(expr.clone()).into()],
             ),
             Def::Substance {
                 ref symbol,
@@ -199,7 +196,7 @@ fn main() {
                         children: prop_children,
                     })
                 }
-                let mut values = vec![full_name.into()];
+                let mut values = vec![def.name.clone().into()];
                 if let Some(symbol) = symbol {
                     values.push(symbol.clone().into());
                 }
@@ -219,7 +216,7 @@ fn main() {
 
     let create_category =
         |cat_def: &DefEntry, display_name: &String, mut extra_children: Vec<KdlNode>| -> KdlNode {
-            let (mut children, _) = create_children(cat_def);
+            let mut children = create_children(cat_def);
             children.push(KdlNode {
                 name: "title".to_owned(),
                 values: vec![display_name.clone().into()],
