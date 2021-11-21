@@ -1,0 +1,11 @@
+[package]
+name = "data"
+version = "0.1.0"
+authors = ["Tiffany Bennett <tiffany@tiffnix.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rink-core = { version = "0.6.2", path = "../core" }
+kdl = "3.0.0"
