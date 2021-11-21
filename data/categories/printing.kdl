@@ -1,0 +1,73 @@
+category "printing" {
+    title "Printing Units" lang="en"
+    unit "INpoint" "0.4 mm"
+    unit "Q" "1|4 mm"
+    unit "agate" "5.5 oldpoint" {
+        alias "ruby"
+    }
+    unit "bertholdpoint" "1|2660 m"
+    unit "borgis" "9 didotpoint"
+    unit "bourgeois" "9 oldpoint"
+    unit "brevier" "8 oldpoint"
+    unit "brillant" "3 didotpoint"
+    unit "brilliant" "3.5 oldpoint"
+    unit "canon" "48 oldpoint"
+    unit "cicero" "12 didotpoint"
+    unit "columbian" "16 oldpoint"
+    unit "computerpica" "12 computerpoint"
+    unit "computerpoint" "1|72 inch" {
+        alias "point"
+        alias "postscriptpoint"
+    }
+    unit "diamant" "4 didotpoint"
+    unit "diamondtype" "4 oldpoint"
+    unit "english" "14 oldpoint"
+    unit "excelsior" "3 oldpoint"
+    unit "fournierpoint" "0.1648 inch / 12"
+    unit "germandidotpoint" "0.376065 mm" {
+        alias "didotpoint"
+    }
+    unit "greatprimer" "18 oldpoint"
+    unit "grobe_kanon" "42 didotpoint"
+    unit "grobe_sabon" "84 didotpoint"
+    unit "kanon" "36 didotpoint"
+    unit "kleine_kanon" "32 didotpoint"
+    unit "kleine_sabon" "72 didotpoint"
+    unit "kolonel" "7 didotpoint"
+    unit "korpus" "10 didotpoint" {
+        alias "corpus"
+        alias "garamond"
+    }
+    unit "longprimer" "10 oldpoint"
+    unit "meridian" "44 oldpoint"
+    unit "metricpoint" "3|8 mm"
+    unit "mignonette" "6.5 oldpoint" {
+        alias "emerald"
+    }
+    unit "minion" "7 oldpoint"
+    unit "missal" "48 didotpoint"
+    unit "mittel" "14 didotpoint"
+    unit "nonpareil" "6 oldpoint"
+    unit "nonpareille" "6 didotpoint"
+    unit "nonplusultra" "2 didotpoint"
+    unit "olddidotpoint" "1|72 frenchinch" {
+        alias "frenchprinterspoint"
+    }
+    unit "oldpoint" "1|72.27 inch" {
+        alias "printerspoint"
+        alias "texpoint"
+    }
+    unit "paragon" "20 oldpoint"
+    unit "pearl" "5 oldpoint"
+    unit "perl" "5 didotpoint"
+    unit "petit" "8 didotpoint"
+    unit "pica" "12 oldpoint"
+    unit "smallpica" "11 oldpoint"
+    unit "stick" "2 inches"
+    unit "tertia" "16 didotpoint"
+    unit "texscaledpoint" "1|65536 texpoint" {
+        alias "texsp"
+    }
+    unit "text" "18 didotpoint"
+    unit "twip" "1|20 point"
+}

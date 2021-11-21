@@ -1,0 +1,16 @@
+category "northern_cubic" {
+    title "Northern Cubic and Foot" lang="en"
+    unit "assyriancubit" "21.6 in"
+    unit "assyrianfoot" "1|2 assyriancubit"
+    unit "assyrianpalm" "1|3 assyrianfoot"
+    unit "assyriansusi" "1|20 assyrianpalm" {
+        alias "susi"
+    }
+    unit "northerncubit" "26.6 in"
+    unit "northernfoot" "1|2 northerncubit"
+    unit "persianroyalcubit" "7 assyrianpalm"
+    unit "sumeriancubit" "495 mm" {
+        alias "kus"
+    }
+    unit "sumerianfoot" "2|3 sumeriancubit"
+}

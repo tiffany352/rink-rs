@@ -1,0 +1,10 @@
+category "fr_bottle" {
+    title "French CHampagne Bottle Sizes" lang="en"
+    unit "balthazar" "8 magnum"
+    unit "jeroboam" "2 magnum"
+    unit "methuselah" "4 magnum"
+    unit "nebuchadnezzar" "10 magnum"
+    unit "rehoboam" "3 magnum"
+    unit "salmanazar" "6 magnum"
+    unit "split" "200 ml"
+}

@@ -1,0 +1,7 @@
+category "br_bottles" {
+    title "British Bottle Sizes" lang="en"
+    unit "reputedpint" "1|2 reputedquart"
+    unit "reputedquart" "1|6 brgallon" {
+        alias "brwinebottle"
+    }
+}

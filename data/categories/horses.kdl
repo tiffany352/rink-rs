@@ -1,0 +1,15 @@
+category "horses" {
+    title "Horse Units" lang="en"
+    unit "boilerhorsepower" "9809.5 W"
+    unit "brhorsepower" "745.7 W"
+    unit "donkeypower" "250 W"
+    unit "electrichorsepower" "746 W"
+    unit "horsepower" "550 foot pound force / sec" {
+        alias "mechanicalhorsepower"
+        alias "hp"
+    }
+    unit "metrichorsepower" "75 kilogram force meter / sec" {
+        alias "chevalvapeur"
+    }
+    unit "waterhorsepower" "746.043 W"
+}

@@ -1,0 +1,49 @@
+category "dozenal" {
+    title "Dozenal Units" lang="en"
+    prefix "12^8" long="Aka"
+    prefix "12^-8" long="Aki"
+    prefix "12^10" long="Dexa"
+    prefix "12^-10" long="Dexi"
+    prefix "12^2" long="Duna"
+    prefix "12^-2" long="Duni"
+    prefix "12^6" long="Hesa"
+    prefix "12^-6" long="Hesi"
+    prefix "12^11" long="Lefa"
+    prefix "12^-11" long="Lefi"
+    prefix "12^9" long="Neena"
+    prefix "12^-9" long="Neeni"
+    prefix "12^4" long="Quedra"
+    prefix "12^-4" long="Quedri"
+    prefix "12^5" long="Quena"
+    prefix "12^-5" long="Queni"
+    prefix "12^7" long="Seva"
+    prefix "12^-7" long="Sevi"
+    prefix "12^3" long="Trina"
+    prefix "12^-3" long="Trini"
+    prefix "12" long="Zena"
+    prefix "12^-1" long="Zeni"
+    prefix "12^12" long="Zennila"
+    prefix "12^-12" long="Zennili"
+    unit "Denz" "Maz / Volm" {
+        alias "Dz"
+    }
+    unit "Grafut" "gravity Tim^2" {
+        alias "Gf"
+    }
+    unit "Mag" "Maz gravity"
+    unit "Maz" "Volm kg / oldliter" {
+        alias "Mz"
+    }
+    unit "Surf" "Grafut^2" {
+        alias "Sf"
+    }
+    unit "Tim" "12^-4 hour" {
+        alias "Tm"
+    }
+    unit "Vlos" "Grafut / Tim" {
+        alias "Vl"
+    }
+    unit "Volm" "Grafut^3" {
+        alias "Vm"
+    }
+}

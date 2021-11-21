@@ -1,0 +1,92 @@
+category "br_volume" {
+    title "British Volume Measures" lang="en"
+    unit "amber" "4 brbushel"
+    unit "bag" "4 brbushel"
+    unit "boll" "6 brbushel"
+    unit "brbarrel" "36 brgallon" {
+        alias "imperialbarrel"
+    }
+    unit "brbeerbutt" "2 brbeerhogshead" {
+        alias "imperialbeerbutt"
+    }
+    unit "brbeerhogshead" "54 brgallon" {
+        alias "imperialbeerhogshead"
+    }
+    unit "brbushel" "8 brgallon" {
+        alias "imperialbushel"
+    }
+    unit "brchaldron" "36 brbushel" {
+        alias "imperialchaldron"
+    }
+    unit "brcup" "1|2 brpint"
+    unit "brdessertspoon" "2 brteaspoon" {
+        alias "dessertspoon"
+    }
+    unit "brdram" "1|8 brfloz" {
+        alias "imperialdram"
+    }
+    unit "brfirkin" "9 brgallon" {
+        alias "imperialfirkin"
+    }
+    unit "brfluidounce" "1|20 brpint" {
+        alias "brfloz"
+        alias "imperialfluidounce"
+    }
+    unit "brgallon" "4.54609 l" {
+        alias "imperialgallon"
+    }
+    unit "brgill" "1|4 brpint" {
+        alias "noggin"
+        alias "imperialgill"
+    }
+    unit "brheapedbushel" "1.278 brbushel" {
+        alias "imperialheapedbushel"
+    }
+    unit "brminim" "1|60 brdram" {
+        alias "imperialminim"
+    }
+    unit "brpint" "1|2 brquart" {
+        alias "imperialpint"
+    }
+    unit "brquart" "1|4 brgallon" {
+        alias "imperialquart"
+    }
+    unit "brquarter" "8 brbushel" {
+        alias "imperialquarter"
+    }
+    unit "brscruple" "1|3 brdram" {
+        alias "fluidscruple"
+        alias "imperialscruple"
+    }
+    unit "brshippington" "42 ft^3"
+    unit "brtablespoon" "15 ml" {
+        alias "brtbl"
+        alias "brtbsp"
+        alias "brtblsp"
+    }
+    unit "brteacup" "1|3 brpint"
+    unit "brteaspoon" "1|3 brtablespoon" {
+        alias "brtsp"
+    }
+    unit "brwinehogshead" "52.5 brgallon" {
+        alias "brhogshead"
+        alias "imperialwinehogshead"
+    }
+    unit "bucket" "4 brgallon"
+    unit "coomb" "4 brbushel"
+    unit "cran" "37.5 brgallon"
+    unit "displacementton" "35 ft^3"
+    unit "firlot" "1|4 boll"
+    unit "kilderkin" "2 brfirkin"
+    unit "last" "40 brbushel"
+    unit "pin" "4.5 brgallon"
+    unit "pottle" "0.5 brgallon"
+    unit "puncheon" "72 brgallon"
+    unit "registerton" "100 ft^3"
+    unit "seam" "8 brbushel"
+    unit "shippington" "40 ft^3" {
+        alias "freightton"
+    }
+    unit "strike" "70.5 l"
+    unit "waterton" "224 brgallon"
+}

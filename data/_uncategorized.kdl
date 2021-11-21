@@ -1,0 +1,524 @@
+base_unit "IU" {
+    doc "One international unit of a biological agent is the biological activity equivalent to a standard amount of a substance that represents the agent (its “reference preparation”). Agents that can be measured in international units are generally found in multiple forms (such as Vitamin A) and/or not meaningfully comparable in SI units like moles (such as prolactin). WHO TRS 932, Annex 2." lang="en"
+}
+base_unit "bit" {
+    alias "b"
+    doc "Basic unit of information (entropy).  The entropy in bits of a random variable over a finite alphabet is defined to be the sum of -p(i)*log2(p(i)) over the alphabet where p(i) is the probability that the random variable takes on the value i." lang="en"
+}
+base_unit "radian" {
+    doc "The angle subtended at the center of a circle by an arc equal in length to the radius of the circle" lang="en"
+}
+base_unit "steradian" {
+    short "sr"
+    alias "㏛"
+    doc "Solid angle which cuts off an area of the surface of the sphere equal to that of a square with sides of length equal to the radius of the sphere" lang="en"
+}
+quantity "acceleration" "velocity / time"
+quantity "amount" "mole"
+quantity "angle" "radian"
+quantity "angular_momentum" "mass area / time"
+quantity "area" "length^2"
+quantity "area_density" "mass / area"
+quantity "biological_activity" "IU"
+quantity "biological_activity_density" "mass / biological_activity"
+quantity "capacitance" "farad"
+quantity "catalytic_activity" "amount / time"
+quantity "charge" "coulomb"
+quantity "chemical_potential" "energy / amount"
+quantity "conductance" "siemens"
+quantity "crackle" "snap / time"
+quantity "current" "ampere"
+quantity "current_density" "current / area"
+quantity "density" "mass / volume"
+quantity "dimensionless" "1"
+quantity "electric_charge_density" "charge / volume"
+quantity "electric_displacement" "charge / area"
+quantity "electric_field" "newton / coulomb"
+quantity "electrical_potential" "volt"
+quantity "energy" "joule"
+quantity "entropy" "energy / temperature"
+quantity "flow_rate" "volume / time"
+quantity "force" "newton"
+quantity "frequency" "hertz"
+quantity "fuel_efficiency" "area^-1"
+quantity "heat_flux_density" "power / area"
+quantity "impulse" "mass length / time"
+quantity "inductance" "henry"
+quantity "jerk" "acceleration / time"
+quantity "kinematic_viscosity" "viscosity / density"
+quantity "length" "meter"
+quantity "linear_density" "mass / length"
+quantity "magnetic_flux" "weber"
+quantity "magnetic_flux_density" "tesla"
+quantity "magnetization" "current / length"
+quantity "mass" "kilogram"
+quantity "molar_concentration" "amount / volume"
+quantity "molar_entropy" "entropy / amount"
+quantity "molar_mass" "mass / amount"
+quantity "moment_of_inertia" "mass area"
+quantity "permeability" "henry / meter"
+quantity "permittivity" "farad / meter"
+quantity "pop" "crackle / time"
+quantity "power" "watt"
+quantity "pressure" "pascal"
+quantity "pressure_column" "pressure / length"
+quantity "reaction_rate" "amount / volume time"
+quantity "resistance" "ohm"
+quantity "snap" "jerk / time"
+quantity "solid_angle" "steradian"
+quantity "specific_energy" "energy / mass"
+quantity "specific_heat_capacity" "energy / mass temperature"
+quantity "specific_volume" "volume / mass"
+quantity "surface_tension" "energy / area"
+quantity "temperature" "kelvin"
+quantity "thermal_admittance" "thermal_conductivity / length"
+quantity "thermal_conductance" "power / temperature_difference"
+quantity "thermal_conductivity" "power / area temperature_difference|length"
+quantity "thermal_inductance" "energy temperature^2 / power^2"
+quantity "thermal_insulation" "thermal_resistivity length"
+quantity "thermal_resistance" "1 / thermal_conductance"
+quantity "thermal_resistivity" "1 / thermal_conductivity"
+quantity "time" "second"
+quantity "velocity" "length / time"
+quantity "viscosity" "pressure time"
+quantity "volume" "length^3"
+prefix "0.5" short="demi"
+prefix "0.5" short="hemi"
+prefix "1 / 4" short="quarter"
+prefix "0.5" short="semi"
+prefix "0.000000000000000001" short="a" long="atto"
+prefix "0.01" short="c" long="centi"
+prefix "10" long="deca" {
+    alias "deka"
+}
+prefix "0.1" short="d" long="deci"
+prefix "2" long="double"
+prefix "1000000000000000000" long="exa" short="E"
+prefix "2^60" long="exbi" short="Ei"
+prefix "0.000000000000001" short="f" long="femto"
+prefix "2^30" short="Gi" long="gibi"
+prefix "1000000000" short="G" long="giga"
+prefix "0.5" long="half"
+prefix "100" long="hecto" short="h"
+prefix "2^10" short="Ki" long="kibi"
+prefix "1000" long="kilo" short="k"
+prefix "2^20" short="Mi" long="mebi"
+prefix "1000000" long="mega" short="M"
+prefix "0.000001" long="micro" short="u" {
+    alias "µ"
+    alias "μ"
+}
+prefix "0.001" long="milli" short="m"
+prefix "10000" long="myria"
+prefix "0.000000001" long="nano" short="n"
+prefix "2^50" long="pebi" short="Pi"
+prefix "1000000000000000" long="peta" short="P"
+prefix "0.000000000001" short="p" long="pico"
+prefix "2^40" long="tebi" short="Ti"
+prefix "1000000000000" long="tera" short="T"
+prefix "3" long="treble"
+prefix "3" long="triple"
+prefix "0.000000000000000000000001" short="y" long="yocto"
+prefix "1000000000000000000000000" short="Y" long="yotta"
+prefix "0.000000000000000000001" short="z" long="zepto"
+prefix "1000000000000000000000" long="zetta" short="Z"
+prefix "1 / 4" long="¼"
+prefix "1 / 2" long="½"
+prefix "3 / 4" long="¾"
+prefix "1 / 3" long="⅓"
+prefix "2 / 3" long="⅔"
+prefix "1 / 5" long="⅕"
+prefix "2 / 5" long="⅖"
+prefix "3 / 5" long="⅗"
+prefix "4 / 5" long="⅘"
+prefix "1 / 6" long="⅙"
+prefix "5 / 6" long="⅚"
+prefix "1 / 8" long="⅛"
+prefix "3 / 8" long="⅜"
+prefix "5 / 8" long="⅝"
+prefix "7 / 8" long="⅞"
+unit "ECtherm" "105506000 J"
+unit "Mcf" "1000 ft^3"
+unit "RSI" "K m^2 / W"
+unit "Rvalue" "degR ft^2 hr / btu"
+unit "UStherm" "105480400 J" {
+    alias "therm"
+}
+unit "Uvalue" "1 / Rvalue"
+unit "VA" "volt ampere"
+unit "Wh" "W hour"
+unit "airwatt" "8.5 (ft^3 / min) inH2O"
+unit "angstrom" "0.0000000001 m" {
+    alias "ångström"
+    alias "Å"
+    alias "Å"
+}
+unit "angstromstar" "1.00001495 angstrom"
+unit "anomalisticmonth" "27.55454977 day"
+unit "anomalisticyear" "365.2596 days"
+unit "arab" "1000000000"
+unit "arcmin" "1|60 degree" {
+    alias "arcminute"
+    alias "'"
+}
+unit "arcsec" "1|60 arcmin" {
+    alias "arcsecond"
+}
+unit "are" "100 m^2" {
+    alias "a"
+}
+unit "astronomicalunit" "149597870700 m" {
+    alias "au"
+}
+unit "australiasquare" "(10 ft)^2"
+unit "bakersdozen" "13"
+unit "bale" "5 bundles"
+unit "bar" "100000 Pa" {
+    alias "㍴"
+}
+unit "barn" "0.0000000000000000000000000001 m^2"
+unit "basebox" "31360 in^2"
+unit "baumeconst" "145"
+unit "bell" "1|8 watch"
+unit "biblicalcubit" "21.8 in"
+unit "blanc" "1|24 periot"
+unit "blink" "0.00001 day"
+unit "brace" "2"
+unit "brewster" "micron^2 / N"
+unit "btu" "cal lb degR / gram K" {
+    alias "britishthermalunit"
+    alias "btu_IT"
+}
+unit "btu_mean" "cal_mean lb degR / gram K"
+unit "btu_th" "cal_th lb degR / gram K"
+unit "bundle" "2 reams"
+unit "calendaryear" "365 day"
+unit "canadafootballfield" "110 yards"
+unit "catty" "0.5 kg"
+unit "cc" "cm^3" {
+    alias "㏄"
+}
+unit "ccf" "100 ft^3"
+unit "ce" "0.01 day"
+unit "celsiusheatunit" "cal lb K / gram K" {
+    alias "chu"
+}
+unit "centesimalminute" "1|100 grade"
+unit "centesimalsecond" "1|100 centesimalminute"
+unit "centillion" "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+unit "centrad" "0.01 radian"
+unit "century" "100 years"
+unit "chittak" "1|16 seer"
+unit "circle" "2 pi radian" {
+    alias "turn"
+}
+unit "clausius" "1000 cal / K"
+unit "clo" "0.155 K m^2 / W"
+unit "commonyear" "365 day"
+unit "copperconductivity" "58 siemens m / mm^2" {
+    alias "IACS"
+}
+unit "copperdensity" "8.89 g / cm^3"
+unit "cron" "1000000 years"
+unit "crore" "10000000"
+unit "daraf" "1 / farad"
+unit "day" "24 hr" {
+    alias "d"
+    alias "da"
+}
+unit "decade" "10 years"
+unit "decimalhour" "1|10 day"
+unit "decimalminute" "1|100 decimalhour" {
+    alias "beat"
+}
+unit "decimalsecond" "1|100 decimalminute"
+unit "degree" "1|360 circle" {
+    alias "deg"
+    alias "arcdeg"
+    alias "°"
+}
+unit "degreesrankine" "5|9 K" {
+    alias "degrankine"
+    alias "degreerankine"
+}
+unit "delisle_absolute" "-2|3 kelvin"
+unit "dicker" "10"
+unit "diopter" "1 / m" {
+    alias "dioptre"
+}
+unit "doppelzentner" "2 zentner"
+unit "dozen" "12"
+unit "droit" "1|24 mite"
+unit "dry" "drygallon / gallon"
+unit "earthflattening" "1 / 298.25642"
+unit "earthradius_equatorial" "6378136.49 m"
+unit "earthradius_polar" "(-earthflattening + 1) earthradius_equatorial"
+unit "eclipseyear" "346.62 days"
+unit "englishcarat" "troyounce / 151.5"
+unit "etto" "100 g" {
+    alias "etti"
+}
+unit "europeanUvalue" "watt / m^2 K"
+unit "fermi" "0.000000000000001 m"
+unit "finsenunit" "100000 W / m^2"
+unit "flick" "W / cm^2 sr micrometer"
+unit "flock" "40"
+unit "fluxunit" "0.00000000000000000000000001 W / m^2 Hz" {
+    alias "jansky"
+}
+unit "fortnight" "14 day"
+unit "fpm" "ft / min"
+unit "fps" "ft / s"
+unit "fresnel" "1000000000000 Hz"
+unit "frigorie" "1000 cal_fifteen"
+unit "gauss_k" "0.01720209895"
+unit "gaussianyear" "(2 pi / gauss_k) days"
+unit "gon" "1|100 rightangle" {
+    alias "grade"
+}
+unit "googol" "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+unit "gram" "1|1000 kg" {
+    alias "gm"
+    alias "g"
+    alias "gramme"
+}
+unit "greatgross" "12 gross"
+unit "gregorianyear" "365.2425 day"
+unit "gross" "144"
+unit "hattrick" "3"
+unit "hebrewcubit" "17.58 in"
+unit "hide" "120 acre"
+unit "hour" "60 min" {
+    alias "hr"
+    alias "h"
+}
+unit "hph" "hp hour"
+unit "ipy" "inch / year"
+unit "islamicleapyear" "355 day"
+unit "islamicmonth" "1|12 islamicyear"
+unit "islamicyear" "354 day"
+unit "japancup" "200 ml"
+unit "julianyear" "365.25 day"
+unit "kWh" "kilowatt hour"
+unit "katal" "mol / sec" {
+    alias "kat"
+}
+unit "kharab" "100000000000"
+unit "kmh" "km / hr"
+unit "kph" "km / hr"
+unit "kpm" "kp meter"
+unit "lakh" "100000"
+unit "landarea" "148847000 km^2"
+unit "langley" "thermcalorie / cm^2"
+unit "leapyear" "366 day"
+unit "leo" "10 m / s^2"
+unit "li" "10|27.8 mile"
+unit "liang" "11|3 oz"
+unit "lid" "1 oz"
+unit "liter" "1000 cc" {
+    alias "L"
+    alias "l"
+    alias "litre"
+    alias "ℓ"
+}
+unit "longhundred" "120"
+unit "lunarmonth" "29 days + 12 hours + 44 minutes + 2.8 seconds" {
+    alias "synodicmonth"
+}
+unit "lunaryear" "12 lunarmonth"
+unit "lune" "1|30 lunation"
+unit "lunour" "1|24 lune"
+unit "lustrum" "5 years"
+unit "mace" "0.1 tael"
+unit "mancus" "2 oz"
+unit "marathon" "26 miles + 385 yards"
+unit "mas" "milli arcsec"
+unit "mast" "2.5 lb"
+unit "maund" "40 seer"
+unit "mayer" "J / g K"
+unit "mbh" "1000 btu / hour"
+unit "mcm" "1000 circularmil"
+unit "metricounce" "25 g" {
+    alias "mounce"
+}
+unit "milangle" "1|6400 circle"
+unit "millennium" "1000 years" {
+    alias "millennia"
+}
+unit "minute" "60 s" {
+    alias "min"
+}
+unit "mired" "1 / microK"
+unit "mite" "1|20 grain"
+unit "month" "1|12 year" {
+    alias "mo"
+}
+unit "moonradius" "1738 km"
+unit "mpg" "mile / gal"
+unit "mph" "mile / hr"
+unit "nailkeg" "100 lbs"
+unit "neel" "10000000000000"
+unit "nest" "3"
+unit "newton_absolute" "100|33 kelvin"
+unit "nodicalmonth" "27.2122199 day" {
+    alias "draconicmonth"
+    alias "draconiticmonth"
+}
+unit "nook" "1|2 virgate"
+unit "oceanarea" "361254000 km^2"
+unit "octant" "0.5 pi sr"
+unit "oldcatty" "4|3 lbs"
+unit "oldliter" "1.000028 dm^3"
+unit "oldpicul" "100 oldcatty"
+unit "ollock" "1|4 liter"
+unit "ouncecopper" "oz / ft^2 copperdensity" {
+    alias "ozcu"
+}
+unit "padm" "1000000000000000"
+unit "pair" "2"
+unit "pakistanmaund" "40 pakistanseer"
+unit "pakistanseer" "1 kg"
+unit "parasang" "3.5 mile"
+unit "people" "1" {
+    alias "person"
+    alias "death"
+    alias "capita"
+}
+unit "percapita" "1 / capita"
+unit "perfectream" "516"
+unit "periot" "1|20 droit"
+unit "perm_0C" "grain / hr ft^2 inHg" {
+    alias "perm_zero"
+    alias "perm_0"
+    alias "perm"
+}
+unit "perm_23C" "grain / hr ft^2 in (pressure_column_23C of Hg)" {
+    alias "perm_twentythree"
+}
+unit "pfu" "1|cm^2 sr s"
+unit "pfund" "500 g"
+unit "picul" "100 catty"
+unit "pieze" "sthene / m^2"
+unit "planck" "J s"
+unit "plf" "lb / foot"
+unit "pointangle" "1|32 circle"
+unit "poiseuille" "N s / m^2"
+unit "poncelet" "100 kg force m / s"
+unit "preece" "10000000000000 ohm m"
+unit "pulsatance" "radian / sec"
+unit "pyron" "cal_IT / cm^2 min"
+unit "quad" "quadrillion btu"
+unit "quadrant" "1|4 circle"
+unit "quintal" "100 kg"
+unit "quintant" "1|5 circle"
+unit "quire" "25"
+unit "ream" "500"
+unit "reaumur_absolute" "10|8 kelvin"
+unit "refrigeration" "tonref / ton"
+unit "rightangle" "90 degrees"
+unit "romer_absolute" "40|21 kelvin"
+unit "rood" "furlong rod"
+unit "rpm" "rev / min"
+unit "rps" "rev / sec"
+unit "saros" "223 synodicmonth"
+unit "score" "20"
+unit "seclongitude" "circle seconds|day"
+unit "seer" "14400 grain" {
+    alias "ser"
+}
+unit "sennight" "7 day"
+unit "sextant" "1|6 circle"
+unit "shake" "0.00000001 sec"
+unit "shankh" "100000000000000000"
+unit "shed" "0.000000000000000000000001 barn"
+unit "shock" "60"
+unit "shortquire" "24"
+unit "shortream" "480"
+unit "siderealday" "86164.09054 s"
+unit "siderealhour" "1|24 siderealday"
+unit "siderealminute" "1|60 siderealhour"
+unit "siderealmonth" "27.321661 day"
+unit "siderealsecond" "1|60 siderealminute"
+unit "siderealyear" "365.256360417 day"
+unit "sign" "1|12 circle"
+unit "spat" "1000000000000 m"
+unit "sphere" "4 pi sr"
+unit "sphericalrightangle" "0.5 pi sr"
+unit "squaredegree" "(1 / 180^2) pi^2 sr"
+unit "squareminute" "(1 / 60^2) squaredegree" {
+    alias "squarearcmin"
+}
+unit "squaresecond" "(1 / 60^2) squareminute" {
+    alias "squarearcsec"
+}
+unit "sthene" "tonne m / s^2" {
+    alias "funal"
+}
+unit "sturgeon" "1 / henry"
+unit "sunradius" "696000000 m"
+unit "svedberg" "0.0000000000001 s"
+unit "tael" "1|16 oldcatty"
+unit "thermal_insulance" "thermal_resistivity length"
+unit "thermalampere" "W / K"
+unit "thermalcoulomb" "J / K"
+unit "thermalfarad" "J / K^2"
+unit "thermalhenry" "J K^2 / W^2"
+unit "thermalohm" "K^2 / W" {
+    alias "fourier"
+}
+unit "timeatom" "1|47 timeounce"
+unit "timeminute" "1|10 hour"
+unit "timeostent" "1|60 hour"
+unit "timeounce" "1|8 timeostent"
+unit "timepoint" "1|5 hour"
+unit "timer" "40"
+unit "tithe" "1 / 10"
+unit "tnt" "1000000000 cal_th / ton"
+unit "tog" "0.1 K m^2 / W"
+unit "tola" "1|5 chittak"
+unit "toncount" "100"
+unit "tonne" "1000 kg" {
+    alias "t"
+    alias "metricton"
+}
+unit "tonrefrigeration" "uston 144 btu / lb day" {
+    alias "tonref"
+}
+unit "tropicalyear" "365.242198781 day" {
+    alias "year"
+}
+unit "usfootballfield" "100 yards" {
+    alias "footballfield"
+}
+unit "virgate" "1|4 hide"
+unit "watch" "4 hours"
+unit "week" "7 day" {
+    alias "wk"
+}
+unit "xunit_cu" "0.000000000000100207697 m" {
+    alias "xunit"
+}
+unit "xunit_mo" "0.000000000000100209952 m"
+unit "zentner" "50 kg"
+unit "zerocelsius" "273.15 K"
+unit "zerodelisle" "373.15 kelvin"
+unit "zerofahrenheit" "zerocelsius - 32 degR"
+unit "zeroromer" "zerocelsius - 7.5 romer_absolute"
+unit "‰" "1 / 1000"
+unit "‱" "1 / 10000"
+unit "ℯ" "2.71828182845904523536" {
+    alias "e"
+}
+unit "㎟" "mm^2"
+unit "㎠" "cm^2"
+unit "㎡" "m^2"
+unit "㎢" "km^2"
+unit "㎣" "mm^3"
+unit "㎤" "cm^3"
+unit "㎥" "m^3"
+unit "㎦" "km^3"
+unit "㎧" "m / s"
+unit "㎨" "m / s^2"
+unit "㎮" "rad / s"
+unit "㎯" "rad / s^2"
+unit "㏆" "C / kg"

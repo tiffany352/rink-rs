@@ -1,0 +1,9 @@
+category "egyptian" {
+    title "Egyptian Measures" lang="en"
+    unit "doubleremen" "29.16 in"
+    unit "egyptiandigit" "1|4 egyptianpalm"
+    unit "egyptianpalm" "1|7 egyptianroyalcubit"
+    unit "egyptianroyalcubit" "20.63 in"
+    unit "egyptianshortcubit" "6 egyptianpalm"
+    unit "remendigit" "1|40 doubleremen"
+}

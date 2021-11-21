@@ -1,0 +1,94 @@
+category "cgs" {
+    title "CGS Units" lang="en"
+    unit "Gal" "cm / s^2" {
+        alias "galileo"
+    }
+    unit "abampere" "10 A" {
+        alias "abamp"
+        alias "aA"
+    }
+    unit "abcoulomb" "abamp sec" {
+        alias "abcoul"
+    }
+    unit "abfarad" "abampere sec / abvolt"
+    unit "abhenry" "abvolt sec / abamp"
+    unit "abmho" "1 / abohm"
+    unit "abohm" "abvolt / abamp"
+    unit "abvolt" "dyne cm / abamp sec"
+    unit "acousticalohm" "dyn s / cm^5" {
+        alias "ray"
+    }
+    unit "barye" "dyne / cm^2" {
+        alias "barad"
+    }
+    unit "bole" "g cm / s"
+    unit "daniell" "1.042 V"
+    unit "darcy" "centipoise cm^2 / s atm"
+    unit "debye" "0.000000000000000001 statcoul cm"
+    unit "dyne" "cm gram / s^2" {
+        alias "dyn"
+    }
+    unit "emu" "erg / gauss"
+    unit "eotvos" "0.000000001 Gal / cm"
+    unit "erg" "cm dyne"
+    unit "faraday" "N_A electroncharge mol"
+    unit "faraday_chem" "96495.7 C"
+    unit "faraday_phys" "96521.9 C"
+    unit "gauss" "abvolt sec / cm^2" {
+        alias "Gs"
+    }
+    unit "gilbert" "gauss cm / mu0" {
+        alias "Gi"
+    }
+    unit "glug" "gram force s^2 / cm"
+    unit "helmholtz" "debye / angstrom^2"
+    unit "intampere" "0.999835 A" {
+        alias "intamp"
+    }
+    unit "intfarad" "0.999505 F"
+    unit "intohm" "1.000495 ohm"
+    unit "intvolt" "1.00033 V"
+    unit "jar" "1000 statfarad"
+    unit "kappline" "6000 maxwell"
+    unit "kayser" "1 / cm" {
+        alias "balmer"
+    }
+    unit "kine" "cm / s"
+    unit "maxwell" "abvolt sec" {
+        alias "Mx"
+    }
+    unit "mechanicalohm" "dyn s / cm"
+    unit "mobileohm" "cm / dyn s"
+    unit "oersted" "gauss / mu0" {
+        alias "Oe"
+    }
+    unit "poise" "gram / cm s" {
+        alias "P"
+    }
+    unit "pond" "gram force"
+    unit "rayl" "dyn s / cm^3"
+    unit "rhe" "1 / poise"
+    unit "siemensunit" "0.9534 ohm"
+    unit "statampere" "10 A cm / s c" {
+        alias "statamp"
+    }
+    unit "statcoulomb" "statamp s" {
+        alias "esu"
+        alias "statcoul"
+        alias "franklin"
+    }
+    unit "statfarad" "statamp sec / statvolt" {
+        alias "cmcapacitance"
+    }
+    unit "stathenry" "statvolt sec / statamp"
+    unit "statmaxwell" "statvolt sec"
+    unit "statmho" "1 / statohm"
+    unit "statohm" "statvolt / statamp"
+    unit "statvolt" "dyne cm / statamp sec"
+    unit "stokes" "cm^2 / s" {
+        alias "St"
+        alias "stoke"
+        alias "lentor"
+    }
+    unit "unitpole" "4 pi maxwell"
+}

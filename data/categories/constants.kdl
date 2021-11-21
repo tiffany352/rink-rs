@@ -1,0 +1,114 @@
+category "constants" {
+    title "Physical Constants" lang="en"
+    unit "G" "0.0000000000667408 N m^2 / kg^2"
+    unit "K_J" "483597.8525 GHz / V"
+    unit "K_J90" "483597.9 GHz / V"
+    unit "R_H" "10967760 / m"
+    unit "R_K" "25812.8074555 ohm"
+    unit "R_K90" "25812.807 ohm"
+    unit "Rinfinity" "10973731.568539 / m"
+    unit "alpha" "0.0072973525664"
+    unit "amagat" "mol / amagatvolume"
+    unit "amu_chem" "0.00000000000000000000000000166026 kg"
+    unit "amu_phys" "0.00000000000000000000000000165981 kg"
+    unit "atm" "101325 Pa" {
+        alias "atmosphere"
+        alias "stdatmP0"
+    }
+    unit "atomicmassunit" "0.00000000000000000000000000166053904 kg" {
+        alias "u"
+        alias "amu"
+    }
+    unit "avogadro" "grams / amu mol" {
+        alias "N_A"
+    }
+    unit "bohrmagneton" "electroncharge hbar / (mass of 2 electron)" {
+        alias "mu_B"
+    }
+    unit "bohrradius" "alpha / 4 pi Rinfinity" {
+        alias "atomiclength"
+    }
+    unit "boltzmann" "0.0000000000000000000000138064852 J / K" {
+        alias "kboltzmann"
+    }
+    unit "c" "speed of light"
+    unit "cminv" "planck_constant c / cm" {
+        alias "invcm"
+        alias "wavenumber"
+    }
+    unit "coulombconst" "1 / 4 pi epsilon0"
+    unit "crith" "0.089885 gram"
+    unit "eV" "electroncharge V" {
+        alias "electronvolt"
+        alias "ev"
+    }
+    unit "epsilon0" "1 / mu0 c^2"
+    unit "gasconstant" "boltzmann N_A" {
+        alias "R"
+    }
+    unit "gravity" "9.80665 m / s^2" {
+        alias "force"
+    }
+    unit "hbar" "planck_constant / 2 pi" {
+        alias "spin"
+        alias "atomicaction"
+        alias "ℏ"
+        alias "ħ"
+    }
+    unit "hyl" "kgf s^2 / m"
+    unit "kcal_mol" "kcal_th / mol N_A"
+    unit "kgf" "kg force"
+    unit "lightminute" "c min"
+    unit "lightsecond" "c s"
+    unit "lightyear" "c julianyear" {
+        alias "ly"
+    }
+    unit "lorentz" "bohrmagneton / planck_constant c"
+    unit "loschmidt" "avogadro mol / molarvolume"
+    unit "mach" "331.46 m / s"
+    unit "mass_energy" "c^2"
+    unit "molarvolume" "mol R stdtemp / atm" {
+        alias "amagatvolume"
+    }
+    unit "mu0" "4 pi 0.0000001 H / m"
+    unit "normaltemp" "529.67 degR" {
+        alias "normtemp"
+    }
+    unit "nuclearmagneton" "electroncharge hbar / (mass of 2 proton)" {
+        alias "mu_N"
+    }
+    unit "parsec" "32313140071200 km" {
+        alias "pc"
+    }
+    unit "planck_constant" "0.000000000000000000000000000000000662607004 J s" {
+        alias "ℎ"
+    }
+    unit "plancklength" "plancktime c" {
+        alias "l_P"
+    }
+    unit "planckmass" "0.0000000217651 kg" {
+        alias "m_P"
+    }
+    unit "plancktime" "hbar / planckmass c^2" {
+        alias "t_P"
+    }
+    unit "prout" "185.5 keV"
+    unit "rydberg" "planck_constant c Rinfinity"
+    unit "standardtemp" "273.15 K" {
+        alias "stdtemp"
+    }
+    unit "stefanboltzmann" "pi^2 boltzmann^4 / 60 hbar^3 c^2" {
+        alias "sigma"
+    }
+    unit "technicalatmosphere" "kgf / cm^2" {
+        alias "at"
+    }
+    unit "torr" "atm / 760"
+    unit "wiendisplacement" "0.0028977729 m K"
+    unit "π" "3.14159265358979323846" {
+        alias "pi"
+    }
+    unit "τ" "2 pi" {
+        alias "tau"
+    }
+}

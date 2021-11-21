@@ -1,0 +1,14 @@
+category "calories" {
+    title "Calories" lang="en"
+    unit "cal_IT" "4.1868 J" {
+        alias "calorie"
+        alias "calorie_IT"
+    }
+    unit "cal_fifteen" "4.1858 J"
+    unit "cal_mean" "4.19002 J"
+    unit "cal_th" "4.184 J" {
+        alias "thermcalorie"
+    }
+    unit "cal_twenty" "4.1819 J"
+    unit "thermie" "1000000 cal_fifteen"
+}

@@ -1,0 +1,12 @@
+category "int_nautical" {
+    title "International Nautical Units" lang="en"
+    unit "intcable" "1|10 nauticalmile" {
+        alias "cable"
+    }
+    unit "intfathom" "6 ft" {
+        alias "fathom"
+    }
+    unit "intnauticalmile" "1852 m" {
+        alias "nauticalmile"
+    }
+}

@@ -1,0 +1,17 @@
+category "human_measures" {
+    title "Human Body Measurements" lang="en"
+    unit "USdoubletimepace" "36 in"
+    unit "USmilitarypace" "30 in"
+    unit "fingerbreadth" "7|8 in" {
+        alias "finger"
+    }
+    unit "fingerlength" "4.5 in"
+    unit "geometricpace" "5 ft"
+    unit "hand" "4 inch" {
+        alias "palmwidth"
+    }
+    unit "pace" "2.5 ft"
+    unit "palmlength" "8 in"
+    unit "shaftment" "6 inch"
+    unit "smoot" "5 ft + 7 in"
+}

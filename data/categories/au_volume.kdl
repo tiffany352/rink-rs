@@ -1,0 +1,11 @@
+category "au_volume" {
+    title "Australian Volume Measures" lang="en"
+    unit "australiatablespoon" "20 ml" {
+        alias "austbl"
+        alias "austbsp"
+        alias "austblsp"
+    }
+    unit "australiateaspoon" "1|4 australiatablespoon" {
+        alias "austsp"
+    }
+}

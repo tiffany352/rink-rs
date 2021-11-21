@@ -1,0 +1,19 @@
+category "compuing" {
+    title "Computing Units" lang="en"
+    quantity "information" "bit"
+    unit "bps" "bit / sec"
+    unit "byte" "8 bit" {
+        alias "B"
+    }
+    unit "cdaudiospeed" "44.1 kHz 2 16 bits"
+    unit "cdromspeed" "75 2048 bytes / sec"
+    unit "dvdspeed" "1385 kB / s"
+    unit "jiffy" "0.01 sec" {
+        alias "jiffies"
+    }
+    unit "nybble" "4 bits" {
+        alias "nibble"
+    }
+    unit "nyp" "2 bits"
+    unit "octet" "8 bits"
+}

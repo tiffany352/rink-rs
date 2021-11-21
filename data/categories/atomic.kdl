@@ -1,0 +1,8 @@
+category "atomic" {
+    title "Atomic Units" lang="en"
+    unit "atomicenergy" "hbar / atomictime" {
+        alias "hartree"
+    }
+    unit "atomictime" "hbar^3 / coulombconst^2 atomicmass electroncharge^4"
+    unit "atomicvelocity" "atomiclength / atomictime"
+}

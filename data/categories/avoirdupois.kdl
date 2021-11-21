@@ -1,0 +1,31 @@
+category "avoirdupois" {
+    title "Avoirdupois Weights" lang="en"
+    unit "dram" "1|16 ounce" {
+        alias "dr"
+        alias "ʒ"
+    }
+    unit "grain" "1|7000 pound" {
+        alias "gr"
+    }
+    unit "ounce" "1|16 pound" {
+        alias "oz"
+        alias "℥"
+    }
+    unit "pound" "0.45359237 kg" {
+        alias "lb"
+        doc "International yard and pound, since July 1, 1959. Avoirdupois." lang="en"
+    }
+    unit "quarterweight" "1|4 uston" {
+        alias "quarter"
+    }
+    unit "shortquarterweight" "1|4 shortton" {
+        alias "shortquarter"
+    }
+    unit "shortton" "2000 lb" {
+        alias "uston"
+    }
+    unit "ushundredweight" "100 pounds" {
+        alias "shorthundredweight"
+        alias "hundredweight"
+    }
+}

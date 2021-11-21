@@ -1,0 +1,42 @@
+category "base_units" {
+    title "SI Base Units" lang="en"
+    base_unit "ampere" {
+        short "A"
+        alias "amp"
+        doc "The constant current which, if maintained in two straight parallel conductors of infinite length, of negligible circular cross-section, and placed 1 meter apart in vacuum, would produce between those conductors a force equal to 2e-7 newton per meter of length. 9th CGPM (1948)." lang="en"
+    }
+    base_unit "kelvin" {
+        short "K"
+        alias "degK"
+        alias "tempK"
+        alias "thermalvolt"
+        alias "°K"
+        alias "K"
+        doc "The fraction 1 / 273.16 of the thermodynamic temperature of the triple point of water. 13th CGPM (1967/68, Resolution 4; CR, 104)." lang="en"
+    }
+    base_unit "candela" {
+        short "cd"
+        alias "㏅"
+        doc "The luminous intensity, in a given direction, of a source that emits monochromatic radiation of frequency 540e12 hertz and that has a radiant intensity in that direction of 1/683 watt per steradian. 16th CGPM (1979, Resolution 3; CR, 100)." lang="en"
+    }
+    base_unit "kilogram" {
+        short "kg"
+        alias "key"
+        alias "㎏"
+        doc "Equal to the mass of the international prototype of the kilogram. 3rd CGPM (1901, CR, 70)." lang="en"
+    }
+    base_unit "meter" {
+        short "m"
+        doc "Length of the path travelled by light in vacuum during a time interval of 1 / 299 792 458 of a second. 17th CGPM (1983, CR, 70)." lang="en"
+    }
+    base_unit "mole" {
+        short "mol"
+        alias "㏖"
+        doc "The amount of substance a system which contains as many elementary entities as there are atoms in 0.012 kilogram of carbon 12 at rest and in their ground state. When the mole is used, the elementary entities must be specified and may be atoms, molecules, ions, electrons, other particles, or specified groups of such particles. 14th CGPM (1971, Resolution 3; CR, 78)." lang="en"
+    }
+    base_unit "second" {
+        short "s"
+        alias "sec"
+        doc "Duration of 9192631770 periods of the radiation corresponding to the transition between the two hyperfine levels of the ground state of the cesium-133 atom at rest at a temperature of 0 K. 13th CGPM (1968/68, Resolution 1; CR; 103)." lang="en"
+    }
+}

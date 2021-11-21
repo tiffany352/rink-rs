@@ -1,0 +1,43 @@
+category "grits" {
+    title "Grit Sizes" lang="en"
+    unit "coarsecrystalon" "127 micron"
+    unit "coarseindia" "97 micron"
+    unit "dmtceramic" "7 micron" {
+        alias "dmtcer"
+        alias "dmtwhite"
+    }
+    unit "dmtcoarse" "45 micron" {
+        alias "dmtc"
+        alias "dmtblue"
+    }
+    unit "dmteefine" "3 micron" {
+        alias "dmttan"
+        alias "dmtee"
+    }
+    unit "dmtefine" "9 micron" {
+        alias "dmte"
+        alias "dmtgreen"
+    }
+    unit "dmtfine" "25 micron" {
+        alias "dmtred"
+        alias "dmtf"
+    }
+    unit "dmtxcoarse" "60 micron" {
+        alias "dmtx"
+        alias "dmtblack"
+    }
+    unit "dmtxxcoarse" "120 micron" {
+        alias "dmtsilver"
+        alias "dmtxx"
+    }
+    unit "extrafineindia" "22 micron"
+    unit "finecrystolon" "45 micron"
+    unit "fineindia" "35 micron"
+    unit "hardblackarkansas" "6 micron"
+    unit "hardtranslucentarkansas" "6 micron"
+    unit "hardwhitearkansas" "11 micron"
+    unit "mediumcrystalon" "78 micron"
+    unit "mediumindia" "53.5 micron"
+    unit "softarkansas" "22 micron"
+    unit "washita" "35 micron"
+}

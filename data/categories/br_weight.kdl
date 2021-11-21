@@ -1,0 +1,13 @@
+category "br_weight" {
+    title "British Weight Measures" lang="en"
+    unit "brhundredweight" "8 stone" {
+        alias "longhundredweight"
+    }
+    unit "brquarterweight" "1|4 brhundredweight"
+    unit "clove" "7 lb"
+    unit "longton" "20 brhundredweight" {
+        alias "brton"
+    }
+    unit "stone" "14 lb"
+    unit "tod" "28 lb"
+}

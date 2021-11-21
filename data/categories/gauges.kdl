@@ -1,0 +1,9 @@
+category "gauges" {
+    title "Wire Gauges" lang="en"
+    unit "g00" "-1"
+    unit "g000" "-2"
+    unit "g0000" "-3"
+    unit "g00000" "-4"
+    unit "g000000" "-5"
+    unit "g0000000" "-6"
+}

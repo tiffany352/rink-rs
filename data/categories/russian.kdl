@@ -1,0 +1,117 @@
+category "russian" {
+    title "Traditional Russian Units" lang="en"
+    unit "апфунт" "12 унция"
+    unit "аршин" "7|3 ft" {
+        alias "arshin"
+    }
+    unit "берковец" "10 пуд" {
+        alias "berkovets"
+    }
+    unit "бочка" "40 жидкведро" {
+        alias "bochka"
+    }
+    unit "верста" "1500 аршин" {
+        alias "versta"
+    }
+    unit "вершок" "1.75 in" {
+        alias "vershok"
+    }
+    unit "владельческая_десятина" "3200 сажень^2" {
+        alias "vladelcheskaya_desiatina"
+        alias "proprietors_desiatina"
+    }
+    unit "гарнец" "200 in^3" {
+        alias "garnets"
+    }
+    unit "гран" "7|5 доля" {
+        alias "gran"
+    }
+    unit "доля" "1|96 золотник" {
+        alias "dolia"
+    }
+    unit "драхма" "3 скрупул" {
+        alias "drachma"
+    }
+    unit "дюим" "1 inch" {
+        alias "dyuim"
+    }
+    unit "жидкведро" "750 in^3" {
+        alias "fuidvedro"
+    }
+    unit "жидккружка" "1|10 жидкведро" {
+        alias "fluidkruzhka"
+    }
+    unit "жидкчетверть" "1|8 жидкведро" {
+        alias "fluidchetvert"
+    }
+    unit "золотник" "1|3 лот" {
+        alias "zolotnik"
+    }
+    unit "казенная_десятина" "2400 сажень^2" {
+        alias "kazionnaya_desiatina"
+        alias "official_desiatina"
+    }
+    unit "косушка" "1|2 чарка" {
+        alias "kosushka"
+    }
+    unit "линия" "1|10 дюим" {
+        alias "liniya"
+    }
+    unit "лот" "1|13 фунт" {
+        alias "lot"
+    }
+    unit "миля" "10500 аршин" {
+        alias "milia"
+    }
+    unit "осьмина" "4 четверик" {
+        alias "osmina"
+    }
+    unit "пуд" "40 фунт" {
+        alias "pood"
+    }
+    unit "пядь" "7 дюим" {
+        alias "piad"
+        alias "четверть"
+    }
+    unit "сажень" "7 ft" {
+        alias "sazhen"
+    }
+    unit "скрупул" "20 гран" {
+        alias "scrupul"
+    }
+    unit "сухведро" "4 гарнец" {
+        alias "dryvedro"
+    }
+    unit "сухкружка" "2|5 гарнец" {
+        alias "drykruzhka"
+    }
+    unit "сухчетверть" "2 осьмина"
+    unit "точка" "1|10 линия" {
+        alias "tochka"
+    }
+    unit "унция" "8 драхма" {
+        alias "uncia"
+    }
+    unit "фунт" "0.903 lb" {
+        alias "funt"
+        alias "apfunt"
+    }
+    unit "фут" "1 foot" {
+        alias "fut"
+    }
+    unit "чарка" "1|10 жидккружка" {
+        alias "charka"
+    }
+    unit "часть" "1|12 сухкружка" {
+        alias "chast"
+    }
+    unit "четверик" "2 сухведро" {
+        alias "chetverik"
+    }
+    unit "шкалик" "1|2 чарка" {
+        alias "shlalik"
+    }
+    unit "штоф" "1|10 жидкведро" {
+        alias "shtof"
+    }
+}

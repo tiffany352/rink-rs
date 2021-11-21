@@ -1,0 +1,22 @@
+category "arabic" {
+    title "Arabic Measures" lang="en"
+    unit "arabicfeet" "1|2 blackcubit" {
+        alias "arabicfoot"
+    }
+    unit "arabicinch" "1|12 arabicfoot"
+    unit "arabicmile" "4000 blackcubit"
+    unit "blackcubit" "21.28 in"
+    unit "hashimicubit" "25.56 in"
+    unit "silverdirhem" "45 grain"
+    unit "silverkirat" "1|16 silverdirhem"
+    unit "silverrotl" "12 silverwukiyeh" {
+        alias "arabicsilverpound"
+    }
+    unit "silverwukiyeh" "10 silverdirhem"
+    unit "tradedirhem" "48 grain"
+    unit "tradekirat" "1|16 tradedirhem"
+    unit "traderotl" "12 tradewukiyeh" {
+        alias "arabictradepound"
+    }
+    unit "tradewukiyeh" "10 tradedirhem"
+}

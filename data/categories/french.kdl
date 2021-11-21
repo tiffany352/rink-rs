@@ -1,0 +1,18 @@
+category "french" {
+    title "French Old Measures" lang="en"
+    unit "arpent" "180^2 pied^2"
+    unit "frenchfoot" "144|443.296 m" {
+        alias "pied"
+        alias "frenchfeet"
+    }
+    unit "frenchgrain" "1|18827.15 kg"
+    unit "frenchinch" "1|12 frenchfoot" {
+        alias "frenchthumb"
+    }
+    unit "frenchline" "1|12 frenchinch" {
+        alias "ligne"
+    }
+    unit "frenchpoint" "1|12 frenchline"
+    unit "frenchpound" "9216 frenchgrain"
+    unit "toise" "6 frenchfeet"
+}

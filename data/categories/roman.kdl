@@ -1,0 +1,97 @@
+category "roman" {
+    title "Roman Measures" lang="en"
+    unit "acetabula" "1|8 sextarius"
+    unit "actus" "120 4 romanfeet^2"
+    unit "actuslength" "120 romanfeet"
+    unit "amphora" "8 congii" {
+        alias "amphorae"
+        alias "quadrantal"
+    }
+    unit "bes" "8 uncia"
+    unit "centuria" "100 heredia" {
+        alias "centurium"
+    }
+    unit "cheonix" "1.5 sextarii"
+    unit "cochlearia" "1|48 sextarius"
+    unit "congius" "12 heminae" {
+        alias "congii"
+    }
+    unit "culleus" "20 amphorae"
+    unit "cyathi" "1|12 sextarius"
+    unit "deunx" "11 uncia"
+    unit "dextans" "10 uncia"
+    unit "dodrans" "9 uncia"
+    unit "earlyromanfoot" "29.73 cm"
+    unit "heminae" "1|2 sextarius" {
+        alias "hemina"
+    }
+    unit "heredium" "2 iugera" {
+        alias "heredia"
+    }
+    unit "iugerum" "2 squareactus" {
+        alias "iugera"
+        alias "jugerum"
+        alias "jugera"
+    }
+    unit "lateromanfoot" "29.42 cm"
+    unit "libra" "5052 grain" {
+        alias "librae"
+        alias "romanpound"
+    }
+    unit "modius" "16 sextarius" {
+        alias "modii"
+    }
+    unit "pesdrusianus" "33.3 cm"
+    unit "quadrans" "3 uncia"
+    unit "quartaria" "1|4 sextarius" {
+        alias "quartarius"
+    }
+    unit "quincunx" "5 uncia"
+    unit "romanaspound" "4210 grain"
+    unit "romancubit" "18 romaninch"
+    unit "romandigit" "1|16 romanfoot"
+    unit "romanfoot" "296 mm" {
+        alias "romanfeet"
+        alias "pes"
+        alias "pedes"
+    }
+    unit "romaninch" "1|12 romanfoot"
+    unit "romanleague" "1.5 romanmile"
+    unit "romanmile" "8 stadia"
+    unit "romanobol" "1|2 scrupula"
+    unit "romanpace" "5 romanfeet" {
+        alias "passus"
+    }
+    unit "romanpalm" "1|4 romanfoot"
+    unit "romanperch" "10 romanfeet"
+    unit "romanuncia" "1|12 libra" {
+        alias "unciae"
+        alias "romanounce"
+    }
+    unit "schoenus" "4 romanmile"
+    unit "scriptulum" "1|24 uncia" {
+        alias "scrupula"
+    }
+    unit "semis" "6 uncia"
+    unit "semisextula" "1|12 uncia"
+    unit "semodius" "8 sextarius" {
+        alias "semodii"
+    }
+    unit "semuncia" "1|2 uncia"
+    unit "seprunx" "7 uncia"
+    unit "sescuncia" "1.5 uncia"
+    unit "sextans" "2 uncia"
+    unit "sextarius" "35.4 in^3" {
+        alias "sextarii"
+    }
+    unit "sextula" "1|6 uncia"
+    unit "siscilius" "1|4 uncia"
+    unit "squareactus" "120^2 romanfeet^2" {
+        alias "acnua"
+    }
+    unit "stade" "125 romanpaces" {
+        alias "stadia"
+        alias "stadium"
+    }
+    unit "triens" "4 uncia"
+}

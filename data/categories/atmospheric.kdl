@@ -1,0 +1,12 @@
+category "atmospheric" {
+    title "Atmospheric Measures" lang="en"
+    unit "R_1976" "8314.32 N m / kmol K"
+    unit "air_1976" "78.084 % 28.0134 g / mol + 20.9476 % 31.9988 g / mol + 9340 ppm 39.948 g / mol + 314 ppm 44.00995 g / mol + 18.18 ppm 20.183 g / mol + 5.24 ppm 4.0026 g / mol + 2 ppm 16.04303 g / mol + 1.14 ppm 83.8 g / mol + 0.55 ppm 2.01594 g / mol + 0.087 ppm 131.3 g / mol"
+    unit "earthradUSAtm" "6356766 m"
+    unit "lapserate" "6.5 K / km"
+    unit "polyexpnt" "(polyndx + 1) / polyndx"
+    unit "polyndx_1976" "air_1976 gravity / R_1976 lapserate - 1" {
+        alias "polyndx"
+    }
+    unit "stdatmT0" "288.15 K"
+}

@@ -1,0 +1,38 @@
+category "irish" {
+    title "Ireland Measures" lang="en"
+    unit "irishacre" "4 irishrood"
+    unit "irishbarrel" "31.5 irishgallon"
+    unit "irishbushel" "4 irishpeck"
+    unit "irishchain" "4 irishperch"
+    unit "irishcubit" "18 irishinch"
+    unit "irishdrybarrel" "2 irishstrike"
+    unit "irishfathom" "6 irishfeet"
+    unit "irishfoot" "12 irishinch" {
+        alias "irishfeet"
+    }
+    unit "irishfurlong" "10 irishchain"
+    unit "irishgallon" "217.6 UKinch^3"
+    unit "irishhogshead" "2 irishbarrel"
+    unit "irishlink" "1|100 irishchain"
+    unit "irishmile" "8 irishfurlong"
+    unit "irishnoggin" "1|4 irishpint"
+    unit "irishpace" "5 irishfeet"
+    unit "irishpalm" "3 irishinch"
+    unit "irishpeck" "2 irishgallon"
+    unit "irishpint" "1|2 irishquart"
+    unit "irishpipe" "2 irishhogshead"
+    unit "irishpole" "7 irishyard" {
+        alias "irishperch"
+    }
+    unit "irishpottle" "1|2 irishgallon"
+    unit "irishpuncheon" "2 irishtierce"
+    unit "irishquart" "1|2 irishpottle"
+    unit "irishquarter" "2 irishbarrel"
+    unit "irishrood" "40 irishpole^2"
+    unit "irishrundlet" "18 irishgallon"
+    unit "irishspan" "3 irishpalm"
+    unit "irishstrike" "2 irishbushel"
+    unit "irishtierce" "42 irishgallon"
+    unit "irishtun" "2 irishpipe"
+    unit "irishyard" "3 irishfeet"
+}

@@ -1,0 +1,29 @@
+category "wine" {
+    title "Wine and Spirits Measures" lang="en"
+    unit "alebarrel" "34 alegallon"
+    unit "alehogshead" "1.5 alebarrel"
+    unit "alepint" "1|2 alequart"
+    unit "alequart" "1|4 alegallon"
+    unit "beerbarrel" "36 beergallon"
+    unit "beergallon" "282 UKinch^3" {
+        alias "alegallon"
+    }
+    unit "beerhogshead" "1.5 beerbarrel"
+    unit "beerpint" "1|2 beerquart"
+    unit "beerquart" "1|4 beergallon"
+    unit "eushot" "25 ml"
+    unit "fifth" "1|5 usgallon"
+    unit "jigger" "1.5 usfloz" {
+        alias "shot"
+    }
+    unit "magnum" "1.5 liter"
+    unit "metricfifth" "750 ml"
+    unit "metricquart" "1 liter"
+    unit "metrictenth" "375 ml"
+    unit "ponyvolume" "1 usfloz" {
+        alias "pony"
+    }
+    unit "winebottle" "750 ml"
+    unit "wineglass" "4 usfloz"
+    unit "winesplit" "1|4 winebottle"
+}

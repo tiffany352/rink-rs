@@ -1,0 +1,55 @@
+category "long_system" {
+    title "Long System" lang="en"
+    unit "billiard" "1000 million^2" {
+        alias "longbilliard"
+    }
+    unit "decilliard" "1000 million^10" {
+        alias "longdecilliard"
+    }
+    unit "longbillion" "million^2"
+    unit "longdecillion" "million^10"
+    unit "longduodecillion" "million^12"
+    unit "longnonillion" "million^9" {
+        alias "longnoventillion"
+    }
+    unit "longnovemdecillion" "million^19"
+    unit "longoctillion" "million^8"
+    unit "longoctodecillion" "million^18"
+    unit "longquadrillion" "million^4"
+    unit "longquattuordecillion" "million^14"
+    unit "longquindecillion" "million^15"
+    unit "longquintillion" "million^5"
+    unit "longseptdecillion" "million^17"
+    unit "longseptillion" "million^7"
+    unit "longsexdecillion" "million^16"
+    unit "longsextillion" "million^6"
+    unit "longtredecillion" "million^13"
+    unit "longtrillion" "million^3"
+    unit "longundecillion" "million^11"
+    unit "longvigintillion" "million^20"
+    unit "milliard" "1000 million" {
+        alias "longmilliard"
+    }
+    unit "nonilliard" "1000 million^9" {
+        alias "noventilliard"
+        alias "longnonilliard"
+    }
+    unit "octilliard" "1000 million^8" {
+        alias "longoctilliard"
+    }
+    unit "quadrilliard" "1000 million^4" {
+        alias "longquadrilliard"
+    }
+    unit "quintilliard" "1000 million^5" {
+        alias "longquintilliard"
+    }
+    unit "septilliard" "1000 million^7" {
+        alias "longseptilliard"
+    }
+    unit "sextilliard" "1000 million^6" {
+        alias "longsextilliard"
+    }
+    unit "trilliard" "1000 million^3" {
+        alias "longtrilliard"
+    }
+}

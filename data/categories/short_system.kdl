@@ -1,0 +1,61 @@
+category "short_system" {
+    title "Short System" lang="en"
+    unit "shortbillion" "1000000000" {
+        alias "billion"
+    }
+    unit "shortdecillion" "1000000000000000000000000000000000" {
+        alias "decillion"
+    }
+    unit "shortduodecillion" "1000000000000000000000000000000000000000" {
+        alias "duodecillion"
+    }
+    unit "shortnonillion" "1000000000000000000000000000000" {
+        alias "shortnoventillion"
+        alias "nonillion"
+    }
+    unit "shortnovemdecillion" "1000000000000000000000000000000000000000000000000000000000000" {
+        alias "novemdecillion"
+    }
+    unit "shortoctillion" "1000000000000000000000000000" {
+        alias "octillion"
+    }
+    unit "shortoctodecillion" "1000000000000000000000000000000000000000000000000000000000" {
+        alias "octodecillion"
+    }
+    unit "shortquadrillion" "1000000000000000" {
+        alias "quadrillion"
+    }
+    unit "shortquattuordecillion" "1000000000000000000000000000000000000000000000" {
+        alias "quattuordecillion"
+    }
+    unit "shortquindecillion" "1000000000000000000000000000000000000000000000000" {
+        alias "quindecillion"
+    }
+    unit "shortquintillion" "1000000000000000000" {
+        alias "quintillion"
+    }
+    unit "shortseptendecillion" "1000000000000000000000000000000000000000000000000000000" {
+        alias "septendecillion"
+    }
+    unit "shortseptillion" "1000000000000000000000000" {
+        alias "septillion"
+    }
+    unit "shortsexdecillion" "1000000000000000000000000000000000000000000000000000" {
+        alias "sexdecillion"
+    }
+    unit "shortsextillion" "1000000000000000000000" {
+        alias "sextillion"
+    }
+    unit "shorttredecillion" "1000000000000000000000000000000000000000000" {
+        alias "tredecillion"
+    }
+    unit "shorttrillion" "1000000000000" {
+        alias "trillion"
+    }
+    unit "shortundecillion" "1000000000000000000000000000000000000" {
+        alias "undecillion"
+    }
+    unit "shortvigintillion" "1000000000000000000000000000000000000000000000000000000000000000" {
+        alias "vigintillion"
+    }
+}

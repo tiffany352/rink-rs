@@ -1,0 +1,12 @@
+category "jewelers" {
+    title "Jewelers' Units" lang="en"
+    unit "jewelerspoint" "1|100 carat"
+    unit "metriccarat" "0.2 gram" {
+        alias "carat"
+    }
+    unit "metricgrain" "50 mg"
+    unit "momme" "3.75 grams" {
+        alias "monme"
+    }
+    unit "silversmithpoint" "1|4000 inch"
+}

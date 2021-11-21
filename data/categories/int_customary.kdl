@@ -1,0 +1,48 @@
+category "int_customary" {
+    title "International Customary Length Measures" lang="en"
+    unit "foot" "12 inch" {
+        alias "feet"
+        alias "ft"
+        alias "intfoot"
+        alias "intfeet"
+        alias "intft"
+        doc "International yard and pound, since July 1, 1959." lang="en"
+    }
+    unit "furlong" "40 rod" {
+        alias "intfurlong"
+    }
+    unit "inch" "2.54 cm" {
+        alias "inches"
+        alias "in"
+        alias "intinch"
+        alias "intinches"
+        doc "International yard and pound, since July 1, 1959." lang="en"
+    }
+    unit "league" "3 mile" {
+        alias "intleague"
+    }
+    unit "line" "1|12 inch" {
+        alias "intline"
+    }
+    unit "mile" "5280 ft" {
+        alias "mi"
+        alias "statutemile"
+        alias "intmile"
+        alias "intmi"
+        alias "smi"
+        doc "International yard and pound, since July 1, 1959." lang="en"
+    }
+    unit "rod" "5.5 yard" {
+        alias "perch"
+        alias "pole"
+        alias "introd"
+        alias "rd"
+    }
+    unit "yard" "3 ft" {
+        alias "yd"
+        alias "intyard"
+        alias "intyd"
+        alias "internationalyard"
+        doc "International yard and pound, since July 1, 1959." lang="en"
+    }
+}

@@ -1,0 +1,24 @@
+category "concentrations" {
+    title "Concentrations" lang="en"
+    unit "basispoint" "0.01 %"
+    unit "fine" "1 / 1000"
+    unit "gammil" "mg / l"
+    unit "karat" "1 / 24" {
+        alias "caratgold"
+    }
+    unit "mill" "0.001"
+    unit "percent" "0.01" {
+        alias "%"
+    }
+    unit "ppb" "0.000000001" {
+        alias "partsperbillion"
+    }
+    unit "ppm" "0.000001" {
+        alias "partspermillion"
+        alias "㏙"
+    }
+    unit "ppt" "0.000000000001" {
+        alias "partspertrillion"
+    }
+    unit "proof" "1 / 200"
+}

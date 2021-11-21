@@ -1,0 +1,5 @@
+category "water_hardness" {
+    title "Water Hardness Measures" lang="en"
+    unit "clarkdegree" "grains / brgallon"
+    unit "gpg" "grains / usgallon"
+}

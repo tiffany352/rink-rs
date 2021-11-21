@@ -1,0 +1,41 @@
+category "music" {
+    title "Musical Measures" lang="en"
+    base_unit "wholenote" {
+        alias "semibreve"
+    }
+    quantity "musical_note_length" "wholenote"
+    unit "dotted" "3 / 2"
+    unit "doubledotted" "7 / 4"
+    unit "eighthnote" "1|8 wholenote" {
+        alias "quaver"
+    }
+    unit "halfnote" "1|2 wholenote" {
+        alias "minimnote"
+    }
+    unit "majorsecond" "musicalfifth^2 / octave"
+    unit "majorseventh" "musicalfifth majorthird"
+    unit "majorsixth" "musicalfourth majorthird"
+    unit "majorthird" "5 / 4"
+    unit "minorseventh" "musicalfifth minorthird"
+    unit "minorsixth" "musicalfourth minorthird"
+    unit "minorthird" "6 / 5"
+    unit "musicalfifth" "3 / 2"
+    unit "musicalfourth" "4 / 3"
+    unit "octave" "2"
+    unit "pythagoreancomma" "musicalfifth^12 / octave^7"
+    unit "pythagoreanthird" "majorsecond musicalfifth^2 / octave"
+    unit "quarternote" "1|4 wholenote" {
+        alias "crotchet"
+    }
+    unit "semitone" "octave^1|12"
+    unit "sixteenthnote" "1|16 wholenote" {
+        alias "semiquaver"
+    }
+    unit "sixtyfourthnote" "1|64 wholenote" {
+        alias "hemidemisemiquaver"
+    }
+    unit "syntoniccomma" "pythagoreanthird / majorthird"
+    unit "thirtysecondnote" "1|32 wholenote" {
+        alias "demisemiquaver"
+    }
+}

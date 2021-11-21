@@ -1,0 +1,58 @@
+category "derived_customary" {
+    title "Derived Customary Units" lang="en"
+    unit "australiapoint" "0.01 inch"
+    unit "beespace" "1|4 inch"
+    unit "buttonline" "1|40 inch"
+    unit "caliber" "0.01 inch"
+    unit "celo" "ft / s^2"
+    unit "cental" "100 pound" {
+        alias "centner"
+    }
+    unit "circularinch" "1|4 pi in^2" {
+        alias "circleinch"
+    }
+    unit "circularmil" "1|4 pi mil^2" {
+        alias "cmil"
+    }
+    unit "count" "1 / pound"
+    unit "cylinderinch" "circleinch inch"
+    unit "duty" "ft lbf"
+    unit "fillpower" "in^3 / ounce"
+    unit "flag" "5 ft^2"
+    unit "jerk" "ft / s^3"
+    unit "kip" "1000 lbf"
+    unit "ksi" "kip / in^2"
+    unit "lbf" "lb force"
+    unit "mil" "0.001 inch" {
+        alias "㏕"
+    }
+    unit "millionth" "0.000001 inch"
+    unit "osi" "ounce force / inch^2"
+    unit "ouncedal" "oz ft / s^2"
+    unit "pinlength" "1|16 inch"
+    unit "poundal" "lb ft / s^2" {
+        alias "pdl"
+    }
+    unit "psi" "pound force / inch^2" {
+        alias "psia"
+    }
+    unit "retmaunit" "1.75 in" {
+        alias "U"
+    }
+    unit "reyn" "psi sec"
+    unit "rollwallpaper" "30 ft^2"
+    unit "sabin" "ft^2"
+    unit "slinch" "lbf s^2 / inch"
+    unit "slinchf" "slinch force"
+    unit "slug" "lbf s^2 / ft" {
+        alias "geepound"
+    }
+    unit "slugf" "slug force"
+    unit "standardgauge" "4 ft + 8.5 in"
+    unit "tapediamond" "8|5 ft"
+    unit "tenth" "0.0001 inch"
+    unit "thou" "0.001 inch"
+    unit "tondal" "longton ft / s^2"
+    unit "tonf" "ton force"
+    unit "tsi" "ton force / inch^2"
+}

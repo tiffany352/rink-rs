@@ -1,0 +1,17 @@
+category "troy" {
+    title "Troy Weights" lang="en"
+    unit "assayton" "mg ton / troyounce"
+    unit "brassayton" "mg brton / troyounce"
+    unit "pennyweight" "1|20 troyounce" {
+        alias "dwt"
+    }
+    unit "troyounce" "1|12 troypound" {
+        alias "ozt"
+        alias "fineounce"
+        alias "apounce"
+    }
+    unit "troypound" "5760 grain" {
+        alias "appound"
+    }
+    unit "usassayton" "mg uston / troyounce"
+}

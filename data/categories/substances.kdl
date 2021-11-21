@@ -1,0 +1,931 @@
+category "substances" {
+    title "Substances" lang="en"
+    unit "air" "78.08 % nitrogen 2 + 20.95 % oxygen 2 + 9340 ppm argon + 400 ppm (carbon + oxygen 2) + 18.18 ppm neon + 5.24 ppm helium + 1.7 ppm (carbon + 4 hydrogen) + 1.14 ppm krypton + 0.55 ppm hydrogen 2" {
+        doc "Average molecular weight of air." lang="en"
+    }
+    unit "barreloil" "5.8 Mbtu" {
+        doc "Conventional value for barrel of crude oil [E2].  Actual range is 5.6 - 6.3." lang="en"
+    }
+    unit "earthmoonmass" "solarmass / 328900.56" {
+        doc "±0.02" lang="en"
+    }
+    unit "electroncharge" "charge of electron" {
+        alias "atomiccharge"
+    }
+    unit "electronmass" "mass of electron" {
+        alias "atomicmass"
+        alias "m_e"
+    }
+    unit "inH2O" "pressure of inch water"
+    unit "inHg" "pressure of inch mercury"
+    unit "m_d" "mass of deuteron"
+    unit "m_mu" "mass of muon"
+    unit "m_n" "mass of neutron"
+    unit "m_p" "mass of proton"
+    unit "mmH2O" "pressure of mm water"
+    unit "mmHg" "pressure of mm mercury"
+    unit "moonearthmassratio" "0.012300034" {
+        doc "±3e-9" lang="en"
+    }
+    unit "solarluminosity" "luminosity of sun"
+    unit "solarmass" "mass of sun" {
+        alias "sunmass"
+    }
+    unit "sundist" "distance of sun"
+    unit "tonoil" "energy of ton oil" {
+        alias "toe"
+    }
+    unit "wc" "pressure_column of water"
+    substance "acetyl" "Ac" {
+        prop "molar_mass" "amount" "mol" "mass" "43.04522 g"
+    }
+    substance "actinium" {
+        prop "molar_mass" "amount" "mol" "mass" "227.0278 g"
+    }
+    substance "alphaparticle" {
+        prop "mass" "alpha_mass" "1" "mass" "4.001506179127 u"
+    }
+    substance "aluminum" "Al" {
+        alias "aluminium"
+        prop "molar_mass" "amount" "mol" "mass" "26.981539 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.91 J g^-1"
+    }
+    substance "americium" {
+        prop "molar_mass" "amount" "mol" "mass" "243.0614 g" {
+            doc "Longest lived. 241.06"
+        }
+    }
+    substance "ammonia" {
+        alias "NH3"
+        prop "specific_heat" "temperature" "K" "specific_energy" "4.6 J g^-1"
+    }
+    substance "antimony" "Sb" {
+        prop "molar_mass" "amount" "mol" "mass" "121.76 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.21 J g^-1"
+    }
+    substance "argon" "Ar" {
+        prop "molar_mass" "amount" "mol" "mass" "39.948 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.5203 J g^-1"
+    }
+    substance "arsenic" "As" {
+        prop "molar_mass" "amount" "mol" "mass" "74.92159 g"
+    }
+    substance "asphalt" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.92 J g^-1"
+    }
+    substance "astatine" {
+        prop "molar_mass" "amount" "mol" "mass" "209.9871 g" {
+            doc "Longest lived."
+        }
+    }
+    substance "baking_powder" {
+        prop "density" "volume" "ustsp" "mass" "4.6 grams"
+    }
+    substance "barium" "Ba" {
+        prop "molar_mass" "amount" "mol" "mass" "137.327 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.2 J g^-1"
+    }
+    substance "berkelium" {
+        prop "molar_mass" "amount" "mol" "mass" "247.0703 g" {
+            doc "Longest lived. 249.08"
+        }
+    }
+    substance "beryllium" "Be" {
+        prop "molar_mass" "amount" "mol" "mass" "9.012182 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "1.83 J g^-1"
+    }
+    substance "bismuth" "Bi" {
+        prop "molar_mass" "amount" "mol" "mass" "208.98037 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "bohrium" {
+        prop "molar_mass" "amount" "mol" "mass" "272.13826 g"
+    }
+    substance "boron" "B" {
+        prop "molar_mass" "amount" "mol" "mass" "10.811 g"
+    }
+    substance "breadflour" {
+        prop "density_sifted" "volume_sifted" "uscup" "mass_sifted" "4.25 oz"
+        prop "density_spooned" "volume_spooned" "uscup" "mass_spooned" "4.5 oz"
+        prop "density_scooped" "volume_scooped" "uscup" "mass_scooped" "5.5 oz"
+    }
+    substance "brick" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.84 J g^-1"
+    }
+    substance "bromine" "Br" {
+        prop "molar_mass" "amount" "mol" "mass" "79.904 g"
+    }
+    substance "brownsugar_dark" {
+        prop "density" "volume" "uscup" "mass" "239 g"
+    }
+    substance "brownsugar_light" {
+        prop "density" "volume" "uscup" "mass" "217 g" {
+            doc "Packed."
+        }
+    }
+    substance "butane" {
+        prop "energy_density" "volume" "m^3" "energy" "124 MJ"
+    }
+    substance "butter" {
+        prop "density" "volume" "uscup" "mass" "8 oz"
+    }
+    substance "butter_clarified" {
+        prop "density" "volume" "uscup" "mass" "6.8 oz"
+    }
+    substance "cadmium" "Cd" {
+        prop "molar_mass" "amount" "mol" "mass" "112.411 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.23 J g^-1"
+    }
+    substance "cakeflour" {
+        prop "density_sifted" "volume_sifted" "uscup" "mass_sifted" "3.5 oz"
+        prop "density_spooned" "volume_spooned" "uscup" "mass_spooned" "4 oz"
+        prop "density_scooped" "volume_scooped" "uscup" "mass_scooped" "4.5 oz"
+    }
+    substance "calcium" "Ca" {
+        prop "molar_mass" "amount" "mol" "mass" "40.078 g"
+    }
+    substance "californium" {
+        prop "molar_mass" "amount" "mol" "mass" "251.0796 g" {
+            doc "Longest lived. 252.08"
+        }
+    }
+    substance "carbon" "C" {
+        prop "molar_mass" "amount" "mol" "mass" "12.011 g"
+    }
+    substance "cerium" "Ce" {
+        prop "molar_mass" "amount" "mol" "mass" "140.115 g"
+    }
+    substance "cesium" "Cs" {
+        prop "molar_mass" "amount" "mol" "mass" "132.90543 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.24 J g^-1"
+    }
+    substance "charcoal" {
+        prop "specific_energy" "mass" "tonne" "energy" "30 GJ"
+    }
+    substance "chlorine" "Cl" {
+        prop "molar_mass" "amount" "mol" "mass" "35.4527 g"
+    }
+    substance "chromium" "Cr" {
+        prop "molar_mass" "amount" "mol" "mass" "51.9961 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.46 J g^-1"
+    }
+    substance "coal" {
+        prop "specific_energy" "mass" "ton" "energy" "7000000000 cal_IT" {
+            doc "Energy in metric ton coal from [18]. This is a nominal value which is close to the heat content of coal used in the 1950's."
+        }
+        prop "specific_energy_bituminous" "mass_bituminous" "tonne" "energy_bituminous" "27 GJ"
+        prop "specific_energy_lignite" "mass_lignite" "tonne" "energy_lignite" "15 GJ"
+        prop "specific_energy_us" "mass_us" "uston" "energy_us" "22 GJ"
+    }
+    substance "cobalt" "Co" {
+        prop "molar_mass" "amount" "mol" "mass" "58.9332 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.42 J g^-1"
+    }
+    substance "cocoa" {
+        doc "Non-alkalized cocoa." lang="en"
+        prop "density_sifted" "volume_sifted" "uscup" "mass_sifted" "75 g"
+        prop "density_spooned" "volume_spooned" "uscup" "mass_spooned" "82 g"
+        prop "density_scooped" "volume_scooped" "uscup" "mass_scooped" "95 g"
+    }
+    substance "cocoa_butter" {
+        prop "density" "volume" "uscup" "mass" "9 oz"
+    }
+    substance "concrete" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.88 J g^-1"
+    }
+    substance "copernicium" {
+        prop "molar_mass" "amount" "mol" "mass" "285.17712 g"
+    }
+    substance "copper" "Cu" {
+        prop "molar_mass" "amount" "mol" "mass" "63.546 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.39 J g^-1"
+    }
+    substance "cornstarch" {
+        prop "density" "volume" "uscup" "mass" "120 grams"
+    }
+    substance "cornsyrup" {
+        prop "density" "volume" "uscup" "mass" "11.5 oz"
+    }
+    substance "curium" {
+        prop "molar_mass" "amount" "mol" "mass" "247.0703 g"
+    }
+    substance "darmstadtium" {
+        prop "molar_mass" "amount" "mol" "mass" "281.16451 g"
+    }
+    substance "deuterium" "D" {
+        prop "molar_mass" "amount" "mol" "mass" "2.0141017778 g"
+    }
+    substance "deuteron" {
+        prop "mass" "deuteron_mass" "1" "mass" "2.013553212745 u"
+        prop "charge_radius" "deuteron_radius" "1" "charge_radius" "0.0000000000000021413 m"
+        prop "magnetic_moment" "deuteron_moment" "1" "magnetic_moment" "0.00000000000000000000000000433073504 J / T"
+    }
+    substance "diamond" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.5091 J g^-1"
+    }
+    substance "diesel" {
+        prop "energy_density" "volume" "usgallon" "energy" "130500 btu"
+    }
+    substance "dubnium" {
+        prop "molar_mass" "amount" "mol" "mass" "268.12567 g"
+    }
+    substance "dutchcocoa" {
+        doc "Alkalized Dutch processed cocoa." lang="en"
+        prop "density_sifted" "volume_sifted" "uscup" "mass_sifted" "75 g"
+        prop "density_spooned" "volume_spooned" "uscup" "mass_spooned" "92 g"
+        prop "density_scooped" "volume_scooped" "uscup" "mass_scooped" "95 g"
+    }
+    substance "dysprosium" "Dy" {
+        prop "molar_mass" "amount" "mol" "mass" "162.5 g"
+    }
+    substance "earth" {
+        prop "mass" "earth_mass" "1" "mass" "earthmoonmass / (1 + moonearthmassratio)"
+        prop "radius" "earth_radius" "1" "radius" "6371.01 km"
+        prop "volume" "earth_volume" "1" "volume" "1083210000000 km^3"
+        prop "sidereal_day" "earth_day" "1" "sidereal_day" "siderealday"
+        prop "year" "earth_year" "1" "year" "siderealyear"
+    }
+    substance "egg" {
+        doc "USA large egg." lang="en"
+        prop "mass_shelled" "egg_shelled" "1" "mass_shelled" "50 grams"
+        prop "mass_white" "egg_white" "1" "mass_white" "30 grams"
+        prop "mass_yolk" "egg_yolk" "1" "mass_yolk" "18.6 grams"
+        prop "volume" "egg_volume" "1" "volume" "3 ustbsp + 1|2 ustsp"
+        prop "volume_white" "egg_white" "1" "volume_white" "2 tbsp"
+        prop "volume_yolk" "egg_yolk" "1" "volume_yolk" "3.5 ustsp"
+    }
+    substance "einsteinium" {
+        prop "molar_mass" "amount" "mol" "mass" "252.083 g" {
+            doc "Longest lived."
+        }
+    }
+    substance "electron" {
+        prop "mass" "electron_mass" "1" "mass" "0.00054857990907 u"
+        prop "charge" "electron_charge" "1" "charge" "0.00000000000000000016021766208 C"
+        prop "radius" "electron_radius" "1" "radius" "(1 / 4 pi epsilon0) charge^2 / mass c^2"
+        prop "wavelength" "electron_wavelength" "1" "wavelength" "planck_constant / mass c"
+        prop "magnetic_moment" "electron_moment" "1" "magnetic_moment" "-0.00000000000000000000000928476462 J / T"
+    }
+    substance "erbium" "Er" {
+        prop "molar_mass" "amount" "mol" "mass" "167.26 g"
+    }
+    substance "ethanol" {
+        prop "energy_density_HHV" "volume_HHV" "usgallon" "energy_HHV" "84000 btu"
+        prop "energy_density_LHV" "volume_LHV" "usgallon" "energy_LHV" "75700 btu"
+        prop "specific_heat" "temperature" "K" "specific_energy" "2.3 J g^-1"
+    }
+    substance "ethyl" "Et" {
+        prop "molar_mass" "amount" "mol" "mass" "29.0617 g"
+    }
+    substance "europium" "Eu" {
+        prop "molar_mass" "amount" "mol" "mass" "151.965 g"
+    }
+    substance "fermium" {
+        prop "molar_mass" "amount" "mol" "mass" "257.0951 g" {
+            doc "Longest lived."
+        }
+    }
+    substance "flerovium" {
+        prop "molar_mass" "amount" "mol" "mass" "289.19042 g"
+    }
+    substance "flour" {
+        prop "density_sifted" "volume_sifted" "uscup" "mass_sifted" "4 oz"
+        prop "density_spooned" "volume_spooned" "uscup" "mass_spooned" "4.25 oz"
+        prop "density_scooped" "volume_scooped" "uscup" "mass_scooped" "5 oz"
+    }
+    substance "fluorine" "F" {
+        prop "molar_mass" "amount" "mol" "mass" "18.9984032 g"
+    }
+    substance "francium" {
+        prop "molar_mass" "amount" "mol" "mass" "223.0197 g" {
+            doc "Longest lived"
+        }
+    }
+    substance "freon" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.91 J g^-1" {
+            doc "R-12 at 0 degrees Fahrenheit."
+        }
+    }
+    substance "fueloil" {
+        prop "energy_density" "volume" "liter" "energy" "39.7 MJ" {
+            doc "Low sulphur."
+        }
+    }
+    substance "gadolinium" "Gd" {
+        prop "molar_mass" "amount" "mol" "mass" "157.25 g"
+    }
+    substance "gallium" "Ga" {
+        prop "molar_mass" "amount" "mol" "mass" "69.723 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.37 J g^-1"
+    }
+    substance "gasoline" {
+        prop "energy_density_LHV" "volume_LHV" "usgallon" "energy_LHV" "115000 btu"
+        prop "energy_density_HHV" "volume_HHV" "usgallon" "energy_HHV" "125000 btu"
+        prop "specific_heat" "temperature" "K" "specific_energy" "2.22 J g^-1"
+    }
+    substance "germanium" "Ge" {
+        prop "molar_mass" "amount" "mol" "mass" "72.61 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.32 J g^-1"
+    }
+    substance "glass_flint" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.503 J g^-1"
+    }
+    substance "glass_pyrex" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.753 J g^-1"
+    }
+    substance "glass_silica" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.84 J g^-1"
+    }
+    substance "gold" "Au" {
+        prop "molar_mass" "amount" "mol" "mass" "196.96654 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "granite" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.79 J g^-1"
+    }
+    substance "graphite" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.71 J g^-1"
+    }
+    substance "gypsum" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "1.09 J g^-1"
+    }
+    substance "hafnium" "Hf" {
+        prop "molar_mass" "amount" "mol" "mass" "178.49 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.14 J g^-1"
+    }
+    substance "hassium" {
+        prop "molar_mass" "amount" "mol" "mass" "270.13429 g"
+    }
+    substance "heating_oil" {
+        prop "energy_density" "volume" "liter" "energy" "37.3 MJ"
+    }
+    substance "heavycream" {
+        prop "density" "volume" "uscup" "mass" "232 g"
+    }
+    substance "helion" {
+        prop "mass" "helion_mass" "1" "mass" "3.01493224673 u"
+        prop "magnetic_moment" "helion_moment" "1" "magnetic_moment" "-0.00000000000000000000000001074617522 J / T"
+    }
+    substance "helium" "He" {
+        prop "molar_mass" "amount" "mol" "mass" "4.002602 g"
+    }
+    substance "holmium" "Ho" {
+        prop "molar_mass" "amount" "mol" "mass" "164.93032 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "5.1932 J g^-1"
+    }
+    substance "honey" {
+        prop "density" "volume" "uscup" "mass" "11.75 oz"
+    }
+    substance "hydrogen" "H" {
+        prop "molar_mass" "amount" "mol" "mass" "1.00794 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "14.3 J g^-1"
+    }
+    substance "ice" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "2.11 J g^-1"
+    }
+    substance "indium" "In" {
+        prop "molar_mass" "amount" "mol" "mass" "114.818 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.24 J g^-1"
+    }
+    substance "iodine" "I" {
+        prop "molar_mass" "amount" "mol" "mass" "126.90447 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "2.15 J g^-1"
+    }
+    substance "iridium" "Ir" {
+        prop "molar_mass" "amount" "mol" "mass" "192.217 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "iron" "Fe" {
+        prop "molar_mass" "amount" "mol" "mass" "55.845 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.45 J g^-1"
+    }
+    substance "jupiter" {
+        prop "mass" "jupiter_mass" "1" "mass" "solarmass / 1047.3486" {
+            doc "±0.0008"
+        }
+        prop "mass_old" "jupiter_old" "1" "mass_old" "1898800000000000000000000000 kg"
+        prop "radius" "jupiter_radius" "1" "radius" "69911 km"
+        prop "volume" "jupiter_volume" "1" "volume" "1431300000000000 km^3"
+        prop "sidereal_day" "jupiter_day" "1" "sidereal_day" "0.41354 day"
+        prop "year" "jupiter_year" "1" "year" "11.862615 julianyear"
+    }
+    substance "koshersalt" {
+        prop "density_dc" "dc_volume" "ustsp" "dc_mass" "2.8 g" {
+            doc "Diamond Crystal kosher salt"
+        }
+        prop "density_morton" "morton_volume" "ustsp" "morton_mass" "4.8 g" {
+            doc "Morton kosher salt"
+        }
+    }
+    substance "krypton" "Kr" {
+        prop "molar_mass" "amount" "mol" "mass" "83.8 g"
+    }
+    substance "lanthanum" "La" {
+        prop "molar_mass" "amount" "mol" "mass" "138.9055 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.195 J g^-1"
+    }
+    substance "lawrencium" {
+        prop "molar_mass" "amount" "mol" "mass" "262.11 g" {
+            doc "Longest lived."
+        }
+    }
+    substance "lead" "Pb" {
+        prop "molar_mass" "amount" "mol" "mass" "207.2 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "light" {
+        prop "speed" "light_speed" "1" "speed" "299792458 m / s"
+    }
+    substance "lithium" "Li" {
+        prop "molar_mass" "amount" "mol" "mass" "6.941 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "3.57 J g^-1"
+    }
+    substance "livermorium" {
+        prop "molar_mass" "amount" "mol" "mass" "293.20449 g"
+    }
+    substance "lutetium" "Lu" {
+        prop "molar_mass" "amount" "mol" "mass" "174.967 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.15 J g^-1"
+    }
+    substance "magnesium" "Mg" {
+        prop "molar_mass" "amount" "mol" "mass" "24.305 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "1.05 J g^-1"
+    }
+    substance "manganese" "Mn" {
+        prop "molar_mass" "amount" "mol" "mass" "54.93805 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.48 J g^-1"
+    }
+    substance "marble" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.88 J g^-1"
+    }
+    substance "mars" {
+        prop "mass" "mars_mass" "1" "mass" "solarmass / 3098708" {
+            doc "±9"
+        }
+        prop "mass_old" "mars_old" "1" "mass_old" "641910000000000000000000 kg"
+        prop "radius" "mars_radius" "1" "radius" "3389.92 km"
+        prop "volume" "mars_volume" "1" "volume" "163180000000 km^3"
+        prop "sidereal_day" "mars_day" "1" "sidereal_day" "1.02595675 day"
+        prop "year" "mars_year" "1" "year" "1.8808476 julianyear"
+    }
+    substance "meitnerium" {
+        prop "molar_mass" "amount" "mol" "mass" "276.15159 g"
+    }
+    substance "mendelevium" {
+        prop "molar_mass" "amount" "mol" "mass" "258.1 g" {
+            doc "Longest lived"
+        }
+    }
+    substance "mercury" "Hg" {
+        alias "Hg"
+        prop "density" "volume" "cm^3" "mass" "13.5951 gram"
+        prop "pressure_column" "column" "cm" "pressure" "13.5951 gram force cm^-2"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.14 J g^-1"
+        prop "molar_mass" "amount" "mol" "mass" "200.59 g"
+        prop "pressure_column_10C" "column_10C" "cm" "pressure_10C" "13.5708 force gram cm^-2"
+        prop "pressure_column_20C" "column_20C" "cm" "pressure_20C" "13.5462 force gram cm^-2"
+        prop "pressure_column_23C" "column_23C" "cm" "pressure_23C" "13.5386 force gram cm^-2"
+        prop "pressure_column_30C" "column_30C" "cm" "pressure_30C" "13.5217 force gram cm^-2"
+        prop "pressure_column_40C" "column_40C" "cm" "pressure_40C" "13.4973 force gram cm^-2"
+        prop "pressure_column_60F" "column_60F" "cm" "pressure_60F" "13.5574 force gram cm^-2"
+    }
+    substance "mercury_planet" {
+        prop "mass" "mercury_mass" "1" "mass" "solarmass / 6023600" {
+            doc "±250"
+        }
+        prop "mass_old" "mercury_old" "1" "mass_old" "330220000000000000000000 kg"
+        prop "radius" "mercury_radius" "1" "radius" "2440 km"
+        prop "volume" "mercury_volume" "1" "volume" "60830000000 km^3"
+        prop "sidereal_day" "mercury_day" "1" "sidereal_day" "58.6462 day"
+        prop "year" "mercury_year" "1" "year" "0.2408467 julianyear"
+    }
+    substance "methyl" "Me" {
+        prop "molar_mass" "amount" "mol" "mass" "15.03482 g"
+    }
+    substance "milk" {
+        prop "density" "volume" "uscup" "mass" "242 g"
+    }
+    substance "molasses" {
+        prop "density" "volume" "uscup" "mass" "11.25 oz"
+    }
+    substance "molybdenum" "Mo" {
+        prop "molar_mass" "amount" "mol" "mass" "95.94 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.25 J g^-1"
+    }
+    substance "moon" {
+        prop "mass" "moon_mass" "1" "mass" "moonearthmassratio (mass of earth)" {
+            doc "Average earth-moon distance."
+        }
+        prop "radius" "moon_radius" "1" "radius" "1737.1 km"
+        prop "volume" "moon_volume" "1" "volume" "21958000000 km^3"
+        prop "distance" "moon_dist" "1" "distance" "384400000 m"
+        prop "gravity" "moon_gravity" "1" "gravity" "1.62 m / s^2"
+        prop "luminance" "moon_luminance" "1" "luminance" "2500 cd / m^2"
+    }
+    substance "moscovium" "Mc" {
+        alias "ununpentium"
+        prop "atomic_number" "moscovium_atomic_number" "1" "atomic_number" "115"
+        prop "molar_mass" "amount" "mol" "mass" "288.19274 g"
+    }
+    substance "muon" {
+        prop "mass" "muon_mass" "1" "mass" "0.1134289257 u"
+        prop "magnetic_moment" "muon_moment" "1" "magnetic_moment" "-0.0000000000000000000000000449044826 J / T"
+    }
+    substance "naturalgas" {
+        prop "energy_density_HHV" "volume_HHV" "ft^3" "energy_HHV" "1027 btu" {
+            doc "Energy content of natural gas.  HHV is for Higher Heating Value and includes energy from condensation combustion products.  LHV is for Lower Heating Value and excludes these. American publications typically report HHV whereas European ones report LHV."
+        }
+        prop "energy_density_LHV" "volume_LHV" "ft^3" "energy_LHV" "930 btu"
+    }
+    substance "neodymium" "Nd" {
+        prop "molar_mass" "amount" "mol" "mass" "144.24 g"
+    }
+    substance "neon" "Ne" {
+        prop "molar_mass" "amount" "mol" "mass" "20.1797 g"
+    }
+    substance "neptune" {
+        prop "mass" "neptune_mass" "1" "mass" "solarmass / 19412.24" {
+            doc "±0.04"
+        }
+        prop "mass_old" "neptune_old" "1" "mass_old" "102780000000000000000000000 kg"
+        prop "radius" "neptune_radius" "1" "radius" "24624 km"
+        prop "volume" "neptune_volume" "1" "volume" "62540000000000 km^3"
+        prop "sidereal_day" "neptune_day" "1" "sidereal_day" "0.768 day"
+        prop "year" "neptune_year" "1" "year" "164.79132 julianyear"
+    }
+    substance "neptunium" {
+        prop "molar_mass" "amount" "mol" "mass" "237.0482 g"
+    }
+    substance "neutron" {
+        prop "mass" "neutron_mass" "1" "mass" "1.00866491588 u"
+        prop "wavelength" "neutron_wavelength" "1" "wavelength" "planck_constant / mass c"
+        prop "magnetic_moment" "neutron_moment" "1" "magnetic_moment" "-0.000000000000000000000000009662365 J / T"
+    }
+    substance "nickel" "Ni" {
+        prop "molar_mass" "amount" "mol" "mass" "58.6934 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.44 J g^-1"
+    }
+    substance "nihonium" "Nh" {
+        alias "ununtrium"
+        prop "atomic_number" "nihonium_atomic_number" "1" "atomic_number" "113"
+        prop "molar_mass" "amount" "mol" "mass" "284.17873 g"
+    }
+    substance "niobium" "Nb" {
+        prop "molar_mass" "amount" "mol" "mass" "92.90638 g"
+    }
+    substance "nitrogen" "N" {
+        prop "molar_mass" "amount" "mol" "mass" "14.00674 g"
+    }
+    substance "nobelium" {
+        prop "molar_mass" "amount" "mol" "mass" "259.1009 g" {
+            doc "Longest lived."
+        }
+    }
+    substance "oganesson" "Og" {
+        alias "ununoctium"
+        prop "atomic_number" "oganesson_atomic_number" "1" "atomic_number" "118"
+        prop "molar_mass" "amount" "mol" "mass" "294.21392 g"
+    }
+    substance "oil" {
+        prop "specific_energy" "mass" "ton" "energy" "10000000000 cal_IT" {
+            doc "Ton oil equivalent.  A conventional value for the energy released by burning one metric ton of oil. [18,E2] Note that energy per mass of petroleum products is fairly constant. Variations in volumetric energy density result from variations in the density (kg/m^3) of different fuels. This definition is given by the IEA/OECD."
+        }
+    }
+    substance "olive_oil" {
+        prop "density" "volume" "cm^3" "mass" "0.918 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "1.97 J g^-1"
+    }
+    substance "osmium" "Os" {
+        prop "molar_mass" "amount" "mol" "mass" "190.23 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "oxygen" "O" {
+        prop "molar_mass" "amount" "mol" "mass" "15.9994 g"
+    }
+    substance "palladium" "Pa" {
+        prop "molar_mass" "amount" "mol" "mass" "106.42 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.24 J g^-1"
+    }
+    substance "phenyl" "Ph" {
+        prop "molar_mass" "amount" "mol" "mass" "77.1057 g"
+    }
+    substance "phosphorus" "P" {
+        prop "molar_mass" "amount" "mol" "mass" "30.973762 g"
+    }
+    substance "platinum" "Pt" {
+        prop "molar_mass" "amount" "mol" "mass" "195.08 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "pluto" {
+        prop "mass" "pluto_mass" "1" "mass" "solarmass / 135000000" {
+            doc "±0.07e8"
+        }
+        prop "mass_old" "pluto_old" "1" "mass_old" "15000000000000000000000 kg"
+        prop "radius" "pluto_radius" "1" "radius" "1151 km"
+        prop "volume" "pluto_volume" "1" "volume" "7006000000 km^3" {
+            doc "±0.071e9 km^3"
+        }
+        prop "sidereal_day" "pluto_day" "1" "sidereal_day" "6.3867 day"
+        prop "year" "pluto_year" "1" "year" "247.92065 julianyear"
+    }
+    substance "plutonium" "Pu" {
+        prop "molar_mass" "amount" "mol" "mass" "244.0642 g" {
+            doc "Longest lived. 239.05"
+        }
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "polonium" {
+        prop "molar_mass" "amount" "mol" "mass" "208.9824 g" {
+            doc "Longest lived. 209.98"
+        }
+    }
+    substance "potassium" "K" {
+        prop "molar_mass" "amount" "mol" "mass" "39.0983 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.75 J g^-1"
+    }
+    substance "powdered_sugar" {
+        prop "density" "volume" "uscup" "mass" "4 oz"
+    }
+    substance "praseodymium" "Pr" {
+        prop "molar_mass" "amount" "mol" "mass" "140.90765 g"
+    }
+    substance "prolactin" {
+        prop "biological_activity_density" "biological_activity" "67 mIU" "mass" "3.2 µg"
+    }
+    substance "promethium" {
+        prop "molar_mass" "amount" "mol" "mass" "144.9127 g" {
+            doc "Longest lived. 146.92"
+        }
+    }
+    substance "propane" {
+        prop "energy_density" "volume" "m^3" "energy" "93.3 MJ"
+    }
+    substance "protactinium" {
+        prop "molar_mass" "amount" "mol" "mass" "231.03588 g"
+    }
+    substance "proton" {
+        prop "mass" "proton_mass" "1" "mass" "1.007276466879 u"
+        prop "wavelength" "proton_wavelength" "1" "wavelength" "planck_constant / mass c"
+        prop "charge_radius" "proton_radius" "1" "charge_radius" "0.0000000000000008751 m"
+        prop "magnetic_moment" "proton_moment" "1" "magnetic_moment" "0.000000000000000000000000014106067873 J / T"
+    }
+    substance "radium" {
+        prop "molar_mass" "amount" "mol" "mass" "226.0254 g"
+    }
+    substance "radon" {
+        prop "molar_mass" "amount" "mol" "mass" "222.0176 g" {
+            doc "Longest lived."
+        }
+    }
+    substance "rhenium" "Re" {
+        prop "molar_mass" "amount" "mol" "mass" "186.207 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.14 J g^-1"
+    }
+    substance "rhodium" "Rh" {
+        prop "molar_mass" "amount" "mol" "mass" "102.9055 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.24 J g^-1"
+    }
+    substance "roentgenium" {
+        prop "molar_mass" "amount" "mol" "mass" "280.16514 g"
+    }
+    substance "rubidium" "Rb" {
+        prop "molar_mass" "amount" "mol" "mass" "85.4678 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.36 J g^-1"
+    }
+    substance "ruthenium" "Ru" {
+        prop "molar_mass" "amount" "mol" "mass" "101.07 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.24 J g^-1"
+    }
+    substance "rutherfordium" {
+        prop "molar_mass" "amount" "mol" "mass" "267.12179 g"
+    }
+    substance "salt" {
+        prop "density" "volume" "ustsp" "mass" "6 g"
+    }
+    substance "samarium" "Sm" {
+        prop "molar_mass" "amount" "mol" "mass" "150.36 g"
+    }
+    substance "sand" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.835 J g^-1"
+    }
+    substance "saturn" {
+        prop "mass" "saturn_mass" "1" "mass" "solarmass / 3497.898" {
+            doc "±0.018"
+        }
+        prop "mass_old" "saturn_old" "1" "mass_old" "568500000000000000000000000 kg"
+        prop "radius" "saturn_radius" "1" "radius" "58232 km"
+        prop "volume" "saturn_volume" "1" "volume" "827130000000000 km^3"
+        prop "sidereal_day" "saturn_day" "1" "sidereal_day" "0.4375 day"
+        prop "year" "saturn_year" "1" "year" "29.447498 julianyear"
+    }
+    substance "scandium" "Sc" {
+        prop "molar_mass" "amount" "mol" "mass" "44.95591 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.57 J g^-1"
+    }
+    substance "seaborgium" {
+        prop "molar_mass" "amount" "mol" "mass" "271.13393 g"
+    }
+    substance "selenium" "Se" {
+        prop "molar_mass" "amount" "mol" "mass" "78.96 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.32 J g^-1"
+    }
+    substance "shortening" {
+        doc "Vegetable shortening." lang="en"
+        prop "density" "volume" "uscup" "mass" "6.75 oz"
+    }
+    substance "silicon" "Si" {
+        prop "molar_mass" "amount" "mol" "mass" "28.0855 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.71 J g^-1"
+    }
+    substance "silver" "Ag" {
+        prop "molar_mass" "amount" "mol" "mass" "107.8682 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.23 J g^-1"
+    }
+    substance "sodium" "Na" {
+        prop "molar_mass" "amount" "mol" "mass" "22.989768 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "1.21 J g^-1"
+    }
+    substance "soil" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.835 J g^-1"
+    }
+    substance "sourcream" {
+        prop "density" "volume" "uscup" "mass" "242 g"
+    }
+    substance "strontium" "Sr" {
+        prop "molar_mass" "amount" "mol" "mass" "87.62 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.3 J g^-1"
+    }
+    substance "sugar" {
+        prop "density" "volume" "uscup" "mass" "200 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "1.244 J g^-1"
+    }
+    substance "sulfur" "S" {
+        alias "sulphur"
+        prop "molar_mass" "amount" "mol" "mass" "32.066 g"
+    }
+    substance "sun" {
+        prop "mass" "solar_mass" "1" "mass" "1989100000000000000000000000000 kg"
+        prop "distance" "sun_distance" "1" "distance" "1.0000010178 au" {
+            doc "Average earth-sun distance"
+        }
+        prop "distance_near" "sun_distance_near" "1" "distance_near" "147100000000 m" {
+            doc "Earth-sun distance at periphelion"
+        }
+        prop "distance_far" "sun_distance_far" "1" "distance_far" "152100000000 m" {
+            doc "Earth-sun distance at aphelion"
+        }
+        prop "radius_equatorial" "sun_radius" "1" "radius_equatorial" "695700 km"
+        prop "volume" "sun_volume" "1" "volume" "1410000000000000000 km^3"
+        prop "luminosity" "solar_luminosity" "1" "luminosity" "384600000000000000000000000 W" {
+            doc "Source: http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html"
+        }
+        prop "illum_zenith" "sun_illum_zenith" "1" "illum_zenith" "100000 lux" {
+            doc "Clear sky."
+        }
+        prop "illum_overcast" "sun_illum_overcast" "1" "illum_overcast" "10000 lux"
+        prop "luminance_zenith" "sun_lum_zenith" "1" "luminance_zenith" "1600000000 cd / m^2"
+        prop "luminance_horizon" "sun_lum_horizon" "1" "luminance_horizon" "6000000 cd / m^2"
+        prop "luminance_clear" "sun_lum_clear" "1" "luminance_clear" "8000 cd / m^2" {
+            doc "Average, clear sky."
+        }
+        prop "luminance_overcast" "sun_lum_overcast" "1" "luminance_overcast" "2000 cd / m^2" {
+            doc "Average, overcast sky."
+        }
+    }
+    substance "tantalum" "Ta" {
+        prop "molar_mass" "amount" "mol" "mass" "180.9479 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.14 J g^-1"
+    }
+    substance "tauparticle" {
+        prop "mass" "tau_mass" "1" "mass" "1.90749 u"
+    }
+    substance "technetium" {
+        prop "molar_mass" "amount" "mol" "mass" "97.9072 g" {
+            doc "Longest lived. 98.906"
+        }
+    }
+    substance "tellurium" "Te" {
+        prop "molar_mass" "amount" "mol" "mass" "127.6 g"
+    }
+    substance "tennessine" "Ts" {
+        alias "ununseptium"
+        prop "atomic_number" "tennessine_atomic_number" "1" "atomic_number" "117"
+        prop "molar_mass" "amount" "mol" "mass" "292.20746 g"
+    }
+    substance "terbium" "Tb" {
+        prop "molar_mass" "amount" "mol" "mass" "158.92534 g"
+    }
+    substance "thallium" "Tl" {
+        prop "molar_mass" "amount" "mol" "mass" "204.3833 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "thorium" "Th" {
+        prop "molar_mass" "amount" "mol" "mass" "232.0381 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "thullium" "Tm" {
+        prop "molar_mass" "amount" "mol" "mass" "168.93421 g"
+    }
+    substance "tin" "Sn" {
+        prop "molar_mass" "amount" "mol" "mass" "118.71 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.21 J g^-1"
+    }
+    substance "tissue" {
+        prop "specific_heat" "temperature" "K" "specific_energy" "3.5 J g^-1"
+    }
+    substance "titanium" "Ti" {
+        prop "molar_mass" "amount" "mol" "mass" "47.867 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.54 J g^-1"
+    }
+    substance "triton" {
+        prop "mass" "triton_mass" "1" "mass" "3.01550071632 u"
+        prop "magnetic_moment" "triton_moment" "1" "magnetic_moment" "0.00000000000000000000000001504609503 J / T"
+    }
+    substance "tungsten" "W" {
+        prop "molar_mass" "amount" "mol" "mass" "183.84 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
+    }
+    substance "uranium" "U" {
+        prop "molar_mass" "amount" "mol" "mass" "238.0289 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.12 J g^-1"
+        prop "molar_mass_235" "amount_235" "mol" "mass_235" "235.0439299 g"
+        prop "specific_energy_235_fission" "mass" "(235.0439299 g / mol) / avogadro" "fission_energy" "200 MeV" {
+            doc "Total energy from uranium fission.  Actual efficiency of nuclear power plants is around 30%-40%.  Note also that some reactors use enriched uranium around 3% U-235.  Uranium during processing or use may be in a compound of uranium oxide or uranium hexafluoride, in which case the energy density would be lower depending on how much uranium is in the compound."
+        }
+    }
+    substance "uranus" {
+        prop "mass" "uranus_mass" "1" "mass" "solarmass / 22902.98" {
+            doc "±0.03"
+        }
+        prop "mass_old" "uranus_old" "1" "mass_old" "86625000000000000000000000 kg"
+        prop "radius" "uranus_radius" "1" "radius" "25362 km"
+        prop "volume" "uranus_volume" "1" "volume" "68330000000000 km^3"
+        prop "sidereal_day" "uranus_day" "1" "sidereal_day" "0.65 day" {
+            doc "Retrograde."
+        }
+        prop "year" "uranus_year" "1" "year" "84.016846 julianyear"
+    }
+    substance "vanadium" "V" {
+        prop "molar_mass" "amount" "mol" "mass" "50.9415 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.39 J g^-1"
+    }
+    substance "vegetable_oil" {
+        prop "density" "volume" "uscup" "mass" "7.5 oz"
+    }
+    substance "venus" {
+        prop "mass" "venus_mass" "1" "mass" "solarmass / 408523.71" {
+            doc "± 0.06"
+        }
+        prop "mass_old" "venus_old" "1" "mass_old" "4869000000000000000000000 kg"
+        prop "radius" "venus_radius" "1" "radius" "6051.84 km"
+        prop "volume" "venus_volume" "1" "volume" "928430000000 km^3"
+        prop "sidereal_day" "venus_day" "1" "sidereal_day" "243.01 day" {
+            doc "Retrograde."
+        }
+        prop "year" "venus_year" "1" "year" "0.61519726 julianyear"
+    }
+    substance "water" {
+        alias "H2O"
+        prop "density" "volume" "cm^3" "mass" "gram"
+        prop "pressure_column" "column" "cm" "pressure" "gram force cm^-2"
+        prop "specific_heat" "temperature" "K" "specific_energy" "calorie g^-1"
+        prop "fusion_heat" "fusion_mass" "gram" "fusion_energy" "79.8 calorie"
+        prop "vaporization_heat" "vaporization_mass" "gram" "vaporization_energy" "1160 J"
+        prop "pressure_column_0C" "column_0C" "cm" "pressure_0C" "0.99987 force gram cm^-2"
+        prop "pressure_column_5C" "column_5C" "cm" "pressure_5C" "0.99999 force gram cm^-2"
+        prop "pressure_column_10C" "column_10C" "cm" "pressure_10C" "0.99973 force gram cm^-2"
+        prop "pressure_column_15C" "column_15C" "cm" "pressure_15C" "0.99913 force gram cm^-2"
+        prop "pressure_column_18C" "column_18C" "cm" "pressure_18C" "0.99862 force gram cm^-2"
+        prop "pressure_column_20C" "column_20C" "cm" "pressure_20C" "0.99823 force gram cm^-2"
+        prop "pressure_column_25C" "column_25C" "cm" "pressure_25C" "0.99707 force gram cm^-2"
+        prop "pressure_column_50C" "column_50C" "cm" "pressure_50C" "0.98807 force gram cm^-2"
+        prop "pressure_column_100C" "column_100C" "cm" "pressure_100C" "0.95838 force gram cm^-2"
+    }
+    substance "wood" {
+        prop "specific_energy_dry" "mass_dry" "tonne" "energy_dry" "20 GJ" {
+            doc "HHV, a cord weights about a tonne."
+        }
+        prop "specific_energy_airdry" "mass_airdry" "tonne" "energy_airdry" "15 GJ" {
+            doc "20% moisture content."
+        }
+        prop "specific_heat" "temperature" "K" "specific_energy" "1.7 J g^-1"
+    }
+    substance "xenon" "Xe" {
+        prop "molar_mass" "amount" "mol" "mass" "131.29 g"
+    }
+    substance "ytterbium" "Yb" {
+        prop "molar_mass" "amount" "mol" "mass" "173.04 g"
+    }
+    substance "yttrium" "Y" {
+        prop "molar_mass" "amount" "mol" "mass" "88.90585 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.3 J g^-1"
+    }
+    substance "zinc" "Zn" {
+        prop "molar_mass" "amount" "mol" "mass" "65.39 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.39 J g^-1"
+    }
+    substance "zirconium" "Zr" {
+        prop "molar_mass" "amount" "mol" "mass" "91.224 g"
+        prop "specific_heat" "temperature" "K" "specific_energy" "0.27 J g^-1"
+    }
+}

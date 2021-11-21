@@ -1,0 +1,42 @@
+category "scots" {
+    title "Scotland Measures" lang="en"
+    unit "choppin" "1|2 scotspint"
+    unit "mutchkin" "1|2 choppin"
+    unit "scotsacre" "4 scotsrood"
+    unit "scotsbarrel" "8 scotsgallon"
+    unit "scotschain" "4 scotsfall"
+    unit "scotsell" "37 scotsinch"
+    unit "scotsfall" "6 scotsell"
+    unit "scotsfoot" "12 scotsinch" {
+        alias "scotsfeet"
+    }
+    unit "scotsfurlong" "10 scotschain"
+    unit "scotsgallon" "827.232 UKinch^3"
+    unit "scotsgill" "1|4 mutchkin"
+    unit "scotsinch" "1.00540054 UKinch"
+    unit "scotslink" "1|100 scotschain"
+    unit "scotsmile" "8 scotsfurlong"
+    unit "scotsoatboll" "4 scotsoatfirlot"
+    unit "scotsoatchalder" "16 scotsoatboll"
+    unit "scotsoatfirlot" "4 scotsoatpeck"
+    unit "scotsoatlippy" "200.345 UKinch^3" {
+        alias "scotsoatlippies"
+    }
+    unit "scotsoatpeck" "4 scotsoatlippy"
+    unit "scotspint" "1|2 scotsquart" {
+        alias "jug"
+    }
+    unit "scotsquart" "1|4 scotsgallon"
+    unit "scotsrood" "40 scotsfall^2"
+    unit "scotswheatboll" "4 scotswheatfirlot"
+    unit "scotswheatchalder" "16 scotswheatboll"
+    unit "scotswheatfirlot" "4 scotswheatpeck"
+    unit "scotswheatlippy" "137.333 UKinch^3" {
+        alias "scotswheatlippies"
+    }
+    unit "scotswheatpeck" "4 scotswheatlippy"
+    unit "trondrop" "1|16 tronounce"
+    unit "tronounce" "1|20 tronpound"
+    unit "tronpound" "9520 grain"
+    unit "tronstone" "16 tronpound"
+}

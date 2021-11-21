@@ -1,0 +1,54 @@
+category "us_survey" {
+    title "US Survey Measures" lang="en"
+    unit "acre" "10 chain^2" {
+        alias "intacre"
+    }
+    unit "acrefoot" "acre foot" {
+        alias "intacrefoot"
+    }
+    unit "bronzeyard11" "914.3998 mm"
+    unit "chain" "66 intfoot" {
+        alias "ch"
+        alias "intchain"
+    }
+    unit "engineerschain" "100 ft" {
+        alias "ramsdenschain"
+    }
+    unit "engineerslink" "1|100 engineerschain" {
+        alias "ramsdenslink"
+    }
+    unit "gurleychain" "33 feet"
+    unit "gurleylink" "1|50 gurleychain"
+    unit "homestead" "160 acre"
+    unit "link" "1|100 chain" {
+        alias "intlink"
+    }
+    unit "section" "mile^2"
+    unit "surveyacre" "10 surveychain^2"
+    unit "surveyacrefoot" "surveyacre surveyfoot"
+    unit "surveyfoot" "1200|3937 m" {
+        alias "surveyfeet"
+        alias "surveyft"
+    }
+    unit "surveyinch" "1|12 surveyfoot" {
+        alias "surveyinches"
+        alias "surveyin"
+    }
+    unit "surveymile" "5280 surveyfoot" {
+        alias "surveymi"
+    }
+    unit "surveyorschain" "66 surveyft" {
+        alias "surveychain"
+        alias "gunterschain"
+    }
+    unit "surveyorslink" "1|100 surveyorschain"
+    unit "surveyorspole" "1|4 surveyorschain"
+    unit "surveyyard" "3 surveyfoot" {
+        alias "surveyyd"
+        alias "mendenhallyard"
+    }
+    unit "township" "36 section"
+    unit "troughtonyard" "914.4219 mm"
+    unit "wingchain" "66 feet"
+    unit "winglink" "1|80 wingchain"
+}

@@ -1,0 +1,15 @@
+category "winchester_wine" {
+    title "Winchester Wine Measures" lang="en"
+    unit "winebarrel" "31.5 winegallon"
+    unit "winebutt" "2 winehogshead" {
+        alias "winepipe"
+    }
+    unit "winegallon" "231 UKinch^3"
+    unit "winehogshead" "2 winebarrel"
+    unit "winepint" "1|2 winequart"
+    unit "winepuncheon" "2 winetierce"
+    unit "winequart" "1|4 winegallon"
+    unit "winerundlet" "18 winegallon"
+    unit "winetierce" "42 winegallon"
+    unit "winetun" "2 winebutt"
+}

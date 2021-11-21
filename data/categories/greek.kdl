@@ -1,0 +1,61 @@
+category "greek" {
+    title "Greek Measures" lang="en"
+    unit "aeginadrachmae" "1|2 aeginastater"
+    unit "aeginamina" "50 aeginastaters"
+    unit "aeginaobol" "1|6 aeginadrachmae"
+    unit "aeginastater" "192 grain"
+    unit "aeginatalent" "60 aeginamina"
+    unit "akaina" "10 greekfeet"
+    unit "atticdrachmae" "1|2 atticstater"
+    unit "atticmina" "50 atticstaters"
+    unit "atticobol" "1|6 atticdrachmae"
+    unit "atticstater" "135 grain"
+    unit "attictalent" "60 atticmina"
+    unit "choinix" "4 greekkotyle"
+    unit "doricfoot" "326 mm"
+    unit "greekcubit" "1.5 greekfoot"
+    unit "greekfinger" "1|16 greekfoot"
+    unit "greekfoot" "12.45 in" {
+        alias "greekfeet"
+        alias "pous"
+        alias "podes"
+    }
+    unit "greekkotyle" "270 ml"
+    unit "hekteos" "8 choinix"
+    unit "homericcubit" "20 greekfingers"
+    unit "ionicfoot" "296 mm"
+    unit "khous" "12 greekkotyle"
+    unit "medimnos" "6 hekteos"
+    unit "metretes" "12 khous"
+    unit "olympicbema" "2.5 olympicfeet" {
+        alias "olympicpace"
+    }
+    unit "olympiccord" "60 olympicfeet" {
+        alias "olympicamma"
+    }
+    unit "olympiccubit" "25 remendigit"
+    unit "olympicfinger" "1|16 olympicfoot" {
+        alias "olympicdakylos"
+    }
+    unit "olympicfoot" "2|3 olympiccubit" {
+        alias "olympicfeet"
+    }
+    unit "olympicorguia" "6 olympicfeet" {
+        alias "olympicfathom"
+    }
+    unit "olympicpalm" "1|4 olympicfoot" {
+        alias "olympicpalestra"
+    }
+    unit "olympicplethron" "100 olympicfeet"
+    unit "olympicspithame" "3|4 foot" {
+        alias "olympicspan"
+    }
+    unit "olympicstadion" "600 olympicfeet"
+    unit "orguia" "6 greekfoot" {
+        alias "greekfathom"
+    }
+    unit "plethron" "10 akaina"
+    unit "shortgreekcubit" "18 greekfingers"
+    unit "stadion" "100 orguia"
+    unit "xestes" "2 greekkotyle"
+}

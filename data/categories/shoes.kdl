@@ -1,0 +1,11 @@
+category "shoes" {
+    title "Shoe Measures" lang="en"
+    unit "europeshoesize" "2|3 cm"
+    unit "shoe_boys0" "(3 + 11 / 12) inch"
+    unit "shoe_girls0" "(3 + 7 / 12) inch"
+    unit "shoe_men0" "8.25 inch"
+    unit "shoe_women0" "(7 + 11 / 12) inch"
+    unit "shoeiron" "1|48 inch"
+    unit "shoeounce" "1|64 inch"
+    unit "shoesize_delta" "1|3 inch"
+}

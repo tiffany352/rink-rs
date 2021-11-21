@@ -1,0 +1,57 @@
+category "br_length" {
+    title "British Length Measures" lang="en"
+    unit "UKBfoot" "1|3 UKByard"
+    unit "UKBinch" "1|12 UKBfoot"
+    unit "UKBmile" "5280 UKBfoot"
+    unit "UKByard" "0.9143992 meter"
+    unit "UKCfoot" "1|3 UKCyard"
+    unit "UKCinch" "1|12 UKCfoot"
+    unit "UKCmile" "5280 UKCfoot"
+    unit "UKCyard" "1|1.09362311 meter"
+    unit "UKKfoot" "12 UKKinch"
+    unit "UKKinch" "1|39.37079 meter"
+    unit "UKKmile" "5280 UKKfoot"
+    unit "UKKyard" "3 UKKfoot"
+    unit "UKSJJfoot" "1|3 UKSJJyard" {
+        alias "brfoot"
+        alias "UKfoot"
+    }
+    unit "UKSJJinch" "1|12 UKSJJfoot" {
+        alias "brinch"
+        alias "UKinch"
+    }
+    unit "UKSJJmile" "5280 UKSJJfoot" {
+        alias "brmile"
+        alias "UKmile"
+    }
+    unit "UKSJJyard" "0.91439841 meter" {
+        alias "bryard"
+        alias "UKyard"
+    }
+    unit "barleycorn" "1|3 UKinch"
+    unit "brcable" "1|10 brnauticalmile" {
+        alias "admiraltycable"
+    }
+    unit "brknot" "brnauticalmile / hr" {
+        alias "admiraltyknot"
+    }
+    unit "brnauticalmile" "6080 ft" {
+        alias "geographicalmile"
+        alias "admiraltymile"
+    }
+    unit "brpole" "16.5 UKft"
+    unit "brstatutemile" "5280 brfoot"
+    unit "english_land_league" "3 brmile" {
+        alias "brleague"
+    }
+    unit "englishell" "45 UKinch" {
+        alias "ell"
+    }
+    unit "flemishell" "27 UKinch"
+    unit "goad" "4.5 UKft"
+    unit "nail" "1|16 UKyard"
+    unit "rope" "20 UKft"
+    unit "seamile" "6000 ft"
+    unit "shackle" "15 fathoms"
+    unit "span" "9 UKinch"
+}

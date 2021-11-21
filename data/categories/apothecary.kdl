@@ -1,0 +1,7 @@
+category "apothecary" {
+    title "Apothecaries' Weights" lang="en"
+    unit "apdram" "1|8 apounce"
+    unit "apscruple" "1|3 apdram" {
+        alias "scruple"
+    }
+}

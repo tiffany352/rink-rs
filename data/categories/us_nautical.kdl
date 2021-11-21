@@ -1,0 +1,9 @@
+category "us_nautical" {
+    title "US Survey Nautical Units" lang="en"
+    unit "knot" "nauticalmile / hr"
+    unit "marineleague" "3 nauticalmile"
+    unit "navycablelength" "720 surveyft"
+    unit "surveycable" "100 surveyfathom"
+    unit "surveyfathom" "6 surveyfoot"
+    unit "surveynauticalmile" "6080.2 surveyfoot"
+}

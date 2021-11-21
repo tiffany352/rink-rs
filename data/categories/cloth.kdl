@@ -1,0 +1,30 @@
+category "cloth" {
+    title "Yarn and Cloth Measures" lang="en"
+    unit "asbestoscut" "100 yd / lb"
+    unit "cottonbolt" "120 ft" {
+        alias "bolt"
+    }
+    unit "cottonyarncount" "840 yard / pound"
+    unit "cut" "300 yards"
+    unit "denier" "1|9 tex"
+    unit "drex" "0.1 tex"
+    unit "heer" "600 yards"
+    unit "lea" "300 yards"
+    unit "linenyarncount" "300 yard / pound"
+    unit "manchesteryarnnumber" "drams / 1000 yards"
+    unit "metricyarncount" "meter / gram"
+    unit "pli" "lb / in"
+    unit "poumar" "lb / 1000000 yard"
+    unit "sailmakersounce" "oz / sailmakersyard 36 inch"
+    unit "sailmakersyard" "28.5 in"
+    unit "silkmomme" "momme / 25 yards 1.49 inch" {
+        alias "silkmm"
+    }
+    unit "skeincotton" "80 54 inch"
+    unit "tex" "gram / km"
+    unit "typp" "1000 yd / lb"
+    unit "woolbolt" "210 ft"
+    unit "woolyarnrun" "1600 yard / pound"
+    unit "worstedyarncount" "1680 ft / pound"
+    unit "yarncut" "300 yard / pound"
+}

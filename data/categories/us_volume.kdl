@@ -1,0 +1,80 @@
+category "us_volume" {
+    title "US Volume Measures" lang="en"
+    unit "beerkeg" "15.5 usgallon"
+    unit "brpeck" "1|4 brbushel"
+    unit "cranberrybarrel" "5826 in^3"
+    unit "drybarrel" "7056 in^3"
+    unit "drygallon" "1|2 uspeck"
+    unit "drypint" "1|2 dryquart"
+    unit "dryquart" "1|4 drygallon"
+    unit "fluiddram" "1|8 usfloz" {
+        alias "fldr"
+    }
+    unit "gill" "1|4 pint"
+    unit "heapedbushel" "1.278 usbushel"
+    unit "legalcup" "240 ml"
+    unit "legaltablespoon" "1|16 legalcup" {
+        alias "legaltbsp"
+    }
+    unit "liquidbarrel" "31.5 usgallon"
+    unit "metriccup" "250 ml"
+    unit "minimvolume" "1|60 fluiddram" {
+        alias "minim"
+    }
+    unit "number10can" "105 usfloz"
+    unit "number1can" "10 usfloz"
+    unit "number2.5can" "3.5 uscups"
+    unit "number2can" "19 usfloz"
+    unit "number3can" "4 uscups"
+    unit "number5can" "7 uscups"
+    unit "peck" "1|4 bushel" {
+        alias "pk"
+    }
+    unit "petroleumbarrel" "42 usgallon" {
+        alias "barrel"
+    }
+    unit "pint" "1|2 quart" {
+        alias "pt"
+    }
+    unit "ponykeg" "1|2 beerkeg"
+    unit "quart" "1|4 gallon" {
+        alias "qt"
+    }
+    unit "saltspoon" "1|4 tsp"
+    unit "stickbutter" "1|4 lb"
+    unit "usbeerbarrel" "2 beerkegs"
+    unit "usbushel" "2150.42 in^3" {
+        alias "bushel"
+    }
+    unit "uscup" "8 usfloz" {
+        alias "cup"
+    }
+    unit "usfirkin" "9 usgallon" {
+        alias "firkin"
+    }
+    unit "usfluidounce" "1|16 uspint" {
+        alias "usfloz"
+        alias "fluidounce"
+    }
+    unit "usgallon" "231 in^3" {
+        alias "gallon"
+    }
+    unit "usgill" "1|4 uspint"
+    unit "ushogshead" "2 liquidbarrel" {
+        alias "hogshead"
+    }
+    unit "uspeck" "1|4 usbushel"
+    unit "uspint" "1|2 usquart"
+    unit "usquart" "1|4 usgallon"
+    unit "ustablespoon" "1|16 uscup" {
+        alias "ustbl"
+        alias "ustbsp"
+        alias "ustblsp"
+        alias "tablespoon"
+    }
+    unit "usteaspoon" "1|3 ustablespoon" {
+        alias "ustsp"
+        alias "teaspoon"
+    }
+    unit "winekeg" "12 usgallon"
+}

@@ -1,0 +1,62 @@
+category "photometric" {
+    title "Photometric Units" lang="en"
+    quantity "illuminance" "lux"
+    quantity "luminance" "nit"
+    quantity "luminous_energy" "talbot"
+    quantity "luminous_flux" "lumen"
+    quantity "luminous_intensity" "candela"
+    unit "C_apex1961" "224 lx / lx s" {
+        alias "C_illum"
+    }
+    unit "C_apex1971" "322 lx / lx s"
+    unit "K_apex1961" "11.4 (cd / m^2) / lx s"
+    unit "K_apex1971" "12.5 (cd / m^2) / lx s" {
+        alias "K_lum"
+    }
+    unit "N_exif" "1|3.125 lx s" {
+        alias "N_speed"
+    }
+    unit "apostilb" "cd / pi m^2" {
+        alias "asb"
+        alias "blondel"
+    }
+    unit "c250" "250 lx / lx s"
+    unit "candle" "1.02 candela"
+    unit "equivalentlux" "cd / pi m^2"
+    unit "equivalentphot" "cd / pi cm^2"
+    unit "footcandle" "lumen / ft^2"
+    unit "footlambert" "cd / pi ft^2" {
+        alias "fL"
+    }
+    unit "hefnerunit" "0.9 candle" {
+        alias "hefnercandle"
+    }
+    unit "k1250" "12.5 (cd / m^2) / lx s"
+    unit "k1400" "14 (cd / m^2) / lx s"
+    unit "lambert" "cd / pi cm^2"
+    unit "lumen" "cd sr" {
+        alias "lm"
+    }
+    unit "lux" "lm / m^2" {
+        alias "lx"
+    }
+    unit "mcs" "metercandle s"
+    unit "metercandle" "lumen / m^2"
+    unit "nit" "cd / m^2"
+    unit "nox" "0.001 lux"
+    unit "phot" "lumen / cm^2" {
+        alias "ph"
+    }
+    unit "s100" "100 / lx s" {
+        alias "iso100"
+    }
+    unit "skot" "0.001 apostilb"
+    unit "stilb" "cd / cm^2" {
+        alias "sb"
+    }
+    unit "talbot" "lumen s" {
+        alias "lumberg"
+        alias "lumerg"
+    }
+    unit "violle" "20.17 cd"
+}

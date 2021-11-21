@@ -1,0 +1,67 @@
+category "japanese" {
+    title "Traditional Japanese Units" lang="en"
+    unit "bu_distance" "1|100 shaku"
+    unit "bu_proportion" "1 / 100"
+    unit "bu_weight" "1|10 monme"
+    unit "chou_area" "10 tan_area"
+    unit "chou_distance" "60 ken" {
+        alias "chou"
+    }
+    unit "chuukyouma" "(6 3) shaku^2"
+    unit "edoma" "(5.8 2.9) shaku^2" {
+        alias "jou_area"
+    }
+    unit "fen_area" "1|10 jia" {
+        alias "分地"
+    }
+    unit "fun" "1|10 monme"
+    unit "gou_area" "1|10 tsubo"
+    unit "gou_volume" "1|10 shou" {
+        alias "gou"
+    }
+    unit "ja_sun" "1|10 shaku" {
+        alias "kanejakusun"
+        alias "taicun"
+    }
+    unit "jia" "2934 ping" {
+        alias "甲"
+    }
+    unit "jou_distance" "10 shaku" {
+        alias "jou"
+    }
+    unit "kan" "1000 monme" {
+        alias "kwan"
+    }
+    unit "ken" "6 shaku"
+    unit "kin" "160 monme" {
+        alias "taijin"
+    }
+    unit "koku" "10 to"
+    unit "kujirajaku" "10|8 shaku"
+    unit "kujirajakubu" "1|100 kujirajaku"
+    unit "kujirajakujou" "10 kujirajaku"
+    unit "kujirajakusun" "1|10 kujirajaku"
+    unit "kyouma" "(6.3 3.15) shaku^2"
+    unit "mou" "1|10000 shaku"
+    unit "mou_proportion" "1 / 10000"
+    unit "ri" "36 chou"
+    unit "rin" "1|1000 shaku"
+    unit "rin_proportion" "1 / 1000"
+    unit "rin_weight" "1|10 bu_weight"
+    unit "se" "30 tsubo"
+    unit "shaku" "1|3.3 m" {
+        alias "kanejaku"
+        alias "taichi"
+    }
+    unit "shaku_volume" "1|10 gou_volume"
+    unit "shou" "(4.9 4.9 2.7) ja_sun^3"
+    unit "tan_area" "10 se"
+    unit "tan_distance" "3 kujirajakujou"
+    unit "to" "10 shou"
+    unit "tsubo" "36 shaku^2" {
+        alias "ping"
+    }
+    unit "wari_proportion" "1 / 10" {
+        alias "wari"
+    }
+}

@@ -1,0 +1,29 @@
+category "radioactivity" {
+    title "Radioactivity Units" lang="en"
+    unit "becquerel" "1 / s" {
+        alias "Bq"
+    }
+    unit "curie" "37000000000 Bq" {
+        alias "Ci"
+    }
+    unit "eman" "0.0000001 Ci / m^3"
+    unit "gray" "J / kg" {
+        alias "radiation_dose"
+        alias "Gy"
+    }
+    unit "mache" "0.00000037 Ci / m^3"
+    unit "rad" "0.01 Gy" {
+        alias "㎭"
+    }
+    unit "rem" "0.01 Sv"
+    unit "rep" "8.38 mGy"
+    unit "roentgen" "0.000258 C / kg" {
+        alias "rontgen"
+        alias "röntgen"
+    }
+    unit "rutherford" "1000000 Bq"
+    unit "sievert" "J / kg" {
+        alias "Sv"
+    }
+    unit "sievertunit" "8.38 rontgen"
+}

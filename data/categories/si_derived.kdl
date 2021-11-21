@@ -1,0 +1,45 @@
+category "si_derived" {
+    title "SI Derived Units" lang="en"
+    unit "coulomb" "A s" {
+        alias "C"
+    }
+    unit "farad" "C / V" {
+        alias "F"
+    }
+    unit "henry" "Wb / A" {
+        alias "H"
+    }
+    unit "hertz" "1 / s" {
+        alias "Hz"
+    }
+    unit "joule" "N m" {
+        alias "J"
+    }
+    unit "newton" "kg m / s^2" {
+        alias "N"
+    }
+    unit "ohm" "V / A" {
+        alias "Ω"
+        alias "Ω"
+    }
+    unit "pascal" "N / m^2" {
+        alias "Pa"
+        alias "stress"
+    }
+    unit "siemens" "A / V" {
+        alias "S"
+        alias "mho"
+    }
+    unit "tesla" "Wb / m^2" {
+        alias "T"
+    }
+    unit "volt" "W / A" {
+        alias "V"
+    }
+    unit "watt" "J / s" {
+        alias "W"
+    }
+    unit "weber" "V s" {
+        alias "Wb"
+    }
+}
