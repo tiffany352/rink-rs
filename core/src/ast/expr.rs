@@ -128,13 +128,36 @@ impl fmt::Display for Expr {
                 Expr::Unit { ref name } => write!(fmt, "{}", name),
                 Expr::Quote { ref string } => write!(fmt, "'{}'", string),
                 Expr::Const { ref value } => {
-                    let (_exact, val) = value.to_string(10, Digits::Default);
-                    write!(fmt, "{}", val)
+                    let (exact, val) = value.to_string(10, Digits::Digits(50));
+                    if exact {
+                        write!(fmt, "{}", val)
+                    } else {
+                        write!(fmt, "{}<approx>", val)
+                    }
                 }
                 Expr::Date { .. } => write!(fmt, "NYI: date expr Display"),
                 Expr::BinOp(ref binop) => {
                     let op_prec = Precedence::from(binop.op);
                     let succ = Precedence::next(binop.op);
+
+                    if binop.op == BinOpType::Frac && prec < op_prec {
+                        // Use the tighter binding fraction syntax if it's appropriate in context.
+                        fn is_frac_term(expr: &Expr) -> bool {
+                            match *expr {
+                                Expr::Unit { .. } => true,
+                                Expr::Const { .. } => true,
+                                Expr::UnaryOp(UnaryOpExpr { op, .. }) => op.is_prefix(),
+                                _ => false,
+                            }
+                        }
+                        if is_frac_term(&*binop.left) && is_frac_term(&*binop.right) {
+                            recurse(&binop.left, fmt, succ)?;
+                            write!(fmt, "|")?;
+                            recurse(&binop.right, fmt, op_prec)?;
+                            return Ok(());
+                        }
+                    }
+
                     if prec < op_prec {
                         write!(fmt, "(")?;
                     }
