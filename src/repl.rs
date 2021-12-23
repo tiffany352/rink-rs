@@ -90,7 +90,10 @@ pub fn interactive(config: &Config) -> Result<()> {
                         rl.add_history_entry(line);
                         print_fmt(config, &v)
                     }
-                    Err(e) => print_fmt(config, &e),
+                    Err(e) => {
+                        rl.add_history_entry(line);
+                        print_fmt(config, &e)
+                    }
                 };
                 println!();
             }
