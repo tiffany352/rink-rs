@@ -1,9 +1,9 @@
 category "photometric" {
     title "Photometric Units" lang="en"
-    quantity "illuminance" "lux"
-    quantity "luminance" "nit"
-    quantity "luminous_energy" "talbot"
-    quantity "luminous_flux" "lumen"
+    quantity "illuminance" "luminous_flux / length^2"
+    quantity "luminance" "cd / m^2"
+    quantity "luminous_energy" "luminous_flux s"
+    quantity "luminous_flux" "cd sr"
     quantity "luminous_intensity" "candela"
     unit "C_apex1961" "224 lx / lx s" {
         alias "C_illum"

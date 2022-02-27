@@ -2,7 +2,7 @@ use std::{io, num::ParseIntError};
 
 use kdl::KdlNode;
 
-use crate::{KdlType, KdlTypeTuple};
+use crate::{resolver::DependencyErrors, KdlType, KdlTypeTuple};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -73,6 +73,9 @@ pub enum Error {
         string: String,
         source: ParseIntError,
     },
+
+    #[error(transparent)]
+    DependencyErrors(#[from] DependencyErrors<String>),
 }
 
 impl Error {

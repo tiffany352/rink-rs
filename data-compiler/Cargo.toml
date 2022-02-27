@@ -10,5 +10,6 @@ bincode = "1"
 thiserror = "1"
 eyre = "0.6"
 displaydoc = "0.2"
+indexmap = "1.8"
 
 rink-format = { version = "0.6.2", path = "../format" }

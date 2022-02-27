@@ -4,10 +4,14 @@
 
 //! Definitions for the data format used to store units data.
 
+mod dims;
+
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Copy)]
+pub use dims::Dimensionality;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Copy, PartialOrd, Ord)]
 pub struct BaseUnitId(pub u16);
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Copy)]
@@ -41,7 +45,7 @@ pub struct BaseUnit {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Quantity {
     pub name: String,
-    pub dimensionality: Vec<(BaseUnitId, i64)>,
+    pub dimensionality: Dimensionality,
     pub documentation: Documentation,
 }
 

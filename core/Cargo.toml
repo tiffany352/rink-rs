@@ -21,6 +21,7 @@ chrono-tz = "0.5.2"
 chrono-humanize = { version = "0.1.2", optional = true }
 serde = { version = "1", features = ["rc"] }
 serde_derive = "1"
+rink-format = { version = "0.6.2", path = "../format" }
 
 [dev_dependencies]
 serde_json = "1"

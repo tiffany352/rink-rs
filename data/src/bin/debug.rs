@@ -1,5 +1,6 @@
 use std::{
     alloc::{GlobalAlloc, System},
+    env::args,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
@@ -31,7 +32,12 @@ fn main() {
     let data = rink_data::load_data();
     let stop = ALLOCATOR.max_used.load(Ordering::SeqCst);
 
-    println!("{:?}", data);
+    let arg = args().nth(1);
+    match arg.as_ref().map(|x| &x[..]) {
+        Some("quantities") => println!("{:?}", data.quantities),
+        Some(_) => println!("invalid argument"),
+        None => println!("{:?}", data),
+    }
     println!("size: {} bytes", rink_data::DATA.len());
     println!(
         "memory: {} kB ({} kB more than start)",

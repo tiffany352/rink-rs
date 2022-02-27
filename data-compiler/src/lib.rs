@@ -1,14 +1,17 @@
 mod ast;
 mod error;
 mod matcher;
+mod resolver;
 
 use std::{collections::HashMap, fs};
 
 use ast::*;
 use matcher::*;
-use rink_format::{CategoryId, Documentation, UnitsData};
+use rink_format::{BaseUnitId, CategoryId, Dimensionality, Documentation, UnitsData};
 
 pub use error::Error;
+
+use crate::resolver::{resolve_dependencies, DependencyNode};
 
 struct DocsBuilder {
     title_by_lang: HashMap<String, String>,
@@ -56,6 +59,15 @@ impl DocsBuilder {
     }
 }
 
+struct Context {
+    base_units: Vec<(BaseUnit, Documentation)>,
+    quantities: Vec<(Quantity, Documentation)>,
+    prefixes: Vec<(Prefix, Documentation)>,
+    categories: Vec<(Category, Documentation)>,
+    units: Vec<(Unit, Documentation)>,
+    substances: Vec<(Substance, Vec<Property>, Documentation)>,
+}
+
 fn process_docs(children: Vec<Node>, category: Option<CategoryId>) -> Result<Documentation, Error> {
     let mut builder = DocsBuilder::new();
     for child in children {
@@ -74,11 +86,11 @@ fn process_docs(children: Vec<Node>, category: Option<CategoryId>) -> Result<Doc
     Ok(builder.build(category))
 }
 
-fn process_substance(
+fn visit_substance(
     substance: Substance,
     children: Vec<Node>,
     category: Option<CategoryId>,
-) -> Result<rink_format::Substance, Error> {
+) -> Result<(Substance, Vec<Property>, Documentation), Error> {
     let mut docs_builder = DocsBuilder::new();
     let mut properties = vec![];
 
@@ -87,19 +99,7 @@ fn process_substance(
             NodeData::Title(node) => docs_builder.add_title(node)?,
             NodeData::Doc(node) => docs_builder.add_doc(node)?,
             NodeData::Alias(node) => docs_builder.add_alias(node)?,
-            NodeData::Property(Property {
-                name,
-                input_name,
-                input_value,
-                output_name,
-                output_value,
-            }) => properties.push(rink_format::Property {
-                name,
-                input_name,
-                input_value,
-                output_name,
-                output_value,
-            }),
+            NodeData::Property(node) => properties.push(node),
             node => {
                 return Err(Error::UnexpectedNode {
                     parent: Substance::NAME,
@@ -109,78 +109,31 @@ fn process_substance(
         }
     }
 
-    Ok(rink_format::Substance {
-        name: substance.name,
-        symbol: substance.symbol,
-        documentation: docs_builder.build(category),
-        properties,
-    })
+    Ok((substance, properties, docs_builder.build(category)))
 }
 
-fn process_def(
+fn visit_def(
     node: Node,
-    data: &mut UnitsData,
+    ctx: &mut Context,
     category: Option<CategoryId>,
     parent: &'static str,
 ) -> Result<(), Error> {
     match node.data {
-        NodeData::Unit(Unit { name, definition }) => data.units.push(rink_format::Unit {
-            name,
-            definition,
-            documentation: process_docs(node.children, category)?,
-        }),
-        NodeData::BaseUnit(BaseUnit { name, short }) => {
-            data.base_units.push(rink_format::BaseUnit {
-                name,
-                short,
-                documentation: process_docs(node.children, category)?,
-            })
-        }
-        NodeData::Prefix(Prefix { value, short, long }) => {
-            data.prefixes.push(rink_format::Prefix {
-                long,
-                short,
-                value,
-                documentation: process_docs(node.children, category)?,
-            })
-        }
-        NodeData::Quantity(Quantity {
-            name,
-            dimensionality: dim_str,
-        }) => {
-            let dimensionality = vec![];
-
-            let parse = |input: &str, mul: i64| -> Result<(), Error> {
-                for term in input.split(' ') {
-                    if let Some((name, power)) = term.split_once('^') {
-                        let power = power.parse::<i64>().map_err(|source| {
-                            Error::InvalidDimensionality {
-                                source,
-                                string: dim_str.clone(),
-                            }
-                        })? * mul;
-                        let _ = (name, power);
-                    }
-                }
-                Ok(())
-            };
-
-            if let Some((numerator, denominator)) = dim_str.split_once('/') {
-                parse(numerator, 1)?;
-                parse(denominator, -1)?;
-            } else {
-                parse(&dim_str, 1)?;
-            };
-
-            data.quantities.push(rink_format::Quantity {
-                name,
-                dimensionality,
-                documentation: process_docs(node.children, category)?,
-            })
-        }
-        NodeData::Substance(substance) => {
-            data.substances
-                .push(process_substance(substance, node.children, category)?);
+        NodeData::Unit(data) => ctx
+            .units
+            .push((data, process_docs(node.children, category)?)),
+        NodeData::BaseUnit(data) => ctx
+            .base_units
+            .push((data, process_docs(node.children, category)?)),
+        NodeData::Prefix(data) => ctx
+            .prefixes
+            .push((data, process_docs(node.children, category)?)),
+        NodeData::Quantity(data) => ctx
+            .quantities
+            .push((data, process_docs(node.children, category)?)),
+        NodeData::Substance(data) => {
+            ctx.substances
+                .push(visit_substance(data, node.children, category)?)
         }
         node => {
             return Err(Error::UnexpectedNode {
@@ -192,12 +145,8 @@ fn process_def(
     Ok(())
 }
 
-fn process_category(
-    category: Category,
-    children: Vec<Node>,
-    data: &mut UnitsData,
-) -> Result<(), Error> {
-    let id = CategoryId(data.categories.len() as u32);
+fn visit_category(category: Category, children: Vec<Node>, ctx: &mut Context) -> Result<(), Error> {
+    let id = CategoryId(ctx.categories.len() as u32);
     let mut docs_builder = DocsBuilder::new();
 
     for node in children {
@@ -205,31 +154,142 @@ fn process_category(
             NodeData::Title(node) => docs_builder.add_title(node)?,
             NodeData::Doc(node) => docs_builder.add_doc(node)?,
             NodeData::Alias(node) => docs_builder.add_alias(node)?,
-            _ => process_def(node, data, Some(id), Category::NAME)?,
+            _ => visit_def(node, ctx, Some(id), Category::NAME)?,
         }
     }
 
-    data.categories.push(rink_format::Category {
-        name: category.name,
-        documentation: docs_builder.build(None),
-    });
+    ctx.categories.push((category, docs_builder.build(None)));
     Ok(())
 }
 
-fn process_top(nodes: Vec<Node>, data: &mut UnitsData) -> Result<(), Error> {
+fn visit_top(nodes: Vec<Node>, ctx: &mut Context) -> Result<(), Error> {
     for node in nodes {
         match node.data {
-            NodeData::Category(category) => process_category(category, node.children, data)?,
-            _ => process_def(node, data, None, "document")?,
+            NodeData::Category(category) => visit_category(category, node.children, ctx)?,
+            _ => visit_def(node, ctx, None, "document")?,
         }
     }
+
     Ok(())
+}
+
+fn process_quantities(
+    quantities: Vec<(Quantity, Documentation)>,
+    base_units: &[rink_format::BaseUnit],
+) -> Result<Vec<rink_format::Quantity>, Error> {
+    enum TermType {
+        BaseUnit(BaseUnitId),
+        Quantity(Vec<(String, i64)>, Documentation),
+    }
+
+    impl DependencyNode for (String, TermType) {
+        type Id = String;
+        type Intermediate = Dimensionality;
+        type Output = Option<rink_format::Quantity>;
+
+        fn id(&self) -> Self::Id {
+            self.0.clone()
+        }
+
+        fn dependencies(&self) -> Vec<Self::Id> {
+            match self.1 {
+                TermType::BaseUnit(_) => vec![],
+                TermType::Quantity(ref deps, _) => {
+                    deps.iter().map(|(name, _)| name.clone()).collect()
+                }
+            }
+        }
+
+        fn process(&self, values: Vec<Self::Intermediate>) -> (Self::Intermediate, Self::Output) {
+            match self.1 {
+                TermType::BaseUnit(id) => (Dimensionality::base_unit(id), None),
+                TermType::Quantity(ref terms, ref documentation) => {
+                    let dimensionality = terms
+                        .iter()
+                        .zip(values.into_iter())
+                        .map(|((_, pow), value)| value.pow(*pow))
+                        .reduce(|acc, value| acc * value)
+                        .unwrap_or(Dimensionality::dimensionless());
+                    (
+                        dimensionality.clone(),
+                        Some(rink_format::Quantity {
+                            documentation: documentation.clone(),
+                            name: self.0.to_owned(),
+                            dimensionality,
+                        }),
+                    )
+                }
+            }
+        }
+    }
+
+    let mut terms: Vec<(String, TermType)> = vec![];
+
+    for (index, unit) in base_units.iter().enumerate() {
+        terms.push((
+            unit.name.clone(),
+            TermType::BaseUnit(BaseUnitId(index as u16)),
+        ));
+        if let Some(ref short) = unit.short {
+            terms.push((short.clone(), TermType::BaseUnit(BaseUnitId(index as u16))));
+        }
+    }
+
+    for (
+        Quantity {
+            dimensionality,
+            name,
+        },
+        documentation,
+    ) in &quantities
+    {
+        let mut result = vec![];
+
+        let mut parse =
+            |input: &str, mul: i64| -> Result<(), Error> {
+                let input = input.trim();
+                for term in input.split(' ') {
+                    let term = term.trim();
+                    if term.is_empty() {
+                        continue;
+                    }
+                    if let Some((base_unit, power)) = term.split_once('^') {
+                        let power = power.parse::<i64>().map_err(|source| {
+                            Error::InvalidDimensionality {
+                                source,
+                                string: dimensionality.clone(),
+                            }
+                        })? * mul;
+                        result.push((base_unit.to_owned(), power));
+                    } else if term != "1" {
+                        result.push((term.to_owned(), 1));
+                    }
+                }
+                Ok(())
+            };
+
+        if let Some((numerator, denominator)) = dimensionality.split_once('/') {
+            parse(numerator, 1)?;
+            parse(denominator, -1)?;
+        } else {
+            parse(&dimensionality, 1)?;
+        };
+        terms.push((
+            name.to_owned(),
+            TermType::Quantity(result, documentation.clone()),
+        ));
+    }
+
+    Ok(resolve_dependencies(terms)?
+        .into_iter()
+        .filter_map(|x| x)
+        .collect())
 }
 
 pub fn compile() -> Result<Vec<u8>, Error> {
     let paths = glob::glob("**/*.kdl")?;
 
-    let mut data = UnitsData {
+    let mut ctx = Context {
         base_units: vec![],
         quantities: vec![],
         prefixes: vec![],
@@ -248,8 +308,95 @@ pub fn compile() -> Result<Vec<u8>, Error> {
             .map(Node::parse)
             .collect::<Result<Vec<_>, Error>>()?;
 
-        process_top(tree, &mut data)?
+        visit_top(tree, &mut ctx)?
     }
+
+    let base_units = ctx
+        .base_units
+        .into_iter()
+        .map(
+            |(BaseUnit { name, short }, documentation)| rink_format::BaseUnit {
+                name,
+                short,
+                documentation,
+            },
+        )
+        .collect::<Vec<_>>();
+
+    let quantities = process_quantities(ctx.quantities, &base_units)?;
+
+    let prefixes = ctx
+        .prefixes
+        .into_iter()
+        .map(
+            |(Prefix { value, short, long }, documentation)| rink_format::Prefix {
+                long,
+                short,
+                value,
+                documentation,
+            },
+        )
+        .collect();
+
+    let categories = ctx
+        .categories
+        .into_iter()
+        .map(|(Category { name }, documentation)| rink_format::Category {
+            name,
+            documentation,
+        })
+        .collect();
+
+    let units = ctx
+        .units
+        .into_iter()
+        .map(
+            |(Unit { name, definition }, documentation)| rink_format::Unit {
+                name,
+                definition,
+                documentation,
+            },
+        )
+        .collect();
+
+    let substances = ctx
+        .substances
+        .into_iter()
+        .map(
+            |(Substance { name, symbol }, properties, documentation)| rink_format::Substance {
+                name,
+                symbol,
+                documentation,
+                properties: properties
+                    .into_iter()
+                    .map(
+                        |Property {
+                             name,
+                             input_name,
+                             input_value,
+                             output_name,
+                             output_value,
+                         }| rink_format::Property {
+                            name,
+                            input_name,
+                            input_value,
+                            output_name,
+                            output_value,
+                        },
+                    )
+                    .collect(),
+            },
+        )
+        .collect();
+
+    let data = UnitsData {
+        base_units,
+        quantities,
+        prefixes,
+        categories,
+        units,
+        substances,
+    };
 
     Ok(bincode::serialize(&data)?)
 }

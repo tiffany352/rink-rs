@@ -25,6 +25,7 @@ macro_rules! node_shape {
   };
 }
 
+#[derive(Clone)]
 pub struct Title {
     pub text: String,
     pub lang: String,
@@ -36,6 +37,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct Doc {
     pub text: String,
     pub lang: String,
@@ -47,6 +49,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct Alias(pub String);
 
 node_shape!(
@@ -55,6 +58,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct Category {
     pub name: String,
 }
@@ -65,6 +69,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct Unit {
     pub name: String,
     pub definition: String,
@@ -76,6 +81,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct BaseUnit {
     pub name: String,
     pub short: Option<String>,
@@ -87,6 +93,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct Prefix {
     pub value: String,
     pub short: Option<String>,
@@ -99,6 +106,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct Quantity {
     pub name: String,
     pub dimensionality: String,
@@ -110,6 +118,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct Substance {
     pub name: String,
     pub symbol: Option<String>,
@@ -121,6 +130,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub struct Property {
     pub name: String,
     pub input_name: String,
@@ -135,6 +145,7 @@ node_shape!(
   }
 );
 
+#[derive(Clone)]
 pub enum NodeData {
     Title(Title),
     Doc(Doc),
@@ -181,6 +192,7 @@ impl NodeData {
     }
 }
 
+#[derive(Clone)]
 pub struct Node {
     pub data: NodeData,
     pub children: Vec<Node>,
