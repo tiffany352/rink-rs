@@ -1,0 +1,8 @@
+[package]
+name = "rink-converter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rink-core = { version = "0.6.2", path = "../core" }
+kdl = "3.0.0"

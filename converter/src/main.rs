@@ -179,7 +179,11 @@ fn main() {
                         prop_children.push(KdlNode {
                             name: "doc".to_owned(),
                             values: vec![doc.clone().into()],
-                            properties: HashMap::new(),
+                            properties: {
+                                let mut map = HashMap::new();
+                                map.insert("lang".to_owned(), "en".into());
+                                map
+                            },
                             children: vec![],
                         });
                     }

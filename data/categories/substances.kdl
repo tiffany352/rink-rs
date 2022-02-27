@@ -52,7 +52,7 @@ category "substances" {
     }
     substance "americium" {
         prop "molar_mass" "amount" "mol" "mass" "243.0614 g" {
-            doc "Longest lived. 241.06"
+            doc "Longest lived. 241.06" lang="en"
         }
     }
     substance "ammonia" {
@@ -75,7 +75,7 @@ category "substances" {
     }
     substance "astatine" {
         prop "molar_mass" "amount" "mol" "mass" "209.9871 g" {
-            doc "Longest lived."
+            doc "Longest lived." lang="en"
         }
     }
     substance "baking_powder" {
@@ -87,7 +87,7 @@ category "substances" {
     }
     substance "berkelium" {
         prop "molar_mass" "amount" "mol" "mass" "247.0703 g" {
-            doc "Longest lived. 249.08"
+            doc "Longest lived. 249.08" lang="en"
         }
     }
     substance "beryllium" "Be" {
@@ -120,7 +120,7 @@ category "substances" {
     }
     substance "brownsugar_light" {
         prop "density" "volume" "uscup" "mass" "217 g" {
-            doc "Packed."
+            doc "Packed." lang="en"
         }
     }
     substance "butane" {
@@ -146,7 +146,7 @@ category "substances" {
     }
     substance "californium" {
         prop "molar_mass" "amount" "mol" "mass" "251.0796 g" {
-            doc "Longest lived. 252.08"
+            doc "Longest lived. 252.08" lang="en"
         }
     }
     substance "carbon" "C" {
@@ -171,7 +171,7 @@ category "substances" {
     }
     substance "coal" {
         prop "specific_energy" "mass" "ton" "energy" "7000000000 cal_IT" {
-            doc "Energy in metric ton coal from [18]. This is a nominal value which is close to the heat content of coal used in the 1950's."
+            doc "Energy in metric ton coal from [18]. This is a nominal value which is close to the heat content of coal used in the 1950's." lang="en"
         }
         prop "specific_energy_bituminous" "mass_bituminous" "tonne" "energy_bituminous" "27 GJ"
         prop "specific_energy_lignite" "mass_lignite" "tonne" "energy_lignite" "15 GJ"
@@ -256,7 +256,7 @@ category "substances" {
     }
     substance "einsteinium" {
         prop "molar_mass" "amount" "mol" "mass" "252.083 g" {
-            doc "Longest lived."
+            doc "Longest lived." lang="en"
         }
     }
     substance "electron" {
@@ -282,7 +282,7 @@ category "substances" {
     }
     substance "fermium" {
         prop "molar_mass" "amount" "mol" "mass" "257.0951 g" {
-            doc "Longest lived."
+            doc "Longest lived." lang="en"
         }
     }
     substance "flerovium" {
@@ -298,17 +298,17 @@ category "substances" {
     }
     substance "francium" {
         prop "molar_mass" "amount" "mol" "mass" "223.0197 g" {
-            doc "Longest lived"
+            doc "Longest lived" lang="en"
         }
     }
     substance "freon" {
         prop "specific_heat" "temperature" "K" "specific_energy" "0.91 J g^-1" {
-            doc "R-12 at 0 degrees Fahrenheit."
+            doc "R-12 at 0 degrees Fahrenheit." lang="en"
         }
     }
     substance "fueloil" {
         prop "energy_density" "volume" "liter" "energy" "39.7 MJ" {
-            doc "Low sulphur."
+            doc "Low sulphur." lang="en"
         }
     }
     substance "gadolinium" "Gd" {
@@ -401,7 +401,7 @@ category "substances" {
     }
     substance "jupiter" {
         prop "mass" "jupiter_mass" "1" "mass" "solarmass / 1047.3486" {
-            doc "±0.0008"
+            doc "±0.0008" lang="en"
         }
         prop "mass_old" "jupiter_old" "1" "mass_old" "1898800000000000000000000000 kg"
         prop "radius" "jupiter_radius" "1" "radius" "69911 km"
@@ -411,10 +411,10 @@ category "substances" {
     }
     substance "koshersalt" {
         prop "density_dc" "dc_volume" "ustsp" "dc_mass" "2.8 g" {
-            doc "Diamond Crystal kosher salt"
+            doc "Diamond Crystal kosher salt" lang="en"
         }
         prop "density_morton" "morton_volume" "ustsp" "morton_mass" "4.8 g" {
-            doc "Morton kosher salt"
+            doc "Morton kosher salt" lang="en"
         }
     }
     substance "krypton" "Kr" {
@@ -426,7 +426,7 @@ category "substances" {
     }
     substance "lawrencium" {
         prop "molar_mass" "amount" "mol" "mass" "262.11 g" {
-            doc "Longest lived."
+            doc "Longest lived." lang="en"
         }
     }
     substance "lead" "Pb" {
@@ -460,7 +460,7 @@ category "substances" {
     }
     substance "mars" {
         prop "mass" "mars_mass" "1" "mass" "solarmass / 3098708" {
-            doc "±9"
+            doc "±9" lang="en"
         }
         prop "mass_old" "mars_old" "1" "mass_old" "641910000000000000000000 kg"
         prop "radius" "mars_radius" "1" "radius" "3389.92 km"
@@ -473,7 +473,7 @@ category "substances" {
     }
     substance "mendelevium" {
         prop "molar_mass" "amount" "mol" "mass" "258.1 g" {
-            doc "Longest lived"
+            doc "Longest lived" lang="en"
         }
     }
     substance "mercury" "Hg" {
@@ -491,7 +491,7 @@ category "substances" {
     }
     substance "mercury_planet" {
         prop "mass" "mercury_mass" "1" "mass" "solarmass / 6023600" {
-            doc "±250"
+            doc "±250" lang="en"
         }
         prop "mass_old" "mercury_old" "1" "mass_old" "330220000000000000000000 kg"
         prop "radius" "mercury_radius" "1" "radius" "2440 km"
@@ -514,7 +514,7 @@ category "substances" {
     }
     substance "moon" {
         prop "mass" "moon_mass" "1" "mass" "moonearthmassratio (mass of earth)" {
-            doc "Average earth-moon distance."
+            doc "Average earth-moon distance." lang="en"
         }
         prop "radius" "moon_radius" "1" "radius" "1737.1 km"
         prop "volume" "moon_volume" "1" "volume" "21958000000 km^3"
@@ -533,7 +533,7 @@ category "substances" {
     }
     substance "naturalgas" {
         prop "energy_density_HHV" "volume_HHV" "ft^3" "energy_HHV" "1027 btu" {
-            doc "Energy content of natural gas.  HHV is for Higher Heating Value and includes energy from condensation combustion products.  LHV is for Lower Heating Value and excludes these. American publications typically report HHV whereas European ones report LHV."
+            doc "Energy content of natural gas.  HHV is for Higher Heating Value and includes energy from condensation combustion products.  LHV is for Lower Heating Value and excludes these. American publications typically report HHV whereas European ones report LHV." lang="en"
         }
         prop "energy_density_LHV" "volume_LHV" "ft^3" "energy_LHV" "930 btu"
     }
@@ -545,7 +545,7 @@ category "substances" {
     }
     substance "neptune" {
         prop "mass" "neptune_mass" "1" "mass" "solarmass / 19412.24" {
-            doc "±0.04"
+            doc "±0.04" lang="en"
         }
         prop "mass_old" "neptune_old" "1" "mass_old" "102780000000000000000000000 kg"
         prop "radius" "neptune_radius" "1" "radius" "24624 km"
@@ -578,7 +578,7 @@ category "substances" {
     }
     substance "nobelium" {
         prop "molar_mass" "amount" "mol" "mass" "259.1009 g" {
-            doc "Longest lived."
+            doc "Longest lived." lang="en"
         }
     }
     substance "oganesson" "Og" {
@@ -588,7 +588,7 @@ category "substances" {
     }
     substance "oil" {
         prop "specific_energy" "mass" "ton" "energy" "10000000000 cal_IT" {
-            doc "Ton oil equivalent.  A conventional value for the energy released by burning one metric ton of oil. [18,E2] Note that energy per mass of petroleum products is fairly constant. Variations in volumetric energy density result from variations in the density (kg/m^3) of different fuels. This definition is given by the IEA/OECD."
+            doc "Ton oil equivalent.  A conventional value for the energy released by burning one metric ton of oil. [18,E2] Note that energy per mass of petroleum products is fairly constant. Variations in volumetric energy density result from variations in the density (kg/m^3) of different fuels. This definition is given by the IEA/OECD." lang="en"
         }
     }
     substance "olive_oil" {
@@ -618,25 +618,25 @@ category "substances" {
     }
     substance "pluto" {
         prop "mass" "pluto_mass" "1" "mass" "solarmass / 135000000" {
-            doc "±0.07e8"
+            doc "±0.07e8" lang="en"
         }
         prop "mass_old" "pluto_old" "1" "mass_old" "15000000000000000000000 kg"
         prop "radius" "pluto_radius" "1" "radius" "1151 km"
         prop "volume" "pluto_volume" "1" "volume" "7006000000 km^3" {
-            doc "±0.071e9 km^3"
+            doc "±0.071e9 km^3" lang="en"
         }
         prop "sidereal_day" "pluto_day" "1" "sidereal_day" "6.3867 day"
         prop "year" "pluto_year" "1" "year" "247.92065 julianyear"
     }
     substance "plutonium" "Pu" {
         prop "molar_mass" "amount" "mol" "mass" "244.0642 g" {
-            doc "Longest lived. 239.05"
+            doc "Longest lived. 239.05" lang="en"
         }
         prop "specific_heat" "temperature" "K" "specific_energy" "0.13 J g^-1"
     }
     substance "polonium" {
         prop "molar_mass" "amount" "mol" "mass" "208.9824 g" {
-            doc "Longest lived. 209.98"
+            doc "Longest lived. 209.98" lang="en"
         }
     }
     substance "potassium" "K" {
@@ -654,7 +654,7 @@ category "substances" {
     }
     substance "promethium" {
         prop "molar_mass" "amount" "mol" "mass" "144.9127 g" {
-            doc "Longest lived. 146.92"
+            doc "Longest lived. 146.92" lang="en"
         }
     }
     substance "propane" {
@@ -674,7 +674,7 @@ category "substances" {
     }
     substance "radon" {
         prop "molar_mass" "amount" "mol" "mass" "222.0176 g" {
-            doc "Longest lived."
+            doc "Longest lived." lang="en"
         }
     }
     substance "rhenium" "Re" {
@@ -710,7 +710,7 @@ category "substances" {
     }
     substance "saturn" {
         prop "mass" "saturn_mass" "1" "mass" "solarmass / 3497.898" {
-            doc "±0.018"
+            doc "±0.018" lang="en"
         }
         prop "mass_old" "saturn_old" "1" "mass_old" "568500000000000000000000000 kg"
         prop "radius" "saturn_radius" "1" "radius" "58232 km"
@@ -766,30 +766,30 @@ category "substances" {
     substance "sun" {
         prop "mass" "solar_mass" "1" "mass" "1989100000000000000000000000000 kg"
         prop "distance" "sun_distance" "1" "distance" "1.0000010178 au" {
-            doc "Average earth-sun distance"
+            doc "Average earth-sun distance" lang="en"
         }
         prop "distance_near" "sun_distance_near" "1" "distance_near" "147100000000 m" {
-            doc "Earth-sun distance at periphelion"
+            doc "Earth-sun distance at periphelion" lang="en"
         }
         prop "distance_far" "sun_distance_far" "1" "distance_far" "152100000000 m" {
-            doc "Earth-sun distance at aphelion"
+            doc "Earth-sun distance at aphelion" lang="en"
         }
         prop "radius_equatorial" "sun_radius" "1" "radius_equatorial" "695700 km"
         prop "volume" "sun_volume" "1" "volume" "1410000000000000000 km^3"
         prop "luminosity" "solar_luminosity" "1" "luminosity" "384600000000000000000000000 W" {
-            doc "Source: http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html"
+            doc "Source: http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html" lang="en"
         }
         prop "illum_zenith" "sun_illum_zenith" "1" "illum_zenith" "100000 lux" {
-            doc "Clear sky."
+            doc "Clear sky." lang="en"
         }
         prop "illum_overcast" "sun_illum_overcast" "1" "illum_overcast" "10000 lux"
         prop "luminance_zenith" "sun_lum_zenith" "1" "luminance_zenith" "1600000000 cd / m^2"
         prop "luminance_horizon" "sun_lum_horizon" "1" "luminance_horizon" "6000000 cd / m^2"
         prop "luminance_clear" "sun_lum_clear" "1" "luminance_clear" "8000 cd / m^2" {
-            doc "Average, clear sky."
+            doc "Average, clear sky." lang="en"
         }
         prop "luminance_overcast" "sun_lum_overcast" "1" "luminance_overcast" "2000 cd / m^2" {
-            doc "Average, overcast sky."
+            doc "Average, overcast sky." lang="en"
         }
     }
     substance "tantalum" "Ta" {
@@ -801,7 +801,7 @@ category "substances" {
     }
     substance "technetium" {
         prop "molar_mass" "amount" "mol" "mass" "97.9072 g" {
-            doc "Longest lived. 98.906"
+            doc "Longest lived. 98.906" lang="en"
         }
     }
     substance "tellurium" "Te" {
@@ -850,18 +850,18 @@ category "substances" {
         prop "specific_heat" "temperature" "K" "specific_energy" "0.12 J g^-1"
         prop "molar_mass_235" "amount_235" "mol" "mass_235" "235.0439299 g"
         prop "specific_energy_235_fission" "mass" "(235.0439299 g / mol) / avogadro" "fission_energy" "200 MeV" {
-            doc "Total energy from uranium fission.  Actual efficiency of nuclear power plants is around 30%-40%.  Note also that some reactors use enriched uranium around 3% U-235.  Uranium during processing or use may be in a compound of uranium oxide or uranium hexafluoride, in which case the energy density would be lower depending on how much uranium is in the compound."
+            doc "Total energy from uranium fission.  Actual efficiency of nuclear power plants is around 30%-40%.  Note also that some reactors use enriched uranium around 3% U-235.  Uranium during processing or use may be in a compound of uranium oxide or uranium hexafluoride, in which case the energy density would be lower depending on how much uranium is in the compound." lang="en"
         }
     }
     substance "uranus" {
         prop "mass" "uranus_mass" "1" "mass" "solarmass / 22902.98" {
-            doc "±0.03"
+            doc "±0.03" lang="en"
         }
         prop "mass_old" "uranus_old" "1" "mass_old" "86625000000000000000000000 kg"
         prop "radius" "uranus_radius" "1" "radius" "25362 km"
         prop "volume" "uranus_volume" "1" "volume" "68330000000000 km^3"
         prop "sidereal_day" "uranus_day" "1" "sidereal_day" "0.65 day" {
-            doc "Retrograde."
+            doc "Retrograde." lang="en"
         }
         prop "year" "uranus_year" "1" "year" "84.016846 julianyear"
     }
@@ -874,13 +874,13 @@ category "substances" {
     }
     substance "venus" {
         prop "mass" "venus_mass" "1" "mass" "solarmass / 408523.71" {
-            doc "± 0.06"
+            doc "± 0.06" lang="en"
         }
         prop "mass_old" "venus_old" "1" "mass_old" "4869000000000000000000000 kg"
         prop "radius" "venus_radius" "1" "radius" "6051.84 km"
         prop "volume" "venus_volume" "1" "volume" "928430000000 km^3"
         prop "sidereal_day" "venus_day" "1" "sidereal_day" "243.01 day" {
-            doc "Retrograde."
+            doc "Retrograde." lang="en"
         }
         prop "year" "venus_year" "1" "year" "0.61519726 julianyear"
     }
@@ -903,10 +903,10 @@ category "substances" {
     }
     substance "wood" {
         prop "specific_energy_dry" "mass_dry" "tonne" "energy_dry" "20 GJ" {
-            doc "HHV, a cord weights about a tonne."
+            doc "HHV, a cord weights about a tonne." lang="en"
         }
         prop "specific_energy_airdry" "mass_airdry" "tonne" "energy_airdry" "15 GJ" {
-            doc "20% moisture content."
+            doc "20% moisture content." lang="en"
         }
         prop "specific_heat" "temperature" "K" "specific_energy" "1.7 J g^-1"
     }

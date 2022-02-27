@@ -870,7 +870,7 @@ mod test {
             parse("a b * c / d / e f * g h"),
             "(((a b) c / d) / e f) (g h)"
         );
-        assert_eq!(parse("a|b c / g e|f"), "(a / b) c / g (e / f)");
+        assert_eq!(parse("a|b c / g e|f"), "a|b c / g e|f");
         assert_eq!(parse("a / b / c"), "(a / b) / c");
     }
 

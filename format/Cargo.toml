@@ -1,0 +1,8 @@
+[package]
+name = "rink-format"
+version = "0.6.2"
+edition = "2021"
+
+[dependencies]
+serde = "1"
+serde_derive = "1"
