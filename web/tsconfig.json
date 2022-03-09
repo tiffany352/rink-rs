@@ -12,7 +12,8 @@
     "target": "ES2015",
     "allowJs": true,
     "baseUrl": "./src/",
-    "types": ["svelte"]
+    "types": ["svelte"],
+    "resolveJsonModule": true
   },
   "include": ["./src/**/*"]
 }

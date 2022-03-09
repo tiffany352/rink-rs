@@ -3,6 +3,7 @@ import fetch from "node-fetch";
 import { parse } from "elementtree";
 import { writeFile } from "atomically";
 import { mkdir } from "fs/promises";
+import ecbDefaults from "./ecb-defaults.json";
 
 async function btc() {
   interface Format {
@@ -89,16 +90,30 @@ async function ecb() {
   const desc = `Sourced from European Central Bank. Current as of ${timestamp}.`;
 
   const defs: Def[] = [];
+  const seen: Set<string> = new Set();
   for (const element of doc.findall(".//Cube")) {
     const currency = element.attrib.currency;
     const rate = element.attrib.rate;
     if (currency && rate) {
+      seen.add(currency);
       defs.push({
         name: currency,
         doc: desc,
         category: "currencies",
         type: "unit",
         expr: `(1 / ${rate}) EUR`,
+      });
+    }
+  }
+
+  for (const [name, currency] of Object.entries(ecbDefaults)) {
+    if (!seen.has(name)) {
+      defs.push({
+        name,
+        doc: `Fetching live data failed. Fallback value provided from ${currency.source} on ${currency.time}.`,
+        category: "currencies",
+        type: "unit",
+        expr: `(1 / ${currency.value}) EUR`,
       });
     }
   }
