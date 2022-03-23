@@ -753,6 +753,17 @@ pub fn parse_query(iter: &mut Iter<'_>) -> Query {
                 return Query::Search(s.clone());
             }
         }
+        Some(Token::Ident(ref s)) if s == "let" => {
+            iter.next();
+            if let Some(Token::Ident(ref s)) = iter.peek().cloned() {
+               iter.next();
+               if let Some(Token::Equals) = iter.peek() {
+                   iter.next();
+                   return Query::Let(s.clone(), parse_eq(iter));
+               }
+            }
+            return Query::Error("let needs to have form `let var = expr`".to_string());
+        }
         _ => (),
     }
     let left = parse_eq(iter);

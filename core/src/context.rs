@@ -33,6 +33,7 @@ pub struct Context {
     pub use_humanize: bool,
     pub save_previous_result: bool,
     pub previous_result: Option<Number>,
+    pub variables: BTreeMap<String, Number>,
 }
 
 impl Default for Context {
@@ -67,6 +68,7 @@ impl Context {
             substance_symbols: BTreeMap::new(),
             temporaries: BTreeMap::new(),
             previous_result: None,
+            variables: BTreeMap::new(),
         }
     }
 
@@ -105,6 +107,9 @@ impl Context {
                         unit: unit.clone(),
                     });
                 }
+            }
+            if let Some(v) = ctx.variables.get(name).cloned() {
+                return Some(v);
             }
             None
         }

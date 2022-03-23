@@ -709,7 +709,7 @@ impl Context {
     }
 
     /// Evaluates an expression, include `->` conversions.
-    pub fn eval_outer(&self, expr: &Query) -> Result<QueryReply, QueryError> {
+    pub fn eval_outer(&mut self, expr: &Query) -> Result<QueryReply, QueryError> {
         match *expr {
             Query::Expr(Expr::Unit { ref name })
                 if {
@@ -1186,7 +1186,18 @@ impl Context {
                         s.to_reply(self).map_err(QueryError::generic)?,
                     )),
                 }
-            }
+            },
+            Query::Let(ref var_name, ref expr) => {
+                // todo: check whether already defined with self.lookup(var_name)
+                let res = self.eval(expr)?;
+                if let Value::Number(num) = res {
+                    let parts = num.to_parts(self);
+                    self.variables.insert(var_name.clone(), num);
+                    Ok(QueryReply::Number(parts))
+                } else {
+                    Err(QueryError::generic("let expressions currently only supported for numeric results".to_string()))
+                }
+            },
             Query::Error(ref e) => Err(QueryError::generic(e.clone())),
         }
     }
