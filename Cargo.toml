@@ -11,7 +11,7 @@ categories = ["command-line-utilities", "mathematics", "science"]
 edition = "2018"
 
 [dependencies]
-clap = "2.33.1"
+clap = "3"
 dirs = "3.0.1"
 reqwest = { version = "0.11.2", features = ["blocking"] }
 chrono = "0.4.19"

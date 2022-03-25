@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use clap::{App, Arg};
+use clap::{Arg, Command};
 use eyre::{Result, WrapErr};
 use rink_sandbox::Alloc;
 use std::fs::File;
@@ -22,33 +22,33 @@ pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
 
 #[async_std::main]
 async fn main() -> Result<()> {
-    let matches = App::new("Rink")
+    let matches = Command::new("Rink")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Rink Contributors")
         .about("Unit conversion tool")
         .arg(
-            Arg::with_name("EXPR")
+            Arg::new("EXPR")
                 .help("Evaluate a list of expressions. If no arguments are provided, an interactive session will start.")
-                .multiple(true)
+                .multiple_values(true)
                 .required(false),
         )
         .arg(
-            Arg::with_name("file")
-                .short("f")
+            Arg::new("file")
+                .short('f')
                 .long("file")
                 .takes_value(true)
                 .help("Reads expressions from a file"),
         )
         .arg(
-            Arg::with_name("config-path")
+            Arg::new("config-path")
                 .long("config-path")
                 .help("Prints a path to the config file, then exits")
         )
         .arg(
-            Arg::with_name("service")
+            Arg::new("service")
                 .long("service")
                 .help("Start in service mode")
-                .hidden(true)
+                .hide(true)
         )
         .get_matches();
 
