@@ -1,6 +1,6 @@
 [package]
 name = "rink"
-version = "0.6.2"
+version = "0.6.3"
 description = "Unit conversion tool, similar to frink"
 homepage = "https://rinkcalc.app"
 repository = "https://github.com/tiffany352/rink-rs"
