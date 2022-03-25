@@ -23,6 +23,8 @@ jobs:
 
       # runs cargo with defaults flags, using the default `lcov` output
       - uses: Swatinem/fucov@v1
+        with:
+          toolchain: nightly
 
       # afterwards, upload the report to codecov
       - uses: codecov/codecov-action@v1
