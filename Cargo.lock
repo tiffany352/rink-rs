@@ -381,8 +381,21 @@ dependencies = [
  "eyre",
  "indenter",
  "once_cell",
- "owo-colors",
+ "owo-colors 1.3.0",
  "tracing-error",
+]
+
+[[package]]
+name = "color-eyre"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ebf286c900a6d5867aeff75cfee3192857bb7f24b547d4f0df2ed6baa812c90"
+dependencies = [
+ "backtrace",
+ "eyre",
+ "indenter",
+ "once_cell",
+ "owo-colors 3.3.0",
 ]
 
 [[package]]
@@ -392,7 +405,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6eee477a4a8a72f4addd4de416eb56d54bc307b284d6601bafdee1f4ea462d1"
 dependencies = [
  "once_cell",
- "owo-colors",
+ "owo-colors 1.3.0",
  "tracing-core",
  "tracing-error",
 ]
@@ -1206,6 +1219,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2386b4ebe91c2f7f51082d4cefa145d030e33a1842a96b12e4885cc3c01f7a55"
 
 [[package]]
+name = "owo-colors"
+version = "3.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e72e30578e0d0993c8ae20823dd9cff2bc5517d2f586a8aef462a581e8a03eb"
+
+[[package]]
 name = "parking"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1379,7 +1398,7 @@ dependencies = [
  "async-std",
  "chrono",
  "clap",
- "color-eyre",
+ "color-eyre 0.6.1",
  "dirs",
  "eyre",
  "humantime-serde",
@@ -1435,7 +1454,7 @@ dependencies = [
  "async-std",
  "bincode",
  "byteorder",
- "color-eyre",
+ "color-eyre 0.5.11",
  "displaydoc",
  "serde",
  "serde_derive",
