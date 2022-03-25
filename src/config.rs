@@ -11,6 +11,7 @@ use rink_core::context::Context;
 use rink_core::fmt::FmtToken;
 use rink_core::{ast, date, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::{Deserialize, Serialize};
+use std::env;
 use std::ffi::OsString;
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::Path;
@@ -76,7 +77,7 @@ pub struct Currency {
 #[serde(default, deny_unknown_fields)]
 pub struct Colors {
     /// Whether support for colored output should be enabled.
-    pub enabled: bool,
+    pub enabled: Option<bool>,
     /// The name of the current theme.
     pub theme: String,
 }
@@ -189,7 +190,7 @@ impl Default for Rink {
 impl Default for Colors {
     fn default() -> Self {
         Colors {
-            enabled: false,
+            enabled: None,
             theme: "default".to_owned(),
         }
     }
@@ -208,12 +209,15 @@ impl Default for Limits {
 
 impl Config {
     pub fn get_theme(&self) -> &Theme {
-        if !self.colors.enabled {
-            &self.disabled_theme
-        } else {
+        let default_enable_colors = env::var("NO_COLOR") == Err(env::VarError::NotPresent);
+        let colors_enabled = self.colors.enabled.unwrap_or(default_enable_colors);
+
+        if colors_enabled {
             let name = &self.colors.theme;
             let theme = self.themes.get(name);
             theme.unwrap_or(&self.default_theme)
+        } else {
+            &self.disabled_theme
         }
     }
 }
