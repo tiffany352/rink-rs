@@ -15,8 +15,6 @@ pub enum Numeric {
     Rational(BigRat),
     /// Machine floats.
     Float(f64),
-    // /// Machine ints.
-    // Int(i64),
 }
 
 /// Parity represents the result of coercing a pair of `Numeric`s into
