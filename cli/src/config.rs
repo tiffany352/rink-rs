@@ -10,7 +10,7 @@ use reqwest::header::USER_AGENT;
 use rink_core::context::Context;
 use rink_core::fmt::FmtToken;
 use rink_core::parsing::datetime;
-use rink_core::{ast, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+use rink_core::{ast, loader::gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 use std::ffi::OsString;

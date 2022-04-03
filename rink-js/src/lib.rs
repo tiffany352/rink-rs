@@ -99,9 +99,10 @@ impl Context {
             serde_json::from_str(&live_defs).map_err(|e| e.to_string())?;
 
         let mut base_defs = {
+            use rink_core::loader::gnu_units;
             let defs = rink_core::CURRENCY_FILE;
-            let mut iter = rink_core::gnu_units::TokenIterator::new(defs).peekable();
-            rink_core::gnu_units::parse(&mut iter)
+            let mut iter = gnu_units::TokenIterator::new(defs).peekable();
+            gnu_units::parse(&mut iter)
         };
         let currency = {
             let mut defs = vec![];
