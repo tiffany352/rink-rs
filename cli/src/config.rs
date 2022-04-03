@@ -9,7 +9,8 @@ use eyre::{eyre, Report, WrapErr};
 use reqwest::header::USER_AGENT;
 use rink_core::context::Context;
 use rink_core::fmt::FmtToken;
-use rink_core::{ast, dateparse, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+use rink_core::parsing::datetime;
+use rink_core::{ast, gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 use std::ffi::OsString;
@@ -282,7 +283,7 @@ pub fn load(config: &Config) -> Result<Context> {
     let mut ctx = Context::new();
     ctx.save_previous_result = true;
     ctx.load(gnu_units::parse_str(&units));
-    ctx.load_dates(dateparse::parse_datefile(&dates));
+    ctx.load_dates(datetime::parse_datefile(&dates));
 
     // Load currency data.
     if config.currency.enabled {

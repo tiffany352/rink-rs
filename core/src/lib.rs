@@ -41,7 +41,6 @@ extern crate serde_derive;
 
 pub mod ast;
 pub mod context;
-pub mod dateparse;
 pub mod eval;
 pub mod factorize;
 pub mod fmt;
@@ -50,6 +49,7 @@ pub mod gnu_units;
 pub mod load;
 pub mod number;
 pub mod numeric;
+pub mod parsing;
 pub mod reply;
 pub mod search;
 pub mod substance;
@@ -108,7 +108,7 @@ pub fn simple_context() -> Result<Context, String> {
     let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
     let units = gnu_units::parse(&mut iter);
 
-    let dates = dateparse::parse_datefile(DATES_FILE);
+    let dates = crate::parsing::datetime::parse_datefile(DATES_FILE);
 
     let mut ctx = Context::new();
     ctx.load(units);

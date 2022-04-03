@@ -4,11 +4,11 @@
 
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::context::Context;
-use crate::dateparse;
 use crate::factorize::{factorize, Factors};
 use crate::formula::substance_from_formula;
 use crate::number::{pow, Dimension, Number, NumberParts};
 use crate::numeric::{Digits, Numeric};
+use crate::parsing::datetime;
 use crate::reply::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
     Factorization, FactorizeReply, QueryError, QueryReply, UnitListReply, UnitsForReply,
@@ -56,7 +56,7 @@ impl Context {
                 Ok(Value::Number(Number::one_unit(Dimension::new(string))))
             }
             Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
-            Expr::Date { ref tokens } => match dateparse::try_decode(tokens, self) {
+            Expr::Date { ref tokens } => match datetime::try_decode(tokens, self) {
                 Ok(date) => Ok(Value::DateTime(date)),
                 Err(e) => Err(QueryError::generic(e)),
             },

@@ -283,4 +283,12 @@ impl Context {
             suggestion: self.typo_dym(name).map(|x| x.to_owned()),
         }
     }
+
+    pub fn humanize<Tz: chrono::TimeZone>(&self, date: chrono::DateTime<Tz>) -> Option<String> {
+        if self.use_humanize {
+            crate::parsing::datetime::humanize(date)
+        } else {
+            None
+        }
+    }
 }

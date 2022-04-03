@@ -495,19 +495,11 @@ pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
     defs
 }
 
-impl Context {
-    #[cfg(feature = "chrono-humanize")]
-    pub fn humanize<Tz: TimeZone>(&self, date: DateTime<Tz>) -> Option<String> {
-        if self.use_humanize {
-            use chrono_humanize::HumanTime;
-            Some(HumanTime::from(date).to_string())
-        } else {
-            None
-        }
-    }
-
-    #[cfg(not(feature = "chrono-humanize"))]
-    pub fn humanize<Tz: TimeZone>(&self, _date: DateTime<Tz>) -> Option<String> {
+pub fn humanize<Tz: TimeZone>(date: DateTime<Tz>) -> Option<String> {
+    if cfg!(feature = "chrono-humanize") {
+        use chrono_humanize::HumanTime;
+        Some(HumanTime::from(date).to_string())
+    } else {
         None
     }
 }

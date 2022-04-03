@@ -3,8 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::context::Context;
-use crate::dateparse;
 use crate::number::Number;
+use crate::parsing::datetime;
 use crate::substance::Substance;
 use crate::types::GenericDateTime;
 use chrono::{DateTime, FixedOffset};
@@ -86,10 +86,10 @@ impl<'a, 'b> Add<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::Number(ref right))
             | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
                 GenericDateTime::Fixed(left) => left
-                    .checked_add_signed(dateparse::to_duration(right)?)
+                    .checked_add_signed(datetime::to_duration(right)?)
                     .map(GenericDateTime::Fixed),
                 GenericDateTime::Timezone(left) => left
-                    .checked_add_signed(dateparse::to_duration(right)?)
+                    .checked_add_signed(datetime::to_duration(right)?)
                     .map(GenericDateTime::Timezone),
             }
             .ok_or_else(|| {
@@ -117,10 +117,10 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::Number(ref right))
             | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
                 GenericDateTime::Fixed(left) => left
-                    .checked_sub_signed(dateparse::to_duration(right)?)
+                    .checked_sub_signed(datetime::to_duration(right)?)
                     .map(GenericDateTime::Fixed),
                 GenericDateTime::Timezone(left) => left
-                    .checked_sub_signed(dateparse::to_duration(right)?)
+                    .checked_sub_signed(datetime::to_duration(right)?)
                     .map(GenericDateTime::Timezone),
             }
             .ok_or_else(|| {
@@ -128,7 +128,7 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
             })
             .map(Value::DateTime),
             (&Value::DateTime(ref left), &Value::DateTime(ref right)) => {
-                dateparse::from_duration(&match (left, right) {
+                datetime::from_duration(&match (left, right) {
                     (&GenericDateTime::Fixed(ref left), &GenericDateTime::Fixed(ref right)) => {
                         *left - *right
                     }
