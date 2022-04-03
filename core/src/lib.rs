@@ -44,7 +44,6 @@ pub mod context;
 pub mod eval;
 pub mod factorize;
 pub mod fmt;
-pub mod load;
 pub mod loader;
 pub mod number;
 pub mod numeric;

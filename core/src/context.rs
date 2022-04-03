@@ -291,4 +291,10 @@ impl Context {
             None
         }
     }
+
+    /// Takes a parsed definitions.units from
+    /// `gnu_units::parse()`. Prints if there are errors in the file.
+    pub fn load(&mut self, defs: crate::ast::Defs) {
+        crate::loader::load_defs(self, defs)
+    }
 }
