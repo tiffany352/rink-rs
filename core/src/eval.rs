@@ -5,10 +5,9 @@
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::context::Context;
 use crate::factorize::{factorize, Factors};
-use crate::formula::substance_from_formula;
 use crate::number::{pow, Dimension, Number, NumberParts};
 use crate::numeric::{Digits, Numeric};
-use crate::parsing::datetime;
+use crate::parsing::{datetime, formula};
 use crate::reply::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
     Factorization, FactorizeReply, QueryError, QueryReply, UnitListReply, UnitsForReply,
@@ -48,7 +47,7 @@ impl Context {
                     })
                 })
                 .or_else(|| {
-                    substance_from_formula(name, &self.substance_symbols, &self.substances)
+                    formula::substance_from_formula(name, &self.substance_symbols, &self.substances)
                         .map(Value::Substance)
                 })
                 .ok_or_else(|| QueryError::NotFound(self.unknown_unit_err(name))),
