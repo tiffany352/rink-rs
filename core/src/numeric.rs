@@ -5,8 +5,7 @@
 use std::cmp::{Ordering, PartialOrd};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::bigint::BigInt;
-use crate::bigrat::BigRat;
+use crate::types::{BigInt, BigRat};
 
 /// Number type.
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

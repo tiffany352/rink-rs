@@ -3,9 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::*;
-use crate::bigint::BigInt;
-use crate::bigrat::BigRat;
 use crate::numeric::{Digits, Numeric};
+use crate::types::{BigInt, BigRat};
 use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::Chars;

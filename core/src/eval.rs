@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
-use crate::bigint::BigInt;
 use crate::context::Context;
 use crate::date;
 use crate::factorize::{factorize, Factors};
@@ -17,6 +16,7 @@ use crate::reply::{
 };
 use crate::search;
 use crate::substance::SubstanceGetError;
+use crate::types::BigInt;
 use crate::value::{Show, Value};
 use chrono::{DateTime, FixedOffset};
 use std::collections::BTreeMap;

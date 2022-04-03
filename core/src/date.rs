@@ -3,11 +3,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{DatePattern, DateToken};
-use crate::bigint::BigInt;
-use crate::bigrat::BigRat;
 use crate::context::Context;
 use crate::number::{Dimension, Number};
 use crate::numeric::Numeric;
+use crate::types::{BigInt, BigRat};
 use chrono::format::Parsed;
 use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
 use chrono_tz::Tz;

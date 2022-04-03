@@ -2,12 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::bigrat::BigRat;
 use crate::context::Context;
+use crate::fmt::Span;
 use crate::fmt::TokenFmt;
 use crate::numeric::*;
+use crate::types::{BigInt, BigRat};
 use crate::value::Show;
-use crate::{bigint::BigInt, fmt::Span};
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::fmt;

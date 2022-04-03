@@ -9,7 +9,7 @@ use std::cmp::Ord;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::bigint::BigInt;
+use super::BigInt;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct BigRat {

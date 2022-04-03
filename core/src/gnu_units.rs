@@ -633,7 +633,7 @@ mod tests {
 
     #[test]
     fn test_float_leading_dot() {
-        use crate::bigrat::BigRat;
+        use crate::types::BigRat;
         expect!(
             ".123",
             Expr::Const { value },

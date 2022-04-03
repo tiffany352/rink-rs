@@ -40,8 +40,6 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 extern crate serde_derive;
 
 pub mod ast;
-pub mod bigint;
-pub mod bigrat;
 pub mod context;
 pub mod date;
 pub mod eval;
@@ -56,6 +54,7 @@ pub mod reply;
 pub mod search;
 pub mod substance;
 pub mod text_query;
+pub mod types;
 pub mod value;
 
 use reply::{QueryError, QueryReply};
