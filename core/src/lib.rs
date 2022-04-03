@@ -40,9 +40,9 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 extern crate serde_derive;
 
 pub mod ast;
+pub mod commands;
 pub mod context;
 pub mod eval;
-pub mod factorize;
 pub mod fmt;
 pub mod loader;
 pub mod number;

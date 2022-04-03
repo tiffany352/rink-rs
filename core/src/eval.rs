@@ -3,8 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
+use crate::commands::{factorize, Factors};
 use crate::context::Context;
-use crate::factorize::{factorize, Factors};
 use crate::number::{pow, Dimension, Number, NumberParts};
 use crate::numeric::{Digits, Numeric};
 use crate::parsing::{datetime, formula};
