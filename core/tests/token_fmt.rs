@@ -5,6 +5,7 @@ use rink_core::fmt::{
     FmtToken::{self, *},
     Span,
 };
+use rink_core::parsing::text_query;
 use rink_core::*;
 use std::fmt;
 

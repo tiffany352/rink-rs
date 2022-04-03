@@ -2,7 +2,7 @@ use chrono::{Local, TimeZone};
 use js_sys::Date;
 use rink_core;
 use rink_core::ast;
-use rink_core::text_query;
+use rink_core::parsing::text_query;
 use serde_derive::*;
 use serde_json;
 use wasm_bindgen::prelude::*;

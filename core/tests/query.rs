@@ -2,11 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use rink_core::*;
+use rink_core::parsing::text_query;
+use rink_core::Context;
 
 thread_local! {
     static CONTEXT: Context = {
-        let mut ctx = simple_context().unwrap();
+        let mut ctx = rink_core::simple_context().unwrap();
         ctx.use_humanize = false;
         ctx
     };

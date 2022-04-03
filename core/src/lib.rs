@@ -52,10 +52,10 @@ pub mod parsing;
 pub mod reply;
 pub mod search;
 pub mod substance;
-pub mod text_query;
 pub mod types;
 pub mod value;
 
+use parsing::text_query;
 use reply::{QueryError, QueryReply};
 
 pub use crate::context::Context;

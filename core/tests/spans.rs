@@ -1,6 +1,7 @@
 use rink_core::{
     fmt::{Span, TokenFmt},
-    simple_context, text_query, Context,
+    parsing::text_query,
+    simple_context, Context,
 };
 
 thread_local! {
