@@ -49,7 +49,6 @@ pub mod number;
 pub mod numeric;
 pub mod parsing;
 pub mod reply;
-pub mod search;
 pub mod substance;
 pub mod types;
 pub mod value;

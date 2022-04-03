@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
-use crate::commands::{factorize, Factors};
+use crate::commands;
 use crate::context::Context;
 use crate::number::{pow, Dimension, Number, NumberParts};
 use crate::numeric::{Digits, Numeric};
@@ -13,7 +13,6 @@ use crate::reply::{
     Factorization, FactorizeReply, QueryError, QueryReply, UnitListReply, UnitsForReply,
     UnitsInCategory,
 };
-use crate::search;
 use crate::substance::SubstanceGetError;
 use crate::types::{BigInt, GenericDateTime};
 use crate::value::{Show, Value};
@@ -1041,12 +1040,12 @@ impl Context {
                     .iter()
                     .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
                     .collect::<BTreeMap<_, _>>();
-                let results = factorize(&val, &quantities);
+                let results = commands::factorize(&val, &quantities);
                 let mut results = results.into_sorted_vec();
                 results.dedup();
                 let results = results
                     .into_iter()
-                    .map(|Factors(_score, names)| {
+                    .map(|commands::Factors(_score, names)| {
                         let mut next = BTreeMap::<Rc<String>, usize>::new();
                         for name in names.into_iter() {
                             *next.entry(name).or_insert(0) += 1;
@@ -1141,7 +1140,9 @@ impl Context {
                     of: parts,
                 }))
             }
-            Query::Search(ref string) => Ok(QueryReply::Search(search::query(self, &**string, 5))),
+            Query::Search(ref string) => {
+                Ok(QueryReply::Search(commands::search(self, &**string, 5)))
+            }
             Query::Expr(ref expr)
             | Query::Convert(ref expr, Conversion::None, None, Digits::Default) => {
                 let val = self.eval(expr)?;

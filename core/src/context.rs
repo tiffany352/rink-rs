@@ -3,10 +3,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{DatePattern, Expr};
+use crate::commands;
 use crate::number::{Dimension, Number, Quantity};
 use crate::numeric::Numeric;
 use crate::reply::NotFoundError;
-use crate::search;
 use crate::substance::Substance;
 use chrono::{DateTime, Local, TimeZone};
 use std::collections::{BTreeMap, BTreeSet};
@@ -274,7 +274,7 @@ impl Context {
     }
 
     pub fn typo_dym<'a>(&'a self, what: &str) -> Option<&'a str> {
-        search::search(self, what, 1).into_iter().next()
+        commands::search_impl(self, what, 1).into_iter().next()
     }
 
     pub fn unknown_unit_err(&self, name: &str) -> NotFoundError {

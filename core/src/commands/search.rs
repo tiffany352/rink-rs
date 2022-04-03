@@ -32,7 +32,7 @@ impl<'a> Ord for SearchResult<'a> {
     }
 }
 
-pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a str> {
+pub(crate) fn search_impl<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a str> {
     let mut results = BinaryHeap::new();
     let query = query.to_lowercase();
     {
@@ -80,9 +80,9 @@ pub fn search<'a>(ctx: &'a Context, query: &str, num_results: usize) -> Vec<&'a 
         .collect()
 }
 
-pub fn query(ctx: &Context, query: &str, num_results: usize) -> SearchReply {
+pub fn search(ctx: &Context, query: &str, num_results: usize) -> SearchReply {
     SearchReply {
-        results: search(ctx, query, num_results)
+        results: search_impl(ctx, query, num_results)
             .into_iter()
             .map(|name| {
                 let parts = ctx

@@ -9,7 +9,7 @@ use rustyline::{
 };
 use rustyline::{Context as LineContext, Result};
 
-use rink_core::{search::query, Context};
+use rink_core::{commands, Context};
 
 use crate::{config::Config, fmt::to_ansi_string};
 
@@ -31,7 +31,7 @@ impl Completer for RinkHelper {
         let (res_pos, name) = extract_word(line, pos, None, &[b' ']);
 
         let ctx = self.context.lock().unwrap();
-        let reply = query(&ctx, name, 100);
+        let reply = commands::search(&ctx, name, 100);
 
         let results = reply
             .results

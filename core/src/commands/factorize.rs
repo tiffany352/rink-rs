@@ -23,7 +23,7 @@ impl cmp::Ord for Factors {
     }
 }
 
-pub fn fast_decompose(value: &Number, quantities: &BTreeMap<Quantity, String>) -> Quantity {
+pub(crate) fn fast_decompose(value: &Number, quantities: &BTreeMap<Quantity, String>) -> Quantity {
     let mut best = None;
     'outer: for (unit, name) in quantities.iter() {
         // make sure we aren't doing something weird like introducing new base units

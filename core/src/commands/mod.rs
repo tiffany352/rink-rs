@@ -1,3 +1,7 @@
 mod factorize;
+mod search;
 
-pub use factorize::{factorize, fast_decompose, Factors};
+pub(crate) use factorize::fast_decompose;
+pub use factorize::{factorize, Factors};
+pub(crate) use search::search_impl;
+pub use search::{search, SearchResult};
