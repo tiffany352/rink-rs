@@ -4,7 +4,7 @@
 
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::context::Context;
-use crate::date;
+use crate::dateparse;
 use crate::factorize::{factorize, Factors};
 use crate::formula::substance_from_formula;
 use crate::number::{pow, Dimension, Number, NumberParts};
@@ -16,7 +16,7 @@ use crate::reply::{
 };
 use crate::search;
 use crate::substance::SubstanceGetError;
-use crate::types::BigInt;
+use crate::types::{BigInt, GenericDateTime};
 use crate::value::{Show, Value};
 use chrono::{DateTime, FixedOffset};
 use std::collections::BTreeMap;
@@ -30,9 +30,10 @@ impl Context {
 
         match *expr {
             Expr::Unit { ref name } if name == "now" => {
-                Ok(Value::DateTime(date::GenericDateTime::Fixed(
-                    DateTime::from_utc(self.now.naive_utc(), *self.now.offset()),
-                )))
+                Ok(Value::DateTime(GenericDateTime::Fixed(DateTime::from_utc(
+                    self.now.naive_utc(),
+                    *self.now.offset(),
+                ))))
             }
             Expr::Unit { ref name } => self
                 .lookup(name)
@@ -55,7 +56,7 @@ impl Context {
                 Ok(Value::Number(Number::one_unit(Dimension::new(string))))
             }
             Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
-            Expr::Date { ref tokens } => match date::try_decode(tokens, self) {
+            Expr::Date { ref tokens } => match dateparse::try_decode(tokens, self) {
                 Ok(date) => Ok(Value::DateTime(date)),
                 Err(e) => Err(QueryError::generic(e)),
             },
@@ -1175,10 +1176,8 @@ impl Context {
                     }
                     Value::Number(n) => Ok(QueryReply::Number(n.to_parts(self))),
                     Value::DateTime(d) => match d {
-                        date::GenericDateTime::Fixed(d) => {
-                            Ok(QueryReply::Date(DateReply::new(self, d)))
-                        }
-                        date::GenericDateTime::Timezone(d) => {
+                        GenericDateTime::Fixed(d) => Ok(QueryReply::Date(DateReply::new(self, d))),
+                        GenericDateTime::Timezone(d) => {
                             Ok(QueryReply::Date(DateReply::new(self, d)))
                         }
                     },

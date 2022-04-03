@@ -6,7 +6,7 @@ use crate::ast::{DatePattern, DateToken};
 use crate::context::Context;
 use crate::number::{Dimension, Number};
 use crate::numeric::Numeric;
-use crate::types::{BigInt, BigRat};
+use crate::types::{BigInt, BigRat, GenericDateTime};
 use chrono::format::Parsed;
 use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
 use chrono_tz::Tz;
@@ -269,21 +269,6 @@ where
         date.next();
     }
     res.and_then(|_| parse_date(out, out_tz, date, &pat[1..]))
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GenericDateTime {
-    Fixed(DateTime<FixedOffset>),
-    Timezone(DateTime<Tz>),
-}
-
-impl GenericDateTime {
-    pub fn with_timezone<Tz: TimeZone>(&self, tz: &Tz) -> DateTime<Tz> {
-        match *self {
-            GenericDateTime::Fixed(ref d) => d.with_timezone(tz),
-            GenericDateTime::Timezone(ref d) => d.with_timezone(tz),
-        }
-    }
 }
 
 fn attempt(
