@@ -8,11 +8,11 @@ use crate::commands;
 use crate::loader::Context;
 use crate::output::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
-    Factorization, FactorizeReply, QueryError, QueryReply, UnitListReply, UnitsForReply,
-    UnitsInCategory,
+    Factorization, FactorizeReply, NumberParts, QueryError, QueryReply, UnitListReply,
+    UnitsForReply, UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::types::{BaseUnit, Digits, GenericDateTime, Number, NumberParts, Numeric};
+use crate::types::{BaseUnit, Digits, GenericDateTime, Number, Numeric};
 use chrono::{DateTime, FixedOffset};
 use std::collections::BTreeMap;
 use std::rc::Rc;

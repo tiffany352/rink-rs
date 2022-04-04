@@ -13,7 +13,7 @@ pub use base_unit::BaseUnit;
 pub use bigint::{BigInt, BigIntError};
 pub use bigrat::BigRat;
 pub use date::GenericDateTime;
-pub use number::{Dimensionality, Number, NumberParts, NumberPartsFmt};
+pub use number::{Dimensionality, Number};
 pub use numeric::{Digits, Numeric, NumericParts};
 
 #[deprecated(since = "0.7.0", note = "renamed to BaseUnit")]

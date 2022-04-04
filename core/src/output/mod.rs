@@ -3,6 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 pub mod fmt;
+mod number_parts;
 mod reply;
 
+pub use number_parts::{NumberParts, NumberPartsFmt};
 pub use reply::*;

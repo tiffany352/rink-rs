@@ -3,8 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use super::fmt::{flat_join, join, Span, TokenFmt};
+use super::NumberParts;
 use crate::ast::{Expr, Precedence, UnaryOpType};
-use crate::types::{Digits, NumberParts};
+use crate::types::Digits;
 use chrono::{DateTime, TimeZone};
 use serde_derive::Serialize;
 use std::collections::BTreeMap;

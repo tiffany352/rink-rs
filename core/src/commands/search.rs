@@ -4,8 +4,8 @@
 
 use crate::{
     loader::Context,
-    output::SearchReply,
-    types::{BaseUnit, NumberParts},
+    output::{NumberParts, SearchReply},
+    types::BaseUnit,
 };
 use std::collections::BTreeMap;
 
