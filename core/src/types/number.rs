@@ -2,26 +2,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use super::BaseUnit;
 use crate::loader::Context;
 use crate::output::fmt::{Span, TokenFmt};
 use crate::runtime::Show;
 use crate::types::{BigInt, BigRat, Digits, Numeric};
 use serde_derive::{Deserialize, Serialize};
-use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
-use std::sync::Arc;
 
 /// Alias for the primary representation of dimensionality.
 pub type Dimensionality = BTreeMap<BaseUnit, i64>;
-
-/// A newtype for a string dimension ID, so that we can implement traits for it.
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-#[serde(transparent)]
-pub struct BaseUnit {
-    pub id: Arc<String>,
-}
 
 /// The basic representation of a number with a unit.
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
@@ -29,26 +21,6 @@ pub struct BaseUnit {
 pub struct Number {
     pub value: Numeric,
     pub unit: Dimensionality,
-}
-
-impl Borrow<str> for BaseUnit {
-    fn borrow(&self) -> &str {
-        &**self.id
-    }
-}
-
-impl fmt::Display for BaseUnit {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.id.fmt(fmt)
-    }
-}
-
-impl BaseUnit {
-    pub fn new(dim: &str) -> BaseUnit {
-        BaseUnit {
-            id: Arc::new(dim.to_owned()),
-        }
-    }
 }
 
 /// Several stringified properties of a number which are useful for
