@@ -5,7 +5,7 @@
 use crate::ast::{DatePattern, Expr, Query};
 use crate::number::{Dimension, Number, NumberParts, Quantity};
 use crate::numeric::{Digits, Numeric};
-use crate::reply::{ConversionReply, NotFoundError, QueryError, QueryReply};
+use crate::output::{ConversionReply, NotFoundError, QueryError, QueryReply};
 use crate::substance::Substance;
 use crate::types::BigInt;
 use crate::{commands, Value};

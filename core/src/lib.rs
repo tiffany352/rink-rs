@@ -46,16 +46,16 @@ pub mod fmt;
 pub mod loader;
 pub mod number;
 pub mod numeric;
+pub mod output;
 pub mod parsing;
-pub mod reply;
 pub mod runtime;
 pub mod substance;
 pub mod types;
 pub mod value;
 
 use loader::gnu_units;
+use output::{QueryError, QueryReply};
 use parsing::text_query;
-use reply::{QueryError, QueryReply};
 
 pub use crate::context::Context;
 pub use crate::number::Number;

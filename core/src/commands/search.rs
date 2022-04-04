@@ -5,7 +5,7 @@
 use crate::{
     context::Context,
     number::{Dimension, NumberParts},
-    reply::SearchReply,
+    output::SearchReply,
 };
 use std::collections::BinaryHeap;
 use std::{

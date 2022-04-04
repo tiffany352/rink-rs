@@ -5,7 +5,7 @@
 use crate::context::Context;
 use crate::number::{Dimension, Number};
 use crate::numeric::{Digits, Numeric};
-use crate::reply::{PropertyReply, SubstanceReply};
+use crate::output::{PropertyReply, SubstanceReply};
 use crate::value::Show;
 use std::collections::BTreeMap;
 use std::iter::once;
