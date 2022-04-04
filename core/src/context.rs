@@ -2,12 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{DatePattern, Expr};
-use crate::commands;
-use crate::number::{Dimension, Number, Quantity};
-use crate::numeric::Numeric;
-use crate::reply::NotFoundError;
+use crate::ast::{DatePattern, Expr, Query};
+use crate::number::{Dimension, Number, NumberParts, Quantity};
+use crate::numeric::{Digits, Numeric};
+use crate::reply::{ConversionReply, NotFoundError, QueryError, QueryReply};
 use crate::substance::Substance;
+use crate::types::BigInt;
+use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -296,5 +297,58 @@ impl Context {
     /// `gnu_units::parse()`. Prints if there are errors in the file.
     pub fn load(&mut self, defs: crate::ast::Defs) {
         crate::loader::load_defs(self, defs)
+    }
+
+    /// Evaluates an expression to compute its value, *excluding* `->`
+    /// conversions.
+    pub fn eval(&self, expr: &Expr) -> Result<Value, QueryError> {
+        crate::runtime::eval_expr(self, expr)
+    }
+
+    #[deprecated(since = "0.7.0", note = "renamed to eval_query()")]
+    pub fn eval_outer(&self, query: &Query) -> Result<QueryReply, QueryError> {
+        self.eval_query(query)
+    }
+
+    /// Evaluates an expression, include `->` conversions.
+    pub fn eval_query(&self, query: &Query) -> Result<QueryReply, QueryError> {
+        crate::runtime::eval_query(self, query)
+    }
+
+    pub fn show(
+        &self,
+        raw: &Number,
+        bottom: &Number,
+        bottom_name: BTreeMap<String, isize>,
+        bottom_const: Numeric,
+        base: u8,
+        digits: Digits,
+    ) -> ConversionReply {
+        let (exact, approx) = raw.numeric_value(base, digits);
+        let bottom_name = bottom_name
+            .into_iter()
+            .map(|(a, b)| (Dimension::new(&*a), b as i64))
+            .collect();
+        let (num, den) = bottom_const.to_rational();
+        ConversionReply {
+            value: NumberParts {
+                raw_value: Some(raw.clone()),
+                exact_value: exact,
+                approx_value: approx,
+                factor: if num != BigInt::one() {
+                    Some(num.to_string())
+                } else {
+                    None
+                },
+                divfactor: if den != BigInt::one() {
+                    Some(den.to_string())
+                } else {
+                    None
+                },
+                unit: Some(Number::unit_to_string(&bottom_name)),
+                raw_unit: Some(bottom_name),
+                ..bottom.to_parts(self)
+            },
+        }
     }
 }

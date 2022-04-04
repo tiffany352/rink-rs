@@ -59,7 +59,7 @@ fn test(input: &str, output: &[FlatSpan<'static>]) {
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        let res = ctx.eval_outer(&expr);
+        let res = ctx.eval_query(&expr);
         let res = match res {
             Ok(ref v) => v.to_spans(),
             Err(ref v) => v.to_spans(),

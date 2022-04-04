@@ -17,7 +17,7 @@ fn test(input: &str, output: &str) {
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        let res = ctx.eval_outer(&expr);
+        let res = ctx.eval_query(&expr);
         let res = match res {
             Ok(v) => v.to_string(),
             Err(v) => v.to_string(),
@@ -30,7 +30,7 @@ fn test_starts_with(input: &str, output: &str) {
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        let res = ctx.eval_outer(&expr);
+        let res = ctx.eval_query(&expr);
         let res = match res {
             Ok(v) => v.to_string(),
             Err(v) => v.to_string(),
@@ -308,7 +308,7 @@ fn test_second_double_prefix() {
     let mut iter = text_query::TokenIterator::new("mks").peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        ctx.eval_outer(&expr).unwrap();
+        ctx.eval_query(&expr).unwrap();
     });
 }
 

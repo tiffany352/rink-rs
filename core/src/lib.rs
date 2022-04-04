@@ -42,13 +42,13 @@ extern crate serde_derive;
 pub mod ast;
 pub mod commands;
 pub mod context;
-pub mod eval;
 pub mod fmt;
 pub mod loader;
 pub mod number;
 pub mod numeric;
 pub mod parsing;
 pub mod reply;
+pub mod runtime;
 pub mod substance;
 pub mod types;
 pub mod value;
@@ -75,7 +75,7 @@ pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
     ctx.update_time();
     let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
-    let res = ctx.eval_outer(&expr)?;
+    let res = ctx.eval_query(&expr)?;
     if ctx.save_previous_result {
         if let QueryReply::Number(ref number_parts) = res {
             if let Some(ref raw) = number_parts.raw_value {

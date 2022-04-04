@@ -117,7 +117,7 @@ impl Context {
 
     #[wasm_bindgen]
     pub fn eval(&mut self, expr: &Query) -> JsValue {
-        let value = Success::from(self.context.eval_outer(&expr.query));
+        let value = Success::from(self.context.eval_query(&expr.query));
         match JsValue::from_serde(&value) {
             Ok(value) => value,
             Err(err) => format!("Failed to serialize: {}\n{:#?}", err, value).into(),
