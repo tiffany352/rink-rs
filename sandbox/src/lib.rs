@@ -41,7 +41,7 @@ pub struct Response<Data> {
 }
 
 impl<Data> Response<Data> {
-    /// Replaces the [`result`] with a new value.
+    /// Replaces the [`Response::result`] with a new value.
     pub fn replace<New>(self, result: New) -> Response<New> {
         let Response {
             memory_used,
@@ -57,7 +57,7 @@ impl<Data> Response<Data> {
         }
     }
 
-    /// Replaces the [`result`] with the value returned by func.
+    /// Replaces the [`Response::result`] with the value returned by func.
     pub fn map<New>(self, func: impl FnOnce(Data) -> New) -> Response<New> {
         let Response {
             result,

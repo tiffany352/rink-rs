@@ -178,7 +178,7 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if called after [`terminate`].
+    /// Panics if called after [`Sandbox::terminate`].
     pub async fn execute(&self, req: S::Req) -> Result<Response<S::Res>, Error> {
         if self.terminated {
             panic!("Sandbox::execute() called after terminated");
