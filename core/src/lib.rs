@@ -50,6 +50,3 @@ mod helpers;
 pub use crate::loader::Context;
 pub use crate::runtime::Value;
 pub use helpers::{eval, one_line, simple_context, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
-
-#[deprecated(since = "0.7", note = "import rink_core::types::Number instead")]
-pub use crate::types::Number;
