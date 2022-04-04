@@ -114,7 +114,7 @@ fn check_defs() {
     // Base units.
     assert_json_eq!(
         serde_json::to_value([
-            DefEntry::new("m", Some("base unit of length"), None, Def::Dimension),
+            DefEntry::new("m", Some("base unit of length"), None, Def::BaseUnit),
             DefEntry::new(
                 "meter",
                 None,

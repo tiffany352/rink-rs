@@ -227,7 +227,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     for (name, def) in udefs {
         let name = name.name();
         match *def {
-            Def::Dimension => {
+            Def::BaseUnit => {
                 ctx.dimensions.insert(BaseUnit::new(&*name));
             }
             Def::Canonicalization { ref of } => {

@@ -67,7 +67,9 @@ pub struct Property {
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
 pub enum Def {
-    Dimension,
+    // Named dimension for backwards compat reasons.
+    #[serde(rename = "dimension")]
+    BaseUnit,
     Canonicalization {
         of: String,
     },

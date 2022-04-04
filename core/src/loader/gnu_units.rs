@@ -397,7 +397,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             iter.next();
                             map.push(DefEntry {
                                 name: name.clone(),
-                                def: Rc::new(Def::Dimension),
+                                def: Rc::new(Def::BaseUnit),
                                 doc: doc.take(),
                                 category: category.clone(),
                             });
@@ -410,7 +410,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                         } else {
                             map.push(DefEntry {
                                 name: name.clone(),
-                                def: Rc::new(Def::Dimension),
+                                def: Rc::new(Def::BaseUnit),
                                 doc: doc.take(),
                                 category: category.clone(),
                             });
