@@ -5,7 +5,7 @@
 use super::Context;
 use crate::ast::{BinOpExpr, Def, DefEntry, Defs, Expr};
 use crate::runtime::{Properties, Property, Substance, Value};
-use crate::types::{Dimension, Number, Numeric};
+use crate::types::{BaseUnit, Number, Numeric};
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 use std::sync::Arc;
@@ -228,7 +228,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
         let name = name.name();
         match *def {
             Def::Dimension => {
-                ctx.dimensions.insert(Dimension::new(&*name));
+                ctx.dimensions.insert(BaseUnit::new(&*name));
             }
             Def::Canonicalization { ref of } => {
                 ctx.canonicalizations.insert(of.clone(), name.clone());

@@ -5,7 +5,7 @@
 use crate::ast::{DatePattern, Expr, Query};
 use crate::output::{ConversionReply, NotFoundError, QueryError, QueryReply};
 use crate::runtime::Substance;
-use crate::types::{BigInt, Digits, Dimension, Number, NumberParts, Numeric, Quantity};
+use crate::types::{BaseUnit, BigInt, Digits, Dimensionality, Number, NumberParts, Numeric};
 use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};
 use std::collections::{BTreeMap, BTreeSet};
@@ -13,11 +13,11 @@ use std::collections::{BTreeMap, BTreeSet};
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
 pub struct Context {
-    pub dimensions: BTreeSet<Dimension>,
+    pub dimensions: BTreeSet<BaseUnit>,
     pub canonicalizations: BTreeMap<String, String>,
     pub units: BTreeMap<String, Number>,
-    pub quantities: BTreeMap<Quantity, String>,
-    pub reverse: BTreeMap<Quantity, String>,
+    pub quantities: BTreeMap<Dimensionality, String>,
+    pub reverse: BTreeMap<Dimensionality, String>,
     pub prefixes: Vec<(String, Number)>,
     pub definitions: BTreeMap<String, Expr>,
     pub docs: BTreeMap<String, String>,
@@ -221,13 +221,13 @@ impl Context {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
-            let helper = |dim: &Dimension, pow: i64, buf: &mut Vec<u8>| {
-                let mut map = Quantity::new();
+            let helper = |dim: &BaseUnit, pow: i64, buf: &mut Vec<u8>| {
+                let mut map = Dimensionality::new();
                 map.insert(dim.clone(), pow);
                 if let Some(name) = self.quantities.get(&map) {
                     write!(buf, " {}", name).unwrap();
                 } else {
-                    let mut map = Quantity::new();
+                    let mut map = Dimensionality::new();
                     map.insert(dim.clone(), 1);
                     if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();
@@ -257,7 +257,7 @@ impl Context {
                     write!(buf, " /").unwrap();
                 }
                 for (dim, pow) in frac {
-                    let mut map = Quantity::new();
+                    let mut map = Dimensionality::new();
                     map.insert(dim.clone(), pow);
                     if let Some(name) = self.quantities.get(&map) {
                         write!(buf, " {}", name).unwrap();
@@ -325,7 +325,7 @@ impl Context {
         let (exact, approx) = raw.numeric_value(base, digits);
         let bottom_name = bottom_name
             .into_iter()
-            .map(|(a, b)| (Dimension::new(&*a), b as i64))
+            .map(|(a, b)| (BaseUnit::new(&*a), b as i64))
             .collect();
         let (num, den) = bottom_const.to_rational();
         ConversionReply {

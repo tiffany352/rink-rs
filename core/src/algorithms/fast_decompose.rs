@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::types::{Dimension, Number, Numeric, Quantity};
+use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 
 /// Uses a single-pass algorithm for finding a suitable decomposition. A
 /// more robust one would require factorization, but that's expensive.
@@ -13,7 +13,10 @@ use crate::types::{Dimension, Number, Numeric, Quantity};
 /// "human-friendly" outputs. This means never introducing base units
 /// that only exist to be cancelled out, and avoiding very long or
 /// complex decompositions.
-pub(crate) fn fast_decompose(value: &Number, quantities: &BTreeMap<Quantity, String>) -> Quantity {
+pub(crate) fn fast_decompose(
+    value: &Number,
+    quantities: &BTreeMap<Dimensionality, String>,
+) -> Dimensionality {
     let mut best = None;
     'outer: for (unit, name) in quantities.iter() {
         // make sure we aren't doing something weird like introducing new base units
@@ -47,7 +50,7 @@ pub(crate) fn fast_decompose(value: &Number, quantities: &BTreeMap<Quantity, Str
                 unit: unit.clone(),
             };
             let mut res = (value / &num.powi(pow)).unwrap().unit;
-            res.insert(Dimension::new(&**name), pow as i64);
+            res.insert(BaseUnit::new(&**name), pow as i64);
             return res;
         }
     }

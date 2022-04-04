@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::types::{Number, Numeric, Quantity};
+use crate::types::{Dimensionality, Number, Numeric};
 use std::cmp;
 use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;
@@ -24,7 +24,7 @@ impl cmp::Ord for Factors {
 
 pub fn factorize(
     value: &Number,
-    quantities: &BTreeMap<Quantity, Rc<String>>,
+    quantities: &BTreeMap<Dimensionality, Rc<String>>,
 ) -> BinaryHeap<Factors> {
     if value.dimless() {
         let mut map = BinaryHeap::new();

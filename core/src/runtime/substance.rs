@@ -5,7 +5,7 @@
 use super::Show;
 use crate::loader::Context;
 use crate::output::{PropertyReply, SubstanceReply};
-use crate::types::{Digits, Dimension, Number, Numeric};
+use crate::types::{BaseUnit, Digits, Number, Numeric};
 use std::collections::BTreeMap;
 use std::iter::once;
 use std::ops::{Add, Div, Mul};
@@ -172,7 +172,7 @@ impl Substance {
                                 let mut output_pretty = output;
                                 output_pretty.unit = bottom_name
                                     .iter()
-                                    .map(|(k, v)| (Dimension::new(&k), *v as i64))
+                                    .map(|(k, v)| (BaseUnit::new(&k), *v as i64))
                                     .collect();
                                 let mut res = try_div!(output_pretty, input_pretty, context)
                                     .to_parts(context);
@@ -228,7 +228,7 @@ impl Substance {
                         let mut output_pretty = output;
                         output_pretty.unit = bottom_name
                             .iter()
-                            .map(|(k, v)| (Dimension::new(&k), *v as i64))
+                            .map(|(k, v)| (BaseUnit::new(&k), *v as i64))
                             .collect();
                         let mut res =
                             try_div!(output_pretty, input_pretty, context).to_parts(context);
@@ -416,7 +416,7 @@ impl<'a, 'b> Add<&'b Substance> for &'a Substance {
                             Some(v) => v,
                             None => return None,
                         };
-                        let mol = Number::one_unit(Dimension::new("mol"));
+                        let mol = Number::one_unit(BaseUnit::new("mol"));
                         if prop1.input_name != prop2.input_name
                             || prop1.output_name != prop2.output_name
                             || prop1.input.unit != prop2.input.unit

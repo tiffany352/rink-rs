@@ -5,7 +5,7 @@
 use crate::{
     loader::Context,
     output::SearchReply,
-    types::{Dimension, NumberParts},
+    types::{BaseUnit, NumberParts},
 };
 use std::collections::BTreeMap;
 
@@ -43,7 +43,7 @@ pub fn search(ctx: &Context, query: &str, num_results: usize) -> SearchReply {
                     })
                     .expect("Search returned non-existent result");
                 let mut raw = BTreeMap::new();
-                raw.insert(Dimension::new(name), 1);
+                raw.insert(BaseUnit::new(name), 1);
                 NumberParts {
                     unit: Some(name.to_owned()),
                     raw_unit: Some(raw),

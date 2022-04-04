@@ -12,7 +12,7 @@ use crate::output::{
     UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::types::{Digits, Dimension, GenericDateTime, Number, NumberParts, Numeric};
+use crate::types::{BaseUnit, Digits, GenericDateTime, Number, NumberParts, Numeric};
 use chrono::{DateTime, FixedOffset};
 use std::collections::BTreeMap;
 use std::rc::Rc;
@@ -40,7 +40,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                     .map(Value::Substance)
             })
             .ok_or_else(|| QueryError::NotFound(ctx.unknown_unit_err(name))),
-        Expr::Quote { ref string } => Ok(Value::Number(Number::one_unit(Dimension::new(string)))),
+        Expr::Quote { ref string } => Ok(Value::Number(Number::one_unit(BaseUnit::new(string)))),
         Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
         Expr::Date { ref tokens } => match datetime::try_decode(tokens, ctx) {
             Ok(date) => Ok(Value::DateTime(date)),
@@ -614,7 +614,7 @@ fn to_list(ctx: &Context, top: &Number, list: &[&str]) -> Result<Vec<NumberParts
         .map(|(name, value)| {
             let raw_number = Number {
                 value,
-                unit: Number::one_unit(Dimension::new(name)).unit,
+                unit: Number::one_unit(BaseUnit::new(name)).unit,
             };
             let pretty = raw_number.to_parts(ctx);
             let unit: String = pretty
@@ -623,7 +623,7 @@ fn to_list(ctx: &Context, top: &Number, list: &[&str]) -> Result<Vec<NumberParts
                 .map(|x| ctx.canonicalize(&*x).unwrap_or(x))
                 .expect("to_parts returned no dimensions");
             let mut raw = BTreeMap::new();
-            raw.insert(Dimension::new(&unit), 1);
+            raw.insert(BaseUnit::new(&unit), 1);
             NumberParts {
                 raw_value: Some(raw_number),
                 unit: Some(unit),
@@ -1081,7 +1081,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
         | Query::Convert(ref expr, Conversion::None, None, Digits::Default) => {
             let val = eval_expr(ctx, expr)?;
             match val {
-                Value::Number(ref n) if n.unit == Number::one_unit(Dimension::new("s")).unit => {
+                Value::Number(ref n) if n.unit == Number::one_unit(BaseUnit::new("s")).unit => {
                     let units = &["year", "week", "day", "hour", "minute", "second"];
                     let list = to_list(ctx, &n, units)?;
                     let mut list = list.into_iter();
@@ -1094,7 +1094,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                             unit: Some("month".to_owned()),
                             raw_unit: Some({
                                 let mut raw = BTreeMap::new();
-                                raw.insert(Dimension::new("month"), 1);
+                                raw.insert(BaseUnit::new("month"), 1);
                                 raw
                             }),
                             ..Default::default()

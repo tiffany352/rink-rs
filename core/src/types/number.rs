@@ -14,12 +14,12 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::sync::Arc;
 
 /// Alias for the primary representation of dimensionality.
-pub type Quantity = BTreeMap<Dimension, i64>;
+pub type Dimensionality = BTreeMap<BaseUnit, i64>;
 
 /// A newtype for a string dimension ID, so that we can implement traits for it.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[serde(transparent)]
-pub struct Dimension {
+pub struct BaseUnit {
     pub id: Arc<String>,
 }
 
@@ -28,24 +28,24 @@ pub struct Dimension {
 #[serde(rename_all = "camelCase")]
 pub struct Number {
     pub value: Numeric,
-    pub unit: Quantity,
+    pub unit: Dimensionality,
 }
 
-impl Borrow<str> for Dimension {
+impl Borrow<str> for BaseUnit {
     fn borrow(&self) -> &str {
         &**self.id
     }
 }
 
-impl fmt::Display for Dimension {
+impl fmt::Display for BaseUnit {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.id.fmt(fmt)
     }
 }
 
-impl Dimension {
-    pub fn new(dim: &str) -> Dimension {
-        Dimension {
+impl BaseUnit {
+    pub fn new(dim: &str) -> BaseUnit {
+        BaseUnit {
             id: Arc::new(dim.to_owned()),
         }
     }
@@ -69,7 +69,7 @@ pub struct NumberParts {
     /// Divisor factor, if not one.
     pub divfactor: Option<String>,
     /// High-level unit decomposition, in format that can be manipulated.
-    pub raw_unit: Option<Quantity>,
+    pub raw_unit: Option<Dimensionality>,
     /// Higher-level unit decomposition, if available.
     pub unit: Option<String>,
     /// The physical quantity associated with the unit, if available.
@@ -77,7 +77,7 @@ pub struct NumberParts {
     /// The dimensionality of the unit.
     pub dimensions: Option<String>,
     /// Map of base units and their dimensions.
-    pub raw_dimensions: Option<Quantity>,
+    pub raw_dimensions: Option<Dimensionality>,
 }
 
 pub struct NumberPartsFmt<'a> {
@@ -565,18 +565,18 @@ impl Number {
     pub fn one() -> Number {
         Number {
             value: Numeric::one(),
-            unit: Quantity::new(),
+            unit: Dimensionality::new(),
         }
     }
 
-    pub fn one_unit(unit: Dimension) -> Number {
+    pub fn one_unit(unit: BaseUnit) -> Number {
         Number::new_unit(Numeric::one(), unit)
     }
 
     pub fn zero() -> Number {
         Number {
             value: Numeric::zero(),
-            unit: Quantity::new(),
+            unit: Dimensionality::new(),
         }
     }
 
@@ -584,13 +584,13 @@ impl Number {
     pub fn new(num: Numeric) -> Number {
         Number {
             value: num,
-            unit: Quantity::new(),
+            unit: Dimensionality::new(),
         }
     }
 
     /// Creates a value with a single dimension.
-    pub fn new_unit(num: Numeric, unit: Dimension) -> Number {
-        let mut map = Quantity::new();
+    pub fn new_unit(num: Numeric, unit: BaseUnit) -> Number {
+        let mut map = Dimensionality::new();
         map.insert(unit, 1);
         Number {
             value: num,
@@ -640,7 +640,7 @@ impl Number {
                 .unit
                 .iter()
                 .map(|(k, &power)| (k.clone(), -power))
-                .collect::<Quantity>(),
+                .collect::<Dimensionality>(),
         }
     }
 
@@ -650,7 +650,7 @@ impl Number {
             .unit
             .iter()
             .map(|(k, &power)| (k.clone(), power * exp as i64))
-            .collect::<Quantity>();
+            .collect::<Dimensionality>();
         Number {
             value: self.value.pow(exp),
             unit,
@@ -663,7 +663,7 @@ impl Number {
         if self.value < Numeric::zero() {
             return Err("Complex numbers are not implemented".to_string());
         }
-        let mut res = Quantity::new();
+        let mut res = Dimensionality::new();
         for (dim, &power) in &self.unit {
             if power % exp as i64 != 0 {
                 return Err("Result must have integer dimensions".to_string());
@@ -736,7 +736,7 @@ impl Number {
             let (val, orig) = if &**(orig.0).id == "kg" || &**(orig.0).id == "kilogram" {
                 (
                     &self.value * &Numeric::from(1000).pow((*orig.1) as i32),
-                    (Dimension::new("gram"), orig.1),
+                    (BaseUnit::new("gram"), orig.1),
                 )
             } else {
                 (self.value.clone(), (orig.0.clone(), orig.1))
@@ -757,7 +757,7 @@ impl Number {
                         format!("{}{}", p, orig.0)
                     };
                     let mut map = BTreeMap::new();
-                    map.insert(Dimension::new(&*unit), *orig.1);
+                    map.insert(BaseUnit::new(&*unit), *orig.1);
                     return Number {
                         value: res,
                         unit: map,
@@ -817,7 +817,7 @@ impl Number {
         }
     }
 
-    pub fn unit_to_string(unit: &Quantity) -> String {
+    pub fn unit_to_string(unit: &Dimensionality) -> String {
         use std::io::Write;
 
         let mut out = vec![];
@@ -850,7 +850,7 @@ impl Number {
         String::from_utf8(out).unwrap()
     }
 
-    fn pretty_unit(&self, context: &Context) -> Quantity {
+    fn pretty_unit(&self, context: &Context) -> Dimensionality {
         let pretty = crate::algorithms::fast_decompose(self, &context.reverse);
         pretty
             .into_iter()
@@ -859,7 +859,7 @@ impl Number {
                     context
                         .canonicalizations
                         .get(&*k.id)
-                        .map(|x| Dimension::new(x))
+                        .map(|x| BaseUnit::new(x))
                         .unwrap_or(k),
                     p,
                 )

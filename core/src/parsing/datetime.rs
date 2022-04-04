@@ -4,7 +4,7 @@
 
 use crate::ast::{DatePattern, DateToken};
 use crate::loader::Context;
-use crate::types::{BigInt, BigRat, Dimension, GenericDateTime, Number, Numeric};
+use crate::types::{BaseUnit, BigInt, BigRat, GenericDateTime, Number, Numeric};
 use chrono::format::Parsed;
 use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
 use chrono_tz::Tz;
@@ -412,7 +412,7 @@ pub fn from_duration(duration: &Duration) -> Result<Number, String> {
     let ns = BigRat::ratio(&BigInt::from(ns), &ns_div);
     Ok(Number::new_unit(
         Numeric::Rational(&ms + &ns),
-        Dimension::new("s"),
+        BaseUnit::new("s"),
     ))
 }
 
