@@ -5,9 +5,11 @@
 mod bigint;
 mod bigrat;
 mod date;
+mod number;
 mod numeric;
 
 pub use bigint::{BigInt, BigIntError};
 pub use bigrat::BigRat;
 pub use date::GenericDateTime;
+pub use number::{Dimension, Number, NumberParts, NumberPartsFmt, Quantity};
 pub use numeric::{Digits, Numeric, NumericParts};

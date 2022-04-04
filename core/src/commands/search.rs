@@ -4,8 +4,8 @@
 
 use crate::{
     loader::Context,
-    number::{Dimension, NumberParts},
     output::SearchReply,
+    types::{Dimension, NumberParts},
 };
 use std::collections::BTreeMap;
 

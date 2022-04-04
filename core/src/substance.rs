@@ -3,10 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::loader::Context;
-use crate::number::{Dimension, Number};
 use crate::output::{PropertyReply, SubstanceReply};
 use crate::runtime::Show;
-use crate::types::{Digits, Numeric};
+use crate::types::{Digits, Dimension, Number, Numeric};
 use std::collections::BTreeMap;
 use std::iter::once;
 use std::ops::{Add, Div, Mul};

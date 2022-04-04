@@ -229,6 +229,21 @@ impl Numeric {
             Numeric::Float(_f) => (None, Some(self.to_string(base, digits).1)),
         }
     }
+
+    pub fn pow(&self, exp: i32) -> Numeric {
+        if exp < 0 {
+            &Numeric::one() / &self.pow(-exp)
+        } else {
+            match *self {
+                Numeric::Rational(ref value) => {
+                    let num = value.numer().pow(exp as u32);
+                    let den = value.denom().pow(exp as u32);
+                    Numeric::Rational(BigRat::ratio(&num, &den))
+                }
+                Numeric::Float(value) => Numeric::Float(value.powi(exp)),
+            }
+        }
+    }
 }
 
 impl From<BigRat> for Numeric {

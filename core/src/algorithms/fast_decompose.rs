@@ -4,11 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::{
-    number::{Dimension, Quantity},
-    types::Numeric,
-    Number,
-};
+use crate::types::{Dimension, Number, Numeric, Quantity};
 
 /// Uses a single-pass algorithm for finding a suitable decomposition. A
 /// more robust one would require factorization, but that's expensive.

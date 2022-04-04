@@ -208,7 +208,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             }
             _ => Expr::new_unit(name),
         },
-        Token::Number(num, frac, exp) => crate::number::Number::from_parts(
+        Token::Number(num, frac, exp) => crate::types::Number::from_parts(
             &*num,
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),

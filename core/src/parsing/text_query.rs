@@ -528,7 +528,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             }
         }
         Token::Quote(string) => Expr::Quote { string },
-        Token::Decimal(num, frac, exp) => crate::number::Number::from_parts(
+        Token::Decimal(num, frac, exp) => crate::types::Number::from_parts(
             &*num,
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),

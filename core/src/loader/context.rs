@@ -3,10 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{DatePattern, Expr, Query};
-use crate::number::{Dimension, Number, NumberParts, Quantity};
 use crate::output::{ConversionReply, NotFoundError, QueryError, QueryReply};
 use crate::substance::Substance;
-use crate::types::{BigInt, Digits, Numeric};
+use crate::types::{BigInt, Digits, Dimension, Number, NumberParts, Numeric, Quantity};
 use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};
 use std::collections::{BTreeMap, BTreeSet};

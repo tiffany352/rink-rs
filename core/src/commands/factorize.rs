@@ -2,8 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::number::{Number, Quantity};
-use crate::types::Numeric;
+use crate::types::{Number, Numeric, Quantity};
 use std::cmp;
 use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;

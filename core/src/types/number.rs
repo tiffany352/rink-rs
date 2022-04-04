@@ -51,20 +51,6 @@ impl Dimension {
     }
 }
 
-pub fn pow(left: &Numeric, exp: i32) -> Numeric {
-    if exp < 0 {
-        &Numeric::one() / &pow(left, -exp)
-    } else {
-        let left = match *left {
-            Numeric::Rational(ref left) => left,
-            Numeric::Float(f) => return Numeric::Float(f.powi(exp)),
-        };
-        let num = left.numer().pow(exp as u32);
-        let den = left.denom().pow(exp as u32);
-        Numeric::Rational(BigRat::ratio(&num, &den))
-    }
-}
-
 /// Several stringified properties of a number which are useful for
 /// displaying it to a user.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -666,7 +652,7 @@ impl Number {
             .map(|(k, &power)| (k.clone(), power * exp as i64))
             .collect::<Quantity>();
         Number {
-            value: pow(&self.value, exp),
+            value: self.value.pow(exp),
             unit,
         }
     }
@@ -749,7 +735,7 @@ impl Number {
             // kg special case
             let (val, orig) = if &**(orig.0).id == "kg" || &**(orig.0).id == "kilogram" {
                 (
-                    &self.value * &pow(&Numeric::from(1000), (*orig.1) as i32),
+                    &self.value * &Numeric::from(1000).pow((*orig.1) as i32),
                     (Dimension::new("gram"), orig.1),
                 )
             } else {
@@ -760,10 +746,10 @@ impl Number {
                     continue;
                 }
                 let abs = val.abs();
-                if abs >= pow(&v.value, (*orig.1) as i32)
-                    && abs < pow(&(&v.value * &Numeric::from(1000)), (*orig.1) as i32)
+                if abs >= v.value.pow((*orig.1) as i32)
+                    && abs < (&v.value * &Numeric::from(1000)).pow((*orig.1) as i32)
                 {
-                    let res = &val / &pow(&v.value, (*orig.1) as i32);
+                    let res = &val / &v.value.pow((*orig.1) as i32);
                     // tonne special case
                     let unit = if &**(orig.0).id == "gram" && p == "mega" {
                         "tonne".to_string()

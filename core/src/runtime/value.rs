@@ -3,10 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::loader::Context;
-use crate::number::Number;
 use crate::parsing::datetime;
 use crate::substance::Substance;
-use crate::types::GenericDateTime;
+use crate::types::{GenericDateTime, Number};
 use chrono::{DateTime, FixedOffset};
 use chrono_tz::Tz;
 use std::ops::{Add, Div, Mul, Neg, Sub};

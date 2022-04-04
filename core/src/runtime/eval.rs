@@ -6,7 +6,6 @@ use super::{Show, Value};
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::commands;
 use crate::loader::Context;
-use crate::number::{pow, Dimension, Number, NumberParts};
 use crate::output::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
     Factorization, FactorizeReply, QueryError, QueryReply, UnitListReply, UnitsForReply,
@@ -15,6 +14,7 @@ use crate::output::{
 use crate::parsing::{datetime, formula};
 use crate::substance::SubstanceGetError;
 use crate::types::{Digits, GenericDateTime, Numeric};
+use crate::types::{Dimension, Number, NumberParts};
 use chrono::{DateTime, FixedOffset};
 use std::collections::BTreeMap;
 use std::rc::Rc;
@@ -468,7 +468,7 @@ pub fn eval_unit_name(
                             }
                         })
                         .collect::<BTreeMap<_, _>>(),
-                    pow(&left_value, right as i32),
+                    left_value.pow(right as i32),
                 ))
             }
         },

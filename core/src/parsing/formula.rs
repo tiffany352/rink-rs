@@ -2,9 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::number::{Dimension, Number};
 use crate::substance::{Properties, Property, Substance};
-use crate::types::Numeric;
+use crate::types::{Dimension, Number, Numeric};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::str::{Chars, FromStr};
