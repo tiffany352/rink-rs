@@ -865,7 +865,7 @@ impl Number {
     }
 
     fn pretty_unit(&self, context: &Context) -> Quantity {
-        let pretty = crate::commands::fast_decompose(self, &context.reverse);
+        let pretty = crate::algorithms::fast_decompose(self, &context.reverse);
         pretty
             .into_iter()
             .map(|(k, p)| {
