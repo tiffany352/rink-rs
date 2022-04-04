@@ -42,7 +42,6 @@ pub mod loader;
 pub mod output;
 pub mod parsing;
 pub mod runtime;
-pub mod substance;
 pub mod types;
 
 pub(crate) mod algorithms;

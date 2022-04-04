@@ -4,10 +4,8 @@
 
 use super::Context;
 use crate::ast::{BinOpExpr, Def, DefEntry, Defs, Expr};
-use crate::runtime::Value;
-use crate::substance::{Properties, Property, Substance};
-use crate::types::Numeric;
-use crate::types::{Dimension, Number};
+use crate::runtime::{Properties, Property, Substance, Value};
+use crate::types::{Dimension, Number, Numeric};
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 use std::sync::Arc;

@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use super::{Show, Value};
+use super::{Show, SubstanceGetError, Value};
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::commands;
 use crate::loader::Context;
@@ -12,9 +12,7 @@ use crate::output::{
     UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::substance::SubstanceGetError;
-use crate::types::{Digits, GenericDateTime, Numeric};
-use crate::types::{Dimension, Number, NumberParts};
+use crate::types::{Digits, Dimension, GenericDateTime, Number, NumberParts, Numeric};
 use chrono::{DateTime, FixedOffset};
 use std::collections::BTreeMap;
 use std::rc::Rc;

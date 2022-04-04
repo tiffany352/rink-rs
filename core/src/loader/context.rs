@@ -4,7 +4,7 @@
 
 use crate::ast::{DatePattern, Expr, Query};
 use crate::output::{ConversionReply, NotFoundError, QueryError, QueryReply};
-use crate::substance::Substance;
+use crate::runtime::Substance;
 use crate::types::{BigInt, Digits, Dimension, Number, NumberParts, Numeric, Quantity};
 use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};

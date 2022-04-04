@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use super::Substance;
 use crate::loader::Context;
 use crate::parsing::datetime;
-use crate::substance::Substance;
 use crate::types::{GenericDateTime, Number};
 use chrono::{DateTime, FixedOffset};
 use chrono_tz::Tz;
