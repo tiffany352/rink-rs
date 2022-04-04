@@ -40,7 +40,6 @@ pub mod ast;
 pub mod commands;
 pub mod loader;
 pub mod number;
-pub mod numeric;
 pub mod output;
 pub mod parsing;
 pub mod runtime;

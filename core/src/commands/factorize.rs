@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::number::{Number, Quantity};
-use crate::numeric::Numeric;
+use crate::types::Numeric;
 use std::cmp;
 use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;

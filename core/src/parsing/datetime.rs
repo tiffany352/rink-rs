@@ -5,8 +5,7 @@
 use crate::ast::{DatePattern, DateToken};
 use crate::loader::Context;
 use crate::number::{Dimension, Number};
-use crate::numeric::Numeric;
-use crate::types::{BigInt, BigRat, GenericDateTime};
+use crate::types::{BigInt, BigRat, GenericDateTime, Numeric};
 use chrono::format::Parsed;
 use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
 use chrono_tz::Tz;

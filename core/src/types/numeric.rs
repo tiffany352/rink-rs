@@ -47,12 +47,10 @@ pub struct NumericParts {
 impl Numeric {
     pub fn one() -> Numeric {
         Numeric::Rational(BigRat::one())
-        //Num::Int(1)
     }
 
     pub fn zero() -> Numeric {
         Numeric::Rational(BigRat::zero())
-        //Num::Int(0)
     }
 
     pub fn abs(&self) -> Numeric {

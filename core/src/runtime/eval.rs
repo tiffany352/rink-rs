@@ -7,7 +7,6 @@ use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryO
 use crate::commands;
 use crate::loader::Context;
 use crate::number::{pow, Dimension, Number, NumberParts};
-use crate::numeric::{Digits, Numeric};
 use crate::output::{
     ConformanceError, ConversionReply, DateReply, DefReply, DurationReply, ExprReply,
     Factorization, FactorizeReply, QueryError, QueryReply, UnitListReply, UnitsForReply,
@@ -15,7 +14,7 @@ use crate::output::{
 };
 use crate::parsing::{datetime, formula};
 use crate::substance::SubstanceGetError;
-use crate::types::GenericDateTime;
+use crate::types::{Digits, GenericDateTime, Numeric};
 use chrono::{DateTime, FixedOffset};
 use std::collections::BTreeMap;
 use std::rc::Rc;

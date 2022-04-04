@@ -5,7 +5,9 @@
 mod bigint;
 mod bigrat;
 mod date;
+mod numeric;
 
 pub use bigint::{BigInt, BigIntError};
 pub use bigrat::BigRat;
 pub use date::GenericDateTime;
+pub use numeric::{Digits, Numeric, NumericParts};

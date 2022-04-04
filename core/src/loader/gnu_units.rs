@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::*;
-use crate::numeric::Numeric;
+use crate::types::Numeric;
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::rc::Rc;

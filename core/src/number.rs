@@ -3,10 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::loader::Context;
-use crate::numeric::{Digits, Numeric};
 use crate::output::fmt::{Span, TokenFmt};
 use crate::runtime::Show;
-use crate::types::{BigInt, BigRat};
+use crate::types::{BigInt, BigRat, Digits, Numeric};
 use serde_derive::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::collections::BTreeMap;

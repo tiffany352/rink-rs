@@ -4,10 +4,9 @@
 
 use crate::ast::{DatePattern, Expr, Query};
 use crate::number::{Dimension, Number, NumberParts, Quantity};
-use crate::numeric::{Digits, Numeric};
 use crate::output::{ConversionReply, NotFoundError, QueryError, QueryReply};
 use crate::substance::Substance;
-use crate::types::BigInt;
+use crate::types::{BigInt, Digits, Numeric};
 use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};
 use std::collections::{BTreeMap, BTreeSet};

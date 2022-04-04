@@ -5,7 +5,7 @@
 use super::fmt::{flat_join, join, Span, TokenFmt};
 use crate::ast::{Expr, Precedence, UnaryOpType};
 use crate::number::NumberParts;
-use crate::numeric::Digits;
+use crate::types::Digits;
 use chrono::{DateTime, TimeZone};
 use serde_derive::Serialize;
 use std::collections::BTreeMap;

@@ -4,9 +4,9 @@
 
 use crate::loader::Context;
 use crate::number::{Dimension, Number};
-use crate::numeric::{Digits, Numeric};
 use crate::output::{PropertyReply, SubstanceReply};
 use crate::runtime::Show;
+use crate::types::{Digits, Numeric};
 use std::collections::BTreeMap;
 use std::iter::once;
 use std::ops::{Add, Div, Mul};

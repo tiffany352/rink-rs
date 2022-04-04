@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 
 use crate::{
     number::{Dimension, Quantity},
-    numeric::Numeric,
+    types::Numeric,
     Number,
 };
 
