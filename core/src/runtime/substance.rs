@@ -172,7 +172,7 @@ impl Substance {
                                 let mut output_pretty = output;
                                 output_pretty.unit = bottom_name
                                     .iter()
-                                    .map(|(k, v)| (BaseUnit::new(&k), *v as i64))
+                                    .map(|(k, v)| (BaseUnit::new(k), *v as i64))
                                     .collect();
                                 let mut res = try_div!(output_pretty, input_pretty, context)
                                     .to_parts(context);
@@ -228,7 +228,7 @@ impl Substance {
                         let mut output_pretty = output;
                         output_pretty.unit = bottom_name
                             .iter()
-                            .map(|(k, v)| (BaseUnit::new(&k), *v as i64))
+                            .map(|(k, v)| (BaseUnit::new(k), *v as i64))
                             .collect();
                         let mut res =
                             try_div!(output_pretty, input_pretty, context).to_parts(context);

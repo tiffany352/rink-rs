@@ -60,15 +60,15 @@ impl Number {
         use std::str::FromStr;
 
         let num = BigInt::from_str_radix(integer, 10).unwrap();
-        let frac = if let Some(ref frac) = frac {
+        let frac = if let Some(frac) = frac {
             let frac_digits = frac.len();
-            let frac = BigInt::from_str_radix(&*frac, 10).unwrap();
+            let frac = BigInt::from_str_radix(frac, 10).unwrap();
             BigRat::ratio(&frac, &BigInt::from(10u64).pow(frac_digits as u32))
         } else {
             BigRat::zero()
         };
-        let exp = if let Some(ref exp) = exp {
-            let exp: i32 = match FromStr::from_str(&*exp) {
+        let exp = if let Some(exp) = exp {
+            let exp: i32 = match FromStr::from_str(exp) {
                 Ok(exp) => exp,
                 // presumably because it is too large
                 Err(e) => return Err(format!("Failed to parse exponent: {}", e)),

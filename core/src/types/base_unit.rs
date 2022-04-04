@@ -31,8 +31,4 @@ impl BaseUnit {
     pub fn as_str(&self) -> &str {
         &self.id[..]
     }
-
-    pub fn to_string(&self) -> String {
-        self.as_str().to_owned()
-    }
 }

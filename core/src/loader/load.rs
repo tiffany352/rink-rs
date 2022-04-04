@@ -232,7 +232,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
             }
             Def::Canonicalization { ref of } => {
                 ctx.canonicalizations.insert(of.clone(), name.clone());
-                match ctx.lookup(&of) {
+                match ctx.lookup(of) {
                     Some(v) => {
                         ctx.definitions
                             .insert(name.clone(), Expr::new_unit(of.clone()));

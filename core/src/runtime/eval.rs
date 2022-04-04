@@ -592,7 +592,7 @@ fn to_list(ctx: &Context, top: &Number, list: &[&str]) -> Result<Vec<NumberParts
             .collect::<Result<Vec<()>, _>>()?;
         if top.unit != first.unit {
             return Err(QueryError::Conformance(Box::new(conformance_err(
-                ctx, &top, &first,
+                ctx, top, first,
             ))));
         }
     }
@@ -909,7 +909,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 .expect(&*format!("Unit {} missing", scale));
             if top.unit != bottom.unit {
                 Err(QueryError::Conformance(Box::new(conformance_err(
-                    ctx, &top, &bottom,
+                    ctx, top, &bottom,
                 ))))
             } else {
                 let res = (top
@@ -1083,7 +1083,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             match val {
                 Value::Number(ref n) if n.unit == Number::one_unit(BaseUnit::new("s")).unit => {
                     let units = &["year", "week", "day", "hour", "minute", "second"];
-                    let list = to_list(ctx, &n, units)?;
+                    let list = to_list(ctx, n, units)?;
                     let mut list = list.into_iter();
                     Ok(QueryReply::Duration(Box::new(DurationReply {
                         raw: n.to_parts(ctx),

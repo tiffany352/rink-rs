@@ -103,7 +103,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 None => Token::Error("Unexpected EOF".to_string()),
             },
             '#' => {
-                while let Some(c) = self.0.next() {
+                for c in self.0.by_ref() {
                     if c == '\n' {
                         break;
                     }
