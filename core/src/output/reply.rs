@@ -3,6 +3,7 @@ use crate::ast::{Expr, Precedence, UnaryOpType};
 use crate::number::NumberParts;
 use crate::numeric::Digits;
 use chrono::{DateTime, TimeZone};
+use serde_derive::Serialize;
 use std::collections::BTreeMap;
 use std::convert::From;
 use std::fmt::{Display, Formatter, Result as FmtResult};

@@ -7,6 +7,7 @@ use crate::numeric::*;
 use crate::output::fmt::{Span, TokenFmt};
 use crate::runtime::Show;
 use crate::types::{BigInt, BigRat};
+use serde_derive::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::fmt;

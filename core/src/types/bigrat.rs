@@ -5,6 +5,7 @@
 use num::cast::ToPrimitive;
 use num::rational::BigRational as NumRat;
 use num::traits::{sign::Signed, One, Zero};
+use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ord;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};

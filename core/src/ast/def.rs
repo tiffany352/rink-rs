@@ -1,5 +1,6 @@
 use super::*;
-use crate::text_query::{parse_expr, Token, TokenIterator};
+use crate::parsing::text_query::{parse_expr, Token, TokenIterator};
+use serde_derive::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::ops::Deref;
 use std::rc::Rc;

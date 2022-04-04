@@ -1,4 +1,5 @@
 use super::*;
+use serde_derive::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
 pub enum Conversion {

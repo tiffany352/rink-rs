@@ -4,6 +4,7 @@
 
 use crate::numeric::{Digits, Numeric};
 use chrono_tz::Tz;
+use serde_derive::Serialize;
 use std::fmt;
 
 mod def;
