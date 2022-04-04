@@ -1,15 +1,15 @@
 <script lang="typescript">
-  import type { Quantity } from "../util/reply";
+  import type { Dimensionality } from "../util/reply";
 
-  export let quantity: Quantity;
+  export let quantity: Dimensionality;
 
-  type QuantityArray = [string, number][];
+  type DimensionalityArray = [string, number][];
 
   function readUnits(
-    quantity: Quantity
-  ): { numer: QuantityArray; denom: QuantityArray } {
-    const numer: QuantityArray = [];
-    const denom: QuantityArray = [];
+    quantity: Dimensionality
+  ): { numer: DimensionalityArray; denom: DimensionalityArray } {
+    const numer: DimensionalityArray = [];
+    const denom: DimensionalityArray = [];
     if (quantity) {
       for (const [dim, pow] of Object.entries(quantity)) {
         if (pow > 0) {

@@ -4,7 +4,7 @@ export interface DefBase {
   category: string | null;
 }
 
-export interface Dimension extends DefBase {
+export interface BaseUnit extends DefBase {
   type: "dimension";
 }
 
@@ -59,7 +59,7 @@ export interface Error extends DefBase {
 }
 
 export type Def =
-  | Dimension
+  | BaseUnit
   | Canonicalization
   | Prefix
   | SPrefix
