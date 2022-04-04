@@ -20,7 +20,7 @@ pub(crate) fn fast_decompose(
     let mut best = None;
     'outer: for (unit, name) in quantities.iter() {
         // make sure we aren't doing something weird like introducing new base units
-        for (dim, pow) in unit {
+        for (dim, pow) in unit.iter() {
             let vpow = value.unit.get(dim).cloned().unwrap_or(0);
             let snum = (vpow - pow).signum();
             if snum != 0 && snum != vpow.signum() {

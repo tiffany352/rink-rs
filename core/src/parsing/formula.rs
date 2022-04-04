@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::runtime::{Properties, Property, Substance};
-use crate::types::{BaseUnit, Number, Numeric};
+use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::str::{Chars, FromStr};
@@ -60,7 +60,7 @@ pub fn substance_from_formula(
     symbols: &BTreeMap<String, String>,
     substances: &BTreeMap<String, Substance>,
 ) -> Option<Substance> {
-    let mut molar_mass_unit = BTreeMap::new();
+    let mut molar_mass_unit = Dimensionality::new();
     molar_mass_unit.insert(BaseUnit::new("kg"), 1);
     molar_mass_unit.insert(BaseUnit::new("mol"), -1);
     let mut total_molar_mass = Number {

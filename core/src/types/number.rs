@@ -2,18 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use super::BaseUnit;
+use super::{BaseUnit, Dimensionality};
 use crate::loader::Context;
 use crate::output::{Digits, NumberParts};
 use crate::runtime::Show;
 use crate::types::{BigInt, BigRat, Numeric};
 use serde_derive::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
-
-/// Alias for the primary representation of dimensionality.
-pub type Dimensionality = BTreeMap<BaseUnit, i64>;
 
 /// The basic representation of a number with a unit.
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
@@ -126,7 +122,7 @@ impl Number {
             return Err("Complex numbers are not implemented".to_string());
         }
         let mut res = Dimensionality::new();
-        for (dim, &power) in &self.unit {
+        for (dim, &power) in self.unit.iter() {
             if power % exp as i64 != 0 {
                 return Err("Result must have integer dimensions".to_string());
             } else {
@@ -218,7 +214,7 @@ impl Number {
                     } else {
                         format!("{}{}", p, orig.0)
                     };
-                    let mut map = BTreeMap::new();
+                    let mut map = Dimensionality::new();
                     map.insert(BaseUnit::new(&*unit), *orig.1);
                     return Number {
                         value: res,
@@ -226,7 +222,7 @@ impl Number {
                     };
                 }
             }
-            let mut map = BTreeMap::new();
+            let mut map = Dimensionality::new();
             map.insert(orig.0.clone(), *orig.1);
             Number {
                 value: val,
@@ -285,7 +281,7 @@ impl Number {
         let mut out = vec![];
         let mut frac = vec![];
 
-        for (dim, &exp) in unit {
+        for (dim, &exp) in unit.iter() {
             if exp < 0 {
                 frac.push((dim, exp));
             } else {
@@ -326,7 +322,7 @@ impl Number {
                     p,
                 )
             })
-            .collect::<BTreeMap<_, _>>()
+            .collect::<Dimensionality>()
     }
 
     pub fn complexity_score(&self) -> i64 {
@@ -405,7 +401,7 @@ impl<'a, 'b> Mul<&'b Number> for &'a Number {
         });
         Some(Number {
             value: &self.value * &other.value,
-            unit: val,
+            unit: val.into(),
         })
     }
 }

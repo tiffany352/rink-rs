@@ -12,7 +12,7 @@ use crate::output::{
     UnitsForReply, UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::types::{BaseUnit, GenericDateTime, Number, Numeric};
+use crate::types::{BaseUnit, Dimensionality, GenericDateTime, Number, Numeric};
 use chrono::{DateTime, FixedOffset};
 use std::collections::BTreeMap;
 use std::rc::Rc;
@@ -105,7 +105,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                         )))
                     }
                 };
-                if expr.unit != BTreeMap::new() {
+                if expr.unit != Dimensionality::new() {
                     Err(QueryError::generic(format!(
                         "Expected dimensionless, got: <{}>",
                         expr.show(ctx)
@@ -622,7 +622,7 @@ fn to_list(ctx: &Context, top: &Number, list: &[&str]) -> Result<Vec<NumberParts
                 .or(pretty.dimensions)
                 .map(|x| ctx.canonicalize(&*x).unwrap_or(x))
                 .expect("to_parts returned no dimensions");
-            let mut raw = BTreeMap::new();
+            let mut raw = Dimensionality::new();
             raw.insert(BaseUnit::new(&unit), 1);
             NumberParts {
                 raw_value: Some(raw_number),
@@ -1093,7 +1093,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                             exact_value: Some("0".to_owned()),
                             unit: Some("month".to_owned()),
                             raw_unit: Some({
-                                let mut raw = BTreeMap::new();
+                                let mut raw = Dimensionality::new();
                                 raw.insert(BaseUnit::new("month"), 1);
                                 raw
                             }),

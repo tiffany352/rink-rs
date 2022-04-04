@@ -242,7 +242,7 @@ impl Context {
 
             let mut frac = vec![];
             let mut found = false;
-            for (dim, &pow) in &value.unit {
+            for (dim, &pow) in value.unit.iter() {
                 if pow < 0 {
                     frac.push((dim, -pow));
                 } else {

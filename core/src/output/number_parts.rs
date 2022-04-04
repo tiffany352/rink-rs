@@ -97,7 +97,7 @@ impl NumberParts {
                             toks.push("*".to_string());
                             toks.push(f.to_string());
                         }
-                        for (dim, &exp) in unit {
+                        for (dim, &exp) in unit.iter() {
                             if exp < 0 {
                                 frac.push((dim, exp));
                             } else if exp == 1 {
@@ -364,7 +364,7 @@ impl<'a> NumberPartsFmt<'a> {
                             last_was_ws = true;
                         }
                         let mut first = true;
-                        for (dim, &exp) in unit {
+                        for (dim, &exp) in unit.iter() {
                             if exp < 0 {
                                 frac.push((dim, exp));
                             } else {
