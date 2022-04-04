@@ -275,7 +275,7 @@ impl Context {
     }
 
     pub fn typo_dym<'a>(&'a self, what: &str) -> Option<&'a str> {
-        commands::search_impl(self, what, 1).into_iter().next()
+        commands::search_internal(self, what, 1).into_iter().next()
     }
 
     pub fn unknown_unit_err(&self, name: &str) -> NotFoundError {
