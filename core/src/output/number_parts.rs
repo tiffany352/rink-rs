@@ -87,7 +87,7 @@ impl NumberParts {
                 },
                 'u' => {
                     if let Some(unit) = self.raw_unit.as_ref() {
-                        if unit.is_empty() {
+                        if unit.is_dimensionless() {
                             continue;
                         }
                         let mut frac = vec![];
@@ -352,7 +352,7 @@ impl<'a> NumberPartsFmt<'a> {
                 }
                 PatternToken::Unit => {
                     if let Some(ref unit) = parts.raw_unit {
-                        if unit.is_empty() {
+                        if unit.is_dimensionless() {
                             continue;
                         }
                         let mut frac = vec![];

@@ -315,7 +315,7 @@ impl Number {
     }
 
     pub fn dimless(&self) -> bool {
-        self.unit.is_empty()
+        self.unit.is_dimensionless()
     }
 }
 

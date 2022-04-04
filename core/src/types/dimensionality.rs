@@ -47,6 +47,10 @@ impl Dimensionality {
             None
         }
     }
+
+    pub fn is_dimensionless(&self) -> bool {
+        self.dims.is_empty()
+    }
 }
 
 /////////////////////////////////////////
@@ -55,10 +59,6 @@ impl Dimensionality {
 impl Dimensionality {
     pub(crate) fn insert(&mut self, unit: BaseUnit, power: i64) {
         self.dims.insert(unit, power);
-    }
-
-    pub(crate) fn is_empty(&self) -> bool {
-        self.dims.is_empty()
     }
 }
 

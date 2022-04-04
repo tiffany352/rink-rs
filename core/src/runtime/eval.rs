@@ -231,7 +231,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                 ),
                 Function::Log => func!(
                     fn log(num: Number, base: Number) {
-                        if !base.unit.is_empty() {
+                        if !base.unit.is_dimensionless() {
                             Err("Base must be dimensionless".to_string())
                         } else {
                             Ok(Value::Number(Number {
