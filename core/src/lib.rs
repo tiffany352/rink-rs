@@ -39,6 +39,7 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 #[macro_use]
 extern crate serde_derive;
 
+pub mod algorithms;
 pub mod ast;
 pub mod commands;
 pub mod context;
@@ -58,8 +59,6 @@ use parsing::text_query;
 pub use crate::context::Context;
 pub use crate::number::Number;
 pub use crate::runtime::Value;
-
-use std::collections::BTreeMap;
 
 #[cfg(feature = "gpl")]
 pub static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.units"));
@@ -110,44 +109,4 @@ pub fn simple_context() -> Result<Context, String> {
     ctx.load(units);
     ctx.load_dates(dates);
     Ok(ctx)
-}
-
-pub(crate) fn btree_merge<K: ::std::cmp::Ord + Clone, V: Clone, F: Fn(&V, &V) -> Option<V>>(
-    left: &BTreeMap<K, V>,
-    right: &BTreeMap<K, V>,
-    merge_func: F,
-) -> BTreeMap<K, V> {
-    let mut res = BTreeMap::new();
-    let mut a = left.iter().peekable();
-    let mut b = right.iter().peekable();
-    loop {
-        match (a.peek().cloned(), b.peek().cloned()) {
-            (Some((akey, aval)), Some((bkey, bval))) if akey == bkey => {
-                if let Some(v) = merge_func(aval, bval) {
-                    res.insert(akey.clone(), v);
-                }
-                a.next();
-                b.next();
-            }
-            (Some((akey, _)), Some((bkey, bval))) if akey > bkey => {
-                res.insert(bkey.clone(), bval.clone());
-                b.next();
-            }
-            (Some((akey, aval)), Some((bkey, _))) if akey < bkey => {
-                res.insert(akey.clone(), aval.clone());
-                a.next();
-            }
-            (Some(_), Some(_)) => unreachable!(),
-            (None, Some((bkey, bval))) => {
-                res.insert(bkey.clone(), bval.clone());
-                b.next();
-            }
-            (Some((akey, aval)), None) => {
-                res.insert(akey.clone(), aval.clone());
-                a.next();
-            }
-            (None, None) => break,
-        }
-    }
-    res
 }

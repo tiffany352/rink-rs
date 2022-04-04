@@ -948,7 +948,7 @@ impl<'a, 'b> Mul<&'b Number> for &'a Number {
 
     #[allow(clippy::suspicious_arithmetic_impl)]
     fn mul(self, other: &Number) -> Self::Output {
-        let val = crate::btree_merge(&self.unit, &other.unit, |a, b| {
+        let val = crate::algorithms::btree_merge(&self.unit, &other.unit, |a, b| {
             if a + b != 0 {
                 Some(a + b)
             } else {

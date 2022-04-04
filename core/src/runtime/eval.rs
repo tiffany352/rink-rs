@@ -434,7 +434,7 @@ pub fn eval_unit_name(
                     .map(|(k, v)| (k, -v))
                     .collect::<BTreeMap<_, _>>();
                 Ok((
-                    crate::btree_merge(&left_unit, &right_unit, |a, b| {
+                    crate::algorithms::btree_merge(&left_unit, &right_unit, |a, b| {
                         if a + b != 0 {
                             Some(a + b)
                         } else {
@@ -480,17 +480,13 @@ pub fn eval_unit_name(
                     let (acc, av) = acc?;
                     let (b, bv) = eval_unit_name(ctx, b)?;
                     Ok((
-                        crate::btree_merge(
-                            &acc,
-                            &b,
-                            |a, b| {
-                                if a + b != 0 {
-                                    Some(a + b)
-                                } else {
-                                    None
-                                }
-                            },
-                        ),
+                        crate::algorithms::btree_merge(&acc, &b, |a, b| {
+                            if a + b != 0 {
+                                Some(a + b)
+                            } else {
+                                None
+                            }
+                        }),
                         &av * &bv,
                     ))
                 })
