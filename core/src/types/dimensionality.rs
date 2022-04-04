@@ -12,23 +12,27 @@ use std::{
 type Map = BTreeMap<BaseUnit, i64>;
 type Dimension = (BaseUnit, i64);
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 #[serde(transparent)]
 pub struct Dimensionality {
     dims: Map,
 }
 
-impl Default for Dimensionality {
-    fn default() -> Self {
-        Dimensionality::new()
-    }
-}
-
 impl Dimensionality {
     pub fn new() -> Dimensionality {
-        Dimensionality {
-            dims: BTreeMap::new(),
-        }
+        Dimensionality::default()
+    }
+
+    pub fn new_dim(unit: BaseUnit, power: i64) -> Dimensionality {
+        let mut value = Dimensionality::new();
+        value.dims.insert(unit, power);
+        value
+    }
+
+    pub fn base_unit(unit: BaseUnit) -> Dimensionality {
+        let mut value = Dimensionality::new();
+        value.dims.insert(unit, 1);
+        value
     }
 
     pub fn iter<'a>(&'a self) -> Iter<'a, BaseUnit, i64> {

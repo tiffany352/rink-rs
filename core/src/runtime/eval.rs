@@ -622,8 +622,7 @@ fn to_list(ctx: &Context, top: &Number, list: &[&str]) -> Result<Vec<NumberParts
                 .or(pretty.dimensions)
                 .map(|x| ctx.canonicalize(&*x).unwrap_or(x))
                 .expect("to_parts returned no dimensions");
-            let mut raw = Dimensionality::new();
-            raw.insert(BaseUnit::new(&unit), 1);
+            let raw = Dimensionality::base_unit(BaseUnit::new(&unit));
             NumberParts {
                 raw_value: Some(raw_number),
                 unit: Some(unit),
@@ -1092,11 +1091,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                         months: NumberParts {
                             exact_value: Some("0".to_owned()),
                             unit: Some("month".to_owned()),
-                            raw_unit: Some({
-                                let mut raw = Dimensionality::new();
-                                raw.insert(BaseUnit::new("month"), 1);
-                                raw
-                            }),
+                            raw_unit: Some(Dimensionality::base_unit(BaseUnit::new("month"))),
                             ..Default::default()
                         },
                         weeks: list.next().expect("Unexpected end of iterator"),

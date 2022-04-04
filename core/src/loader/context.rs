@@ -222,14 +222,12 @@ impl Context {
             write!(buf, "{}", name).unwrap();
         } else {
             let helper = |dim: &BaseUnit, pow: i64, buf: &mut Vec<u8>| {
-                let mut map = Dimensionality::new();
-                map.insert(dim.clone(), pow);
-                if let Some(name) = self.quantities.get(&map) {
+                let unit = Dimensionality::new_dim(dim.clone(), pow);
+                if let Some(name) = self.quantities.get(&unit) {
                     write!(buf, " {}", name).unwrap();
                 } else {
-                    let mut map = Dimensionality::new();
-                    map.insert(dim.clone(), 1);
-                    if let Some(name) = self.quantities.get(&map) {
+                    let unit = Dimensionality::base_unit(dim.clone());
+                    if let Some(name) = self.quantities.get(&unit) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         write!(buf, " '{}'", dim).unwrap();
@@ -257,9 +255,8 @@ impl Context {
                     write!(buf, " /").unwrap();
                 }
                 for (dim, pow) in frac {
-                    let mut map = Dimensionality::new();
-                    map.insert(dim.clone(), pow);
-                    if let Some(name) = self.quantities.get(&map) {
+                    let unit = Dimensionality::new_dim(dim.clone(), pow);
+                    if let Some(name) = self.quantities.get(&unit) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         helper(dim, pow, &mut buf);

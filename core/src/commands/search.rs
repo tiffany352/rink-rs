@@ -41,8 +41,7 @@ pub fn search(ctx: &Context, query: &str, num_results: usize) -> SearchReply {
                         }
                     })
                     .expect("Search returned non-existent result");
-                let mut raw = Dimensionality::new();
-                raw.insert(BaseUnit::new(name), 1);
+                let raw = Dimensionality::base_unit(BaseUnit::new(name));
                 NumberParts {
                     unit: Some(name.to_owned()),
                     raw_unit: Some(raw),

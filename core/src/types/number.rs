@@ -48,12 +48,8 @@ impl Number {
 
     /// Creates a value with a single dimension.
     pub fn new_unit(num: Numeric, unit: BaseUnit) -> Number {
-        let mut map = Dimensionality::new();
-        map.insert(unit, 1);
-        Number {
-            value: num,
-            unit: map,
-        }
+        let unit = Dimensionality::base_unit(unit);
+        Number { value: num, unit }
     }
 
     pub fn from_parts(
@@ -214,20 +210,12 @@ impl Number {
                     } else {
                         format!("{}{}", p, orig.0)
                     };
-                    let mut map = Dimensionality::new();
-                    map.insert(BaseUnit::new(&*unit), *orig.1);
-                    return Number {
-                        value: res,
-                        unit: map,
-                    };
+                    let unit = Dimensionality::new_dim(BaseUnit::new(&unit), *orig.1);
+                    return Number { value: res, unit };
                 }
             }
-            let mut map = Dimensionality::new();
-            map.insert(orig.0.clone(), *orig.1);
-            Number {
-                value: val,
-                unit: map,
-            }
+            let unit = Dimensionality::new_dim(orig.0.clone(), *orig.1);
+            Number { value: val, unit }
         } else {
             Number {
                 value: self.value.clone(),
