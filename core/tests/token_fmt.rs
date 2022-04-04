@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 
-use rink_core::fmt::TokenFmt;
-use rink_core::fmt::{
+use rink_core::output::fmt::{
     FmtToken::{self, *},
-    Span,
+    Span, TokenFmt,
 };
 use rink_core::parsing::text_query;
 use rink_core::*;

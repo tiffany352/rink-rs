@@ -42,7 +42,6 @@ extern crate serde_derive;
 pub mod ast;
 pub mod commands;
 pub mod context;
-pub mod fmt;
 pub mod loader;
 pub mod number;
 pub mod numeric;

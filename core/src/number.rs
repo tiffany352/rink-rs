@@ -3,9 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::context::Context;
-use crate::fmt::Span;
-use crate::fmt::TokenFmt;
 use crate::numeric::*;
+use crate::output::fmt::{Span, TokenFmt};
 use crate::types::{BigInt, BigRat};
 use crate::value::Show;
 use std::borrow::Borrow;

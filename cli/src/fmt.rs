@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use ansi_term::{ANSIString, ANSIStrings};
-use rink_core::fmt::{FmtToken, Span, TokenFmt};
+use rink_core::output::fmt::{FmtToken, Span, TokenFmt};
 
 use crate::config::{Config, Theme};
 

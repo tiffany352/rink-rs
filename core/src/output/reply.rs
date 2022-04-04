@@ -1,5 +1,5 @@
+use super::fmt::{flat_join, join, Span, TokenFmt};
 use crate::ast::{Expr, Precedence, UnaryOpType};
-use crate::fmt::{flat_join, join, Span, TokenFmt};
 use crate::number::NumberParts;
 use crate::numeric::Digits;
 use chrono::{DateTime, TimeZone};

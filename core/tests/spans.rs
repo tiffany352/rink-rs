@@ -1,5 +1,5 @@
 use rink_core::{
-    fmt::{Span, TokenFmt},
+    output::fmt::{Span, TokenFmt},
     parsing::text_query,
     simple_context, Context,
 };
