@@ -1031,9 +1031,10 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     out.push((category, name));
                 }
             }
-            if val.unit.len() == 1 {
-                let n = &(*val.unit.iter().next().unwrap().0.id);
-                dim_name = ctx.canonicalize(n).unwrap_or_else(|| n.to_owned());
+            if let Some((dim, _power)) = val.unit.as_single() {
+                dim_name = ctx
+                    .canonicalize(dim.as_str())
+                    .unwrap_or_else(|| dim.to_string());
                 let category = ctx.categories.get(&dim_name);
                 out.push((category, &dim_name));
             }

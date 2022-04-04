@@ -38,6 +38,15 @@ impl Dimensionality {
     pub fn iter<'a>(&'a self) -> Iter<'a, BaseUnit, i64> {
         self.dims.iter()
     }
+
+    pub fn as_single(&self) -> Option<(&BaseUnit, i64)> {
+        if self.dims.len() == 1 {
+            let (unit, &power) = self.dims.iter().next().unwrap();
+            Some((unit, power))
+        } else {
+            None
+        }
+    }
 }
 
 /////////////////////////////////////////
@@ -46,10 +55,6 @@ impl Dimensionality {
 impl Dimensionality {
     pub(crate) fn insert(&mut self, unit: BaseUnit, power: i64) {
         self.dims.insert(unit, power);
-    }
-
-    pub(crate) fn len(&self) -> usize {
-        self.dims.len()
     }
 
     pub(crate) fn is_empty(&self) -> bool {

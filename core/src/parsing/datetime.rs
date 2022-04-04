@@ -4,7 +4,7 @@
 
 use crate::ast::{DatePattern, DateToken};
 use crate::loader::Context;
-use crate::types::{BaseUnit, BigInt, BigRat, GenericDateTime, Number, Numeric};
+use crate::types::{BaseUnit, BigInt, BigRat, Dimensionality, GenericDateTime, Number, Numeric};
 use chrono::format::Parsed;
 use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
 use chrono_tz::Tz;
@@ -385,7 +385,7 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTi
 }
 
 pub fn to_duration(num: &Number) -> Result<Duration, String> {
-    if num.unit.len() != 1 || num.unit.get("s") != Some(&1) {
+    if num.unit != Dimensionality::base_unit(BaseUnit::new("s")) {
         return Err("Expected seconds".to_string());
     }
     let max = Numeric::from(i64::max_value() / 1000);

@@ -176,7 +176,7 @@ impl Number {
     /// units, and possibly apply SI prefixes.
     pub fn prettify(&self, context: &Context) -> Number {
         let unit = self.pretty_unit(context);
-        if unit.len() == 1 {
+        if let Some(orig) = unit.as_single() {
             use std::collections::HashSet;
             let prefixes = [
                 "milli", "micro", "nano", "pico", "femto", "atto", "zepto", "yocto", "kilo",
@@ -185,11 +185,10 @@ impl Number {
             .iter()
             .cloned()
             .collect::<HashSet<&'static str>>();
-            let orig = unit.iter().next().unwrap();
             // kg special case
             let (val, orig) = if &**(orig.0).id == "kg" || &**(orig.0).id == "kilogram" {
                 (
-                    &self.value * &Numeric::from(1000).pow((*orig.1) as i32),
+                    &self.value * &Numeric::from(1000).pow(orig.1 as i32),
                     (BaseUnit::new("gram"), orig.1),
                 )
             } else {
@@ -200,21 +199,21 @@ impl Number {
                     continue;
                 }
                 let abs = val.abs();
-                if abs >= v.value.pow((*orig.1) as i32)
-                    && abs < (&v.value * &Numeric::from(1000)).pow((*orig.1) as i32)
+                if abs >= v.value.pow(orig.1 as i32)
+                    && abs < (&v.value * &Numeric::from(1000)).pow(orig.1 as i32)
                 {
-                    let res = &val / &v.value.pow((*orig.1) as i32);
+                    let res = &val / &v.value.pow(orig.1 as i32);
                     // tonne special case
                     let unit = if &**(orig.0).id == "gram" && p == "mega" {
                         "tonne".to_string()
                     } else {
                         format!("{}{}", p, orig.0)
                     };
-                    let unit = Dimensionality::new_dim(BaseUnit::new(&unit), *orig.1);
+                    let unit = Dimensionality::new_dim(BaseUnit::new(&unit), orig.1);
                     return Number { value: res, unit };
                 }
             }
-            let unit = Dimensionality::new_dim(orig.0.clone(), *orig.1);
+            let unit = Dimensionality::new_dim(orig.0.clone(), orig.1);
             Number { value: val, unit }
         } else {
             Number {
@@ -229,13 +228,11 @@ impl Number {
         let (exact, approx) = value.numeric_value(10, Digits::Default);
 
         let quantity = context.quantities.get(&self.unit).cloned().or_else(|| {
-            if self.unit.len() == 1 {
-                let e = self.unit.iter().next().unwrap();
-                let n = &(*e.0);
-                if *e.1 == 1 {
-                    Some((&*n.id).clone())
+            if let Some((unit, power)) = self.unit.as_single() {
+                if power == 1 {
+                    Some(unit.to_string())
                 } else {
-                    Some(format!("{}^{}", n, e.1))
+                    Some(format!("{}^{}", unit, power))
                 }
             } else {
                 None
