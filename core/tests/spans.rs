@@ -1,6 +1,11 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use rink_core::{
-    fmt::{Span, TokenFmt},
-    simple_context, text_query, Context,
+    output::fmt::{Span, TokenFmt},
+    parsing::text_query,
+    simple_context, Context,
 };
 
 thread_local! {
@@ -26,7 +31,7 @@ fn test(input: &str, output: &str) {
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        let res = ctx.eval_outer(&expr);
+        let res = ctx.eval_query(&expr);
         let mut string = String::new();
         match res {
             Ok(v) => write_string(&mut string, &v),

@@ -5,11 +5,12 @@
 use num::cast::ToPrimitive;
 use num::rational::BigRational as NumRat;
 use num::traits::{sign::Signed, One, Zero};
+use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ord;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::bigint::BigInt;
+use super::BigInt;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct BigRat {

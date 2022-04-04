@@ -4,7 +4,7 @@
 
 use assert_json_diff::assert_json_eq;
 use rink_core::ast::{Def, DefEntry, Expr, ExprString, Property, Query};
-use rink_core::*;
+use rink_core::parsing::text_query;
 use serde_json;
 use serde_json::{json, to_value};
 
@@ -114,7 +114,7 @@ fn check_defs() {
     // Base units.
     assert_json_eq!(
         serde_json::to_value([
-            DefEntry::new("m", Some("base unit of length"), None, Def::Dimension),
+            DefEntry::new("m", Some("base unit of length"), None, Def::BaseUnit),
             DefEntry::new(
                 "meter",
                 None,

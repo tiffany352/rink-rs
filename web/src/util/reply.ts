@@ -5,14 +5,14 @@ export interface NumberParts {
   approxValue: string | null;
   factor: string | null;
   divfactor: string | null;
-  rawUnit: Quantity | null;
+  rawUnit: Dimensionality | null;
   unit: string | null;
   quantity: string | null;
   dimensions: string | null;
-  rawDimensions: Quantity | null;
+  rawDimensions: Dimensionality | null;
 }
 
-export interface Quantity {
+export interface Dimensionality {
   [dimension: string]: number;
 }
 
@@ -106,7 +106,7 @@ export interface ConversionReply {
 
 export interface FactorizeReply {
   type: "factorize";
-  factorizations: Quantity[];
+  factorizations: Dimensionality[];
 }
 
 export interface UnitsInCategory {

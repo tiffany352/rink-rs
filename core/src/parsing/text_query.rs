@@ -3,9 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::*;
-use crate::bigint::BigInt;
-use crate::bigrat::BigRat;
-use crate::numeric::{Digits, Numeric};
+use crate::output::Digits;
+use crate::types::{BigInt, BigRat, Numeric};
 use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -530,7 +529,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             }
         }
         Token::Quote(string) => Expr::Quote { string },
-        Token::Decimal(num, frac, exp) => crate::number::Number::from_parts(
+        Token::Decimal(num, frac, exp) => crate::types::Number::from_parts(
             &*num,
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),

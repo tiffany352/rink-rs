@@ -1,8 +1,13 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+use super::fmt::{flat_join, join, Span, TokenFmt};
+use super::NumberParts;
 use crate::ast::{Expr, Precedence, UnaryOpType};
-use crate::fmt::{flat_join, join, Span, TokenFmt};
-use crate::number::NumberParts;
-use crate::numeric::Digits;
+use crate::output::Digits;
 use chrono::{DateTime, TimeZone};
+use serde_derive::Serialize;
 use std::collections::BTreeMap;
 use std::convert::From;
 use std::fmt::{Display, Formatter, Result as FmtResult};
@@ -334,7 +339,7 @@ impl Display for ConformanceError {
 }
 
 impl DateReply {
-    pub fn new<Tz>(ctx: &crate::context::Context, date: DateTime<Tz>) -> DateReply
+    pub fn new<Tz>(ctx: &crate::loader::Context, date: DateTime<Tz>) -> DateReply
     where
         Tz: TimeZone,
         Tz::Offset: Display,

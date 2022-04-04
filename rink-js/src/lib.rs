@@ -1,8 +1,12 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use chrono::{Local, TimeZone};
 use js_sys::Date;
 use rink_core;
 use rink_core::ast;
-use rink_core::text_query;
+use rink_core::parsing::text_query;
 use serde_derive::*;
 use serde_json;
 use wasm_bindgen::prelude::*;
@@ -99,9 +103,10 @@ impl Context {
             serde_json::from_str(&live_defs).map_err(|e| e.to_string())?;
 
         let mut base_defs = {
+            use rink_core::loader::gnu_units;
             let defs = rink_core::CURRENCY_FILE;
-            let mut iter = rink_core::gnu_units::TokenIterator::new(defs).peekable();
-            rink_core::gnu_units::parse(&mut iter)
+            let mut iter = gnu_units::TokenIterator::new(defs).peekable();
+            gnu_units::parse(&mut iter)
         };
         let currency = {
             let mut defs = vec![];
@@ -116,7 +121,7 @@ impl Context {
 
     #[wasm_bindgen]
     pub fn eval(&mut self, expr: &Query) -> JsValue {
-        let value = Success::from(self.context.eval_outer(&expr.query));
+        let value = Success::from(self.context.eval_query(&expr.query));
         match JsValue::from_serde(&value) {
             Ok(value) => value,
             Err(err) => format!("Failed to serialize: {}\n{:#?}", err, value).into(),

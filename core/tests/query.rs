@@ -2,11 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use rink_core::*;
+use rink_core::parsing::text_query;
+use rink_core::Context;
 
 thread_local! {
     static CONTEXT: Context = {
-        let mut ctx = simple_context().unwrap();
+        let mut ctx = rink_core::simple_context().unwrap();
         ctx.use_humanize = false;
         ctx
     };
@@ -16,7 +17,7 @@ fn test(input: &str, output: &str) {
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        let res = ctx.eval_outer(&expr);
+        let res = ctx.eval_query(&expr);
         let res = match res {
             Ok(v) => v.to_string(),
             Err(v) => v.to_string(),
@@ -29,7 +30,7 @@ fn test_starts_with(input: &str, output: &str) {
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        let res = ctx.eval_outer(&expr);
+        let res = ctx.eval_query(&expr);
         let res = match res {
             Ok(v) => v.to_string(),
             Err(v) => v.to_string(),
@@ -307,7 +308,7 @@ fn test_second_double_prefix() {
     let mut iter = text_query::TokenIterator::new("mks").peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        ctx.eval_outer(&expr).unwrap();
+        ctx.eval_query(&expr).unwrap();
     });
 }
 

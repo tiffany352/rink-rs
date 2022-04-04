@@ -2,23 +2,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{DatePattern, Expr};
-use crate::number::{Dimension, Number, Quantity};
-use crate::numeric::Numeric;
-use crate::reply::NotFoundError;
-use crate::search;
-use crate::substance::Substance;
+use crate::ast::{DatePattern, Expr, Query};
+use crate::output::{ConversionReply, Digits, NotFoundError, NumberParts, QueryError, QueryReply};
+use crate::runtime::Substance;
+use crate::types::{BaseUnit, BigInt, Dimensionality, Number, Numeric};
+use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
 pub struct Context {
-    pub dimensions: BTreeSet<Dimension>,
+    pub dimensions: BTreeSet<BaseUnit>,
     pub canonicalizations: BTreeMap<String, String>,
     pub units: BTreeMap<String, Number>,
-    pub quantities: BTreeMap<Quantity, String>,
-    pub reverse: BTreeMap<Quantity, String>,
+    pub quantities: BTreeMap<Dimensionality, String>,
+    pub reverse: BTreeMap<Dimensionality, String>,
     pub prefixes: Vec<(String, Number)>,
     pub definitions: BTreeMap<String, Expr>,
     pub docs: BTreeMap<String, String>,
@@ -222,15 +221,13 @@ impl Context {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
-            let helper = |dim: &Dimension, pow: i64, buf: &mut Vec<u8>| {
-                let mut map = Quantity::new();
-                map.insert(dim.clone(), pow);
-                if let Some(name) = self.quantities.get(&map) {
+            let helper = |dim: &BaseUnit, pow: i64, buf: &mut Vec<u8>| {
+                let unit = Dimensionality::new_dim(dim.clone(), pow);
+                if let Some(name) = self.quantities.get(&unit) {
                     write!(buf, " {}", name).unwrap();
                 } else {
-                    let mut map = Quantity::new();
-                    map.insert(dim.clone(), 1);
-                    if let Some(name) = self.quantities.get(&map) {
+                    let unit = Dimensionality::base_unit(dim.clone());
+                    if let Some(name) = self.quantities.get(&unit) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         write!(buf, " '{}'", dim).unwrap();
@@ -243,7 +240,7 @@ impl Context {
 
             let mut frac = vec![];
             let mut found = false;
-            for (dim, &pow) in &value.unit {
+            for (dim, &pow) in value.unit.iter() {
                 if pow < 0 {
                     frac.push((dim, -pow));
                 } else {
@@ -258,9 +255,8 @@ impl Context {
                     write!(buf, " /").unwrap();
                 }
                 for (dim, pow) in frac {
-                    let mut map = Quantity::new();
-                    map.insert(dim.clone(), pow);
-                    if let Some(name) = self.quantities.get(&map) {
+                    let unit = Dimensionality::new_dim(dim.clone(), pow);
+                    if let Some(name) = self.quantities.get(&unit) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         helper(dim, pow, &mut buf);
@@ -274,13 +270,80 @@ impl Context {
     }
 
     pub fn typo_dym<'a>(&'a self, what: &str) -> Option<&'a str> {
-        search::search(self, what, 1).into_iter().next()
+        commands::search_internal(self, what, 1).into_iter().next()
     }
 
     pub fn unknown_unit_err(&self, name: &str) -> NotFoundError {
         NotFoundError {
             got: name.to_owned(),
             suggestion: self.typo_dym(name).map(|x| x.to_owned()),
+        }
+    }
+
+    pub fn humanize<Tz: chrono::TimeZone>(&self, date: chrono::DateTime<Tz>) -> Option<String> {
+        if self.use_humanize {
+            crate::parsing::datetime::humanize(date)
+        } else {
+            None
+        }
+    }
+
+    /// Takes a parsed definitions.units from
+    /// `gnu_units::parse()`. Prints if there are errors in the file.
+    pub fn load(&mut self, defs: crate::ast::Defs) {
+        crate::loader::load_defs(self, defs)
+    }
+
+    /// Evaluates an expression to compute its value, *excluding* `->`
+    /// conversions.
+    pub fn eval(&self, expr: &Expr) -> Result<Value, QueryError> {
+        crate::runtime::eval_expr(self, expr)
+    }
+
+    #[deprecated(since = "0.7.0", note = "renamed to eval_query()")]
+    pub fn eval_outer(&self, query: &Query) -> Result<QueryReply, QueryError> {
+        self.eval_query(query)
+    }
+
+    /// Evaluates an expression, include `->` conversions.
+    pub fn eval_query(&self, query: &Query) -> Result<QueryReply, QueryError> {
+        crate::runtime::eval_query(self, query)
+    }
+
+    pub fn show(
+        &self,
+        raw: &Number,
+        bottom: &Number,
+        bottom_name: BTreeMap<String, isize>,
+        bottom_const: Numeric,
+        base: u8,
+        digits: Digits,
+    ) -> ConversionReply {
+        let (exact, approx) = raw.numeric_value(base, digits);
+        let bottom_name = bottom_name
+            .into_iter()
+            .map(|(a, b)| (BaseUnit::new(&*a), b as i64))
+            .collect();
+        let (num, den) = bottom_const.to_rational();
+        ConversionReply {
+            value: NumberParts {
+                raw_value: Some(raw.clone()),
+                exact_value: exact,
+                approx_value: approx,
+                factor: if num != BigInt::one() {
+                    Some(num.to_string())
+                } else {
+                    None
+                },
+                divfactor: if den != BigInt::one() {
+                    Some(den.to_string())
+                } else {
+                    None
+                },
+                unit: Some(Number::unit_to_string(&bottom_name)),
+                raw_unit: Some(bottom_name),
+                ..bottom.to_parts(self)
+            },
         }
     }
 }

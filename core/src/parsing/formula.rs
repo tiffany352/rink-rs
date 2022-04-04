@@ -2,9 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::number::{Dimension, Number};
-use crate::numeric::Numeric;
-use crate::substance::{Properties, Property, Substance};
+use crate::runtime::{Properties, Property, Substance};
+use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::str::{Chars, FromStr};
@@ -61,9 +60,9 @@ pub fn substance_from_formula(
     symbols: &BTreeMap<String, String>,
     substances: &BTreeMap<String, Substance>,
 ) -> Option<Substance> {
-    let mut molar_mass_unit = BTreeMap::new();
-    molar_mass_unit.insert(Dimension::new("kg"), 1);
-    molar_mass_unit.insert(Dimension::new("mol"), -1);
+    let mut molar_mass_unit = Dimensionality::new();
+    molar_mass_unit.insert(BaseUnit::new("kg"), 1);
+    molar_mass_unit.insert(BaseUnit::new("mol"), -1);
     let mut total_molar_mass = Number {
         value: Numeric::from(0),
         unit: molar_mass_unit,

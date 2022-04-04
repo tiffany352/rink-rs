@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_ctrlc::CtrlC;
 use async_std::channel::bounded;
 use async_std::channel::Receiver;
@@ -174,7 +178,7 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if called after [`terminate`].
+    /// Panics if called after [`Sandbox::terminate`].
     pub async fn execute(&self, req: S::Req) -> Result<Response<S::Res>, Error> {
         if self.terminated {
             panic!("Sandbox::execute() called after terminated");

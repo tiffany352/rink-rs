@@ -1,5 +1,10 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use super::*;
-use crate::text_query::{parse_expr, Token, TokenIterator};
+use crate::parsing::text_query::{parse_expr, Token, TokenIterator};
+use serde_derive::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -62,7 +67,9 @@ pub struct Property {
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
 pub enum Def {
-    Dimension,
+    // Named dimension for backwards compat reasons.
+    #[serde(rename = "dimension")]
+    BaseUnit,
     Canonicalization {
         of: String,
     },

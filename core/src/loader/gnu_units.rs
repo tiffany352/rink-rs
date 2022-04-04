@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::*;
-use crate::numeric::Numeric;
+use crate::types::Numeric;
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::rc::Rc;
@@ -208,7 +208,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             }
             _ => Expr::new_unit(name),
         },
-        Token::Number(num, frac, exp) => crate::number::Number::from_parts(
+        Token::Number(num, frac, exp) => crate::types::Number::from_parts(
             &*num,
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),
@@ -397,7 +397,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             iter.next();
                             map.push(DefEntry {
                                 name: name.clone(),
-                                def: Rc::new(Def::Dimension),
+                                def: Rc::new(Def::BaseUnit),
                                 doc: doc.take(),
                                 category: category.clone(),
                             });
@@ -410,7 +410,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                         } else {
                             map.push(DefEntry {
                                 name: name.clone(),
-                                def: Rc::new(Def::Dimension),
+                                def: Rc::new(Def::BaseUnit),
                                 doc: doc.take(),
                                 category: category.clone(),
                             });
@@ -633,7 +633,7 @@ mod tests {
 
     #[test]
     fn test_float_leading_dot() {
-        use crate::bigrat::BigRat;
+        use crate::types::BigRat;
         expect!(
             ".123",
             Expr::Const { value },

@@ -1,10 +1,14 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::borrow::Cow;
 
-use rink_core::fmt::TokenFmt;
-use rink_core::fmt::{
+use rink_core::output::fmt::{
     FmtToken::{self, *},
-    Span,
+    Span, TokenFmt,
 };
+use rink_core::parsing::text_query;
 use rink_core::*;
 use std::fmt;
 
@@ -58,7 +62,7 @@ fn test(input: &str, output: &[FlatSpan<'static>]) {
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
-        let res = ctx.eval_outer(&expr);
+        let res = ctx.eval_query(&expr);
         let res = match res {
             Ok(ref v) => v.to_spans(),
             Err(ref v) => v.to_spans(),

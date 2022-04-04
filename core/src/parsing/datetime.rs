@@ -3,11 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::{DatePattern, DateToken};
-use crate::bigint::BigInt;
-use crate::bigrat::BigRat;
-use crate::context::Context;
-use crate::number::{Dimension, Number};
-use crate::numeric::Numeric;
+use crate::loader::Context;
+use crate::types::{BaseUnit, BigInt, BigRat, Dimensionality, GenericDateTime, Number, Numeric};
 use chrono::format::Parsed;
 use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
 use chrono_tz::Tz;
@@ -272,21 +269,6 @@ where
     res.and_then(|_| parse_date(out, out_tz, date, &pat[1..]))
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GenericDateTime {
-    Fixed(DateTime<FixedOffset>),
-    Timezone(DateTime<Tz>),
-}
-
-impl GenericDateTime {
-    pub fn with_timezone<Tz: TimeZone>(&self, tz: &Tz) -> DateTime<Tz> {
-        match *self {
-            GenericDateTime::Fixed(ref d) => d.with_timezone(tz),
-            GenericDateTime::Timezone(ref d) => d.with_timezone(tz),
-        }
-    }
-}
-
 fn attempt(
     now: DateTime<Local>,
     date: &[DateToken],
@@ -403,7 +385,7 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTi
 }
 
 pub fn to_duration(num: &Number) -> Result<Duration, String> {
-    if num.unit.len() != 1 || num.unit.get("s") != Some(&1) {
+    if num.unit != Dimensionality::base_unit(BaseUnit::new("s")) {
         return Err("Expected seconds".to_string());
     }
     let max = Numeric::from(i64::max_value() / 1000);
@@ -430,7 +412,7 @@ pub fn from_duration(duration: &Duration) -> Result<Number, String> {
     let ns = BigRat::ratio(&BigInt::from(ns), &ns_div);
     Ok(Number::new_unit(
         Numeric::Rational(&ms + &ns),
-        Dimension::new("s"),
+        BaseUnit::new("s"),
     ))
 }
 
@@ -511,19 +493,11 @@ pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
     defs
 }
 
-impl Context {
-    #[cfg(feature = "chrono-humanize")]
-    pub fn humanize<Tz: TimeZone>(&self, date: DateTime<Tz>) -> Option<String> {
-        if self.use_humanize {
-            use chrono_humanize::HumanTime;
-            Some(HumanTime::from(date).to_string())
-        } else {
-            None
-        }
-    }
-
-    #[cfg(not(feature = "chrono-humanize"))]
-    pub fn humanize<Tz: TimeZone>(&self, _date: DateTime<Tz>) -> Option<String> {
+pub fn humanize<Tz: TimeZone>(date: DateTime<Tz>) -> Option<String> {
+    if cfg!(feature = "chrono-humanize") {
+        use chrono_humanize::HumanTime;
+        Some(HumanTime::from(date).to_string())
+    } else {
         None
     }
 }
