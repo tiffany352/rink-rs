@@ -339,7 +339,7 @@ impl Display for ConformanceError {
 }
 
 impl DateReply {
-    pub fn new<Tz>(ctx: &crate::context::Context, date: DateTime<Tz>) -> DateReply
+    pub fn new<Tz>(ctx: &crate::loader::Context, date: DateTime<Tz>) -> DateReply
     where
         Tz: TimeZone,
         Tz::Offset: Display,

@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::{
-    context::Context,
+    loader::Context,
     number::{Dimension, NumberParts},
     output::SearchReply,
 };

@@ -38,7 +38,6 @@ println!("{}", one_line(&mut ctx, "kWh / year -> W").unwrap());
 
 pub mod ast;
 pub mod commands;
-pub mod context;
 pub mod loader;
 pub mod number;
 pub mod numeric;
@@ -51,7 +50,7 @@ pub mod types;
 pub(crate) mod algorithms;
 mod helpers;
 
-pub use crate::context::Context;
+pub use crate::loader::Context;
 pub use crate::number::Number;
 pub use crate::runtime::Value;
 pub use helpers::{eval, one_line, simple_context, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};

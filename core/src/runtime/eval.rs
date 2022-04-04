@@ -5,7 +5,7 @@
 use super::{Show, Value};
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::commands;
-use crate::context::Context;
+use crate::loader::Context;
 use crate::number::{pow, Dimension, Number, NumberParts};
 use crate::numeric::{Digits, Numeric};
 use crate::output::{

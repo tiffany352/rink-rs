@@ -2,8 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::context::Context;
-use crate::numeric::*;
+use crate::loader::Context;
+use crate::numeric::{Digits, Numeric};
 use crate::output::fmt::{Span, TokenFmt};
 use crate::runtime::Show;
 use crate::types::{BigInt, BigRat};

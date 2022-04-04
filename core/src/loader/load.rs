@@ -2,12 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use super::Context;
 use crate::ast::{BinOpExpr, Def, DefEntry, Defs, Expr};
 use crate::number::{Dimension, Number};
 use crate::numeric::Numeric;
 use crate::runtime::Value;
 use crate::substance::{Properties, Property, Substance};
-use crate::Context;
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 use std::sync::Arc;
