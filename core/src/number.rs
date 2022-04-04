@@ -5,8 +5,8 @@
 use crate::context::Context;
 use crate::numeric::*;
 use crate::output::fmt::{Span, TokenFmt};
+use crate::runtime::Show;
 use crate::types::{BigInt, BigRat};
-use crate::value::Show;
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::fmt;

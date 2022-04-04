@@ -6,7 +6,7 @@ use crate::context::Context;
 use crate::number::{Dimension, Number};
 use crate::numeric::{Digits, Numeric};
 use crate::output::{PropertyReply, SubstanceReply};
-use crate::value::Show;
+use crate::runtime::Show;
 use std::collections::BTreeMap;
 use std::iter::once;
 use std::ops::{Add, Div, Mul};

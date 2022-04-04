@@ -50,7 +50,6 @@ pub mod parsing;
 pub mod runtime;
 pub mod substance;
 pub mod types;
-pub mod value;
 
 use loader::gnu_units;
 use output::{QueryError, QueryReply};
@@ -58,7 +57,7 @@ use parsing::text_query;
 
 pub use crate::context::Context;
 pub use crate::number::Number;
-pub use crate::value::Value;
+pub use crate::runtime::Value;
 
 use std::collections::BTreeMap;
 

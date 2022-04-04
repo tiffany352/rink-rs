@@ -5,8 +5,8 @@
 use crate::ast::{BinOpExpr, Def, DefEntry, Defs, Expr};
 use crate::number::{Dimension, Number};
 use crate::numeric::Numeric;
+use crate::runtime::Value;
 use crate::substance::{Properties, Property, Substance};
-use crate::value::Value;
 use crate::Context;
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
