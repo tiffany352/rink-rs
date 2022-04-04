@@ -14,7 +14,7 @@ pub use bigint::{BigInt, BigIntError};
 pub use bigrat::BigRat;
 pub use date::GenericDateTime;
 pub use number::{Dimensionality, Number};
-pub use numeric::{Digits, Numeric, NumericParts};
+pub use numeric::Numeric;
 
 #[deprecated(since = "0.7.0", note = "renamed to BaseUnit")]
 pub type Dimension = BaseUnit;

@@ -4,8 +4,8 @@
 
 use super::Show;
 use crate::loader::Context;
-use crate::output::{PropertyReply, SubstanceReply};
-use crate::types::{BaseUnit, Digits, Number, Numeric};
+use crate::output::{Digits, PropertyReply, SubstanceReply};
+use crate::types::{BaseUnit, Number, Numeric};
 use std::collections::BTreeMap;
 use std::iter::once;
 use std::ops::{Add, Div, Mul};

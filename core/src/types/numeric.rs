@@ -2,11 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::output::{Digits, NumericParts};
+use crate::types::{BigInt, BigRat};
 use serde_derive::{Deserialize, Serialize};
 use std::cmp::{Ordering, PartialOrd};
 use std::ops::{Add, Div, Mul, Neg, Sub};
-
-use crate::types::{BigInt, BigRat};
 
 /// Number type.
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -24,24 +24,6 @@ pub enum Numeric {
 enum Parity {
     Rational(BigRat, BigRat),
     Float(f64, f64),
-}
-
-/// Used when converting to string representation to choose desired
-/// output mode.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
-pub enum Digits {
-    Default,
-    FullInt,
-    Digits(u64),
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NumericParts {
-    numer: String,
-    denom: String,
-    exact_value: Option<String>,
-    approx_value: Option<String>,
 }
 
 impl Numeric {
@@ -269,19 +251,6 @@ impl<'a> From<&'a Numeric> for f64 {
         match value {
             Numeric::Rational(ref rational) => rational.as_float(),
             Numeric::Float(f) => *f,
-        }
-    }
-}
-
-impl From<Numeric> for NumericParts {
-    fn from(value: Numeric) -> NumericParts {
-        let (exact, approx) = value.string_repr(10, Digits::Default);
-        let (num, den) = value.to_rational();
-        NumericParts {
-            numer: num.to_string(),
-            denom: den.to_string(),
-            exact_value: exact,
-            approx_value: approx,
         }
     }
 }

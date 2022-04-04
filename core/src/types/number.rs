@@ -4,9 +4,9 @@
 
 use super::BaseUnit;
 use crate::loader::Context;
-use crate::output::NumberParts;
+use crate::output::{Digits, NumberParts};
 use crate::runtime::Show;
-use crate::types::{BigInt, BigRat, Digits, Numeric};
+use crate::types::{BigInt, BigRat, Numeric};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fmt;

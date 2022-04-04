@@ -4,7 +4,9 @@
 
 pub mod fmt;
 mod number_parts;
+mod numeric_parts;
 mod reply;
 
 pub use number_parts::{NumberParts, NumberPartsFmt};
+pub use numeric_parts::{Digits, NumericParts};
 pub use reply::*;
