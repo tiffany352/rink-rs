@@ -1,3 +1,5 @@
+use crate::algorithms::btree_merge;
+
 use super::BaseUnit;
 use serde_derive::{Deserialize, Serialize};
 use std::{
@@ -53,6 +55,21 @@ impl Dimensionality {
     }
 }
 
+impl<'a> ops::Mul for &'a Dimensionality {
+    type Output = Dimensionality;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let dims = btree_merge(&self.dims, &rhs.dims, |a, b| {
+            if a + b != 0 {
+                Some(a + b)
+            } else {
+                None
+            }
+        });
+        Dimensionality { dims }
+    }
+}
+
 /////////////////////////////////////////
 // Compatiblity with BTreeMap interface
 
@@ -83,11 +100,5 @@ impl IntoIterator for Dimensionality {
 
     fn into_iter(self) -> Self::IntoIter {
         self.dims.into_iter()
-    }
-}
-
-impl From<Map> for Dimensionality {
-    fn from(dims: Map) -> Self {
-        Dimensionality { dims }
     }
 }

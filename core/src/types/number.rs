@@ -381,18 +381,10 @@ impl<'a> Neg for &'a Number {
 impl<'a, 'b> Mul<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
-    #[allow(clippy::suspicious_arithmetic_impl)]
     fn mul(self, other: &Number) -> Self::Output {
-        let val = crate::algorithms::btree_merge(&self.unit, &other.unit, |a, b| {
-            if a + b != 0 {
-                Some(a + b)
-            } else {
-                None
-            }
-        });
         Some(Number {
             value: &self.value * &other.value,
-            unit: val.into(),
+            unit: &self.unit * &other.unit,
         })
     }
 }
