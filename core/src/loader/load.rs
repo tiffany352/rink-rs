@@ -224,6 +224,8 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     reverse.insert("gray");
     reverse.insert("katal");
 
+    let mut prefix_lookup = BTreeMap::new();
+
     for (name, def) in udefs {
         let name = name.name();
         match *def {
@@ -269,22 +271,43 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 Ok(_) => println!("Unit {} is not a number", name),
                 Err(e) => println!("Unit {} is malformed: {}", name, e),
             },
-            Def::Prefix { ref expr } => match ctx.eval(expr) {
-                Ok(Value::Number(v)) if v.unit.is_dimensionless() => {
-                    ctx.registry.prefixes.push((name.clone(), v.value));
+            Def::Prefix { ref expr } => match expr.0 {
+                Expr::Const { ref value } => {
+                    prefix_lookup.insert(name.clone(), value.clone());
+                    ctx.registry.prefixes.push((name.clone(), value.clone()));
                 }
-                Ok(_) => println!("Prefix {} is not a number", name),
-                Err(e) => println!("Prefix {} is malformed: {}", name, e),
+                Expr::Unit { name: ref other } => {
+                    if let Some(other_value) = prefix_lookup.get(other).cloned() {
+                        prefix_lookup.insert(name.clone(), other_value.clone());
+                        ctx.registry.prefixes.push((name.clone(), other_value));
+                    } else {
+                        println!("Prefix {} references non-existent prefix {}", name, other);
+                    }
+                }
+                _ => println!("Prefix {} is not a numeric constant", name),
             },
-            Def::SPrefix { ref expr } => match ctx.eval(expr) {
-                Ok(Value::Number(v)) if v.unit.is_dimensionless() => {
-                    ctx.registry.prefixes.push((name.clone(), v.value.clone()));
+            Def::SPrefix { ref expr } => match expr.0 {
+                Expr::Const { ref value } => {
+                    prefix_lookup.insert(name.clone(), value.clone());
+                    ctx.registry.prefixes.push((name.clone(), value.clone()));
                     ctx.registry
                         .units
-                        .insert(name.clone(), Number::new(v.value));
+                        .insert(name.clone(), Number::new(value.clone()));
                 }
-                Ok(_) => println!("Prefix {} is not a dimensionless number", name),
-                Err(e) => println!("Prefix {} is malformed: {}", name, e),
+                Expr::Unit { name: ref other } => {
+                    if let Some(other_value) = prefix_lookup.get(other).cloned() {
+                        prefix_lookup.insert(name.clone(), other_value.clone());
+                        ctx.registry
+                            .prefixes
+                            .push((name.clone(), other_value.clone()));
+                        ctx.registry
+                            .units
+                            .insert(name.clone(), Number::new(other_value));
+                    } else {
+                        println!("SPrefix {} references non-existent prefix {}", name, other);
+                    }
+                }
+                _ => println!("SPrefix {} is not a numeric constant", name),
             },
             Def::Quantity { ref expr } => match ctx.eval(expr) {
                 Ok(Value::Number(v)) => {
