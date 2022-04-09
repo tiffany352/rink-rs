@@ -89,7 +89,7 @@ impl Context {
             for &(ref pre, ref value) in &self.registry.prefixes {
                 if name.starts_with(pre) {
                     if let Some(v) = inner(self, &name[pre.len()..]) {
-                        return Some((&v * value).unwrap());
+                        return Some((&v * &Number::new(value.clone())).unwrap());
                     }
                 }
             }

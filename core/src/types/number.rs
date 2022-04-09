@@ -199,10 +199,10 @@ impl Number {
                     continue;
                 }
                 let abs = val.abs();
-                if abs >= v.value.pow(orig.1 as i32)
-                    && abs < (&v.value * &Numeric::from(1000)).pow(orig.1 as i32)
+                if abs >= v.pow(orig.1 as i32)
+                    && abs < (v * &Numeric::from(1000)).pow(orig.1 as i32)
                 {
-                    let res = &val / &v.value.pow(orig.1 as i32);
+                    let res = &val / &v.pow(orig.1 as i32);
                     // tonne special case
                     let unit = if &**(orig.0).id == "gram" && p == "mega" {
                         "tonne".to_string()

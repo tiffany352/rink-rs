@@ -231,7 +231,9 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 ctx.registry.dimensions.insert(BaseUnit::new(&*name));
             }
             Def::Canonicalization { ref of } => {
-                ctx.registry.canonicalizations.insert(of.clone(), name.clone());
+                ctx.registry
+                    .canonicalizations
+                    .insert(of.clone(), name.clone());
                 match ctx.lookup(of) {
                     Some(v) => {
                         ctx.registry
@@ -249,7 +251,9 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                     if v.value == Numeric::one() && reverse.contains(&*name) {
                         ctx.registry.reverse.insert(v.unit.clone(), name.clone());
                     }
-                    ctx.registry.definitions.insert(name.clone(), expr.0.clone());
+                    ctx.registry
+                        .definitions
+                        .insert(name.clone(), expr.0.clone());
                     ctx.registry.units.insert(name.clone(), v);
                 }
                 Ok(Value::Substance(sub)) => {
@@ -266,25 +270,29 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 Err(e) => println!("Unit {} is malformed: {}", name, e),
             },
             Def::Prefix { ref expr } => match ctx.eval(expr) {
-                Ok(Value::Number(v)) => {
-                    ctx.registry.prefixes.push((name.clone(), v));
+                Ok(Value::Number(v)) if v.unit.is_dimensionless() => {
+                    ctx.registry.prefixes.push((name.clone(), v.value));
                 }
                 Ok(_) => println!("Prefix {} is not a number", name),
                 Err(e) => println!("Prefix {} is malformed: {}", name, e),
             },
             Def::SPrefix { ref expr } => match ctx.eval(expr) {
-                Ok(Value::Number(v)) => {
-                    ctx.registry.prefixes.push((name.clone(), v.clone()));
-                    ctx.registry.units.insert(name.clone(), v);
+                Ok(Value::Number(v)) if v.unit.is_dimensionless() => {
+                    ctx.registry.prefixes.push((name.clone(), v.value.clone()));
+                    ctx.registry
+                        .units
+                        .insert(name.clone(), Number::new(v.value));
                 }
-                Ok(_) => println!("Prefix {} is not a number", name),
+                Ok(_) => println!("Prefix {} is not a dimensionless number", name),
                 Err(e) => println!("Prefix {} is malformed: {}", name, e),
             },
             Def::Quantity { ref expr } => match ctx.eval(expr) {
                 Ok(Value::Number(v)) => {
                     let res = ctx.registry.quantities.insert(v.unit, name.clone());
                     if !ctx.registry.definitions.contains_key(&name) {
-                        ctx.registry.definitions.insert(name.clone(), expr.0.clone());
+                        ctx.registry
+                            .definitions
+                            .insert(name.clone(), expr.0.clone());
                     }
                     if let Some(old) = res {
                         println!("Warning: Conflicting quantities {} and {}", name, old);
