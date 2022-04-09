@@ -5,7 +5,9 @@
 mod context;
 pub mod gnu_units;
 mod load;
+mod registry;
 
 pub use context::Context;
+pub use registry::Registry;
 
 pub(crate) use load::load_defs;

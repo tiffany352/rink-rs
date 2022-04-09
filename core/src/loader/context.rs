@@ -2,30 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use super::Registry;
 use crate::ast::{DatePattern, Expr, Query};
 use crate::output::{ConversionReply, Digits, NotFoundError, NumberParts, QueryError, QueryReply};
-use crate::runtime::Substance;
 use crate::types::{BaseUnit, BigInt, Dimensionality, Number, Numeric};
 use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};
-use std::collections::{BTreeMap, BTreeSet};
-
-#[derive(Default, Debug)]
-pub struct Registry {
-    pub dimensions: BTreeSet<BaseUnit>,
-    pub canonicalizations: BTreeMap<String, String>,
-    pub units: BTreeMap<String, Number>,
-    pub quantities: BTreeMap<Dimensionality, String>,
-    pub reverse: BTreeMap<Dimensionality, String>,
-    pub prefixes: Vec<(String, Number)>,
-    pub definitions: BTreeMap<String, Expr>,
-    pub docs: BTreeMap<String, String>,
-    pub categories: BTreeMap<String, String>,
-    pub category_names: BTreeMap<String, String>,
-    pub datepatterns: Vec<Vec<DatePattern>>,
-    pub substances: BTreeMap<String, Substance>,
-    pub substance_symbols: BTreeMap<String, String>,
-}
+use std::collections::BTreeMap;
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
