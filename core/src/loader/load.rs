@@ -3,10 +3,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use super::Context;
-use crate::ast::{BinOpExpr, Def, DefEntry, Defs, Expr};
+use crate::ast::{BinOpExpr, BinOpType, Def, DefEntry, Defs, Expr, UnaryOpExpr, UnaryOpType};
 use crate::runtime::{Properties, Property, Substance, Value};
 use crate::types::{BaseUnit, Number, Numeric};
 use std::collections::{BTreeMap, BTreeSet};
+use std::convert::TryInto;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -152,6 +153,49 @@ impl Resolver {
     }
 }
 
+fn eval_prefix(prefixes: &BTreeMap<String, Numeric>, expr: &Expr) -> Result<Numeric, String> {
+    match expr {
+        Expr::Const { ref value } => Ok(value.clone()),
+        Expr::Unit { name: ref other } => {
+            if let Some(value) = prefixes.get(other).cloned() {
+                Ok(value)
+            } else {
+                Err(format!("References non-existent prefix {other}"))
+            }
+        }
+        Expr::BinOp(BinOpExpr {
+            op: BinOpType::Frac,
+            left,
+            right,
+        }) => {
+            let left = eval_prefix(prefixes, &*left)?;
+            let right = eval_prefix(prefixes, &*right)?;
+            Ok(&left / &right)
+        }
+        Expr::BinOp(BinOpExpr {
+            op: BinOpType::Pow,
+            left,
+            right,
+        }) => {
+            let left = eval_prefix(prefixes, &*left)?;
+            let right = eval_prefix(prefixes, &*right)?;
+            let right: i32 = right
+                .to_int()
+                .and_then(|value| value.try_into().ok())
+                .ok_or(format!("Exponent is too big"))?;
+            Ok(left.pow(right))
+        }
+        Expr::UnaryOp(UnaryOpExpr {
+            op: UnaryOpType::Negative,
+            expr,
+        }) => {
+            let value = eval_prefix(prefixes, &*expr)?;
+            Ok(&value * &Numeric::from(-1))
+        }
+        ref expr => Err(format!("Not a numeric constant: {expr}")),
+    }
+}
+
 pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     let mut resolver = Resolver {
         interned: BTreeSet::new(),
@@ -271,43 +315,22 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 Ok(_) => println!("Unit {} is not a number", name),
                 Err(e) => println!("Unit {} is malformed: {}", name, e),
             },
-            Def::Prefix { ref expr } => match expr.0 {
-                Expr::Const { ref value } => {
+            Def::Prefix { ref expr } => match eval_prefix(&prefix_lookup, &expr.0) {
+                Ok(value) => {
                     prefix_lookup.insert(name.clone(), value.clone());
                     ctx.registry.prefixes.push((name.clone(), value.clone()));
                 }
-                Expr::Unit { name: ref other } => {
-                    if let Some(other_value) = prefix_lookup.get(other).cloned() {
-                        prefix_lookup.insert(name.clone(), other_value.clone());
-                        ctx.registry.prefixes.push((name.clone(), other_value));
-                    } else {
-                        println!("Prefix {} references non-existent prefix {}", name, other);
-                    }
-                }
-                _ => println!("Prefix {} is not a numeric constant", name),
+                Err(err) => println!("Prefix {name}: {err}"),
             },
-            Def::SPrefix { ref expr } => match expr.0 {
-                Expr::Const { ref value } => {
+            Def::SPrefix { ref expr } => match eval_prefix(&prefix_lookup, &expr.0) {
+                Ok(value) => {
                     prefix_lookup.insert(name.clone(), value.clone());
                     ctx.registry.prefixes.push((name.clone(), value.clone()));
                     ctx.registry
                         .units
                         .insert(name.clone(), Number::new(value.clone()));
                 }
-                Expr::Unit { name: ref other } => {
-                    if let Some(other_value) = prefix_lookup.get(other).cloned() {
-                        prefix_lookup.insert(name.clone(), other_value.clone());
-                        ctx.registry
-                            .prefixes
-                            .push((name.clone(), other_value.clone()));
-                        ctx.registry
-                            .units
-                            .insert(name.clone(), Number::new(other_value));
-                    } else {
-                        println!("SPrefix {} references non-existent prefix {}", name, other);
-                    }
-                }
-                _ => println!("SPrefix {} is not a numeric constant", name),
+                Err(err) => println!("SPrefix {name}: {err}"),
             },
             Def::Quantity { ref expr } => match ctx.eval(expr) {
                 Ok(Value::Number(v)) => {
