@@ -127,7 +127,7 @@ impl Substance {
         if self.amount.dimless() {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
-                doc: context.docs.get(&self.properties.name).cloned(),
+                doc: context.registry.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: self
                     .properties
@@ -254,7 +254,7 @@ impl Substance {
             };
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
-                doc: context.docs.get(&self.properties.name).cloned(),
+                doc: context.registry.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: once(Ok(Some(amount)))
                     .chain(self.properties.properties.iter().map(func))
@@ -270,7 +270,7 @@ impl Substance {
         if self.amount.dimless() {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
-                doc: context.docs.get(&self.properties.name).cloned(),
+                doc: context.registry.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: self
                     .properties
@@ -346,7 +346,7 @@ impl Substance {
             };
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
-                doc: context.docs.get(&self.properties.name).cloned(),
+                doc: context.registry.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: once(Ok(Some(amount)))
                     .chain(self.properties.properties.iter().map(func))

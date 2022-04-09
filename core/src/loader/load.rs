@@ -228,15 +228,16 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
         let name = name.name();
         match *def {
             Def::BaseUnit => {
-                ctx.dimensions.insert(BaseUnit::new(&*name));
+                ctx.registry.dimensions.insert(BaseUnit::new(&*name));
             }
             Def::Canonicalization { ref of } => {
-                ctx.canonicalizations.insert(of.clone(), name.clone());
+                ctx.registry.canonicalizations.insert(of.clone(), name.clone());
                 match ctx.lookup(of) {
                     Some(v) => {
-                        ctx.definitions
+                        ctx.registry
+                            .definitions
                             .insert(name.clone(), Expr::new_unit(of.clone()));
-                        ctx.units.insert(name.clone(), v);
+                        ctx.registry.units.insert(name.clone(), v);
                     }
                     None => {
                         println!("Canonicalization {} is malformed: {} not found", name, of)
@@ -246,10 +247,10 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
             Def::Unit { ref expr } => match ctx.eval(expr) {
                 Ok(Value::Number(v)) => {
                     if v.value == Numeric::one() && reverse.contains(&*name) {
-                        ctx.reverse.insert(v.unit.clone(), name.clone());
+                        ctx.registry.reverse.insert(v.unit.clone(), name.clone());
                     }
-                    ctx.definitions.insert(name.clone(), expr.0.clone());
-                    ctx.units.insert(name.clone(), v);
+                    ctx.registry.definitions.insert(name.clone(), expr.0.clone());
+                    ctx.registry.units.insert(name.clone(), v);
                 }
                 Ok(Value::Substance(sub)) => {
                     let sub = if sub.properties.name.contains('+') {
@@ -257,7 +258,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                     } else {
                         sub
                     };
-                    if ctx.substances.insert(name.clone(), sub).is_some() {
+                    if ctx.registry.substances.insert(name.clone(), sub).is_some() {
                         println!("Warning: Conflicting substances for {}", name);
                     }
                 }
@@ -266,24 +267,24 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
             },
             Def::Prefix { ref expr } => match ctx.eval(expr) {
                 Ok(Value::Number(v)) => {
-                    ctx.prefixes.push((name.clone(), v));
+                    ctx.registry.prefixes.push((name.clone(), v));
                 }
                 Ok(_) => println!("Prefix {} is not a number", name),
                 Err(e) => println!("Prefix {} is malformed: {}", name, e),
             },
             Def::SPrefix { ref expr } => match ctx.eval(expr) {
                 Ok(Value::Number(v)) => {
-                    ctx.prefixes.push((name.clone(), v.clone()));
-                    ctx.units.insert(name.clone(), v);
+                    ctx.registry.prefixes.push((name.clone(), v.clone()));
+                    ctx.registry.units.insert(name.clone(), v);
                 }
                 Ok(_) => println!("Prefix {} is not a number", name),
                 Err(e) => println!("Prefix {} is malformed: {}", name, e),
             },
             Def::Quantity { ref expr } => match ctx.eval(expr) {
                 Ok(Value::Number(v)) => {
-                    let res = ctx.quantities.insert(v.unit, name.clone());
-                    if !ctx.definitions.contains_key(&name) {
-                        ctx.definitions.insert(name.clone(), expr.0.clone());
+                    let res = ctx.registry.quantities.insert(v.unit, name.clone());
+                    if !ctx.registry.definitions.contains_key(&name) {
+                        ctx.registry.definitions.insert(name.clone(), expr.0.clone());
                     }
                     if let Some(old) = res {
                         println!("Warning: Conflicting quantities {} and {}", name, old);
@@ -370,7 +371,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 ctx.temporaries.clear();
                 match res {
                     Ok(res) => {
-                        ctx.substances.insert(
+                        ctx.registry.substances.insert(
                             name.clone(),
                             Substance {
                                 amount: Number::one(),
@@ -381,14 +382,17 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                             },
                         );
                         if let Some(ref symbol) = symbol {
-                            ctx.substance_symbols.insert(symbol.clone(), name.clone());
+                            ctx.registry
+                                .substance_symbols
+                                .insert(symbol.clone(), name.clone());
                         }
                     }
                     Err(e) => println!("Substance {} is malformed: {}", name, e),
                 }
             }
             Def::Category { ref display_name } => {
-                ctx.category_names
+                ctx.registry
+                    .category_names
                     .insert(name.clone(), display_name.clone());
             }
             Def::Error { ref message } => println!("Def {}: {}", name, message),
@@ -397,14 +401,14 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
 
     for (name, val) in resolver.docs {
         let name = name.name();
-        if ctx.docs.insert(name.clone(), val).is_some() {
+        if ctx.registry.docs.insert(name.clone(), val).is_some() {
             println!("Doc conflict for {}", name);
         }
     }
 
     for (name, val) in resolver.categories {
         let name = name.name();
-        if ctx.categories.insert(name.clone(), val).is_some() {
+        if ctx.registry.categories.insert(name.clone(), val).is_some() {
             println!("Category conflict for {}", name);
         }
     }

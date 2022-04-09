@@ -29,15 +29,32 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
         Expr::Unit { ref name } => ctx
             .lookup(name)
             .map(Value::Number)
-            .or_else(|| ctx.substances.get(name).cloned().map(Value::Substance))
             .or_else(|| {
-                ctx.substance_symbols.get(name).and_then(|full_name| {
-                    ctx.substances.get(full_name).cloned().map(Value::Substance)
-                })
+                ctx.registry
+                    .substances
+                    .get(name)
+                    .cloned()
+                    .map(Value::Substance)
             })
             .or_else(|| {
-                formula::substance_from_formula(name, &ctx.substance_symbols, &ctx.substances)
-                    .map(Value::Substance)
+                ctx.registry
+                    .substance_symbols
+                    .get(name)
+                    .and_then(|full_name| {
+                        ctx.registry
+                            .substances
+                            .get(full_name)
+                            .cloned()
+                            .map(Value::Substance)
+                    })
+            })
+            .or_else(|| {
+                formula::substance_from_formula(
+                    name,
+                    &ctx.registry.substance_symbols,
+                    &ctx.registry.substances,
+                )
+                .map(Value::Substance)
             })
             .ok_or_else(|| QueryError::NotFound(ctx.unknown_unit_err(name))),
         Expr::Quote { ref string } => Ok(Value::Number(Number::one_unit(BaseUnit::new(string)))),
@@ -643,15 +660,15 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
     match *expr {
         Query::Expr(Expr::Unit { ref name })
             if {
-                let a = ctx.definitions.contains_key(name);
+                let a = ctx.registry.definitions.contains_key(name);
                 let b = ctx
                     .canonicalize(name)
-                    .map(|x| ctx.definitions.contains_key(&*x))
+                    .map(|x| ctx.registry.definitions.contains_key(&*x))
                     .unwrap_or(false);
-                let c = ctx.dimensions.contains(&**name);
+                let c = ctx.registry.dimensions.contains(&**name);
                 let d = ctx
                     .canonicalize(name)
-                    .map(|x| ctx.dimensions.contains(&*x))
+                    .map(|x| ctx.registry.dimensions.contains(&*x))
                     .unwrap_or(false);
                 a || b || c || d
             } =>
@@ -659,22 +676,23 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             let mut name = name.clone();
             let mut canon = ctx.canonicalize(&name).unwrap_or_else(|| name.clone());
             while let Some(&Expr::Unit { name: ref unit }) = {
-                ctx.definitions
+                ctx.registry
+                    .definitions
                     .get(&name)
-                    .or_else(|| ctx.definitions.get(&*canon))
+                    .or_else(|| ctx.registry.definitions.get(&*canon))
             } {
-                if ctx.dimensions.contains(&*name) {
+                if ctx.registry.dimensions.contains(&*name) {
                     break;
                 }
                 let unit_canon = ctx.canonicalize(unit).unwrap_or_else(|| unit.clone());
-                if ctx.dimensions.contains(&**unit) {
+                if ctx.registry.dimensions.contains(&**unit) {
                     name = unit.clone();
                     canon = unit_canon;
                     break;
                 }
-                if ctx.definitions.get(unit).is_none() {
-                    if ctx.definitions.get(&unit_canon).is_none() {
-                        if !ctx.dimensions.contains(&**unit) {
+                if ctx.registry.definitions.get(unit).is_none() {
+                    if ctx.registry.definitions.get(&unit_canon).is_none() {
+                        if !ctx.registry.dimensions.contains(&**unit) {
                             break;
                         } else {
                             assert!(name != *unit || canon != unit_canon);
@@ -693,7 +711,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     canon = unit_canon.clone();
                 }
             }
-            let (def, def_expr, res) = if ctx.dimensions.contains(&*name) {
+            let (def, def_expr, res) = if ctx.registry.dimensions.contains(&*name) {
                 let parts = ctx
                     .lookup(&name)
                     .expect("Lookup of base unit failed")
@@ -705,7 +723,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 };
                 (Some(def), None, None)
             } else {
-                let def = ctx.definitions.get(&name);
+                let def = ctx.registry.definitions.get(&name);
                 (
                     def.as_ref().map(|x| x.to_string()),
                     def,
@@ -717,7 +735,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 def,
                 def_expr: def_expr.as_ref().map(|x| ExprReply::from(*x)),
                 value: res,
-                doc: ctx.docs.get(&name).cloned(),
+                doc: ctx.registry.docs.get(&name).cloned(),
             })))
         }
         Query::Convert(ref top, Conversion::None, Some(base), digits) => {
@@ -853,7 +871,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             .map(|list| {
                 QueryReply::UnitList(UnitListReply {
                     rest: NumberParts {
-                        quantity: ctx.quantities.get(&top.unit).cloned(),
+                        quantity: ctx.registry.quantities.get(&top.unit).cloned(),
                         ..Default::default()
                     },
                     list,
@@ -945,7 +963,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
         Query::Factorize(ref expr) => {
             let mut val = None;
             if let Expr::Unit { ref name } = *expr {
-                for (u, k) in &ctx.quantities {
+                for (u, k) in &ctx.registry.quantities {
                     if name == k {
                         val = Some(Number {
                             value: Numeric::one(),
@@ -971,6 +989,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 Some(val) => val,
             };
             let quantities = ctx
+                .registry
                 .quantities
                 .iter()
                 .map(|(a, b)| (a.clone(), Rc::new(b.clone())))
@@ -995,7 +1014,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
         Query::UnitsFor(ref expr) => {
             let mut val = None;
             if let Expr::Unit { ref name } = *expr {
-                for (u, k) in &ctx.quantities {
+                for (u, k) in &ctx.registry.quantities {
                     if name == k {
                         val = Some(Number {
                             value: Numeric::one(),
@@ -1022,11 +1041,11 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             };
             let dim_name;
             let mut out = vec![];
-            for (name, unit) in ctx.units.iter() {
-                if let Some(&Expr::Unit { .. }) = ctx.definitions.get(name) {
+            for (name, unit) in ctx.registry.units.iter() {
+                if let Some(&Expr::Unit { .. }) = ctx.registry.definitions.get(name) {
                     continue;
                 }
-                let category = ctx.categories.get(name);
+                let category = ctx.registry.categories.get(name);
                 if val.unit == unit.unit {
                     out.push((category, name));
                 }
@@ -1035,7 +1054,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 dim_name = ctx
                     .canonicalize(dim.as_str())
                     .unwrap_or_else(|| dim.to_string());
-                let category = ctx.categories.get(&dim_name);
+                let category = ctx.registry.categories.get(&dim_name);
                 out.push((category, &dim_name));
             }
             out.sort_by(|&(ref c1, ref n1), &(ref c2, ref n2)| {
@@ -1053,7 +1072,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             for (category, name) in out {
                 if category != cur_cat {
                     if !cur.is_empty() {
-                        let cat_name = cur_cat.and_then(|x| ctx.category_names.get(x));
+                        let cat_name = cur_cat.and_then(|x| ctx.registry.category_names.get(x));
                         categories.push(UnitsInCategory {
                             category: cat_name.map(ToOwned::to_owned),
                             units: cur.drain(..).collect(),
@@ -1064,7 +1083,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 cur.push(name.clone());
             }
             if !cur.is_empty() {
-                let cat_name = cur_cat.and_then(|x| ctx.category_names.get(x));
+                let cat_name = cur_cat.and_then(|x| ctx.registry.category_names.get(x));
                 categories.push(UnitsInCategory {
                     category: cat_name.map(ToOwned::to_owned),
                     units: cur,

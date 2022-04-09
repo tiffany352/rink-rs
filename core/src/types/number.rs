@@ -194,7 +194,7 @@ impl Number {
             } else {
                 (self.value.clone(), (orig.0.clone(), orig.1))
             };
-            for &(ref p, ref v) in &context.prefixes {
+            for &(ref p, ref v) in &context.registry.prefixes {
                 if !prefixes.contains(&**p) {
                     continue;
                 }
@@ -227,17 +227,22 @@ impl Number {
         let value = self.prettify(context);
         let (exact, approx) = value.numeric_value(10, Digits::Default);
 
-        let quantity = context.quantities.get(&self.unit).cloned().or_else(|| {
-            if let Some((unit, power)) = self.unit.as_single() {
-                if power == 1 {
-                    Some(unit.to_string())
+        let quantity = context
+            .registry
+            .quantities
+            .get(&self.unit)
+            .cloned()
+            .or_else(|| {
+                if let Some((unit, power)) = self.unit.as_single() {
+                    if power == 1 {
+                        Some(unit.to_string())
+                    } else {
+                        Some(format!("{}^{}", unit, power))
+                    }
                 } else {
-                    Some(format!("{}^{}", unit, power))
+                    None
                 }
-            } else {
-                None
-            }
-        });
+            });
 
         NumberParts {
             raw_value: Some(self.clone()),
@@ -294,12 +299,13 @@ impl Number {
     }
 
     fn pretty_unit(&self, context: &Context) -> Dimensionality {
-        let pretty = crate::algorithms::fast_decompose(self, &context.reverse);
+        let pretty = crate::algorithms::fast_decompose(self, &context.registry.reverse);
         pretty
             .into_iter()
             .map(|(k, p)| {
                 (
                     context
+                        .registry
                         .canonicalizations
                         .get(&*k.id)
                         .map(|x| BaseUnit::new(x))

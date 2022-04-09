@@ -10,9 +10,8 @@ use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};
 use std::collections::{BTreeMap, BTreeSet};
 
-/// The evaluation context that contains unit definitions.
-#[derive(Debug)]
-pub struct Context {
+#[derive(Default, Debug)]
+pub struct Registry {
     pub dimensions: BTreeSet<BaseUnit>,
     pub canonicalizations: BTreeMap<String, String>,
     pub units: BTreeMap<String, Number>,
@@ -26,6 +25,12 @@ pub struct Context {
     pub datepatterns: Vec<Vec<DatePattern>>,
     pub substances: BTreeMap<String, Substance>,
     pub substance_symbols: BTreeMap<String, String>,
+}
+
+/// The evaluation context that contains unit definitions.
+#[derive(Debug)]
+pub struct Context {
+    pub registry: Registry,
     pub temporaries: BTreeMap<String, Number>,
     pub now: DateTime<Local>,
     pub short_output: bool,
@@ -45,26 +50,12 @@ impl Context {
     /// Creates a new, empty context
     pub fn new() -> Context {
         Context {
+            registry: Registry::default(),
+            temporaries: BTreeMap::new(),
+            now: Local.timestamp(0, 0),
             short_output: false,
             use_humanize: true,
             save_previous_result: false,
-
-            now: Local.timestamp(0, 0),
-
-            dimensions: BTreeSet::new(),
-            prefixes: vec![],
-            datepatterns: vec![],
-            canonicalizations: BTreeMap::new(),
-            units: BTreeMap::new(),
-            quantities: BTreeMap::new(),
-            reverse: BTreeMap::new(),
-            definitions: BTreeMap::new(),
-            docs: BTreeMap::new(),
-            categories: BTreeMap::new(),
-            category_names: BTreeMap::new(),
-            substances: BTreeMap::new(),
-            substance_symbols: BTreeMap::new(),
-            temporaries: BTreeMap::new(),
             previous_result: None,
         }
     }
@@ -78,7 +69,7 @@ impl Context {
     }
 
     pub fn load_dates(&mut self, mut dates: Vec<Vec<DatePattern>>) {
-        self.datepatterns.append(&mut dates)
+        self.registry.datepatterns.append(&mut dates)
     }
 
     /// Given a unit name, returns its value if it exists. Supports SI
@@ -91,13 +82,13 @@ impl Context {
             if let Some(v) = ctx.temporaries.get(name).cloned() {
                 return Some(v);
             }
-            if let Some(k) = ctx.dimensions.get(name) {
+            if let Some(k) = ctx.registry.dimensions.get(name) {
                 return Some(Number::one_unit(k.to_owned()));
             }
-            if let Some(v) = ctx.units.get(name).cloned() {
+            if let Some(v) = ctx.registry.units.get(name).cloned() {
                 return Some(v);
             }
-            for (unit, quantity) in &ctx.quantities {
+            for (unit, quantity) in &ctx.registry.quantities {
                 if name == quantity {
                     return Some(Number {
                         value: Numeric::one(),
@@ -112,7 +103,7 @@ impl Context {
             if let Some(v) = inner(self, name) {
                 return Some(v);
             }
-            for &(ref pre, ref value) in &self.prefixes {
+            for &(ref pre, ref value) in &self.registry.prefixes {
                 if name.starts_with(pre) {
                     if let Some(v) = inner(self, &name[pre.len()..]) {
                         return Some((&v * value).unwrap());
@@ -139,13 +130,13 @@ impl Context {
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
         fn inner(ctx: &Context, name: &str) -> Option<String> {
-            if let Some(v) = ctx.canonicalizations.get(name) {
+            if let Some(v) = ctx.registry.canonicalizations.get(name) {
                 return Some(v.clone());
             }
-            if let Some(k) = ctx.dimensions.get(name) {
+            if let Some(k) = ctx.registry.dimensions.get(name) {
                 return Some((*k.id).clone());
             }
-            if let Some(v) = ctx.definitions.get(name) {
+            if let Some(v) = ctx.registry.definitions.get(name) {
                 if let Expr::Unit { ref name } = *v {
                     if let Some(r) = ctx.canonicalize(&*name) {
                         return Some(r);
@@ -164,11 +155,11 @@ impl Context {
             if let Some(v) = inner(self, name) {
                 return Some(v);
             }
-            for &(ref pre, ref val) in &self.prefixes {
+            for &(ref pre, ref val) in &self.registry.prefixes {
                 if name.starts_with(pre) {
                     if let Some(v) = inner(self, &name[pre.len()..]) {
                         let mut pre = pre;
-                        for &(ref other, ref otherval) in &self.prefixes {
+                        for &(ref other, ref otherval) in &self.registry.prefixes {
                             if other.len() > pre.len() && val == otherval {
                                 pre = other;
                             }
@@ -213,21 +204,23 @@ impl Context {
                 unit: value.unit.clone(),
             })
             .unwrap();
-        if let Some(name) = self.quantities.get(&value.unit) {
+        if let Some(name) = self.registry.quantities.get(&value.unit) {
             write!(buf, "{}", name).unwrap();
-        } else if let Some(name) = square.and_then(|square| self.quantities.get(&square.unit)) {
+        } else if let Some(name) =
+            square.and_then(|square| self.registry.quantities.get(&square.unit))
+        {
             write!(buf, "{}^2", name).unwrap();
-        } else if let Some(name) = self.quantities.get(&inverse.unit) {
+        } else if let Some(name) = self.registry.quantities.get(&inverse.unit) {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
             let helper = |dim: &BaseUnit, pow: i64, buf: &mut Vec<u8>| {
                 let unit = Dimensionality::new_dim(dim.clone(), pow);
-                if let Some(name) = self.quantities.get(&unit) {
+                if let Some(name) = self.registry.quantities.get(&unit) {
                     write!(buf, " {}", name).unwrap();
                 } else {
                     let unit = Dimensionality::base_unit(dim.clone());
-                    if let Some(name) = self.quantities.get(&unit) {
+                    if let Some(name) = self.registry.quantities.get(&unit) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         write!(buf, " '{}'", dim).unwrap();
@@ -256,7 +249,7 @@ impl Context {
                 }
                 for (dim, pow) in frac {
                     let unit = Dimensionality::new_dim(dim.clone(), pow);
-                    if let Some(name) = self.quantities.get(&unit) {
+                    if let Some(name) = self.registry.quantities.get(&unit) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         helper(dim, pow, &mut buf);
