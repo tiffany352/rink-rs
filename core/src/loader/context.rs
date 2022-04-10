@@ -70,59 +70,7 @@ impl Context {
 
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
-        fn inner(ctx: &Context, name: &str) -> Option<String> {
-            if let Some(v) = ctx.registry.canonicalizations.get(name) {
-                return Some(v.clone());
-            }
-            if let Some(base_unit) = ctx.registry.base_units.get(name) {
-                return Some((*base_unit.id).clone());
-            }
-            if let Some(v) = ctx.registry.definitions.get(name) {
-                if let Expr::Unit { ref name } = *v {
-                    if let Some(r) = ctx.canonicalize(&*name) {
-                        return Some(r);
-                    } else {
-                        return Some(name.clone());
-                    }
-                } else {
-                    // we cannot canonicalize it further
-                    return Some(name.to_owned());
-                }
-            }
-            None
-        }
-
-        let outer = |name: &str| -> Option<String> {
-            if let Some(v) = inner(self, name) {
-                return Some(v);
-            }
-            for &(ref pre, ref val) in &self.registry.prefixes {
-                if name.starts_with(pre) {
-                    if let Some(v) = inner(self, &name[pre.len()..]) {
-                        let mut pre = pre;
-                        for &(ref other, ref otherval) in &self.registry.prefixes {
-                            if other.len() > pre.len() && val == otherval {
-                                pre = other;
-                            }
-                        }
-                        return Some(format!("{}{}", pre, v));
-                    }
-                }
-            }
-            None
-        };
-
-        let res = outer(name);
-        if res.is_some() {
-            return res;
-        }
-
-        if name.ends_with('s') {
-            let name = &name[0..name.len() - 1];
-            outer(name)
-        } else {
-            None
-        }
+        self.registry.canonicalize(name)
     }
 
     /// Describes a value's unit, gives true if the unit is reciprocal

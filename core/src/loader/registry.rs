@@ -71,4 +71,60 @@ impl Registry {
             None
         }
     }
+
+    fn canonicalize_exact(&self, name: &str) -> Option<String> {
+        if let Some(v) = self.canonicalizations.get(name) {
+            return Some(v.clone());
+        }
+        if let Some(base_unit) = self.base_units.get(name) {
+            return Some(base_unit.to_string());
+        }
+        if let Some(expr) = self.definitions.get(name) {
+            if let Expr::Unit { ref name } = *expr {
+                if let Some(canonicalized) = self.canonicalize(&*name) {
+                    return Some(canonicalized);
+                } else {
+                    return Some(name.clone());
+                }
+            } else {
+                // we cannot canonicalize it further
+                return Some(name.to_owned());
+            }
+        }
+        None
+    }
+
+    fn canonicalize_with_prefix(&self, name: &str) -> Option<String> {
+        if let Some(v) = self.canonicalize_exact(name) {
+            return Some(v);
+        }
+        for &(ref prefix, ref value) in &self.prefixes {
+            if let Some(name) = name.strip_prefix(prefix) {
+                if let Some(canonicalized) = self.canonicalize_exact(name) {
+                    let mut prefix = prefix;
+                    for &(ref other, ref otherval) in &self.prefixes {
+                        if other.len() > prefix.len() && value == otherval {
+                            prefix = other;
+                        }
+                    }
+                    return Some(format!("{}{}", prefix, canonicalized));
+                }
+            }
+        }
+        None
+    }
+
+    /// Given a unit name, try to return a canonical name (expanding aliases and such)
+    pub fn canonicalize(&self, name: &str) -> Option<String> {
+        let res = self.canonicalize_with_prefix(name);
+        if res.is_some() {
+            return res;
+        }
+
+        if let Some(name) = name.strip_suffix('s') {
+            self.canonicalize_with_prefix(name)
+        } else {
+            None
+        }
+    }
 }
