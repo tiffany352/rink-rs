@@ -48,8 +48,8 @@ impl Resolver {
         }
     }
 
-    fn lookup_exact(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
-        let ordering = if prefer_quantities {
+    fn lookup_exact(&mut self, name: &Rc<String>, context: bool) -> bool {
+        let ordering = if context {
             [Namespace::Quantity, Namespace::Unit, Namespace::Prefix]
         } else {
             [Namespace::Unit, Namespace::Prefix, Namespace::Quantity]
@@ -66,8 +66,8 @@ impl Resolver {
         })
     }
 
-    fn lookup_with_prefix(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
-        if self.lookup_exact(name, prefer_quantities) {
+    fn lookup_with_prefix(&mut self, name: &Rc<String>, context: bool) -> bool {
+        if self.lookup_exact(name, context) {
             return true;
         }
         let mut found = vec![];
@@ -77,47 +77,44 @@ impl Resolver {
             }
         }
         found.into_iter().any(|pre| {
-            self.lookup_exact(
-                &Rc::new(name[pre.name.len()..].to_owned()),
-                prefer_quantities,
-            ) && {
+            self.lookup_exact(&Rc::new(name[pre.name.len()..].to_owned()), context) && {
                 self.visit(&pre);
                 true
             }
         })
     }
 
-    fn lookup(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
-        self.lookup_with_prefix(name, prefer_quantities)
+    fn lookup(&mut self, name: &Rc<String>, context: bool) -> bool {
+        self.lookup_with_prefix(name, context)
             || name.ends_with('s') && {
                 let name = &Rc::new(name[0..name.len() - 1].to_owned());
-                self.lookup_with_prefix(name, prefer_quantities)
+                self.lookup_with_prefix(name, context)
             }
     }
 
-    fn eval(&mut self, expr: &Expr, prefer_quantities: bool) {
+    fn eval(&mut self, expr: &Expr, context: bool) {
         match *expr {
             Expr::Unit { ref name } => {
                 let name = self.intern(name);
-                self.lookup(&name, prefer_quantities);
+                self.lookup(&name, context);
             }
             Expr::BinOp(BinOpExpr {
                 ref left,
                 ref right,
                 ..
             }) => {
-                self.eval(left, prefer_quantities);
-                self.eval(right, prefer_quantities);
+                self.eval(left, context);
+                self.eval(right, context);
             }
-            Expr::UnaryOp(ref unaryop) => self.eval(&unaryop.expr, prefer_quantities),
-            Expr::Of { ref expr, .. } => self.eval(expr, prefer_quantities),
+            Expr::UnaryOp(ref unaryop) => self.eval(&unaryop.expr, context),
+            Expr::Of { ref expr, .. } => self.eval(expr, context),
 
             Expr::Mul { ref exprs }
             | Expr::Call {
                 args: ref exprs, ..
             } => {
                 for expr in exprs {
-                    self.eval(expr, prefer_quantities);
+                    self.eval(expr, context);
                 }
             }
             _ => (),
@@ -129,7 +126,7 @@ impl Resolver {
             println!("Unit {:?} has a dependency cycle", id);
             return;
         }
-        let prefer_quantities = id.namespace == Namespace::Quantity;
+        let context = id.namespace == Namespace::Quantity;
         if self.unmarked.get(id).is_some() {
             self.temp_marks.insert(id.clone());
             if let Some(v) = self.input.get(id).cloned() {
@@ -137,14 +134,14 @@ impl Resolver {
                     Def::Prefix { ref expr }
                     | Def::SPrefix { ref expr }
                     | Def::Unit { ref expr }
-                    | Def::Quantity { ref expr } => self.eval(expr, prefer_quantities),
+                    | Def::Quantity { ref expr } => self.eval(expr, context),
                     Def::Canonicalization { ref of } => {
-                        self.lookup(&Rc::new(of.clone()), prefer_quantities);
+                        self.lookup(&Rc::new(of.clone()), context);
                     }
                     Def::Substance { ref properties, .. } => {
                         for prop in properties {
-                            self.eval(&prop.input, prefer_quantities);
-                            self.eval(&prop.output, prefer_quantities);
+                            self.eval(&prop.input, context);
+                            self.eval(&prop.output, context);
                         }
                     }
                     _ => (),
