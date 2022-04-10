@@ -280,6 +280,21 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
         category,
     } in defs.defs.into_iter()
     {
+        // Base units can have two different names from one Def, handle that here.
+        if let Def::BaseUnit {
+            long_name: Some(ref long_name),
+        } = *def
+        {
+            let long_name = resolver.intern(long_name);
+            resolver.input.insert(
+                Id {
+                    namespace: Namespace::Unit,
+                    name: long_name,
+                },
+                def.clone(),
+            );
+        }
+
         let name = resolver.intern(&name);
         let id = match *def {
             Def::Prefix { .. } => Id {
