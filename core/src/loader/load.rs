@@ -359,7 +359,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 ctx.registry
                     .canonicalizations
                     .insert(of.clone(), name.clone());
-                match ctx.lookup(of) {
+                match ctx.registry.lookup(of) {
                     Some(v) => {
                         ctx.registry
                             .definitions
