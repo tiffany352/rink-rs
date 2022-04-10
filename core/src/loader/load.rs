@@ -178,7 +178,7 @@ fn eval_prefix(prefixes: &BTreeMap<String, Numeric>, expr: &Expr) -> Result<Nume
             let right: i32 = right
                 .to_int()
                 .and_then(|value| value.try_into().ok())
-                .ok_or(format!("Exponent is too big"))?;
+                .ok_or_else(|| "Exponent is too big".to_string())?;
             Ok(left.pow(right))
         }
         Expr::UnaryOp(UnaryOpExpr {
@@ -234,7 +234,9 @@ fn eval_quantity(
             let left = eval_quantity(base_units, quantities, &*left)?;
             match **right {
                 Expr::Const { ref value } => {
-                    let value = value.to_int().ok_or(format!("RHS of `^` is too big"))?;
+                    let value = value
+                        .to_int()
+                        .ok_or_else(|| "RHS of `^` is too big".to_string())?;
                     Ok(left.pow(value))
                 }
                 Expr::UnaryOp(UnaryOpExpr {
@@ -242,7 +244,9 @@ fn eval_quantity(
                     ref expr,
                 }) => {
                     if let Expr::Const { ref value } = **expr {
-                        let value = -value.to_int().ok_or(format!("RHS of `^` is too big"))?;
+                        let value = -value
+                            .to_int()
+                            .ok_or_else(|| "RHS of `^` is too big".to_string())?;
                         Ok(left.pow(value))
                     } else {
                         Err(format!("RHS of `^` must be a constant: {expr}"))

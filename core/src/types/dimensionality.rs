@@ -84,6 +84,7 @@ impl<'a> ops::Mul for &'a Dimensionality {
     }
 }
 
+#[allow(clippy::suspicious_arithmetic_impl)]
 impl<'a> ops::Div for &'a Dimensionality {
     type Output = Dimensionality;
 
