@@ -730,6 +730,16 @@ fn expand_aliases(ctx: &Context, name: &str) -> (String, String) {
     (name, canon)
 }
 
+/// Given a name, returns the dimensionality if it is a quantity, or None if it isn't.
+fn find_quantity(ctx: &Context, name: &str) -> Option<Dimensionality> {
+    for (dims, quantity_name) in &ctx.registry.quantities {
+        if quantity_name == name {
+            return Some(dims.clone());
+        }
+    }
+    None
+}
+
 pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, QueryError> {
     match *expr {
         Query::Expr(Expr::Unit { ref name }) if can_show_definition(ctx, name) => {
@@ -744,6 +754,15 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                         "base unit".to_string()
                     };
                     (Some(def), None, None)
+                } else if let Some(dims) = find_quantity(ctx, &name) {
+                    let def = ctx
+                        .registry
+                        .definitions
+                        .get(&name)
+                        .expect("quantities should always have definitions");
+                    let description = format!("physical quantity for {def} ({dims})");
+
+                    (Some(description), None, None)
                 } else {
                     let def = ctx.registry.definitions.get(&name);
                     (

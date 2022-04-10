@@ -46,6 +46,10 @@ impl Number {
         }
     }
 
+    pub fn new_dims(value: Numeric, unit: Dimensionality) -> Number {
+        Number { value, unit }
+    }
+
     /// Creates a value with a single dimension.
     pub fn new_unit(num: Numeric, unit: BaseUnit) -> Number {
         let unit = Dimensionality::base_unit(unit);

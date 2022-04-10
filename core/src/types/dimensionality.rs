@@ -7,6 +7,7 @@ use std::{
         btree_map::{IntoIter, Iter},
         BTreeMap,
     },
+    fmt,
     iter::FromIterator,
     ops,
 };
@@ -90,6 +91,44 @@ impl<'a> ops::Div for &'a Dimensionality {
 
     fn div(self, rhs: Self) -> Self::Output {
         self * &rhs.clone().recip()
+    }
+}
+
+impl fmt::Display for Dimensionality {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut first = true;
+        let mut have_frac = false;
+        let mut have_numerator = false;
+        for (base_unit, &power) in &self.dims {
+            if !first && power > 0 {
+                write!(fmt, " ")?;
+            }
+            first = false;
+            if power == 1 {
+                have_numerator = true;
+                write!(fmt, "{}", base_unit)?;
+            } else if power > 0 {
+                have_numerator = true;
+                write!(fmt, "{}^{}", base_unit, power)?;
+            } else {
+                have_frac = true;
+            }
+        }
+        if have_frac {
+            if have_numerator {
+                write!(fmt, " ")?;
+            }
+            write!(fmt, "/")?;
+            for (base_unit, &power) in &self.dims {
+                let power = -power;
+                if power == 1 {
+                    write!(fmt, " {}", base_unit)?;
+                } else if power > 0 {
+                    write!(fmt, " {}^{}", base_unit, power)?;
+                }
+            }
+        }
+        Ok(())
     }
 }
 
