@@ -328,23 +328,23 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
         (name, res)
     });
 
-    let mut reverse = BTreeSet::new();
-    reverse.insert("newton");
-    reverse.insert("pascal");
-    reverse.insert("joule");
-    reverse.insert("watt");
-    reverse.insert("coulomb");
-    reverse.insert("volt");
-    reverse.insert("ohm");
-    reverse.insert("siemens");
-    reverse.insert("farad");
-    reverse.insert("weber");
-    reverse.insert("henry");
-    reverse.insert("tesla");
-    reverse.insert("lumen");
-    reverse.insert("lux");
-    reverse.insert("gray");
-    reverse.insert("katal");
+    let mut decomposition_units = BTreeSet::new();
+    decomposition_units.insert("newton");
+    decomposition_units.insert("pascal");
+    decomposition_units.insert("joule");
+    decomposition_units.insert("watt");
+    decomposition_units.insert("coulomb");
+    decomposition_units.insert("volt");
+    decomposition_units.insert("ohm");
+    decomposition_units.insert("siemens");
+    decomposition_units.insert("farad");
+    decomposition_units.insert("weber");
+    decomposition_units.insert("henry");
+    decomposition_units.insert("tesla");
+    decomposition_units.insert("lumen");
+    decomposition_units.insert("lux");
+    decomposition_units.insert("gray");
+    decomposition_units.insert("katal");
 
     let mut prefix_lookup = BTreeMap::new();
     let mut quantities = BTreeMap::new();
@@ -373,8 +373,11 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
             }
             Def::Unit { ref expr } => match ctx.eval(expr) {
                 Ok(Value::Number(v)) => {
-                    if v.value == Numeric::one() && reverse.contains(&*name) {
-                        ctx.registry.reverse.insert(v.unit.clone(), name.clone());
+                    // This is one of the SI derived units, so put it in the map.
+                    if v.value == Numeric::one() && decomposition_units.contains(&*name) {
+                        ctx.registry
+                            .decomposition_units
+                            .insert(v.unit.clone(), name.clone());
                     }
                     ctx.registry
                         .definitions

@@ -299,7 +299,7 @@ impl Number {
     }
 
     fn pretty_unit(&self, context: &Context) -> Dimensionality {
-        let pretty = crate::algorithms::fast_decompose(self, &context.registry.reverse);
+        let pretty = crate::algorithms::fast_decompose(self, &context.registry.decomposition_units);
         pretty
             .into_iter()
             .map(|(k, p)| {

@@ -12,7 +12,9 @@ pub struct Registry {
     pub canonicalizations: BTreeMap<String, String>,
     pub units: BTreeMap<String, Number>,
     pub quantities: BTreeMap<Dimensionality, String>,
-    pub reverse: BTreeMap<Dimensionality, String>,
+    /// Maps dimensionality to names of SI derived units (newton,
+    /// pascal, etc.) for showing simplified forms of units.
+    pub decomposition_units: BTreeMap<Dimensionality, String>,
     pub prefixes: Vec<(String, Numeric)>,
     pub definitions: BTreeMap<String, Expr>,
     pub docs: BTreeMap<String, String>,
