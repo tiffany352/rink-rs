@@ -665,10 +665,10 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     .canonicalize(name)
                     .map(|x| ctx.registry.definitions.contains_key(&*x))
                     .unwrap_or(false);
-                let c = ctx.registry.dimensions.contains(&**name);
+                let c = ctx.registry.base_units.contains(&**name);
                 let d = ctx
                     .canonicalize(name)
-                    .map(|x| ctx.registry.dimensions.contains(&*x))
+                    .map(|x| ctx.registry.base_units.contains(&*x))
                     .unwrap_or(false);
                 a || b || c || d
             } =>
@@ -681,18 +681,18 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     .get(&name)
                     .or_else(|| ctx.registry.definitions.get(&*canon))
             } {
-                if ctx.registry.dimensions.contains(&*name) {
+                if ctx.registry.base_units.contains(&*name) {
                     break;
                 }
                 let unit_canon = ctx.canonicalize(unit).unwrap_or_else(|| unit.clone());
-                if ctx.registry.dimensions.contains(&**unit) {
+                if ctx.registry.base_units.contains(&**unit) {
                     name = unit.clone();
                     canon = unit_canon;
                     break;
                 }
                 if ctx.registry.definitions.get(unit).is_none() {
                     if ctx.registry.definitions.get(&unit_canon).is_none() {
-                        if !ctx.registry.dimensions.contains(&**unit) {
+                        if !ctx.registry.base_units.contains(&**unit) {
                             break;
                         } else {
                             assert!(name != *unit || canon != unit_canon);
@@ -711,7 +711,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     canon = unit_canon.clone();
                 }
             }
-            let (def, def_expr, res) = if ctx.registry.dimensions.contains(&*name) {
+            let (def, def_expr, res) = if ctx.registry.base_units.contains(&*name) {
                 let parts = ctx
                     .lookup(&name)
                     .expect("Lookup of base unit failed")

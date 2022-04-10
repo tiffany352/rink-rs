@@ -74,8 +74,8 @@ impl Context {
             if let Some(v) = ctx.registry.canonicalizations.get(name) {
                 return Some(v.clone());
             }
-            if let Some(k) = ctx.registry.dimensions.get(name) {
-                return Some((*k.id).clone());
+            if let Some(base_unit) = ctx.registry.base_units.get(name) {
+                return Some((*base_unit.id).clone());
             }
             if let Some(v) = ctx.registry.definitions.get(name) {
                 if let Expr::Unit { ref name } = *v {

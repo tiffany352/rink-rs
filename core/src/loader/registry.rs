@@ -8,7 +8,7 @@ use crate::{
 
 #[derive(Default, Debug)]
 pub struct Registry {
-    pub dimensions: BTreeSet<BaseUnit>,
+    pub base_units: BTreeSet<BaseUnit>,
     pub canonicalizations: BTreeMap<String, String>,
     pub units: BTreeMap<String, Number>,
     pub quantities: BTreeMap<Dimensionality, String>,
@@ -25,7 +25,7 @@ pub struct Registry {
 
 impl Registry {
     fn lookup_exact(&self, name: &str) -> Option<Number> {
-        if let Some(k) = self.dimensions.get(name) {
+        if let Some(k) = self.base_units.get(name) {
             return Some(Number::one_unit(k.to_owned()));
         }
         if let Some(v) = self.units.get(name).cloned() {

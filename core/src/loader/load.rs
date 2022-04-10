@@ -353,7 +353,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
         let name = id.name.to_string();
         match *def {
             Def::BaseUnit => {
-                ctx.registry.dimensions.insert(BaseUnit::new(&*name));
+                ctx.registry.base_units.insert(BaseUnit::new(&*name));
             }
             Def::Canonicalization { ref of } => {
                 ctx.registry
@@ -407,7 +407,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 Err(err) => println!("Prefix {name}: {err}"),
             },
             Def::Quantity { ref expr } => {
-                match eval_quantity(&ctx.registry.dimensions, &quantities, &expr.0) {
+                match eval_quantity(&ctx.registry.base_units, &quantities, &expr.0) {
                     Ok(dimensionality) => {
                         quantities.insert(name.clone(), dimensionality.clone());
                         let res = ctx

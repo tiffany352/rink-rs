@@ -13,12 +13,12 @@ pub(crate) fn search_internal<'a>(
     query: &str,
     num_results: usize,
 ) -> Vec<&'a str> {
-    let dimensions = ctx.registry.dimensions.iter().map(|dim| &dim.id[..]);
+    let base_units = ctx.registry.base_units.iter().map(|dim| &dim.id[..]);
     let units = ctx.registry.units.keys().map(|name| &name[..]);
     let quantities = ctx.registry.quantities.values().map(|name| &name[..]);
     let substances = ctx.registry.substances.keys().map(|name| &name[..]);
 
-    let iter = dimensions.chain(units).chain(quantities).chain(substances);
+    let iter = base_units.chain(units).chain(quantities).chain(substances);
     crate::algorithms::search_impl(iter, query, num_results)
 }
 
