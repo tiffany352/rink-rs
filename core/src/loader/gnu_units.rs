@@ -374,6 +374,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             name,
                             def: Rc::new(Def::Prefix {
                                 expr: ExprString(expr),
+                                is_long: false,
                             }),
                             doc: doc.take(),
                             category: category.clone(),
@@ -381,8 +382,9 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                     } else {
                         map.push(DefEntry {
                             name,
-                            def: Rc::new(Def::SPrefix {
+                            def: Rc::new(Def::Prefix {
                                 expr: ExprString(expr),
+                                is_long: true,
                             }),
                             doc: doc.take(),
                             category: category.clone(),

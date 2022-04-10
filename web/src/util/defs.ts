@@ -16,11 +16,7 @@ export interface Canonicalization extends DefBase {
 export interface Prefix extends DefBase {
   type: "prefix";
   expr: string;
-}
-
-export interface SPrefix extends DefBase {
-  type: "sprefix";
-  expr: string;
+  isLong: boolean;
 }
 
 export interface Unit extends DefBase {
@@ -62,7 +58,6 @@ export type Def =
   | BaseUnit
   | Canonicalization
   | Prefix
-  | SPrefix
   | Unit
   | Quantity
   | Substance

@@ -75,10 +75,7 @@ pub enum Def {
     },
     Prefix {
         expr: ExprString,
-    },
-    #[serde(rename = "sprefix")]
-    SPrefix {
-        expr: ExprString,
+        is_long: bool,
     },
     Unit {
         expr: ExprString,

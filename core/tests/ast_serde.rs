@@ -79,8 +79,9 @@ fn check_defs() {
                 "kilo",
                 None,
                 None,
-                Def::SPrefix {
-                    expr: ExprString(expr("1000"))
+                Def::Prefix {
+                    expr: ExprString(expr("1000")),
+                    is_long: true,
                 },
             ),
             DefEntry::new(
@@ -88,7 +89,8 @@ fn check_defs() {
                 None,
                 None,
                 Def::Prefix {
-                    expr: ExprString(expr("kilo"))
+                    expr: ExprString(expr("kilo")),
+                    is_long: false,
                 }
             )
         ])
@@ -98,7 +100,8 @@ fn check_defs() {
                 "name": "kilo",
                 "doc": null,
                 "category": null,
-                "type": "sprefix",
+                "type": "prefix",
+                "is_long": true,
                 "expr": "1000"
             },
             {
@@ -106,6 +109,7 @@ fn check_defs() {
                 "doc": null,
                 "category": null,
                 "type": "prefix",
+                "is_long": false,
                 "expr": "kilo"
             }
         ])

@@ -130,8 +130,7 @@ impl Resolver {
             self.temp_marks.insert(id.clone());
             if let Some(v) = self.input.get(id).cloned() {
                 match *v {
-                    Def::Prefix { ref expr }
-                    | Def::SPrefix { ref expr }
+                    Def::Prefix { ref expr, .. }
                     | Def::Unit { ref expr }
                     | Def::Quantity { ref expr } => self.eval(expr, id.namespace),
                     Def::Canonicalization { ref of } => {
@@ -282,7 +281,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     {
         let name = resolver.intern(&name);
         let id = match *def {
-            Def::Prefix { .. } | Def::SPrefix { .. } => Id {
+            Def::Prefix { .. } => Id {
                 namespace: Namespace::Prefix,
                 name,
             },
@@ -395,22 +394,17 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 Ok(_) => println!("Unit {} is not a number", name),
                 Err(e) => println!("Unit {} is malformed: {}", name, e),
             },
-            Def::Prefix { ref expr } => match eval_prefix(&prefix_lookup, &expr.0) {
+            Def::Prefix { ref expr, is_long } => match eval_prefix(&prefix_lookup, &expr.0) {
                 Ok(value) => {
                     prefix_lookup.insert(name.clone(), value.clone());
                     ctx.registry.prefixes.push((name.clone(), value.clone()));
+                    if is_long {
+                        ctx.registry
+                            .units
+                            .insert(name.clone(), Number::new(value.clone()));
+                    }
                 }
                 Err(err) => println!("Prefix {name}: {err}"),
-            },
-            Def::SPrefix { ref expr } => match eval_prefix(&prefix_lookup, &expr.0) {
-                Ok(value) => {
-                    prefix_lookup.insert(name.clone(), value.clone());
-                    ctx.registry.prefixes.push((name.clone(), value.clone()));
-                    ctx.registry
-                        .units
-                        .insert(name.clone(), Number::new(value.clone()));
-                }
-                Err(err) => println!("SPrefix {name}: {err}"),
             },
             Def::Quantity { ref expr } => {
                 match eval_quantity(&ctx.registry.dimensions, &quantities, &expr.0) {
