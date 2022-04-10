@@ -49,9 +49,9 @@ impl Resolver {
     }
 
     fn lookup_exact(&mut self, name: &Rc<String>, context: Namespace) -> bool {
-        let ordering = match context {
-            Namespace::Quantity => [Namespace::Quantity, Namespace::Unit, Namespace::Prefix],
-            _ => [Namespace::Unit, Namespace::Prefix, Namespace::Quantity],
+        let ordering: &[Namespace] = match context {
+            Namespace::Quantity => &[Namespace::Quantity],
+            _ => &[Namespace::Unit, Namespace::Prefix, Namespace::Quantity],
         };
         ordering.iter().copied().any(|namespace| {
             let id = Id {
