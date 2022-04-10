@@ -7,7 +7,7 @@ use rink_core::*;
 #[test]
 fn canonicalizations() {
     let ctx = simple_context().unwrap();
-    for (name, value) in &ctx.units {
+    for (name, value) in &ctx.registry.units {
         let canon = match ctx.canonicalize(&*name) {
             Some(x) => x,
             None => continue,

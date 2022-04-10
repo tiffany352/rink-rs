@@ -72,15 +72,16 @@ fn check_defs() {
         })
     );
 
-    // Prefix and SPrefix.
+    // Prefixes
     assert_json_eq!(
         serde_json::to_value([
             DefEntry::new(
                 "kilo",
                 None,
                 None,
-                Def::SPrefix {
-                    expr: ExprString(expr("1000"))
+                Def::Prefix {
+                    expr: ExprString(expr("1000")),
+                    is_long: true,
                 },
             ),
             DefEntry::new(
@@ -88,7 +89,8 @@ fn check_defs() {
                 None,
                 None,
                 Def::Prefix {
-                    expr: ExprString(expr("kilo"))
+                    expr: ExprString(expr("kilo")),
+                    is_long: false,
                 }
             )
         ])
@@ -98,7 +100,8 @@ fn check_defs() {
                 "name": "kilo",
                 "doc": null,
                 "category": null,
-                "type": "sprefix",
+                "type": "prefix",
+                "isLong": true,
                 "expr": "1000"
             },
             {
@@ -106,6 +109,7 @@ fn check_defs() {
                 "doc": null,
                 "category": null,
                 "type": "prefix",
+                "isLong": false,
                 "expr": "kilo"
             }
         ])
@@ -113,31 +117,44 @@ fn check_defs() {
 
     // Base units.
     assert_json_eq!(
-        serde_json::to_value([
-            DefEntry::new("m", Some("base unit of length"), None, Def::BaseUnit),
-            DefEntry::new(
-                "meter",
-                None,
-                None,
-                Def::Canonicalization { of: "m".to_owned() }
-            )
-        ])
+        serde_json::to_value([DefEntry::new(
+            "m",
+            Some("base unit of length"),
+            None,
+            Def::BaseUnit {
+                long_name: Some("meter".to_owned())
+            }
+        ),])
         .unwrap(),
         json!([
             {
                 "name": "m",
+                "longName": "meter",
                 "doc": "base unit of length",
                 "category": null,
-                "type": "dimension"
-            },
-            {
-                "name": "meter",
-                "doc": null,
-                "category": null,
-                "type": "canonicalization",
-                "of": "m"
+                "type": "baseUnit"
             }
         ])
+    );
+
+    // Quantities
+    assert_json_eq!(
+        serde_json::to_value(DefEntry::new(
+            "watt",
+            Some("SI derived unit for power"),
+            None,
+            Def::Quantity {
+                expr: ExprString(expr("energy / time"))
+            }
+        ))
+        .unwrap(),
+        json!({
+            "name": "watt",
+            "doc": "SI derived unit for power",
+            "category": null,
+            "type": "quantity",
+            "expr": "energy / time",
+        })
     );
 
     // Substances
@@ -173,6 +190,46 @@ fn check_defs() {
                 "output": "cm^3",
                 "outputName": "volume"
             }]
+        })
+    );
+
+    // Categories
+    assert_json_eq!(
+        serde_json::to_value(DefEntry::new(
+            "cool_beans",
+            Some("Units that are cool beans."),
+            None,
+            Def::Category {
+                display_name: "Cool Beans".to_owned(),
+            }
+        ))
+        .unwrap(),
+        json!({
+            "name": "cool_beans",
+            "doc": "Units that are cool beans.",
+            "category": null,
+            "type": "category",
+            "displayName": "Cool Beans",
+        })
+    );
+
+    // Errors
+    assert_json_eq!(
+        serde_json::to_value(DefEntry::new(
+            "foo",
+            Some("Definition of foo"),
+            None,
+            Def::Error {
+                message: "Syntax error".to_owned()
+            }
+        ))
+        .unwrap(),
+        json!({
+            "name": "foo",
+            "doc": "Definition of foo",
+            "category": null,
+            "type": "error",
+            "message": "Syntax error",
         })
     );
 }

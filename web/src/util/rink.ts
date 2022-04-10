@@ -1,4 +1,3 @@
-import { Def } from "./defs";
 import { QueryResult } from "./reply";
 
 export interface Query {

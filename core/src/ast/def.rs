@@ -67,18 +67,14 @@ pub struct Property {
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
 pub enum Def {
-    // Named dimension for backwards compat reasons.
-    #[serde(rename = "dimension")]
-    BaseUnit,
-    Canonicalization {
-        of: String,
+    BaseUnit {
+        #[serde(rename = "longName")]
+        long_name: Option<String>,
     },
     Prefix {
         expr: ExprString,
-    },
-    #[serde(rename = "sprefix")]
-    SPrefix {
-        expr: ExprString,
+        #[serde(rename = "isLong")]
+        is_long: bool,
     },
     Unit {
         expr: ExprString,
@@ -91,6 +87,7 @@ pub enum Def {
         properties: Vec<Property>,
     },
     Category {
+        #[serde(rename = "displayName")]
         display_name: String,
     },
     Error {

@@ -194,15 +194,15 @@ impl Number {
             } else {
                 (self.value.clone(), (orig.0.clone(), orig.1))
             };
-            for &(ref p, ref v) in &context.prefixes {
+            for &(ref p, ref v) in &context.registry.prefixes {
                 if !prefixes.contains(&**p) {
                     continue;
                 }
                 let abs = val.abs();
-                if abs >= v.value.pow(orig.1 as i32)
-                    && abs < (&v.value * &Numeric::from(1000)).pow(orig.1 as i32)
+                if abs >= v.pow(orig.1 as i32)
+                    && abs < (v * &Numeric::from(1000)).pow(orig.1 as i32)
                 {
-                    let res = &val / &v.value.pow(orig.1 as i32);
+                    let res = &val / &v.pow(orig.1 as i32);
                     // tonne special case
                     let unit = if &**(orig.0).id == "gram" && p == "mega" {
                         "tonne".to_string()
@@ -227,17 +227,22 @@ impl Number {
         let value = self.prettify(context);
         let (exact, approx) = value.numeric_value(10, Digits::Default);
 
-        let quantity = context.quantities.get(&self.unit).cloned().or_else(|| {
-            if let Some((unit, power)) = self.unit.as_single() {
-                if power == 1 {
-                    Some(unit.to_string())
+        let quantity = context
+            .registry
+            .quantities
+            .get(&self.unit)
+            .cloned()
+            .or_else(|| {
+                if let Some((unit, power)) = self.unit.as_single() {
+                    if power == 1 {
+                        Some(unit.to_string())
+                    } else {
+                        Some(format!("{}^{}", unit, power))
+                    }
                 } else {
-                    Some(format!("{}^{}", unit, power))
+                    None
                 }
-            } else {
-                None
-            }
-        });
+            });
 
         NumberParts {
             raw_value: Some(self.clone()),
@@ -294,13 +299,14 @@ impl Number {
     }
 
     fn pretty_unit(&self, context: &Context) -> Dimensionality {
-        let pretty = crate::algorithms::fast_decompose(self, &context.reverse);
+        let pretty = crate::algorithms::fast_decompose(self, &context.registry.decomposition_units);
         pretty
             .into_iter()
             .map(|(k, p)| {
                 (
                     context
-                        .canonicalizations
+                        .registry
+                        .base_unit_long_names
                         .get(&*k.id)
                         .map(|x| BaseUnit::new(x))
                         .unwrap_or(k),
@@ -375,18 +381,10 @@ impl<'a> Neg for &'a Number {
 impl<'a, 'b> Mul<&'b Number> for &'a Number {
     type Output = Option<Number>;
 
-    #[allow(clippy::suspicious_arithmetic_impl)]
     fn mul(self, other: &Number) -> Self::Output {
-        let val = crate::algorithms::btree_merge(&self.unit, &other.unit, |a, b| {
-            if a + b != 0 {
-                Some(a + b)
-            } else {
-                None
-            }
-        });
         Some(Number {
             value: &self.value * &other.value,
-            unit: val.into(),
+            unit: &self.unit * &other.unit,
         })
     }
 }

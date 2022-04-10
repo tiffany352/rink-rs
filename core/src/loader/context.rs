@@ -2,35 +2,34 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use super::Registry;
 use crate::ast::{DatePattern, Expr, Query};
 use crate::output::{ConversionReply, Digits, NotFoundError, NumberParts, QueryError, QueryReply};
-use crate::runtime::Substance;
 use crate::types::{BaseUnit, BigInt, Dimensionality, Number, Numeric};
 use crate::{commands, Value};
 use chrono::{DateTime, Local, TimeZone};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
 pub struct Context {
-    pub dimensions: BTreeSet<BaseUnit>,
-    pub canonicalizations: BTreeMap<String, String>,
-    pub units: BTreeMap<String, Number>,
-    pub quantities: BTreeMap<Dimensionality, String>,
-    pub reverse: BTreeMap<Dimensionality, String>,
-    pub prefixes: Vec<(String, Number)>,
-    pub definitions: BTreeMap<String, Expr>,
-    pub docs: BTreeMap<String, String>,
-    pub categories: BTreeMap<String, String>,
-    pub category_names: BTreeMap<String, String>,
-    pub datepatterns: Vec<Vec<DatePattern>>,
-    pub substances: BTreeMap<String, Substance>,
-    pub substance_symbols: BTreeMap<String, String>,
-    pub temporaries: BTreeMap<String, Number>,
+    /// Contains all the information about units.
+    pub registry: Registry,
+    /// Used only during initialization.
+    pub(crate) temporaries: BTreeMap<String, Number>,
+    /// The current time, as set by the caller.
+    ///
+    /// This is used instead of directly asking the OS for the time
+    /// since it allows determinism in unit tests, and prevents edge
+    /// cases like `now - now` being non-zero.
     pub now: DateTime<Local>,
-    pub short_output: bool,
+    /// Enables the use of chrono-humanize. It can be disabled for unit
+    /// tests, as well as in wasm builds where the time API panics.
     pub use_humanize: bool,
+    /// Whether to save the previous query result and make it available
+    /// as the `ans` variable.
     pub save_previous_result: bool,
+    /// The previous query result.
     pub previous_result: Option<Number>,
 }
 
@@ -45,26 +44,11 @@ impl Context {
     /// Creates a new, empty context
     pub fn new() -> Context {
         Context {
-            short_output: false,
+            registry: Registry::default(),
+            temporaries: BTreeMap::new(),
+            now: Local.timestamp(0, 0),
             use_humanize: true,
             save_previous_result: false,
-
-            now: Local.timestamp(0, 0),
-
-            dimensions: BTreeSet::new(),
-            prefixes: vec![],
-            datepatterns: vec![],
-            canonicalizations: BTreeMap::new(),
-            units: BTreeMap::new(),
-            quantities: BTreeMap::new(),
-            reverse: BTreeMap::new(),
-            definitions: BTreeMap::new(),
-            docs: BTreeMap::new(),
-            categories: BTreeMap::new(),
-            category_names: BTreeMap::new(),
-            substances: BTreeMap::new(),
-            substance_symbols: BTreeMap::new(),
-            temporaries: BTreeMap::new(),
             previous_result: None,
         }
     }
@@ -78,119 +62,25 @@ impl Context {
     }
 
     pub fn load_dates(&mut self, mut dates: Vec<Vec<DatePattern>>) {
-        self.datepatterns.append(&mut dates)
+        self.registry.datepatterns.append(&mut dates)
     }
 
     /// Given a unit name, returns its value if it exists. Supports SI
     /// prefixes, plurals, bare dimensions like length, and quantities.
     pub fn lookup(&self, name: &str) -> Option<Number> {
-        fn inner(ctx: &Context, name: &str) -> Option<Number> {
-            if name == "ans" || name == "ANS" || name == "_" {
-                return ctx.previous_result.clone();
-            }
-            if let Some(v) = ctx.temporaries.get(name).cloned() {
-                return Some(v);
-            }
-            if let Some(k) = ctx.dimensions.get(name) {
-                return Some(Number::one_unit(k.to_owned()));
-            }
-            if let Some(v) = ctx.units.get(name).cloned() {
-                return Some(v);
-            }
-            for (unit, quantity) in &ctx.quantities {
-                if name == quantity {
-                    return Some(Number {
-                        value: Numeric::one(),
-                        unit: unit.clone(),
-                    });
-                }
-            }
-            None
+        if name == "ans" || name == "ANS" || name == "_" {
+            return self.previous_result.clone();
+        }
+        if let Some(v) = self.temporaries.get(name).cloned() {
+            return Some(v);
         }
 
-        let outer = |name: &str| -> Option<Number> {
-            if let Some(v) = inner(self, name) {
-                return Some(v);
-            }
-            for &(ref pre, ref value) in &self.prefixes {
-                if name.starts_with(pre) {
-                    if let Some(v) = inner(self, &name[pre.len()..]) {
-                        return Some((&v * value).unwrap());
-                    }
-                }
-            }
-            None
-        };
-
-        let res = outer(name);
-        if res.is_some() {
-            return res;
-        }
-
-        // after so that "ks" is kiloseconds
-        if name.ends_with('s') {
-            let name = &name[0..name.len() - 1];
-            outer(name)
-        } else {
-            None
-        }
+        self.registry.lookup(name)
     }
 
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
-        fn inner(ctx: &Context, name: &str) -> Option<String> {
-            if let Some(v) = ctx.canonicalizations.get(name) {
-                return Some(v.clone());
-            }
-            if let Some(k) = ctx.dimensions.get(name) {
-                return Some((*k.id).clone());
-            }
-            if let Some(v) = ctx.definitions.get(name) {
-                if let Expr::Unit { ref name } = *v {
-                    if let Some(r) = ctx.canonicalize(&*name) {
-                        return Some(r);
-                    } else {
-                        return Some(name.clone());
-                    }
-                } else {
-                    // we cannot canonicalize it further
-                    return Some(name.to_owned());
-                }
-            }
-            None
-        }
-
-        let outer = |name: &str| -> Option<String> {
-            if let Some(v) = inner(self, name) {
-                return Some(v);
-            }
-            for &(ref pre, ref val) in &self.prefixes {
-                if name.starts_with(pre) {
-                    if let Some(v) = inner(self, &name[pre.len()..]) {
-                        let mut pre = pre;
-                        for &(ref other, ref otherval) in &self.prefixes {
-                            if other.len() > pre.len() && val == otherval {
-                                pre = other;
-                            }
-                        }
-                        return Some(format!("{}{}", pre, v));
-                    }
-                }
-            }
-            None
-        };
-
-        let res = outer(name);
-        if res.is_some() {
-            return res;
-        }
-
-        if name.ends_with('s') {
-            let name = &name[0..name.len() - 1];
-            outer(name)
-        } else {
-            None
-        }
+        self.registry.canonicalize(name)
     }
 
     /// Describes a value's unit, gives true if the unit is reciprocal
@@ -213,21 +103,23 @@ impl Context {
                 unit: value.unit.clone(),
             })
             .unwrap();
-        if let Some(name) = self.quantities.get(&value.unit) {
+        if let Some(name) = self.registry.quantities.get(&value.unit) {
             write!(buf, "{}", name).unwrap();
-        } else if let Some(name) = square.and_then(|square| self.quantities.get(&square.unit)) {
+        } else if let Some(name) =
+            square.and_then(|square| self.registry.quantities.get(&square.unit))
+        {
             write!(buf, "{}^2", name).unwrap();
-        } else if let Some(name) = self.quantities.get(&inverse.unit) {
+        } else if let Some(name) = self.registry.quantities.get(&inverse.unit) {
             recip = true;
             write!(buf, "{}", name).unwrap();
         } else {
             let helper = |dim: &BaseUnit, pow: i64, buf: &mut Vec<u8>| {
                 let unit = Dimensionality::new_dim(dim.clone(), pow);
-                if let Some(name) = self.quantities.get(&unit) {
+                if let Some(name) = self.registry.quantities.get(&unit) {
                     write!(buf, " {}", name).unwrap();
                 } else {
                     let unit = Dimensionality::base_unit(dim.clone());
-                    if let Some(name) = self.quantities.get(&unit) {
+                    if let Some(name) = self.registry.quantities.get(&unit) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         write!(buf, " '{}'", dim).unwrap();
@@ -256,7 +148,7 @@ impl Context {
                 }
                 for (dim, pow) in frac {
                     let unit = Dimensionality::new_dim(dim.clone(), pow);
-                    if let Some(name) = self.quantities.get(&unit) {
+                    if let Some(name) = self.registry.quantities.get(&unit) {
                         write!(buf, " {}", name).unwrap();
                     } else {
                         helper(dim, pow, &mut buf);

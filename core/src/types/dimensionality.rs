@@ -1,3 +1,5 @@
+use crate::algorithms::btree_merge;
+
 use super::BaseUnit;
 use serde_derive::{Deserialize, Serialize};
 use std::{
@@ -51,6 +53,44 @@ impl Dimensionality {
     pub fn is_dimensionless(&self) -> bool {
         self.dims.is_empty()
     }
+
+    pub fn recip(mut self) -> Dimensionality {
+        for (_, power) in self.dims.iter_mut() {
+            *power *= -1;
+        }
+        self
+    }
+
+    pub fn pow(mut self, exp: i64) -> Dimensionality {
+        for (_, power) in self.dims.iter_mut() {
+            *power *= exp;
+        }
+        self
+    }
+}
+
+impl<'a> ops::Mul for &'a Dimensionality {
+    type Output = Dimensionality;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let dims = btree_merge(&self.dims, &rhs.dims, |a, b| {
+            if a + b != 0 {
+                Some(a + b)
+            } else {
+                None
+            }
+        });
+        Dimensionality { dims }
+    }
+}
+
+#[allow(clippy::suspicious_arithmetic_impl)]
+impl<'a> ops::Div for &'a Dimensionality {
+    type Output = Dimensionality;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self * &rhs.clone().recip()
+    }
 }
 
 /////////////////////////////////////////
@@ -83,11 +123,5 @@ impl IntoIterator for Dimensionality {
 
     fn into_iter(self) -> Self::IntoIter {
         self.dims.into_iter()
-    }
-}
-
-impl From<Map> for Dimensionality {
-    fn from(dims: Map) -> Self {
-        Dimensionality { dims }
     }
 }

@@ -374,6 +374,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             name,
                             def: Rc::new(Def::Prefix {
                                 expr: ExprString(expr),
+                                is_long: false,
                             }),
                             doc: doc.take(),
                             category: category.clone(),
@@ -381,8 +382,9 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                     } else {
                         map.push(DefEntry {
                             name,
-                            def: Rc::new(Def::SPrefix {
+                            def: Rc::new(Def::Prefix {
                                 expr: ExprString(expr),
+                                is_long: true,
                             }),
                             doc: doc.take(),
                             category: category.clone(),
@@ -391,30 +393,22 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                 } else {
                     // unit
                     if let Some(&Token::Bang) = iter.peek() {
-                        // dimension
+                        // base unit
                         iter.next();
-                        if let Some(Token::Ident(ref long)) = iter.peek().cloned() {
+
+                        let long_name = if let Some(Token::Ident(ref long)) = iter.peek().cloned() {
                             iter.next();
-                            map.push(DefEntry {
-                                name: name.clone(),
-                                def: Rc::new(Def::BaseUnit),
-                                doc: doc.take(),
-                                category: category.clone(),
-                            });
-                            map.push(DefEntry {
-                                name: long.clone(),
-                                def: Rc::new(Def::Canonicalization { of: name.clone() }),
-                                doc: doc.take(),
-                                category: category.clone(),
-                            });
+                            Some(long.clone())
                         } else {
-                            map.push(DefEntry {
-                                name: name.clone(),
-                                def: Rc::new(Def::BaseUnit),
-                                doc: doc.take(),
-                                category: category.clone(),
-                            });
-                        }
+                            None
+                        };
+
+                        map.push(DefEntry {
+                            name: name.clone(),
+                            def: Rc::new(Def::BaseUnit { long_name }),
+                            doc: doc.take(),
+                            category: category.clone(),
+                        });
                     } else if let Some(&Token::Question) = iter.peek() {
                         // quantity
                         iter.next();

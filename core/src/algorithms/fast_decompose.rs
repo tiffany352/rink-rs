@@ -6,6 +6,9 @@ use std::collections::BTreeMap;
 
 use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 
+/// Breaks down the dimensionality of a unit into a simpler form that
+/// uses SI derived units.
+///
 /// Uses a single-pass algorithm for finding a suitable decomposition. A
 /// more robust one would require factorization, but that's expensive.
 ///
@@ -15,10 +18,10 @@ use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 /// complex decompositions.
 pub(crate) fn fast_decompose(
     value: &Number,
-    quantities: &BTreeMap<Dimensionality, String>,
+    derived_units: &BTreeMap<Dimensionality, String>,
 ) -> Dimensionality {
     let mut best = None;
-    'outer: for (unit, name) in quantities.iter() {
+    'outer: for (unit, name) in derived_units.iter() {
         // make sure we aren't doing something weird like introducing new base units
         for (dim, pow) in unit.iter() {
             let vpow = value.unit.get(dim).cloned().unwrap_or(0);

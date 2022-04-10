@@ -357,7 +357,7 @@ fn attempt(
 
 pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTime, String> {
     let mut best = None;
-    for pat in &context.datepatterns {
+    for pat in &context.registry.datepatterns {
         match attempt(context.now, date, pat) {
             Ok(datetime) => return Ok(datetime),
             Err((e, c)) => {
