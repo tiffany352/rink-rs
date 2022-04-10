@@ -49,20 +49,21 @@ impl Resolver {
     }
 
     fn lookup_exact(&mut self, name: &Rc<String>, context: Namespace) -> bool {
-        let ordering: &[Namespace] = match context {
+        let to_check: &[Namespace] = match context {
             Namespace::Quantity => &[Namespace::Quantity],
             _ => &[Namespace::Unit, Namespace::Prefix, Namespace::Quantity],
         };
-        ordering.iter().copied().any(|namespace| {
+        for namespace in to_check.iter().copied() {
             let id = Id {
                 namespace,
                 name: name.clone(),
             };
-            self.input.contains_key(&id) && {
+            if self.input.contains_key(&id) {
                 self.visit(&id);
-                true
+                return true;
             }
-        })
+        }
+        false
     }
 
     fn lookup_with_prefix(&mut self, name: &Rc<String>, context: Namespace) -> bool {
