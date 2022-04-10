@@ -20,19 +20,19 @@ enum Namespace {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
-struct Name {
+struct Id {
     namespace: Namespace,
     name: Rc<String>,
 }
 
 struct Resolver {
     interned: BTreeSet<Rc<String>>,
-    input: BTreeMap<Name, Rc<Def>>,
-    sorted: Vec<Name>,
-    unmarked: BTreeSet<Name>,
-    temp_marks: BTreeSet<Name>,
-    docs: BTreeMap<Name, String>,
-    categories: BTreeMap<Name, String>,
+    input: BTreeMap<Id, Rc<Def>>,
+    sorted: Vec<Id>,
+    unmarked: BTreeSet<Id>,
+    temp_marks: BTreeSet<Id>,
+    docs: BTreeMap<Id, String>,
+    categories: BTreeMap<Id, String>,
 }
 
 impl Resolver {
@@ -55,12 +55,12 @@ impl Resolver {
             [Namespace::Unit, Namespace::Prefix, Namespace::Quantity]
         };
         ordering.iter().copied().any(|namespace| {
-            let unit = Name {
+            let id = Id {
                 namespace,
                 name: name.clone(),
             };
-            self.input.contains_key(&unit) && {
-                self.visit(&unit);
+            self.input.contains_key(&id) && {
+                self.visit(&id);
                 true
             }
         })
@@ -124,15 +124,15 @@ impl Resolver {
         }
     }
 
-    fn visit(&mut self, name: &Name) {
-        if self.temp_marks.get(name).is_some() {
-            println!("Unit {:?} has a dependency cycle", name);
+    fn visit(&mut self, id: &Id) {
+        if self.temp_marks.get(id).is_some() {
+            println!("Unit {:?} has a dependency cycle", id);
             return;
         }
-        let prefer_quantities = name.namespace == Namespace::Quantity;
-        if self.unmarked.get(name).is_some() {
-            self.temp_marks.insert(name.clone());
-            if let Some(v) = self.input.get(name).cloned() {
+        let prefer_quantities = id.namespace == Namespace::Quantity;
+        if self.unmarked.get(id).is_some() {
+            self.temp_marks.insert(id.clone());
+            if let Some(v) = self.input.get(id).cloned() {
                 match *v {
                     Def::Prefix { ref expr }
                     | Def::SPrefix { ref expr }
@@ -150,9 +150,9 @@ impl Resolver {
                     _ => (),
                 }
             }
-            self.unmarked.remove(name);
-            self.temp_marks.remove(name);
-            self.sorted.push(name.clone());
+            self.unmarked.remove(id);
+            self.temp_marks.remove(id);
+            self.sorted.push(id.clone());
         }
     }
 }
@@ -285,42 +285,42 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     } in defs.defs.into_iter()
     {
         let name = resolver.intern(&name);
-        let unit = match *def {
-            Def::Prefix { .. } | Def::SPrefix { .. } => Name {
+        let id = match *def {
+            Def::Prefix { .. } | Def::SPrefix { .. } => Id {
                 namespace: Namespace::Prefix,
                 name,
             },
-            Def::Quantity { .. } => Name {
+            Def::Quantity { .. } => Id {
                 namespace: Namespace::Quantity,
                 name,
             },
-            Def::Category { .. } => Name {
+            Def::Category { .. } => Id {
                 namespace: Namespace::Category,
                 name,
             },
-            _ => Name {
+            _ => Id {
                 namespace: Namespace::Unit,
                 name,
             },
         };
         if let Some(doc) = doc {
-            resolver.docs.insert(unit.clone(), doc);
+            resolver.docs.insert(id.clone(), doc);
         }
         if let Some(category) = category {
-            resolver.categories.insert(unit.clone(), category);
+            resolver.categories.insert(id.clone(), category);
         }
-        if resolver.input.insert(unit.clone(), def).is_some() {
-            let namespace = match unit.namespace {
+        if resolver.input.insert(id.clone(), def).is_some() {
+            let namespace = match id.namespace {
                 Namespace::Prefix => "prefixes",
                 Namespace::Quantity => "quantities",
                 Namespace::Unit => "units",
                 Namespace::Category => "category",
             };
             if namespace != "category" {
-                println!("warning: multiple {} named {}", namespace, unit.name);
+                println!("warning: multiple {} named {}", namespace, id.name);
             }
         }
-        resolver.unmarked.insert(unit);
+        resolver.unmarked.insert(id);
     }
 
     while let Some(name) = resolver.unmarked.iter().next().cloned() {
@@ -354,8 +354,8 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     let mut prefix_lookup = BTreeMap::new();
     let mut quantities = BTreeMap::new();
 
-    for (name, def) in udefs {
-        let name = name.name.to_string();
+    for (id, def) in udefs {
+        let name = id.name.to_string();
         match *def {
             Def::BaseUnit => {
                 ctx.registry.dimensions.insert(BaseUnit::new(&*name));
