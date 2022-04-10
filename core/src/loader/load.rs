@@ -53,51 +53,47 @@ impl Resolver {
         }
     }
 
-    fn lookup(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
-        fn inner(ctx: &mut Resolver, name: &Rc<String>, prefer_quantities: bool) -> bool {
-            let ordering = if prefer_quantities {
-                [Name::Quantity, Name::Unit, Name::Prefix]
-            } else {
-                [Name::Unit, Name::Prefix, Name::Quantity]
-            };
-            ordering.iter().any(|f| {
-                let unit = f(name.clone());
-                ctx.input.contains_key(&unit) && {
-                    ctx.visit(&unit);
-                    true
-                }
-            })
-        }
-
-        let mut outer = |name: &Rc<String>| -> bool {
-            if inner(self, name, prefer_quantities) {
-                return true;
-            }
-            let mut found = vec![];
-            for pre in self.input.keys() {
-                if let Name::Prefix(ref pre) = *pre {
-                    if (*name).starts_with(&**pre) {
-                        found.push(pre.clone());
-                    }
-                }
-            }
-            found.into_iter().any(|pre| {
-                inner(
-                    self,
-                    &Rc::new(name[pre.len()..].to_owned()),
-                    prefer_quantities,
-                ) && {
-                    let unit = Name::Prefix(pre);
-                    self.visit(&unit);
-                    true
-                }
-            })
+    fn lookup_exact(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
+        let ordering = if prefer_quantities {
+            [Name::Quantity, Name::Unit, Name::Prefix]
+        } else {
+            [Name::Unit, Name::Prefix, Name::Quantity]
         };
+        ordering.iter().any(|f| {
+            let unit = f(name.clone());
+            self.input.contains_key(&unit) && {
+                self.visit(&unit);
+                true
+            }
+        })
+    }
 
-        outer(name)
+    fn lookup_with_prefix(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
+        if self.lookup_exact(name, prefer_quantities) {
+            return true;
+        }
+        let mut found = vec![];
+        for pre in self.input.keys() {
+            if let Name::Prefix(ref pre) = *pre {
+                if (*name).starts_with(&**pre) {
+                    found.push(pre.clone());
+                }
+            }
+        }
+        found.into_iter().any(|pre| {
+            self.lookup_exact(&Rc::new(name[pre.len()..].to_owned()), prefer_quantities) && {
+                let unit = Name::Prefix(pre);
+                self.visit(&unit);
+                true
+            }
+        })
+    }
+
+    fn lookup(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
+        self.lookup_with_prefix(name, prefer_quantities)
             || name.ends_with('s') && {
                 let name = &Rc::new(name[0..name.len() - 1].to_owned());
-                outer(name)
+                self.lookup_with_prefix(name, prefer_quantities)
             }
     }
 
