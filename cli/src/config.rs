@@ -282,7 +282,8 @@ pub fn load(config: &Config) -> Result<Context> {
 
     let mut ctx = Context::new();
     ctx.save_previous_result = true;
-    ctx.load(gnu_units::parse_str(&units));
+    ctx.load(gnu_units::parse_str(&units))
+        .map_err(|err| eyre!(err))?;
     ctx.load_dates(datetime::parse_datefile(&dates));
 
     // Load currency data.
@@ -296,7 +297,7 @@ pub fn load(config: &Config) -> Result<Context> {
                 let mut defs = vec![];
                 defs.append(&mut base_defs.defs);
                 defs.append(&mut live_defs.defs);
-                ctx.load(ast::Defs { defs });
+                ctx.load(ast::Defs { defs }).map_err(|err| eyre!(err))?;
             }
             Err(err) => {
                 println!("{:?}", err.wrap_err("Failed to load currency data"));

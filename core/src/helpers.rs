@@ -55,7 +55,8 @@ pub fn simple_context() -> Result<Context, String> {
     let dates = crate::parsing::datetime::parse_datefile(DATES_FILE);
 
     let mut ctx = Context::new();
-    ctx.load(units);
+    ctx.load(units)?;
     ctx.load_dates(dates);
+
     Ok(ctx)
 }

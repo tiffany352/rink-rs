@@ -33,6 +33,7 @@ struct Resolver {
     temp_marks: BTreeSet<Id>,
     docs: BTreeMap<Id, String>,
     categories: BTreeMap<Id, String>,
+    errors: Vec<String>,
 }
 
 impl Resolver {
@@ -123,7 +124,8 @@ impl Resolver {
 
     fn visit(&mut self, id: &Id) {
         if self.temp_marks.get(id).is_some() {
-            println!("Unit {:?} has a dependency cycle", id);
+            self.errors
+                .push(format!("Unit {:?} has a dependency cycle", id));
             return;
         }
         if self.unmarked.get(id).is_some() {
@@ -263,7 +265,7 @@ fn eval_quantity(
     }
 }
 
-pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
+pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
     let mut resolver = Resolver {
         interned: BTreeSet::new(),
         input: BTreeMap::new(),
@@ -272,6 +274,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
         temp_marks: BTreeSet::new(),
         docs: BTreeMap::new(),
         categories: BTreeMap::new(),
+        errors: Vec::new(),
     };
     for DefEntry {
         name,
@@ -328,7 +331,9 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 Namespace::Category => "category",
             };
             if namespace != "category" {
-                println!("warning: multiple {} named {}", namespace, id.name);
+                resolver
+                    .errors
+                    .push(format!("warning: multiple {} named {}", namespace, id.name));
             }
         }
         resolver.unmarked.insert(id);
@@ -403,11 +408,17 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                         sub
                     };
                     if ctx.registry.substances.insert(name.clone(), sub).is_some() {
-                        println!("Warning: Conflicting substances for {}", name);
+                        resolver
+                            .errors
+                            .push(format!("Warning: Conflicting substances for {}", name));
                     }
                 }
-                Ok(_) => println!("Unit {} is not a number", name),
-                Err(e) => println!("Unit {} is malformed: {}", name, e),
+                Ok(_) => resolver
+                    .errors
+                    .push(format!("Unit {} is not a number", name)),
+                Err(e) => resolver
+                    .errors
+                    .push(format!("Unit {} is malformed: {}", name, e)),
             },
             Def::Prefix { ref expr, is_long } => match eval_prefix(&prefix_lookup, &expr.0) {
                 Ok(value) => {
@@ -419,7 +430,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                             .insert(name.clone(), Number::new(value.clone()));
                     }
                 }
-                Err(err) => println!("Prefix {name}: {err}"),
+                Err(err) => resolver.errors.push(format!("Prefix {name}: {err}")),
             },
             Def::Quantity { ref expr } => {
                 match eval_quantity(&ctx.registry.base_units, &quantities, &expr.0) {
@@ -435,16 +446,21 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                                 .insert(name.clone(), expr.0.clone());
                         }
                         if let Some(old) = res {
-                            println!("Warning: Conflicting quantities {} and {}", name, old);
+                            resolver.errors.push(format!(
+                                "Warning: Conflicting quantities {} and {}",
+                                name, old
+                            ));
                         }
                     }
-                    Err(err) => println!("Quantity {name}: {err}"),
+                    Err(err) => resolver.errors.push(format!("Quantity {name}: {err}")),
                 }
             }
             Def::Substance {
                 ref properties,
                 ref symbol,
             } => {
+                // Needed because fields of structs can't be individually closed over.
+                let errors = &mut resolver.errors;
                 let mut prev = BTreeMap::new();
                 let res = properties
                     .iter()
@@ -485,11 +501,11 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                         let unit = (&input / &output).expect("Non-zero property").unit;
                         let existing = prev.entry(unit).or_insert_with(BTreeSet::new);
                         for conflict in existing.intersection(&unique) {
-                            println!(
+                            errors.push(format!(
                                 "Warning: conflicting \
                                      properties for {} of {}",
                                 conflict, name
-                            );
+                            ));
                         }
                         existing.append(&mut unique);
                         ctx.temporaries.insert(
@@ -535,7 +551,9 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                                 .insert(symbol.clone(), name.clone());
                         }
                     }
-                    Err(e) => println!("Substance {} is malformed: {}", name, e),
+                    Err(e) => resolver
+                        .errors
+                        .push(format!("Substance {} is malformed: {}", name, e)),
                 }
             }
             Def::Category { ref display_name } => {
@@ -543,21 +561,27 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                     .category_names
                     .insert(name.clone(), display_name.clone());
             }
-            Def::Error { ref message } => println!("Def {}: {}", name, message),
+            Def::Error { ref message } => {
+                resolver.errors.push(format!("Def {}: {}", name, message))
+            }
         };
     }
 
     for (name, val) in resolver.docs {
         let name = name.name.to_string();
         if ctx.registry.docs.insert(name.clone(), val).is_some() {
-            println!("Doc conflict for {}", name);
+            resolver.errors.push(format!("Doc conflict for {}", name));
         }
     }
 
     for (name, val) in resolver.categories {
         let name = name.name.to_string();
         if ctx.registry.categories.insert(name.clone(), val).is_some() {
-            println!("Category conflict for {}", name);
+            resolver
+                .errors
+                .push(format!("Category conflict for {}", name));
         }
     }
+
+    resolver.errors
 }

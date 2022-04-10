@@ -181,9 +181,20 @@ impl Context {
     }
 
     /// Takes a parsed definitions.units from
-    /// `gnu_units::parse()`. Prints if there are errors in the file.
-    pub fn load(&mut self, defs: crate::ast::Defs) {
-        crate::loader::load_defs(self, defs)
+    /// `gnu_units::parse()`. Returns a list of errors, if there were any.
+    #[must_use]
+    pub fn load(&mut self, defs: crate::ast::Defs) -> Result<(), String> {
+        let errors = crate::loader::load_defs(self, defs);
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            let mut lines = vec![format!("Multiple errors encountered while loading:")];
+            for error in errors {
+                lines.push(format!("  {error}"));
+            }
+            Err(lines.join("\n"))
+        }
     }
 
     /// Evaluates an expression to compute its value, *excluding* `->`

@@ -114,7 +114,7 @@ impl Context {
             defs.append(&mut base_defs.defs);
             ast::Defs { defs }
         };
-        self.context.load(currency);
+        self.context.load(currency)?;
 
         Ok(())
     }
