@@ -53,9 +53,14 @@ impl Resolver {
         }
     }
 
-    fn lookup(&mut self, name: &Rc<String>) -> bool {
-        fn inner(ctx: &mut Resolver, name: &Rc<String>) -> bool {
-            [Name::Unit, Name::Prefix, Name::Quantity].iter().any(|f| {
+    fn lookup(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
+        fn inner(ctx: &mut Resolver, name: &Rc<String>, prefer_quantities: bool) -> bool {
+            let ordering = if prefer_quantities {
+                [Name::Quantity, Name::Unit, Name::Prefix]
+            } else {
+                [Name::Unit, Name::Prefix, Name::Quantity]
+            };
+            ordering.iter().any(|f| {
                 let unit = f(name.clone());
                 ctx.input.contains_key(&unit) && {
                     ctx.visit(&unit);
@@ -65,7 +70,7 @@ impl Resolver {
         }
 
         let mut outer = |name: &Rc<String>| -> bool {
-            if inner(self, name) {
+            if inner(self, name, prefer_quantities) {
                 return true;
             }
             let mut found = vec![];
@@ -77,7 +82,11 @@ impl Resolver {
                 }
             }
             found.into_iter().any(|pre| {
-                inner(self, &Rc::new(name[pre.len()..].to_owned())) && {
+                inner(
+                    self,
+                    &Rc::new(name[pre.len()..].to_owned()),
+                    prefer_quantities,
+                ) && {
                     let unit = Name::Prefix(pre);
                     self.visit(&unit);
                     true
@@ -92,29 +101,29 @@ impl Resolver {
             }
     }
 
-    fn eval(&mut self, expr: &Expr) {
+    fn eval(&mut self, expr: &Expr, prefer_quantities: bool) {
         match *expr {
             Expr::Unit { ref name } => {
                 let name = self.intern(name);
-                self.lookup(&name);
+                self.lookup(&name, prefer_quantities);
             }
             Expr::BinOp(BinOpExpr {
                 ref left,
                 ref right,
                 ..
             }) => {
-                self.eval(left);
-                self.eval(right);
+                self.eval(left, prefer_quantities);
+                self.eval(right, prefer_quantities);
             }
-            Expr::UnaryOp(ref unaryop) => self.eval(&unaryop.expr),
-            Expr::Of { ref expr, .. } => self.eval(expr),
+            Expr::UnaryOp(ref unaryop) => self.eval(&unaryop.expr, prefer_quantities),
+            Expr::Of { ref expr, .. } => self.eval(expr, prefer_quantities),
 
             Expr::Mul { ref exprs }
             | Expr::Call {
                 args: ref exprs, ..
             } => {
                 for expr in exprs {
-                    self.eval(expr);
+                    self.eval(expr, prefer_quantities);
                 }
             }
             _ => (),
@@ -126,6 +135,10 @@ impl Resolver {
             println!("Unit {:?} has a dependency cycle", name);
             return;
         }
+        let prefer_quantities = match name {
+            Name::Quantity(_) => true,
+            _ => false,
+        };
         if self.unmarked.get(name).is_some() {
             self.temp_marks.insert(name.clone());
             if let Some(v) = self.input.get(name).cloned() {
@@ -133,14 +146,14 @@ impl Resolver {
                     Def::Prefix { ref expr }
                     | Def::SPrefix { ref expr }
                     | Def::Unit { ref expr }
-                    | Def::Quantity { ref expr } => self.eval(expr),
+                    | Def::Quantity { ref expr } => self.eval(expr, prefer_quantities),
                     Def::Canonicalization { ref of } => {
-                        self.lookup(&Rc::new(of.clone()));
+                        self.lookup(&Rc::new(of.clone()), prefer_quantities);
                     }
                     Def::Substance { ref properties, .. } => {
                         for prop in properties {
-                            self.eval(&prop.input);
-                            self.eval(&prop.output);
+                            self.eval(&prop.input, prefer_quantities);
+                            self.eval(&prop.output, prefer_quantities);
                         }
                     }
                     _ => (),
