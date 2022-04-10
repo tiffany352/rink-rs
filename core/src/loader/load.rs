@@ -133,9 +133,6 @@ impl Resolver {
                     Def::Prefix { ref expr, .. }
                     | Def::Unit { ref expr }
                     | Def::Quantity { ref expr } => self.eval(expr, id.namespace),
-                    Def::Canonicalization { ref of } => {
-                        self.lookup(&Rc::new(of.clone()), id.namespace);
-                    }
                     Def::Substance { ref properties, .. } => {
                         for prop in properties {
                             self.eval(&prop.input, id.namespace);
@@ -352,23 +349,19 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     for (id, def) in udefs {
         let name = id.name.to_string();
         match *def {
-            Def::BaseUnit => {
-                ctx.registry.base_units.insert(BaseUnit::new(&*name));
-            }
-            Def::Canonicalization { ref of } => {
-                ctx.registry
-                    .base_unit_long_names
-                    .insert(of.clone(), name.clone());
-                match ctx.registry.lookup(of) {
-                    Some(v) => {
-                        ctx.registry
-                            .definitions
-                            .insert(name.clone(), Expr::new_unit(of.clone()));
-                        ctx.registry.units.insert(name.clone(), v);
-                    }
-                    None => {
-                        println!("Canonicalization {} is malformed: {} not found", name, of)
-                    }
+            Def::BaseUnit { ref long_name } => {
+                let unit = BaseUnit::new(&*name);
+                ctx.registry.base_units.insert(unit.clone());
+                if let Some(long_name) = long_name {
+                    ctx.registry
+                        .base_unit_long_names
+                        .insert(name.clone(), long_name.clone());
+                    ctx.registry
+                        .definitions
+                        .insert(long_name.clone(), Expr::new_unit(name.clone()));
+                    ctx.registry
+                        .units
+                        .insert(long_name.clone(), Number::one_unit(unit));
                 }
             }
             Def::Unit { ref expr } => match ctx.eval(expr) {

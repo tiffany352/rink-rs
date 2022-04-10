@@ -5,12 +5,8 @@ export interface DefBase {
 }
 
 export interface BaseUnit extends DefBase {
-  type: "dimension";
-}
-
-export interface Canonicalization extends DefBase {
-  type: "canonicalization";
-  of: string;
+  type: "baseUnit";
+  longName: string | null;
 }
 
 export interface Prefix extends DefBase {
@@ -56,7 +52,6 @@ export interface Error extends DefBase {
 
 export type Def =
   | BaseUnit
-  | Canonicalization
   | Prefix
   | Unit
   | Quantity
