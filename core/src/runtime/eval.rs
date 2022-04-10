@@ -656,23 +656,30 @@ fn to_list(ctx: &Context, top: &Number, list: &[&str]) -> Result<Vec<NumberParts
         .collect())
 }
 
+fn can_show_definition(ctx: &Context, name: &str) -> bool {
+    if ctx.registry.definitions.contains_key(name) {
+        return true;
+    }
+
+    if ctx.registry.base_units.contains(name) {
+        return true;
+    }
+
+    if let Some(name) = ctx.canonicalize(name) {
+        if ctx.registry.definitions.contains_key(&name) {
+            return true;
+        }
+        if ctx.registry.base_units.contains(&name[..]) {
+            return true;
+        }
+    }
+
+    false
+}
+
 pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, QueryError> {
     match *expr {
-        Query::Expr(Expr::Unit { ref name })
-            if {
-                let a = ctx.registry.definitions.contains_key(name);
-                let b = ctx
-                    .canonicalize(name)
-                    .map(|x| ctx.registry.definitions.contains_key(&*x))
-                    .unwrap_or(false);
-                let c = ctx.registry.base_units.contains(&**name);
-                let d = ctx
-                    .canonicalize(name)
-                    .map(|x| ctx.registry.base_units.contains(&*x))
-                    .unwrap_or(false);
-                a || b || c || d
-            } =>
-        {
+        Query::Expr(Expr::Unit { ref name }) if can_show_definition(ctx, name) => {
             let mut name = name.clone();
             let mut canon = ctx.canonicalize(&name).unwrap_or_else(|| name.clone());
             while let Some(&Expr::Unit { name: ref unit }) = {
