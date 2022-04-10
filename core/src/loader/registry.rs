@@ -46,14 +46,6 @@ impl Registry {
         if let Some(v) = self.units.get(name).cloned() {
             return Some(v);
         }
-        for (unit, quantity) in &self.quantities {
-            if name == quantity {
-                return Some(Number {
-                    value: Numeric::one(),
-                    unit: unit.clone(),
-                });
-            }
-        }
         None
     }
 

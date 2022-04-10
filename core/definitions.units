@@ -531,7 +531,7 @@ angle                   ? radian
 solid_angle             ? sr
 force                   ? acceleration mass
 pressure                ? force / area
-stress                    pascal
+#stress                    pascal
 charge                  ? A s
 capacitance             ? charge / electrical_potential
 resistance              ? electrical_potential / current
@@ -1280,10 +1280,10 @@ ozcu                    ouncecopper             #   in circuitboard fabrication
 
 !category radiometric "Radiometric Units"
 
-radiant_energy                    energy       # Basic unit of radiation
-radiant_energy_density            energy / volume
-radiant_flux                      power 
-spectral_flux_frequency           power / frequency
+# radiant_energy                    energy       # Basic unit of radiation
+# radiant_energy_density            energy / volume
+# radiant_flux                      power 
+# spectral_flux_frequency           power / frequency
 spectral_flux_wavelength        ? power / length
 radiant_intensity               ? power / solid_angle
 spectral_intensity_frequency    ? power / solid_angle frequency
@@ -1291,17 +1291,17 @@ spectral_intensity_wavelength   ? power / solid_angle length
 radiance                        ? power / solid_angle area
 spectral_radiance_frequency     ? power / solid_angle area frequency
 spectral_radiance_wavelength    ? power / solid_angle volume
-spectral_irradiance_frequency     power / area frequency
+# spectral_irradiance_frequency     power / area frequency
 spectral_irradiance_wavelength  ? power / volume
-radiosity                         power / area
-spectral_radiosity_frequency      power / area frequency
-spectral_radiosity_wavelength     power / volume
-radiant_exitance                  power / area
-spectral_exitance_frequency       power / area frequency
-spectral_exitance_wavelength      power / volume
-radiant_exposure                  energy / area
+# radiosity                         power / area
+# spectral_radiosity_frequency      power / area frequency
+# spectral_radiosity_wavelength     power / volume
+# radiant_exitance                  power / area
+# spectral_exitance_frequency       power / area frequency
+# spectral_exitance_wavelength      power / volume
+# radiant_exposure                  energy / area
 spectral_exposure_frequency     ? energy / area frequency
-spectral_exposure_wavelength      energy / volume
+# spectral_exposure_wavelength      energy / volume
 
 !endcategory
 
@@ -3077,7 +3077,7 @@ thermal_resistance      ? 1/thermal_conductance
 # of sheets of insulation or cloth that are of specified thickness.
 
 thermal_admittance      ? thermal_conductivity / length
-thermal_insulance         thermal_resistivity length
+# thermal_insulance         thermal_resistivity length
 thermal_insulation      ? thermal_resistivity length
 
 Rvalue                  degR ft^2 hr / btu
