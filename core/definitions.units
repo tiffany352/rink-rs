@@ -521,23 +521,23 @@ Hz                      hertz
 #
 
 dimensionless           ? 1
-length                  ? meter
+length                  ? m
 area                    ? length^2
 volume                  ? length^3
-mass                    ? kilogram
-current                 ? ampere
-amount                  ? mole
+mass                    ? kg
+current                 ? A
+amount                  ? mol
 angle                   ? radian
-solid_angle             ? steradian
-force                   ? newton
-pressure                ? pascal
+solid_angle             ? sr
+force                   ? acceleration mass
+pressure                ? force / area
 stress                    pascal
-charge                  ? coulomb
-capacitance             ? farad
-resistance              ? ohm
-conductance             ? siemens
-inductance              ? henry
-frequency               ? hertz
+charge                  ? A s
+capacitance             ? charge / electrical_potential
+resistance              ? electrical_potential / current
+conductance             ? resistance^-1
+inductance              ? magnetic_flux / current
+frequency               ? time^-1
 velocity                ? length / time
 acceleration            ? velocity / time
 jerk                    ? acceleration / time
@@ -548,15 +548,15 @@ density                 ? mass / volume
 linear_density          ? mass / length
 viscosity               ? pressure time
 kinematic_viscosity     ? viscosity / density
-magnetic_flux           ? weber
-magnetic_flux_density   ? tesla
+magnetic_flux           ? electrical_potential time
+magnetic_flux_density   ? magnetic_flux / area
 magnetization           ? current / length
-electrical_potential    ? volt
-electric_field          ? newton / coulomb
+electrical_potential    ? power / current
+electric_field          ? force / charge
 entropy                 ? energy / temperature
 thermal_inductance      ? energy temperature^2 / power^2
-permittivity            ? farad / meter
-permeability            ? henry / meter
+permittivity            ? capacitance / length
+permeability            ? inductance / length
 angular_momentum        ? mass area / time
 area_density            ? mass / area
 catalytic_activity      ? amount / time
@@ -817,7 +817,7 @@ fine                    1|1000    # Measure of gold purity
 # with "temp".
 #
 
-temperature             ? kelvin
+temperature             ? K
 temperature_difference  kelvin
 
 # In 1741 Anders Celsius introduced a temperature scale with water boiling at
@@ -1280,28 +1280,28 @@ ozcu                    ouncecopper             #   in circuitboard fabrication
 
 !category radiometric "Radiometric Units"
 
-radiant_energy                    J       # Basic unit of radiation
-radiant_energy_density            J/m^3
-radiant_flux                      W
-spectral_flux_frequency           W/Hz
-spectral_flux_wavelength        ? W/m
-radiant_intensity               ? W/sr
-spectral_intensity_frequency    ? W sr^-1 Hz^-1
-spectral_intensity_wavelength   ? W sr^-1 m^-1
-radiance                        ? W sr^-1 m^-2
-spectral_radiance_frequency     ? W sr^-1 m^-2 Hz^-1
-spectral_radiance_wavelength    ? W sr^-1 m^-3
-spectral_irradiance_frequency     W m^-2 Hz^-1
-spectral_irradiance_wavelength  ? W/m^3
-radiosity                         W/m^2
-spectral_radiosity_frequency      W m^-2 Hz^-1
-spectral_radiosity_wavelength     W m^-3
-radiant_exitance                  W/m^2
-spectral_exitance_frequency       W m^-2 Hz^-1
-spectral_exitance_wavelength      W/m^3
-radiant_exposure                  J/m^2
-spectral_exposure_frequency     ? J m^-2 Hz^-1
-spectral_exposure_wavelength      J/m^3
+radiant_energy                    energy       # Basic unit of radiation
+radiant_energy_density            energy / volume
+radiant_flux                      power 
+spectral_flux_frequency           power / frequency
+spectral_flux_wavelength        ? power / length
+radiant_intensity               ? power / solid_angle
+spectral_intensity_frequency    ? power / solid_angle frequency
+spectral_intensity_wavelength   ? power / solid_angle length
+radiance                        ? power / solid_angle area
+spectral_radiance_frequency     ? power / solid_angle area frequency
+spectral_radiance_wavelength    ? power / solid_angle volume
+spectral_irradiance_frequency     power / area frequency
+spectral_irradiance_wavelength  ? power / volume
+radiosity                         power / area
+spectral_radiosity_frequency      power / area frequency
+spectral_radiosity_wavelength     power / volume
+radiant_exitance                  power / area
+spectral_exitance_frequency       power / area frequency
+spectral_exitance_wavelength      power / volume
+radiant_exposure                  energy / area
+spectral_exposure_frequency     ? energy / area frequency
+spectral_exposure_wavelength      energy / volume
 
 !endcategory
 
@@ -1311,10 +1311,10 @@ spectral_exposure_wavelength      J/m^3
 
 !category photometric "Photometric Units"
 
-luminous_intensity      ? candela
-luminous_flux           ? lumen
-luminous_energy         ? talbot
-illuminance             ? lux
+luminous_intensity      ? cd
+luminous_flux           ? luminous_intensity solid_angle
+luminous_energy         ? luminous_flux time
+illuminance             ? luminous_flux / area
 
 candle                  1.02 candela  # Standard unit for luminous intensity
 hefnerunit              0.9 candle    #   in use before candela
@@ -1350,7 +1350,7 @@ skot                    1e-3 apostilb # measurements relating to dark adapted
                                       # eyes.
 # Luminance measures
 
-luminance               ? nit
+luminance               ? luminous_intensity / area
 
 nit                     cd/m^2        # Luminance: the intensity per projected
 stilb                   cd / cm^2     # area of an extended luminous source.
@@ -1620,7 +1620,7 @@ C_illum         C_apex1961
 # and a description of how to compute the correction to mean time.
 #
 
-time                    ? second
+time                    ? s
 
 anomalisticyear         365.2596 days       # The time between successive
                                             #   perihelion passages of the
@@ -2982,7 +2982,7 @@ count                  /pound        # For measuring the size of shrimp
 # Other units of work, energy, power, etc
 #
 
-energy                  ? joule
+energy                  ? force length
 
 # Calories: energy to raise a gram of water one degree celsius
 
@@ -3023,7 +3023,7 @@ therm                   UStherm
 celsiusheatunit         cal lb K / gram K
 chu                     celsiusheatunit
 
-power                   ? watt
+power                   ? energy / time
 
 # "Apparent" average power in an AC circuit, the product of rms voltage
 # and rms current, equal to the true power in watts when voltage and
@@ -3061,14 +3061,14 @@ chevalvapeur            metrichorsepower
 # cross sectional area, t is the time, and L is the length (thickness).
 # Thermal conductivity is a material property.
 
-thermal_conductivity    ? power / area (temperature_difference/length)
+thermal_conductivity    ? power / area (temperature/length)
 thermal_resistivity     ? 1/thermal_conductivity
 
 # Thermal conductance is the rate at which heat flows across a given
 # object, so the area and thickness have been fixed.  It depends on
 # the size of the object and is hence not a material property.
 
-thermal_conductance     ? power / temperature_difference
+thermal_conductance     ? power / temperature
 thermal_resistance      ? 1/thermal_conductance
 
 # Thermal admittance is the rate of heat flow per area across an
