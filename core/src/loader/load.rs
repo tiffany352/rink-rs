@@ -357,7 +357,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
             }
             Def::Canonicalization { ref of } => {
                 ctx.registry
-                    .canonicalizations
+                    .base_unit_long_names
                     .insert(of.clone(), name.clone());
                 match ctx.registry.lookup(of) {
                     Some(v) => {

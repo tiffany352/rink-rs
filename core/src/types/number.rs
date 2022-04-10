@@ -306,7 +306,7 @@ impl Number {
                 (
                     context
                         .registry
-                        .canonicalizations
+                        .base_unit_long_names
                         .get(&*k.id)
                         .map(|x| BaseUnit::new(x))
                         .unwrap_or(k),

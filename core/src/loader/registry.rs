@@ -11,7 +11,7 @@ pub struct Registry {
     /// Contains the base units, e.g. `kg`, `bit`.
     pub base_units: BTreeSet<BaseUnit>,
     /// Mappings from short forms of base units to long forms, e.g. `kg` → `kilogram`.
-    pub canonicalizations: BTreeMap<String, String>,
+    pub base_unit_long_names: BTreeMap<String, String>,
     /// Contains numerical values of units.
     pub units: BTreeMap<String, Number>,
     /// Maps dimensionality to named physical quantities like `energy`.
@@ -88,7 +88,7 @@ impl Registry {
     }
 
     fn canonicalize_exact(&self, name: &str) -> Option<String> {
-        if let Some(v) = self.canonicalizations.get(name) {
+        if let Some(v) = self.base_unit_long_names.get(name) {
             return Some(v.clone());
         }
         if let Some(base_unit) = self.base_units.get(name) {
