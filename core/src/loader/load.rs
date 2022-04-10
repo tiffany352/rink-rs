@@ -212,8 +212,6 @@ fn eval_prefix(prefixes: &BTreeMap<String, Numeric>, expr: &Expr) -> Result<Nume
 fn eval_quantity(
     base_units: &BTreeSet<BaseUnit>,
     quantities: &BTreeMap<String, Dimensionality>,
-    ctx: &Context,
-    quantity_name: &str,
     expr: &Expr,
 ) -> Result<Dimensionality, String> {
     match *expr {
@@ -222,9 +220,6 @@ fn eval_quantity(
                 Ok(Dimensionality::base_unit(base.clone()))
             } else if let Some(quantity) = quantities.get(&name[..]) {
                 Ok(quantity.clone())
-            } else if let Some(value) = ctx.lookup(&name[..]) {
-                //println!("Quantity {} relies on unit {}", quantity_name, name);
-                Ok(value.unit)
             } else {
                 Err(format!("No quantity or base unit named {}", name))
             }
@@ -235,7 +230,7 @@ fn eval_quantity(
                 .iter()
                 .fold(Ok(Dimensionality::default()), |acc, value| {
                     let acc = acc?;
-                    let value = eval_quantity(base_units, quantities, ctx, quantity_name, value)?;
+                    let value = eval_quantity(base_units, quantities, value)?;
                     Ok(&acc * &value)
                 })
         }
@@ -244,8 +239,8 @@ fn eval_quantity(
             ref left,
             ref right,
         }) => {
-            let left = eval_quantity(base_units, quantities, ctx, quantity_name, &*left)?;
-            let right = eval_quantity(base_units, quantities, ctx, quantity_name, &*right)?;
+            let left = eval_quantity(base_units, quantities, &*left)?;
+            let right = eval_quantity(base_units, quantities, &*right)?;
             Ok(&left / &right)
         }
         Expr::BinOp(BinOpExpr {
@@ -253,7 +248,7 @@ fn eval_quantity(
             ref left,
             ref right,
         }) => {
-            let left = eval_quantity(base_units, quantities, ctx, quantity_name, &*left)?;
+            let left = eval_quantity(base_units, quantities, &*left)?;
             match **right {
                 Expr::Const { ref value } => {
                     let value = value.to_int().ok_or(format!("RHS of `^` is too big"))?;
@@ -276,7 +271,7 @@ fn eval_quantity(
         Expr::UnaryOp(UnaryOpExpr {
             op: UnaryOpType::Negative,
             ref expr,
-        }) => Ok(eval_quantity(base_units, quantities, ctx, quantity_name, &*expr)?.recip()),
+        }) => Ok(eval_quantity(base_units, quantities, &*expr)?.recip()),
         ref expr => Err(format!("Invalid expression in quantity: {expr}")),
     }
 }
@@ -419,7 +414,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 Err(err) => println!("SPrefix {name}: {err}"),
             },
             Def::Quantity { ref expr } => {
-                match eval_quantity(&ctx.registry.dimensions, &quantities, ctx, &name, &expr.0) {
+                match eval_quantity(&ctx.registry.dimensions, &quantities, &expr.0) {
                     Ok(dimensionality) => {
                         quantities.insert(name.clone(), dimensionality.clone());
                         let res = ctx
