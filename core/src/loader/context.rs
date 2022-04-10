@@ -13,11 +13,23 @@ use std::collections::BTreeMap;
 /// The evaluation context that contains unit definitions.
 #[derive(Debug)]
 pub struct Context {
+    /// Contains all the information about units.
     pub registry: Registry,
-    pub temporaries: BTreeMap<String, Number>,
+    /// Used only during initialization.
+    pub(crate) temporaries: BTreeMap<String, Number>,
+    /// The current time, as set by the caller.
+    ///
+    /// This is used instead of directly asking the OS for the time
+    /// since it allows determinism in unit tests, and prevents edge
+    /// cases like `now - now` being non-zero.
     pub now: DateTime<Local>,
+    /// Enables the use of chrono-humanize. It can be disabled for unit
+    /// tests, as well as in wasm builds where the time API panics.
     pub use_humanize: bool,
+    /// Whether to save the previous query result and make it available
+    /// as the `ans` variable.
     pub save_previous_result: bool,
+    /// The previous query result.
     pub previous_result: Option<Number>,
 }
 

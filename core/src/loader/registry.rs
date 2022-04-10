@@ -8,20 +8,33 @@ use crate::{
 
 #[derive(Default, Debug)]
 pub struct Registry {
+    /// Contains the base units, e.g. `kg`, `bit`.
     pub base_units: BTreeSet<BaseUnit>,
+    /// Mappings from short forms of base units to long forms, e.g. `kg` → `kilogram`.
     pub canonicalizations: BTreeMap<String, String>,
+    /// Contains numerical values of units.
     pub units: BTreeMap<String, Number>,
+    /// Maps dimensionality to named physical quantities like `energy`.
     pub quantities: BTreeMap<Dimensionality, String>,
     /// Maps dimensionality to names of SI derived units (newton,
     /// pascal, etc.) for showing simplified forms of units.
     pub decomposition_units: BTreeMap<Dimensionality, String>,
+    /// A list of prefixes that can be applied to units, like `kilo`.
     pub prefixes: Vec<(String, Numeric)>,
+    /// Contains the original expressions defining a unit.
     pub definitions: BTreeMap<String, Expr>,
+    /// Contains documentation strings.
     pub docs: BTreeMap<String, String>,
+    /// Maps unit names to category IDs.
     pub categories: BTreeMap<String, String>,
+    /// Maps category IDs to display names.
     pub category_names: BTreeMap<String, String>,
+    /// Used for matching date formats.
     pub datepatterns: Vec<Vec<DatePattern>>,
+    /// Objects or materials that have certain properties.
     pub substances: BTreeMap<String, Substance>,
+    /// Maps elemental names (like `He`) to substance names (`helium`),
+    /// used for parsing molecular formulas, e.g. `H2O`.
     pub substance_symbols: BTreeMap<String, String>,
 }
 
