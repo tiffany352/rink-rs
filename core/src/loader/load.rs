@@ -5,7 +5,7 @@
 use super::Context;
 use crate::ast::{BinOpExpr, BinOpType, Def, DefEntry, Defs, Expr, UnaryOpExpr, UnaryOpType};
 use crate::runtime::{Properties, Property, Substance, Value};
-use crate::types::{BaseUnit, Number, Numeric};
+use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 use std::collections::{BTreeMap, BTreeSet};
 use std::convert::TryInto;
 use std::rc::Rc;
@@ -196,6 +196,78 @@ fn eval_prefix(prefixes: &BTreeMap<String, Numeric>, expr: &Expr) -> Result<Nume
     }
 }
 
+fn eval_quantity(
+    base_units: &BTreeSet<BaseUnit>,
+    quantities: &BTreeMap<String, Dimensionality>,
+    ctx: &Context,
+    quantity_name: &str,
+    expr: &Expr,
+) -> Result<Dimensionality, String> {
+    match *expr {
+        Expr::Unit { ref name } => {
+            if let Some(base) = base_units.get(&name[..]) {
+                Ok(Dimensionality::base_unit(base.clone()))
+            } else if let Some(quantity) = quantities.get(&name[..]) {
+                Ok(quantity.clone())
+            } else if let Some(value) = ctx.lookup(&name[..]) {
+                //println!("Quantity {} relies on unit {}", quantity_name, name);
+                Ok(value.unit)
+            } else {
+                Err(format!("No quantity or base unit named {}", name))
+            }
+        }
+        Expr::Const { ref value } if *value == Numeric::one() => Ok(Dimensionality::default()),
+        Expr::Mul { ref exprs } => {
+            exprs
+                .iter()
+                .fold(Ok(Dimensionality::default()), |acc, value| {
+                    let acc = acc?;
+                    let value = eval_quantity(base_units, quantities, ctx, quantity_name, value)?;
+                    Ok(&acc * &value)
+                })
+        }
+        Expr::BinOp(BinOpExpr {
+            op: BinOpType::Frac,
+            ref left,
+            ref right,
+        }) => {
+            let left = eval_quantity(base_units, quantities, ctx, quantity_name, &*left)?;
+            let right = eval_quantity(base_units, quantities, ctx, quantity_name, &*right)?;
+            Ok(&left / &right)
+        }
+        Expr::BinOp(BinOpExpr {
+            op: BinOpType::Pow,
+            ref left,
+            ref right,
+        }) => {
+            let left = eval_quantity(base_units, quantities, ctx, quantity_name, &*left)?;
+            match **right {
+                Expr::Const { ref value } => {
+                    let value = value.to_int().ok_or(format!("RHS of `^` is too big"))?;
+                    Ok(left.pow(value))
+                }
+                Expr::UnaryOp(UnaryOpExpr {
+                    op: UnaryOpType::Negative,
+                    ref expr,
+                }) => {
+                    if let Expr::Const { ref value } = **expr {
+                        let value = -value.to_int().ok_or(format!("RHS of `^` is too big"))?;
+                        Ok(left.pow(value))
+                    } else {
+                        Err(format!("RHS of `^` must be a constant: {expr}"))
+                    }
+                }
+                _ => Err(format!("RHS of `^` must be a constant: {expr}")),
+            }
+        }
+        Expr::UnaryOp(UnaryOpExpr {
+            op: UnaryOpType::Negative,
+            ref expr,
+        }) => Ok(eval_quantity(base_units, quantities, ctx, quantity_name, &*expr)?.recip()),
+        ref expr => Err(format!("Invalid expression in quantity: {expr}")),
+    }
+}
+
 pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     let mut resolver = Resolver {
         interned: BTreeSet::new(),
@@ -269,6 +341,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     reverse.insert("katal");
 
     let mut prefix_lookup = BTreeMap::new();
+    let mut quantities = BTreeMap::new();
 
     for (name, def) in udefs {
         let name = name.name();
@@ -332,21 +405,26 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
                 }
                 Err(err) => println!("SPrefix {name}: {err}"),
             },
-            Def::Quantity { ref expr } => match ctx.eval(expr) {
-                Ok(Value::Number(v)) => {
-                    let res = ctx.registry.quantities.insert(v.unit, name.clone());
-                    if !ctx.registry.definitions.contains_key(&name) {
-                        ctx.registry
-                            .definitions
-                            .insert(name.clone(), expr.0.clone());
+            Def::Quantity { ref expr } => {
+                match eval_quantity(&ctx.registry.dimensions, &quantities, ctx, &name, &expr.0) {
+                    Ok(dimensionality) => {
+                        quantities.insert(name.clone(), dimensionality.clone());
+                        let res = ctx
+                            .registry
+                            .quantities
+                            .insert(dimensionality.clone(), name.clone());
+                        if !ctx.registry.definitions.contains_key(&name) {
+                            ctx.registry
+                                .definitions
+                                .insert(name.clone(), expr.0.clone());
+                        }
+                        if let Some(old) = res {
+                            println!("Warning: Conflicting quantities {} and {}", name, old);
+                        }
                     }
-                    if let Some(old) = res {
-                        println!("Warning: Conflicting quantities {} and {}", name, old);
-                    }
+                    Err(err) => println!("Quantity {name}: {err}"),
                 }
-                Ok(_) => println!("Quantity {} is not a number", name),
-                Err(e) => println!("Quantity {} is malformed: {}", name, e),
-            },
+            }
             Def::Substance {
                 ref properties,
                 ref symbol,

@@ -53,6 +53,20 @@ impl Dimensionality {
     pub fn is_dimensionless(&self) -> bool {
         self.dims.is_empty()
     }
+
+    pub fn recip(mut self) -> Dimensionality {
+        for (_, power) in self.dims.iter_mut() {
+            *power *= -1;
+        }
+        self
+    }
+
+    pub fn pow(mut self, exp: i64) -> Dimensionality {
+        for (_, power) in self.dims.iter_mut() {
+            *power *= exp;
+        }
+        self
+    }
 }
 
 impl<'a> ops::Mul for &'a Dimensionality {
@@ -67,6 +81,14 @@ impl<'a> ops::Mul for &'a Dimensionality {
             }
         });
         Dimensionality { dims }
+    }
+}
+
+impl<'a> ops::Div for &'a Dimensionality {
+    type Output = Dimensionality;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self * &rhs.clone().recip()
     }
 }
 
