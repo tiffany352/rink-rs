@@ -651,3 +651,31 @@ fn test_atom_symbol() {
         "oganesson: atomic_number = 118; molar_mass = approx. 294.2139 gram / mole",
     );
 }
+
+#[test]
+fn gold_density_should_be_error() {
+    test(
+        "gold density",
+        "No such unit density, did you mean paperdensity?",
+    );
+}
+
+#[test]
+fn quantities_disallowed() {
+    test(
+        "energy / time",
+        "No such unit energy, did you mean mass_energy?",
+    );
+}
+
+#[test]
+fn quantity_defs() {
+    test(
+        "power",
+        "Definition: power = physical quantity for energy / time (kg m^2 / s^3)",
+    );
+    test(
+        "energy",
+        "Definition: energy = physical quantity for force length (kg m^2 / s^2)",
+    );
+}

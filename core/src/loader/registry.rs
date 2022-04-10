@@ -46,14 +46,6 @@ impl Registry {
         if let Some(v) = self.units.get(name).cloned() {
             return Some(v);
         }
-        for (unit, quantity) in &self.quantities {
-            if name == quantity {
-                return Some(Number {
-                    value: Numeric::one(),
-                    unit: unit.clone(),
-                });
-            }
-        }
         None
     }
 
@@ -129,7 +121,13 @@ impl Registry {
         None
     }
 
-    /// Given a unit name, try to return a canonical name (expanding aliases and such)
+    /// Given a unit name, tries to find a canonical name for it.
+    ///
+    /// # Examples
+    ///
+    /// * `kg` -> `kilogram` (base units are converted to long name)
+    /// * `mm` -> `millimeter` (prefixes are converted to long form)
+    /// * `micron` -> `micrometer` (aliases are expanded)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
         let res = self.canonicalize_with_prefix(name);
         if res.is_some() {
