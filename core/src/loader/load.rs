@@ -48,11 +48,10 @@ impl Resolver {
         }
     }
 
-    fn lookup_exact(&mut self, name: &Rc<String>, context: bool) -> bool {
-        let ordering = if context {
-            [Namespace::Quantity, Namespace::Unit, Namespace::Prefix]
-        } else {
-            [Namespace::Unit, Namespace::Prefix, Namespace::Quantity]
+    fn lookup_exact(&mut self, name: &Rc<String>, context: Namespace) -> bool {
+        let ordering = match context {
+            Namespace::Quantity => [Namespace::Quantity, Namespace::Unit, Namespace::Prefix],
+            _ => [Namespace::Unit, Namespace::Prefix, Namespace::Quantity],
         };
         ordering.iter().copied().any(|namespace| {
             let id = Id {
@@ -66,7 +65,7 @@ impl Resolver {
         })
     }
 
-    fn lookup_with_prefix(&mut self, name: &Rc<String>, context: bool) -> bool {
+    fn lookup_with_prefix(&mut self, name: &Rc<String>, context: Namespace) -> bool {
         if self.lookup_exact(name, context) {
             return true;
         }
@@ -84,7 +83,7 @@ impl Resolver {
         })
     }
 
-    fn lookup(&mut self, name: &Rc<String>, context: bool) -> bool {
+    fn lookup(&mut self, name: &Rc<String>, context: Namespace) -> bool {
         self.lookup_with_prefix(name, context)
             || name.ends_with('s') && {
                 let name = &Rc::new(name[0..name.len() - 1].to_owned());
@@ -92,7 +91,7 @@ impl Resolver {
             }
     }
 
-    fn eval(&mut self, expr: &Expr, context: bool) {
+    fn eval(&mut self, expr: &Expr, context: Namespace) {
         match *expr {
             Expr::Unit { ref name } => {
                 let name = self.intern(name);
@@ -126,7 +125,6 @@ impl Resolver {
             println!("Unit {:?} has a dependency cycle", id);
             return;
         }
-        let context = id.namespace == Namespace::Quantity;
         if self.unmarked.get(id).is_some() {
             self.temp_marks.insert(id.clone());
             if let Some(v) = self.input.get(id).cloned() {
@@ -134,14 +132,14 @@ impl Resolver {
                     Def::Prefix { ref expr }
                     | Def::SPrefix { ref expr }
                     | Def::Unit { ref expr }
-                    | Def::Quantity { ref expr } => self.eval(expr, context),
+                    | Def::Quantity { ref expr } => self.eval(expr, id.namespace),
                     Def::Canonicalization { ref of } => {
-                        self.lookup(&Rc::new(of.clone()), context);
+                        self.lookup(&Rc::new(of.clone()), id.namespace);
                     }
                     Def::Substance { ref properties, .. } => {
                         for prop in properties {
-                            self.eval(&prop.input, context);
-                            self.eval(&prop.output, context);
+                            self.eval(&prop.input, id.namespace);
+                            self.eval(&prop.output, id.namespace);
                         }
                     }
                     _ => (),
