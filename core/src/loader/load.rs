@@ -11,23 +11,18 @@ use std::convert::TryInto;
 use std::rc::Rc;
 use std::sync::Arc;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
-enum Name {
-    Unit(Rc<String>),
-    Prefix(Rc<String>),
-    Quantity(Rc<String>),
-    Category(Rc<String>),
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
+enum Namespace {
+    Unit,
+    Prefix,
+    Quantity,
+    Category,
 }
 
-impl Name {
-    fn name(&self) -> String {
-        match &self {
-            Name::Unit(ref name)
-            | Name::Prefix(ref name)
-            | Name::Quantity(ref name)
-            | Name::Category(ref name) => (**name).clone(),
-        }
-    }
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
+struct Name {
+    namespace: Namespace,
+    name: Rc<String>,
 }
 
 struct Resolver {
@@ -55,12 +50,15 @@ impl Resolver {
 
     fn lookup_exact(&mut self, name: &Rc<String>, prefer_quantities: bool) -> bool {
         let ordering = if prefer_quantities {
-            [Name::Quantity, Name::Unit, Name::Prefix]
+            [Namespace::Quantity, Namespace::Unit, Namespace::Prefix]
         } else {
-            [Name::Unit, Name::Prefix, Name::Quantity]
+            [Namespace::Unit, Namespace::Prefix, Namespace::Quantity]
         };
-        ordering.iter().any(|f| {
-            let unit = f(name.clone());
+        ordering.iter().copied().any(|namespace| {
+            let unit = Name {
+                namespace,
+                name: name.clone(),
+            };
             self.input.contains_key(&unit) && {
                 self.visit(&unit);
                 true
@@ -73,17 +71,17 @@ impl Resolver {
             return true;
         }
         let mut found = vec![];
-        for pre in self.input.keys() {
-            if let Name::Prefix(ref pre) = *pre {
-                if (*name).starts_with(&**pre) {
-                    found.push(pre.clone());
-                }
+        for prefix in self.input.keys() {
+            if prefix.namespace == Namespace::Prefix && name.starts_with(&prefix.name[..]) {
+                found.push(prefix.clone());
             }
         }
         found.into_iter().any(|pre| {
-            self.lookup_exact(&Rc::new(name[pre.len()..].to_owned()), prefer_quantities) && {
-                let unit = Name::Prefix(pre);
-                self.visit(&unit);
+            self.lookup_exact(
+                &Rc::new(name[pre.name.len()..].to_owned()),
+                prefer_quantities,
+            ) && {
+                self.visit(&pre);
                 true
             }
         })
@@ -131,10 +129,7 @@ impl Resolver {
             println!("Unit {:?} has a dependency cycle", name);
             return;
         }
-        let prefer_quantities = match name {
-            Name::Quantity(_) => true,
-            _ => false,
-        };
+        let prefer_quantities = name.namespace == Namespace::Quantity;
         if self.unmarked.get(name).is_some() {
             self.temp_marks.insert(name.clone());
             if let Some(v) = self.input.get(name).cloned() {
@@ -291,10 +286,22 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     {
         let name = resolver.intern(&name);
         let unit = match *def {
-            Def::Prefix { .. } | Def::SPrefix { .. } => Name::Prefix(name),
-            Def::Quantity { .. } => Name::Quantity(name),
-            Def::Category { .. } => Name::Category(name),
-            _ => Name::Unit(name),
+            Def::Prefix { .. } | Def::SPrefix { .. } => Name {
+                namespace: Namespace::Prefix,
+                name,
+            },
+            Def::Quantity { .. } => Name {
+                namespace: Namespace::Quantity,
+                name,
+            },
+            Def::Category { .. } => Name {
+                namespace: Namespace::Category,
+                name,
+            },
+            _ => Name {
+                namespace: Namespace::Unit,
+                name,
+            },
         };
         if let Some(doc) = doc {
             resolver.docs.insert(unit.clone(), doc);
@@ -303,14 +310,14 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
             resolver.categories.insert(unit.clone(), category);
         }
         if resolver.input.insert(unit.clone(), def).is_some() {
-            let (ty, name) = match unit {
-                Name::Prefix(ref name) => ("prefixes", name),
-                Name::Quantity(ref name) => ("quantities", name),
-                Name::Unit(ref name) => ("units", name),
-                Name::Category(ref name) => ("category", name),
+            let namespace = match unit.namespace {
+                Namespace::Prefix => "prefixes",
+                Namespace::Quantity => "quantities",
+                Namespace::Unit => "units",
+                Namespace::Category => "category",
             };
-            if ty != "category" {
-                println!("warning: multiple {} named {}", ty, name);
+            if namespace != "category" {
+                println!("warning: multiple {} named {}", namespace, unit.name);
             }
         }
         resolver.unmarked.insert(unit);
@@ -348,7 +355,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     let mut quantities = BTreeMap::new();
 
     for (name, def) in udefs {
-        let name = name.name();
+        let name = name.name.to_string();
         match *def {
             Def::BaseUnit => {
                 ctx.registry.dimensions.insert(BaseUnit::new(&*name));
@@ -536,14 +543,14 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) {
     }
 
     for (name, val) in resolver.docs {
-        let name = name.name();
+        let name = name.name.to_string();
         if ctx.registry.docs.insert(name.clone(), val).is_some() {
             println!("Doc conflict for {}", name);
         }
     }
 
     for (name, val) in resolver.categories {
-        let name = name.name();
+        let name = name.name.to_string();
         if ctx.registry.categories.insert(name.clone(), val).is_some() {
             println!("Category conflict for {}", name);
         }
