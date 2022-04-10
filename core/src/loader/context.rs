@@ -55,38 +55,6 @@ impl Context {
         self.registry.datepatterns.append(&mut dates)
     }
 
-    fn lookup_exact(&self, name: &str) -> Option<Number> {
-        if let Some(k) = self.registry.dimensions.get(name) {
-            return Some(Number::one_unit(k.to_owned()));
-        }
-        if let Some(v) = self.registry.units.get(name).cloned() {
-            return Some(v);
-        }
-        for (unit, quantity) in &self.registry.quantities {
-            if name == quantity {
-                return Some(Number {
-                    value: Numeric::one(),
-                    unit: unit.clone(),
-                });
-            }
-        }
-        None
-    }
-
-    fn lookup_with_prefix(&self, name: &str) -> Option<Number> {
-        if let Some(v) = self.lookup_exact(name) {
-            return Some(v);
-        }
-        for &(ref pre, ref value) in &self.registry.prefixes {
-            if name.starts_with(pre) {
-                if let Some(v) = self.lookup_exact(&name[pre.len()..]) {
-                    return Some((&v * &Number::new(value.clone())).unwrap());
-                }
-            }
-        }
-        None
-    }
-
     /// Given a unit name, returns its value if it exists. Supports SI
     /// prefixes, plurals, bare dimensions like length, and quantities.
     pub fn lookup(&self, name: &str) -> Option<Number> {
@@ -97,18 +65,7 @@ impl Context {
             return Some(v);
         }
 
-        let res = self.lookup_with_prefix(name);
-        if res.is_some() {
-            return res;
-        }
-
-        // after so that "ks" is kiloseconds
-        if name.ends_with('s') {
-            let name = &name[0..name.len() - 1];
-            self.lookup_with_prefix(name)
-        } else {
-            None
-        }
+        self.registry.lookup(name)
     }
 
     /// Given a unit name, try to return a canonical name (expanding aliases and such)
