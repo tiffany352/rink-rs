@@ -121,7 +121,13 @@ impl Registry {
         None
     }
 
-    /// Given a unit name, try to return a canonical name (expanding aliases and such)
+    /// Given a unit name, tries to find a canonical name for it.
+    ///
+    /// # Examples
+    ///
+    /// * `kg` -> `kilogram` (base units are converted to long name)
+    /// * `mm` -> `millimeter` (prefixes are converted to long form)
+    /// * `micron` -> `micrometer` (aliases are expanded)
     pub fn canonicalize(&self, name: &str) -> Option<String> {
         let res = self.canonicalize_with_prefix(name);
         if res.is_some() {

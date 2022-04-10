@@ -656,6 +656,8 @@ fn to_list(ctx: &Context, top: &Number, list: &[&str]) -> Result<Vec<NumberParts
         .collect())
 }
 
+/// Returns true if this unit has a definition that can be shown. Units
+/// with prefixes can't be.
 fn can_show_definition(ctx: &Context, name: &str) -> bool {
     if ctx.registry.definitions.contains_key(name) {
         return true;
@@ -666,6 +668,7 @@ fn can_show_definition(ctx: &Context, name: &str) -> bool {
     }
 
     if let Some(name) = ctx.canonicalize(name) {
+        // Canonicalizing doesn't always result in a unit that actually exists, because it can return units that still have a prefix, e.g. micrometer.
         if ctx.registry.definitions.contains_key(&name) {
             return true;
         }
@@ -677,72 +680,84 @@ fn can_show_definition(ctx: &Context, name: &str) -> bool {
     false
 }
 
-pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, QueryError> {
-    match *expr {
-        Query::Expr(Expr::Unit { ref name }) if can_show_definition(ctx, name) => {
-            let mut name = name.clone();
-            let mut canon = ctx.canonicalize(&name).unwrap_or_else(|| name.clone());
-            while let Some(&Expr::Unit { name: ref unit }) = {
-                ctx.registry
-                    .definitions
-                    .get(&name)
-                    .or_else(|| ctx.registry.definitions.get(&*canon))
-            } {
-                if ctx.registry.base_units.contains(&*name) {
+/// Recursively expands aliases to find the canonical version of the
+/// unit, so that its most fundamental definition can be shown.
+///
+/// # Examples
+///
+/// - `ft` -> (`foot`, `foot`)
+fn expand_aliases(ctx: &Context, name: &str) -> (String, String) {
+    let mut name = name.to_owned();
+    let mut canon = ctx.canonicalize(&name).unwrap_or_else(|| name.clone());
+
+    while let Some(&Expr::Unit { name: ref unit }) = {
+        ctx.registry
+            .definitions
+            .get(&name)
+            .or_else(|| ctx.registry.definitions.get(&*canon))
+    } {
+        if ctx.registry.base_units.contains(&*name) {
+            break;
+        }
+        let unit_canon = ctx.canonicalize(unit).unwrap_or_else(|| unit.clone());
+        if ctx.registry.base_units.contains(&**unit) {
+            name = unit.clone();
+            canon = unit_canon;
+            break;
+        }
+        if ctx.registry.definitions.get(unit).is_none() {
+            if ctx.registry.definitions.get(&unit_canon).is_none() {
+                if !ctx.registry.base_units.contains(&**unit) {
                     break;
-                }
-                let unit_canon = ctx.canonicalize(unit).unwrap_or_else(|| unit.clone());
-                if ctx.registry.base_units.contains(&**unit) {
+                } else {
+                    assert!(name != *unit || canon != unit_canon);
                     name = unit.clone();
                     canon = unit_canon;
                     break;
                 }
-                if ctx.registry.definitions.get(unit).is_none() {
-                    if ctx.registry.definitions.get(&unit_canon).is_none() {
-                        if !ctx.registry.base_units.contains(&**unit) {
-                            break;
-                        } else {
-                            assert!(name != *unit || canon != unit_canon);
-                            name = unit.clone();
-                            canon = unit_canon;
-                            break;
-                        }
-                    } else {
-                        assert!(name != unit_canon || canon != unit_canon);
-                        name = unit_canon.clone();
-                        canon = unit_canon;
-                    }
-                } else {
-                    assert!(name != *unit || canon != unit_canon);
-                    name = unit.clone();
-                    canon = unit_canon.clone();
-                }
-            }
-            let (def, def_expr, res) = if ctx.registry.base_units.contains(&*name) {
-                let parts = ctx
-                    .lookup(&name)
-                    .expect("Lookup of base unit failed")
-                    .to_parts(ctx);
-                let def = if let Some(ref q) = parts.quantity {
-                    format!("base unit of {}", q)
-                } else {
-                    "base unit".to_string()
-                };
-                (Some(def), None, None)
             } else {
-                let def = ctx.registry.definitions.get(&name);
-                (
-                    def.as_ref().map(|x| x.to_string()),
-                    def,
-                    ctx.lookup(&name).map(|x| x.to_parts(ctx)),
-                )
-            };
+                assert!(name != unit_canon || canon != unit_canon);
+                name = unit_canon.clone();
+                canon = unit_canon;
+            }
+        } else {
+            assert!(name != *unit || canon != unit_canon);
+            name = unit.clone();
+            canon = unit_canon.clone();
+        }
+    }
+
+    (name, canon)
+}
+
+pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, QueryError> {
+    match *expr {
+        Query::Expr(Expr::Unit { ref name }) if can_show_definition(ctx, name) => {
+            let (name, canon_name) = expand_aliases(ctx, name);
+
+            let (def, def_expr, value) =
+                if let Some(base_unit) = ctx.registry.base_units.get(&*name) {
+                    let parts = Number::one_unit(base_unit.clone()).to_parts(ctx);
+                    let def = if let Some(ref q) = parts.quantity {
+                        format!("base unit of {}", q)
+                    } else {
+                        "base unit".to_string()
+                    };
+                    (Some(def), None, None)
+                } else {
+                    let def = ctx.registry.definitions.get(&name);
+                    (
+                        def.as_ref().map(|x| x.to_string()),
+                        def,
+                        ctx.lookup(&name).map(|x| x.to_parts(ctx)),
+                    )
+                };
             Ok(QueryReply::Def(Box::new(DefReply {
-                canon_name: canon,
-                def,
                 def_expr: def_expr.as_ref().map(|x| ExprReply::from(*x)),
-                value: res,
                 doc: ctx.registry.docs.get(&name).cloned(),
+                canon_name,
+                def,
+                value,
             })))
         }
         Query::Convert(ref top, Conversion::None, Some(base), digits) => {
