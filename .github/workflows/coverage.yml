@@ -27,12 +27,12 @@ jobs:
 
       - name: debugging
         run:
-          echo 'pwd:'
-          pwd
-          echo 'ls:'
-          ls ./
-          echo 'Cargo.toml:'
-          cat Cargo.toml
+          echo 'pwd:';
+          pwd;
+          echo 'ls:';
+          ls ./;
+          echo 'Cargo.toml:';
+          cat Cargo.toml;
 
       - name: Build
         env:
