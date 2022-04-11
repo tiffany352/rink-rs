@@ -25,15 +25,7 @@ jobs:
         run:
           cargo +nightly install grcov
 
-      - name: debugging
-        run:
-          cd ../;
-          echo 'pwd:';
-          pwd;
-          echo 'ls:';
-          ls ./;
-          echo 'Cargo.toml:';
-          cat Cargo.toml;
+      - uses: actions/checkout@v2
 
       - name: Build
         env:
