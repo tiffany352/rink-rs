@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::sync::{Arc, Mutex};
 
 use rustyline::{
@@ -9,7 +13,7 @@ use rustyline::{
 };
 use rustyline::{Context as LineContext, Result};
 
-use rink_core::{search::query, Context};
+use rink_core::{commands, Context};
 
 use crate::{config::Config, fmt::to_ansi_string};
 
@@ -31,7 +35,7 @@ impl Completer for RinkHelper {
         let (res_pos, name) = extract_word(line, pos, None, &[b' ']);
 
         let ctx = self.context.lock().unwrap();
-        let reply = query(&ctx, name, 100);
+        let reply = commands::search(&ctx, name, 100);
 
         let results = reply
             .results

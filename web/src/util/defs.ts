@@ -4,23 +4,15 @@ export interface DefBase {
   category: string | null;
 }
 
-export interface Dimension extends DefBase {
-  type: "dimension";
-}
-
-export interface Canonicalization extends DefBase {
-  type: "canonicalization";
-  of: string;
+export interface BaseUnit extends DefBase {
+  type: "baseUnit";
+  longName: string | null;
 }
 
 export interface Prefix extends DefBase {
   type: "prefix";
   expr: string;
-}
-
-export interface SPrefix extends DefBase {
-  type: "sprefix";
-  expr: string;
+  isLong: boolean;
 }
 
 export interface Unit extends DefBase {
@@ -59,10 +51,8 @@ export interface Error extends DefBase {
 }
 
 export type Def =
-  | Dimension
-  | Canonicalization
+  | BaseUnit
   | Prefix
-  | SPrefix
   | Unit
   | Quantity
   | Substance

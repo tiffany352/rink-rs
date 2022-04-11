@@ -2,11 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::context::Context;
-use crate::number::{Dimension, Number};
-use crate::numeric::{Digits, Numeric};
-use crate::reply::{PropertyReply, SubstanceReply};
-use crate::value::Show;
+use super::Show;
+use crate::loader::Context;
+use crate::output::{Digits, PropertyReply, SubstanceReply};
+use crate::types::{BaseUnit, Number, Numeric};
 use std::collections::BTreeMap;
 use std::iter::once;
 use std::ops::{Add, Div, Mul};
@@ -128,7 +127,7 @@ impl Substance {
         if self.amount.dimless() {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
-                doc: context.docs.get(&self.properties.name).cloned(),
+                doc: context.registry.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: self
                     .properties
@@ -173,7 +172,7 @@ impl Substance {
                                 let mut output_pretty = output;
                                 output_pretty.unit = bottom_name
                                     .iter()
-                                    .map(|(k, v)| (Dimension::new(&k), *v as i64))
+                                    .map(|(k, v)| (BaseUnit::new(k), *v as i64))
                                     .collect();
                                 let mut res = try_div!(output_pretty, input_pretty, context)
                                     .to_parts(context);
@@ -229,7 +228,7 @@ impl Substance {
                         let mut output_pretty = output;
                         output_pretty.unit = bottom_name
                             .iter()
-                            .map(|(k, v)| (Dimension::new(&k), *v as i64))
+                            .map(|(k, v)| (BaseUnit::new(k), *v as i64))
                             .collect();
                         let mut res =
                             try_div!(output_pretty, input_pretty, context).to_parts(context);
@@ -255,7 +254,7 @@ impl Substance {
             };
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
-                doc: context.docs.get(&self.properties.name).cloned(),
+                doc: context.registry.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: once(Ok(Some(amount)))
                     .chain(self.properties.properties.iter().map(func))
@@ -271,7 +270,7 @@ impl Substance {
         if self.amount.dimless() {
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
-                doc: context.docs.get(&self.properties.name).cloned(),
+                doc: context.registry.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: self
                     .properties
@@ -347,7 +346,7 @@ impl Substance {
             };
             Ok(SubstanceReply {
                 name: self.properties.name.clone(),
-                doc: context.docs.get(&self.properties.name).cloned(),
+                doc: context.registry.docs.get(&self.properties.name).cloned(),
                 amount: self.amount.to_parts(context),
                 properties: once(Ok(Some(amount)))
                     .chain(self.properties.properties.iter().map(func))
@@ -417,7 +416,7 @@ impl<'a, 'b> Add<&'b Substance> for &'a Substance {
                             Some(v) => v,
                             None => return None,
                         };
-                        let mol = Number::one_unit(Dimension::new("mol"));
+                        let mol = Number::one_unit(BaseUnit::new("mol"));
                         if prop1.input_name != prop2.input_name
                             || prop1.output_name != prop2.output_name
                             || prop1.input.unit != prop2.input.unit

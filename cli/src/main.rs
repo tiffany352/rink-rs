@@ -45,6 +45,14 @@ async fn main() -> Result<()> {
                 .help("Prints a path to the config file, then exits")
         )
         .arg(
+            Arg::new("dump")
+                .long("dump")
+                .help("Generates a file containing the contents of the Context object, then exits")
+                .takes_value(true)
+                .default_missing_value("dump.txt")
+                .hide(true)
+        )
+        .arg(
             Arg::new("service")
                 .long("service")
                 .help("Start in service mode")
@@ -59,6 +67,15 @@ async fn main() -> Result<()> {
     // it's placed after that check.
     color_eyre::install()?;
     let config = config::read_config()?;
+
+    if let Some(filename) = matches.value_of("dump") {
+        use std::io::Write;
+
+        let ctx = config::load(&config)?;
+        let mut file = std::fs::File::create(filename)?;
+        writeln!(&mut file, "{:#?}", ctx)?;
+        return Ok(());
+    }
 
     if matches.is_present("config-path") {
         println!("{}", config::config_path("config.toml").unwrap().display());

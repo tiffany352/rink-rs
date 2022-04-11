@@ -50,7 +50,7 @@ fn parse_color(input: &str) -> Option<Color> {
                 Some(Color::Fixed(value))
             } else if input.starts_with("rgb(") && input.ends_with(')') {
                 let input = &input[4..input.len() - 1];
-                let mut colors = input.split(',').map(|num| num.parse::<u8>().ok()).flatten();
+                let mut colors = input.split(',').filter_map(|num| num.parse::<u8>().ok());
                 let r = colors.next();
                 let g = colors.next();
                 let b = colors.next();

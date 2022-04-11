@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ast::*;
-use crate::numeric::Numeric;
+use crate::types::Numeric;
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::rc::Rc;
@@ -103,7 +103,7 @@ impl<'a> Iterator for TokenIterator<'a> {
                 None => Token::Error("Unexpected EOF".to_string()),
             },
             '#' => {
-                while let Some(c) = self.0.next() {
+                for c in self.0.by_ref() {
                     if c == '\n' {
                         break;
                     }
@@ -208,7 +208,7 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
             }
             _ => Expr::new_unit(name),
         },
-        Token::Number(num, frac, exp) => crate::number::Number::from_parts(
+        Token::Number(num, frac, exp) => crate::types::Number::from_parts(
             &*num,
             frac.as_ref().map(|x| &**x),
             exp.as_ref().map(|x| &**x),
@@ -374,6 +374,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             name,
                             def: Rc::new(Def::Prefix {
                                 expr: ExprString(expr),
+                                is_long: false,
                             }),
                             doc: doc.take(),
                             category: category.clone(),
@@ -381,8 +382,9 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                     } else {
                         map.push(DefEntry {
                             name,
-                            def: Rc::new(Def::SPrefix {
+                            def: Rc::new(Def::Prefix {
                                 expr: ExprString(expr),
+                                is_long: true,
                             }),
                             doc: doc.take(),
                             category: category.clone(),
@@ -391,30 +393,22 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                 } else {
                     // unit
                     if let Some(&Token::Bang) = iter.peek() {
-                        // dimension
+                        // base unit
                         iter.next();
-                        if let Some(Token::Ident(ref long)) = iter.peek().cloned() {
+
+                        let long_name = if let Some(Token::Ident(ref long)) = iter.peek().cloned() {
                             iter.next();
-                            map.push(DefEntry {
-                                name: name.clone(),
-                                def: Rc::new(Def::Dimension),
-                                doc: doc.take(),
-                                category: category.clone(),
-                            });
-                            map.push(DefEntry {
-                                name: long.clone(),
-                                def: Rc::new(Def::Canonicalization { of: name.clone() }),
-                                doc: doc.take(),
-                                category: category.clone(),
-                            });
+                            Some(long.clone())
                         } else {
-                            map.push(DefEntry {
-                                name: name.clone(),
-                                def: Rc::new(Def::Dimension),
-                                doc: doc.take(),
-                                category: category.clone(),
-                            });
-                        }
+                            None
+                        };
+
+                        map.push(DefEntry {
+                            name: name.clone(),
+                            def: Rc::new(Def::BaseUnit { long_name }),
+                            doc: doc.take(),
+                            category: category.clone(),
+                        });
                     } else if let Some(&Token::Question) = iter.peek() {
                         // quantity
                         iter.next();
@@ -633,7 +627,7 @@ mod tests {
 
     #[test]
     fn test_float_leading_dot() {
-        use crate::bigrat::BigRat;
+        use crate::types::BigRat;
         expect!(
             ".123",
             Expr::Const { value },

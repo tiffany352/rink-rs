@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 //! This crate provides a way to run code in a context with limited
 //! memory, execution time, and the ability to be interrupted.
 //!
@@ -37,7 +41,7 @@ pub struct Response<Data> {
 }
 
 impl<Data> Response<Data> {
-    /// Replaces the [`result`] with a new value.
+    /// Replaces the [`Response::result`] with a new value.
     pub fn replace<New>(self, result: New) -> Response<New> {
         let Response {
             memory_used,
@@ -53,7 +57,7 @@ impl<Data> Response<Data> {
         }
     }
 
-    /// Replaces the [`result`] with the value returned by func.
+    /// Replaces the [`Response::result`] with the value returned by func.
     pub fn map<New>(self, func: impl FnOnce(Data) -> New) -> Response<New> {
         let Response {
             result,
