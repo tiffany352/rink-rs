@@ -1,0 +1,52 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # the action needs a nightly toolchain with llvm-tools
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          components: llvm-tools-preview
+
+      - name: Install grcov
+        run:
+          cargo +nightly install grcov
+
+      - uses: actions/checkout@v2
+
+      - name: Build
+        env:
+          RUSTFLAGS: "-C instrument-coverage"
+        run:
+          cargo +nightly test --all --no-run
+
+      - name: Run tests
+        env:
+          RUSTFLAGS: "-C instrument-coverage"
+          LLVM_PROFILE_FILE: "coverage-%p-%m.profraw"
+        run:
+          cargo +nightly test --all
+
+      - name: Process coverage info
+        env:
+          RUSTUP_TOOLCHAIN: nightly
+        run:
+          grcov **/*.profraw --binary-path ./target/debug -t lcov -o lcov.info
+
+      # afterwards, upload the report to codecov
+      - uses: codecov/codecov-action@v2
+        with:
+          files: ./lcov.info
