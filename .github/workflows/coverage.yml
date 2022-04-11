@@ -27,6 +27,7 @@ jobs:
 
       - name: debugging
         run:
+          cd ../
           echo 'pwd:';
           pwd;
           echo 'ls:';
