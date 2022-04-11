@@ -21,10 +21,28 @@ jobs:
           toolchain: nightly
           components: llvm-tools-preview
 
-      # runs cargo with defaults flags, using the default `lcov` output
-      - uses: Swatinem/fucov@v1
-        with:
-          toolchain: nightly
+      - name: Install grcov
+        run:
+          cargo +nightly install grcov
+
+      - name: Build
+        env:
+          RUSTFLAGS: "-C instrument-coverage"
+        run:
+          cargo +nightly build
+
+      - name: Run tests
+        env:
+          RUSTFLAGS: "-C instrument-coverage"
+          LLVM_PROFILE_FILE: "coverage-%p-%m.profraw"
+        run:
+          cargo +nightly test --all
+
+      - name: Process coverage info
+        env:
+          RUSTUP_TOOLCHAIN: nightly
+        run:
+          grcov **/*.profraw --binary-path ~\target\debug\ -t lcov -o ./lcov.info
 
       # afterwards, upload the report to codecov
       - uses: codecov/codecov-action@v1
