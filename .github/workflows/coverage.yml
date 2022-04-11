@@ -44,7 +44,7 @@ jobs:
         env:
           RUSTUP_TOOLCHAIN: nightly
         run:
-          grcov **/*.profraw --binary-path ~\target\debug\ -t lcov -o ./lcov.info
+          grcov **/*.profraw --binary-path ./target/debug -t lcov -o lcov.info
 
       # afterwards, upload the report to codecov
       - uses: codecov/codecov-action@v1
