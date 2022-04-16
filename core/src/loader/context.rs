@@ -182,7 +182,6 @@ impl Context {
 
     /// Takes a parsed definitions.units from
     /// `gnu_units::parse()`. Returns a list of errors, if there were any.
-    #[must_use]
     pub fn load(&mut self, defs: crate::ast::Defs) -> Result<(), String> {
         let errors = crate::loader::load_defs(self, defs);
 
