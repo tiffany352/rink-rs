@@ -174,7 +174,7 @@ impl Context {
 
     pub fn humanize<Tz: chrono::TimeZone>(&self, date: chrono::DateTime<Tz>) -> Option<String> {
         if self.use_humanize {
-            crate::parsing::datetime::humanize(date)
+            crate::parsing::datetime::humanize(self.now, date)
         } else {
             None
         }

@@ -493,10 +493,12 @@ pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
     defs
 }
 
-pub fn humanize<Tz: TimeZone>(date: DateTime<Tz>) -> Option<String> {
+pub fn humanize<Tz: TimeZone>(now: DateTime<Local>, date: DateTime<Tz>) -> Option<String> {
     if cfg!(feature = "chrono-humanize") {
         use chrono_humanize::HumanTime;
-        Some(HumanTime::from(date).to_string())
+        let now = now.with_timezone(&date.timezone());
+        let duration = date - now;
+        Some(HumanTime::from(duration).to_string())
     } else {
         None
     }
