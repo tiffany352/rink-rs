@@ -2,13 +2,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use chrono::{Local, NaiveDate, TimeZone};
 use rink_core::parsing::text_query;
 use rink_core::Context;
 
 thread_local! {
     static CONTEXT: Context = {
         let mut ctx = rink_core::simple_context().unwrap();
-        ctx.use_humanize = false;
+        // Use a fixed time, this one is the timestamp of the first
+        // commit to Rink (in -04:00 originally, but use local time here
+        // for determinism.)
+        ctx.set_time(Local.from_local_datetime(&NaiveDate::from_ymd(2016, 8, 2).and_hms(15, 33, 19)).unwrap());
+        ctx.use_humanize = true;
         ctx
     };
 }
@@ -109,7 +114,7 @@ fn negative_prefixes() {
 fn negative_now() {
     test(
         "-#jan 01, 1970#",
-        "Operation is not defined: - <1970-01-01 00:00:00 +00:00>",
+        "Operation is not defined: - <1970-01-01 00:00:00 +00:00 (46 years ago)>",
     );
 }
 
@@ -168,7 +173,10 @@ fn test_conformance() {
 
 #[test]
 fn test_dates() {
-    test("#jan 01, 1970#", "1970-01-01 00:00:00 +00:00");
+    test(
+        "#jan 01, 1970#",
+        "1970-01-01 00:00:00 +00:00 (46 years ago)",
+    );
 }
 
 #[test]
@@ -191,7 +199,10 @@ fn test_volume_prefix() {
 
 #[test]
 fn test_offset_conversion() {
-    test("#jan 01, 1970# -> -05:00", "1969-12-31 19:00:00 -05:00");
+    test(
+        "#jan 01, 1970# -> -05:00",
+        "1969-12-31 19:00:00 -05:00 (46 years ago)",
+    );
 }
 
 #[test]
@@ -269,8 +280,14 @@ fn test_substance_add() {
 
 #[test]
 fn test_duration_add() {
-    test("#jan 01, 1970# + 1 s", "1970-01-01 00:00:01 +00:00");
-    test("#jan 01, 1970# + 1.123 s", "1970-01-01 00:00:01.123 +00:00");
+    test(
+        "#jan 01, 1970# + 1 s",
+        "1970-01-01 00:00:01 +00:00 (46 years ago)",
+    );
+    test(
+        "#jan 01, 1970# + 1.123 s",
+        "1970-01-01 00:00:01.123 +00:00 (46 years ago)",
+    );
 }
 
 #[test]
@@ -409,7 +426,7 @@ fn test_of_non_substance() {
 fn test_mul_not_defined() {
     test(
         "#2018-10-03# * kg",
-        "Operation is not defined: <1 (dimensionless)> * <2018-10-03 00:00:00 +00:00>",
+        "Operation is not defined: <1 (dimensionless)> * <2018-10-03 00:00:00 +00:00 (in 2 years)>",
     );
 }
 
