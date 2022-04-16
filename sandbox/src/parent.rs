@@ -52,7 +52,9 @@ where
         let mut ctrlc = CtrlC::new().unwrap();
 
         loop {
-            let program = env::current_exe().expect("Couldn't find current executable");
+            let program = S::program()
+                .or_else(|| env::current_exe().ok())
+                .expect("Couldn't find executable");
             let args = S::args(&config);
 
             let mut process = Command::new(program)

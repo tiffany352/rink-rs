@@ -11,7 +11,9 @@
 
 use serde::de::DeserializeOwned;
 use serde_derive::{Deserialize, Serialize};
-use std::{ffi::OsString, io::Error as IoError, panic::RefUnwindSafe, time::Duration};
+use std::{
+    ffi::OsString, io::Error as IoError, panic::RefUnwindSafe, path::PathBuf, time::Duration,
+};
 use thiserror::Error;
 
 mod alloc;
@@ -84,6 +86,12 @@ pub trait Service: Sized + RefUnwindSafe + 'static {
     type Res: serde::Serialize + DeserializeOwned;
     /// The config is passed to the child on startup.
     type Config: serde::Serialize + DeserializeOwned + Clone + 'static;
+
+    /// Returns the path to the executable, or None if the current
+    /// executable should be used.
+    fn program() -> Option<PathBuf> {
+        None
+    }
 
     /// When your app is passed these CLI flags, it should call
     /// [`become_child`].
