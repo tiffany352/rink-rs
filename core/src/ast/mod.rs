@@ -29,7 +29,7 @@ pub enum Degree {
     Newton,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub enum DateToken {
     Literal(String),
     Number(String, Option<String>),
@@ -62,7 +62,7 @@ impl BinOpType {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct BinOpExpr {
     pub op: BinOpType,
     pub left: Box<Expr>,
@@ -78,22 +78,13 @@ pub enum UnaryOpType {
     Degree(Degree),
 }
 
-impl UnaryOpType {
-    pub fn is_prefix(self) -> bool {
-        match self {
-            UnaryOpType::Degree(_) => false,
-            _ => true,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct UnaryOpExpr {
     pub op: UnaryOpType,
     pub expr: Box<Expr>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum Function {
     Sqrt,
@@ -210,5 +201,57 @@ impl fmt::Display for DateToken {
             DateToken::Plus => write!(fmt, "+"),
             DateToken::Error(ref e) => write!(fmt, "<{}>", e),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ast::DateToken;
+
+    use super::Function;
+
+    const FUNCTIONS: &'static [Function] = &[
+        Function::Sqrt,
+        Function::Exp,
+        Function::Ln,
+        Function::Log2,
+        Function::Log10,
+        Function::Sin,
+        Function::Cos,
+        Function::Tan,
+        Function::Asin,
+        Function::Acos,
+        Function::Atan,
+        Function::Sinh,
+        Function::Cosh,
+        Function::Tanh,
+        Function::Asinh,
+        Function::Acosh,
+        Function::Atanh,
+        Function::Log,
+        Function::Hypot,
+        Function::Atan2,
+    ];
+
+    #[test]
+    fn roundtrip_function_names() {
+        for &func in FUNCTIONS {
+            assert_eq!(Function::from_name(func.name()), Some(func));
+        }
+    }
+
+    #[test]
+    fn date_tokens_display() {
+        assert_eq!(DateToken::Colon.to_string(), ":");
+        assert_eq!(DateToken::Dash.to_string(), "-");
+        assert_eq!(DateToken::Space.to_string(), " ");
+        assert_eq!(DateToken::Plus.to_string(), "+");
+        assert_eq!(DateToken::Literal("a".to_owned()).to_string(), "a");
+        assert_eq!(DateToken::Number("123".to_owned(), None).to_string(), "123");
+        assert_eq!(
+            DateToken::Number("123".to_owned(), Some("456".to_owned())).to_string(),
+            "123.456"
+        );
+        assert_eq!(DateToken::Error("test".to_owned()).to_string(), "<test>");
     }
 }

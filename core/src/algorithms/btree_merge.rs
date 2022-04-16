@@ -15,13 +15,6 @@ pub(crate) fn btree_merge<K: Ord + Clone, V: Clone, F: Fn(&V, &V) -> Option<V>>(
     let mut b = right.iter().peekable();
     loop {
         match (a.peek().cloned(), b.peek().cloned()) {
-            (Some((akey, aval)), Some((bkey, bval))) if akey == bkey => {
-                if let Some(v) = merge_func(aval, bval) {
-                    res.insert(akey.clone(), v);
-                }
-                a.next();
-                b.next();
-            }
             (Some((akey, _)), Some((bkey, bval))) if akey > bkey => {
                 res.insert(bkey.clone(), bval.clone());
                 b.next();
@@ -30,7 +23,17 @@ pub(crate) fn btree_merge<K: Ord + Clone, V: Clone, F: Fn(&V, &V) -> Option<V>>(
                 res.insert(akey.clone(), aval.clone());
                 a.next();
             }
-            (Some(_), Some(_)) => unreachable!(),
+            (Some((akey, aval)), Some((bkey, bval))) => {
+                // If !(akey > bkey) && !(bkey < akey) then they must be
+                // equal. Can't use assert_eq because of the Debug
+                // bound.
+                assert!(akey == bkey);
+                if let Some(v) = merge_func(aval, bval) {
+                    res.insert(akey.clone(), v);
+                }
+                a.next();
+                b.next();
+            }
             (None, Some((bkey, bval))) => {
                 res.insert(bkey.clone(), bval.clone());
                 b.next();

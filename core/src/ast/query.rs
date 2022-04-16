@@ -47,3 +47,29 @@ impl fmt::Display for Conversion {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Conversion;
+    use crate::ast::{Degree, Expr};
+    use chrono_tz::Tz;
+
+    #[test]
+    fn conversion_display() {
+        assert_eq!(Conversion::None.to_string(), "nothing");
+        assert_eq!(
+            Conversion::Expr(Expr::new_unit("a".to_owned())).to_string(),
+            "a"
+        );
+        assert_eq!(Conversion::Degree(Degree::Celsius).to_string(), "°C");
+        assert_eq!(
+            Conversion::List(vec!["a".to_owned(), "b".to_owned()]).to_string(),
+            "a, b"
+        );
+        assert_eq!(Conversion::Offset(3600 * 7).to_string(), "07:00");
+        assert_eq!(
+            Conversion::Timezone(Tz::US__Pacific).to_string(),
+            "US/Pacific"
+        );
+    }
+}
