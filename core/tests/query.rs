@@ -493,6 +493,7 @@ fn test_search() {
         "search cm",
         "Search results: cmil (area), cminv (energy), cmcapacitance (capacitance), sccm (power), mcm (area)",
     );
+    test("search water", "Search results: water (substance), waterton (volume), waterhorsepower (power), watt (power), watch (time)");
 }
 
 #[test]

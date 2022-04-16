@@ -7,18 +7,12 @@ use std::cmp;
 use std::collections::{BTreeMap, BinaryHeap};
 use std::rc::Rc;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Ord, Eq, Debug)]
 pub struct Factors(pub usize, pub Vec<Rc<String>>);
 
 impl cmp::PartialOrd for Factors {
     fn partial_cmp(&self, other: &Factors) -> Option<cmp::Ordering> {
         Some(self.0.cmp(&other.0))
-    }
-}
-
-impl cmp::Ord for Factors {
-    fn cmp(&self, other: &Factors) -> cmp::Ordering {
-        self.partial_cmp(other).unwrap()
     }
 }
 

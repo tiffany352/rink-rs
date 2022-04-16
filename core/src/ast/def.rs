@@ -20,7 +20,7 @@ pub enum DatePattern {
     Space,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(into = "String", try_from = "String")]
 pub struct ExprString(pub Expr);
 
@@ -160,5 +160,47 @@ impl DatePattern {
             write!(buf, "{}", p).unwrap();
         }
         String::from_utf8(buf).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DatePattern, ExprString};
+    use crate::ast::Expr;
+    use std::convert::TryFrom;
+
+    #[test]
+    fn test_try_from() {
+        assert_eq!(
+            ExprString::try_from("abc".to_owned()),
+            Ok(ExprString(Expr::new_unit("abc".to_owned())))
+        );
+        assert_eq!(
+            ExprString::try_from("".to_owned()),
+            Ok(ExprString(Expr::new_error(
+                "Expected term, got eof".to_owned()
+            )))
+        );
+        assert_eq!(
+            ExprString::try_from("a -> ->".to_owned()),
+            Err("Expected EOF".to_owned())
+        )
+    }
+
+    #[test]
+    fn date_pattern_fmt() {
+        assert_eq!(format!("{}", DatePattern::Dash), "-");
+        assert_eq!(format!("{}", DatePattern::Colon), ":");
+        assert_eq!(format!("{}", DatePattern::Space), " ");
+        assert_eq!(format!("{}", DatePattern::Literal("a".to_owned())), "'a'");
+        assert_eq!(format!("{}", DatePattern::Match("a".to_owned())), "a");
+
+        assert_eq!(
+            format!(
+                "{}",
+                DatePattern::Optional(vec![DatePattern::Literal("a".to_owned())])
+            ),
+            "['a']"
+        );
     }
 }
