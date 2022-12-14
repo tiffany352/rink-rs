@@ -38,7 +38,7 @@ jobs:
           RUSTFLAGS: "-C instrument-coverage"
           LLVM_PROFILE_FILE: "coverage-%p-%m.profraw"
         run:
-          cargo +nightly test --all
+          cargo +nightly test --all --no-fail-fast
 
       - name: Process coverage info
         env:
