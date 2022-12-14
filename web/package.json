@@ -41,7 +41,7 @@
   "dependencies": {
     "compression": "^1.7.1",
     "elementtree": "^0.1.7",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "node-fetch": "^2.6.1",
     "sirv": "^1.0.0",
     "atomically": "1.7.0"
