@@ -697,3 +697,9 @@ fn quantity_defs() {
         "Definition: energy = physical quantity for force length (kg m^2 / s^2)",
     );
 }
+
+#[test]
+fn test_tim() {
+    // Issue #151, rink crashing due to stack overflow
+    test("Tim", "Definition: Tim = 12^-4 hour = 3125/18, approx. 173.6111 millisecond (time; s)");
+}

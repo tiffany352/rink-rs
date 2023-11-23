@@ -234,11 +234,11 @@ impl ExprReply {
                 Expr::UnaryOp(ref unaryop) => match unaryop.op {
                     UnaryOpType::Positive => {
                         literal!("+");
-                        recurse(expr, parts, Precedence::Plus)
+                        recurse(&unaryop.expr, parts, Precedence::Plus)
                     }
                     UnaryOpType::Negative => {
                         literal!("-");
-                        recurse(expr, parts, Precedence::Plus)
+                        recurse(&unaryop.expr, parts, Precedence::Plus)
                     }
                     UnaryOpType::Degree(ref suffix) => {
                         if prec < Precedence::Mul {
