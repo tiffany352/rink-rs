@@ -106,6 +106,14 @@ async function ecb() {
     }
   }
 
+  defs.push({
+    name: "HRK",
+    doc: "Croatian Kuna. Pinned to Euro at a fixed rate since 2023-01-01.",
+    category: "currencies",
+    type: "unit",
+    expr: "(1 / 7.5345) EUR",
+  });
+
   for (const [name, currency] of Object.entries(ecbDefaults)) {
     if (!seen.has(name)) {
       defs.push({

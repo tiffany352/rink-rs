@@ -1,162 +1,157 @@
 {
   "USD": {
-    "value": "1.0892",
-    "time": "2022-03-08",
+    "value": "1.0921",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "JPY": {
-    "value": "126.03",
-    "time": "2022-03-08",
+    "value": "158.57",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "BGN": {
     "value": "1.9558",
-    "time": "2022-03-08",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "CZK": {
-    "value": "25.642",
-    "time": "2022-03-08",
+    "value": "24.616",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "DKK": {
-    "value": "7.4441",
-    "time": "2022-03-08",
+    "value": "7.4584",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "GBP": {
-    "value": "0.83185",
-    "time": "2022-03-08",
+    "value": "0.86210",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "HUF": {
-    "value": "388.28",
-    "time": "2022-03-08",
+    "value": "378.23",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "PLN": {
-    "value": "4.9103",
-    "time": "2022-03-08",
+    "value": "4.3568",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "RON": {
-    "value": "4.9494",
-    "time": "2022-03-08",
+    "value": "4.9737",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "SEK": {
-    "value": "10.8803",
-    "time": "2022-03-08",
+    "value": "11.2350",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "CHF": {
-    "value": "1.0111",
-    "time": "2022-03-08",
+    "value": "0.9320",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "ISK": {
-    "value": "145.90",
-    "time": "2022-03-08",
+    "value": "150.50",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "NOK": {
-    "value": "9.7925",
-    "time": "2022-03-08",
-    "source": "European Central Bank"
-  },
-  "HRK": {
-    "value": "7.5715",
-    "time": "2022-03-08",
+    "value": "11.3090",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "TRY": {
-    "value": "15.8183",
-    "time": "2022-03-08",
+    "value": "32.5888",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "AUD": {
-    "value": "1.4971",
-    "time": "2022-03-08",
+    "value": "1.6337",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "BRL": {
-    "value": "5.5346",
-    "time": "2022-03-08",
+    "value": "5.3724",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "CAD": {
-    "value": "1.3978",
-    "time": "2022-03-08",
+    "value": "1.4600",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "CNY": {
-    "value": "6.8805",
-    "time": "2022-03-08",
+    "value": "7.8130",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "HKD": {
-    "value": "8.5183",
-    "time": "2022-03-08",
+    "value": "8.5297",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "IDR": {
-    "value": "15639.76",
-    "time": "2022-03-08",
+    "value": "16967.41",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "ILS": {
-    "value": "3.6022",
-    "time": "2022-03-08",
+    "value": "4.0194",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "INR": {
-    "value": "83.9240",
-    "time": "2022-03-08",
+    "value": "90.8100",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "KRW": {
-    "value": "1344.71",
-    "time": "2022-03-08",
+    "value": "1439.64",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "MXN": {
-    "value": "23.2866",
-    "time": "2022-03-08",
+    "value": "18.6066",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "MYR": {
-    "value": "4.5556",
-    "time": "2022-03-08",
+    "value": "5.0826",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "NZD": {
-    "value": "1.5958",
-    "time": "2022-03-08",
+    "value": "1.7564",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "PHP": {
-    "value": "56.900",
-    "time": "2022-03-08",
+    "value": "60.704",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "SGD": {
-    "value": "1.4856",
-    "time": "2022-03-08",
+    "value": "1.4537",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "THB": {
-    "value": "36.156",
-    "time": "2022-03-08",
+    "value": "37.994",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "ZAR": {
-    "value": "16.7051",
-    "time": "2022-03-08",
+    "value": "20.5511",
+    "time": "2024-01-06",
     "source": "European Central Bank"
   },
   "RUB": {
-    "value": "141.951",
-    "time": "2022-03-09",
+    "value": "99.477867",
+    "time": "2024-01-06",
     "source": "xe.com"
   }
 }
