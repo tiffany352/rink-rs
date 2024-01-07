@@ -99,8 +99,12 @@ krone                   NOK
 øre                     1|100 NOK
 
 # Croatia
-kuna                    HRK
-lipa                    1|100 HRK
+kuna                    croatiakuna
+lipa                    1|100 kuna
+dvakonja				20 kuna
+pebanki					50 kuna
+stoja					100 kuna
+dvistoje				200 kuna
 
 # Russia
 ₽                       RUB
@@ -259,6 +263,7 @@ cypruspound             1|0.585274 euro
 maltalira               1|0.429300 euro
 sloveniatolar           1|239.640 euro
 slovakiakoruna          1|30.1260 euro
+croatiakuna             1|7.53450 euro
 
 # Money on the gold standard, used in the late 19th century and early
 # 20th century.
