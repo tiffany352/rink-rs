@@ -1,6 +1,6 @@
 [package]
 name = "rink"
-version = "0.6.3"
+version = "0.7.0"
 description = "Unit conversion tool, similar to frink"
 homepage = "https://rinkcalc.app"
 repository = "https://github.com/tiffany352/rink-rs"
@@ -29,7 +29,7 @@ async-std = { version = "1.9", features = ["unstable", "attributes"] }
 ubyte = { version = "0.10.3", features = ["serde"] }
 
 [dependencies.rink-core]
-version = "0.6"
+version = "0.7"
 path = "../core"
 
 [dependencies.rink-sandbox]
