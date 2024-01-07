@@ -108,7 +108,7 @@ async function ecb() {
 
   defs.push({
     name: "HRK",
-    doc: "Croatian Kuna. Pinned to Euro at a fixed rate since 2022-01-01.",
+    doc: "Croatian Kuna. Pinned to Euro at a fixed rate since 2023-01-01.",
     category: "currencies",
     type: "unit",
     expr: "(1 / 7.5345) EUR",
