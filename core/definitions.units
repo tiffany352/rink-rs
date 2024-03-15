@@ -7094,3 +7094,5 @@ estetrol                C18H24O4
 #                 a single channel occupied for one hour.
 #
 ############################################################################
+
+# vim: set foldmethod=marker foldmarker=!category,!endcategory:
