@@ -121,11 +121,11 @@
 #                                                                         #
 ###########################################################################
 
+!category base_units "SI Base Units"
+
 #
 # SI units
 #
-
-!category base_units "SI Base Units"
 
 ?? Equal to the mass of the international prototype of the
 ?? kilogram. 3rd CGPM (1901, CR, 70).
@@ -168,7 +168,7 @@ mol       !mole
 K         !kelvin
 
 !endcategory
-
+!category base_nonsi "Non-SI Base Units"
 #
 # The radian and steradian are defined as dimensionless primitive units.
 # The radian is equal to m/m and the steradian to m^2/m^2 so these units are
@@ -206,6 +206,8 @@ bit       !
 ?? WHO TRS 932, Annex 2.
 IU                              !
 
+!endcategory
+!category biology "Biology"
 # XXX: conflates “biological activity” and “immunological activity” to
 # avoid a conflicting quantities warning; some biological agents have
 # more than one reference preparation and/or more than one type of
@@ -213,6 +215,7 @@ IU                              !
 # we would map such agents to Rink’s substance/property model
 biological_activity             ? IU
 biological_activity_density     ? mass / biological_activity
+!endcategory
 
 ###########################################################################
 #                                                                         #
@@ -220,7 +223,7 @@ biological_activity_density     ? mass / biological_activity
 #                                                                         #
 ###########################################################################
 
-#!category prefixes "Prefixes"
+!category prefixes "Prefixes"
 
 yotta-                  1e24     # Greek or Latin octo, "eight"
 zetta-                  1e21     # Latin septem, "seven"
@@ -288,13 +291,12 @@ a--                     atto
 z--                     zepto
 y--                     yocto
 
-#!endcategory
+!endcategory
+!category numbers "Numbers"
 
 #
 # Names of some numbers
 #
-
-!category numbers "Numbers"
 
 one                     1
 two                     2
@@ -332,7 +334,13 @@ hundred                 100
 thousand                1000
 million                 1e6
 
+centillion              1e303
+googol                  1e100
+# googolplex            10^googol # familiar large number equal to 10^googol. 
+                                  # These numbers give overflows.
+
 !endcategory
+!category short_system "Short System"
 
 # These number terms were described by N. Chuquet and De la Roche in the 16th
 # century as being successive powers of a million.  These definitions are still
@@ -340,8 +348,6 @@ million                 1e6
 # numbers arose in the 17th century and don't make nearly as much sense.  These
 # numbers are listed in the CRC Concise Encyclopedia of Mathematics by Eric
 # W. Weisstein.
-
-!category short_system "Short System"
 
 shortbillion               1e9
 shorttrillion              1e12
@@ -364,11 +370,32 @@ shortoctodecillion         1e57
 shortnovemdecillion        1e60
 shortvigintillion          1e63
 
+#
+# The short system prevails in English speaking countries
+#
+
+billion                 shortbillion
+trillion                shorttrillion
+quadrillion             shortquadrillion
+quintillion             shortquintillion
+sextillion              shortsextillion
+septillion              shortseptillion
+octillion               shortoctillion
+nonillion               shortnonillion
+noventillion            shortnoventillion
+decillion               shortdecillion
+undecillion             shortundecillion
+duodecillion            shortduodecillion
+tredecillion            shorttredecillion
+quattuordecillion       shortquattuordecillion
+quindecillion           shortquindecillion
+sexdecillion            shortsexdecillion
+septendecillion         shortseptendecillion
+octodecillion           shortoctodecillion
+novemdecillion          shortnovemdecillion
+vigintillion            shortvigintillion
+
 !endcategory
-
-centillion              1e303
-googol                  1e100
-
 !category long_system "Long System"
 
 longbillion               million^2
@@ -391,6 +418,7 @@ longseptdecillion         million^17
 longoctodecillion         million^18
 longnovemdecillion        million^19
 longvigintillion          million^20
+longcentillion            million^100
 
 # These numbers fill the gaps left by the long system above.
 
@@ -421,34 +449,7 @@ longnoventilliard         noventilliard
 longdecilliard            decilliard
 
 !endcategory
-
-# The long centillion would be 1e600.  The googolplex is another
-# familiar large number equal to 10^googol.  These numbers give overflows.
-
-#
-# The short system prevails in English speaking countries
-#
-
-billion                 shortbillion
-trillion                shorttrillion
-quadrillion             shortquadrillion
-quintillion             shortquintillion
-sextillion              shortsextillion
-septillion              shortseptillion
-octillion               shortoctillion
-nonillion               shortnonillion
-noventillion            shortnoventillion
-decillion               shortdecillion
-undecillion             shortundecillion
-duodecillion            shortduodecillion
-tredecillion            shorttredecillion
-quattuordecillion       shortquattuordecillion
-quindecillion           shortquindecillion
-sexdecillion            shortsexdecillion
-septendecillion         shortseptendecillion
-octodecillion           shortoctodecillion
-novemdecillion          shortnovemdecillion
-vigintillion            shortvigintillion
+!category indian_numbers "Indian Numbering System"
 
 #
 # Numbers used in India
@@ -462,19 +463,19 @@ neel                    1e13
 padm                    1e15
 shankh                  1e17
 
+!endcategory
+
 #############################################################################
 #                                                                           #
 # Derived units which can be reduced to the primitive units                 #
 #                                                                           #
 #############################################################################
 
-
+!category si_derived "SI Derived Units"
 
 #
 # Named SI derived units (officially accepted)
 #
-
-!category si_derived "SI Derived Units"
 
 newton                  kg m / s^2   # force
 N                       newton
@@ -503,17 +504,17 @@ hertz                   /s           # frequency
 Hz                      hertz
 
 !endcategory
+!category quantities "Quantities"
 
 #
-# Dimensions.  These are here to help with dimensional analysis and
-# because they will appear in the list produced by hitting '?' at the
-# "You want:" prompt to tell the user the dimension of the unit.
+# Quantities. These are shown within parentheses in every rink query.
 #
 
 dimensionless           ? 1
 length                  ? m
 area                    ? length^2
 volume                  ? length^3
+time                    ? s
 mass                    ? kg
 current                 ? A
 amount                  ? mol
@@ -521,7 +522,9 @@ angle                   ? radian
 solid_angle             ? sr
 force                   ? acceleration mass
 pressure                ? force / area
-#stress                    pascal
+#stress                 ? force / area # conflicts with pressure
+energy                  ? force length
+power                   ? energy / time
 charge                  ? A s
 capacitance             ? charge / electrical_potential
 resistance              ? electrical_potential / current
@@ -569,7 +572,8 @@ molar_mass              ? mass / amount
 flow_rate               ? volume / time
 pressure_column         ? pressure / length
 
-
+!endcategory
+!category metric_misc "Miscellaneous Metric Units"
 #
 # units derived easily from SI units
 #
@@ -662,6 +666,8 @@ pyron            cal_IT / cm^2 min # Measures heat flow from solar radiation,
 katal                   mol/sec    # Measure of the amount of a catalyst.  One
 kat                     katal      #   katal of catalyst enables the reaction
                                    #   to consume or produce on mol/sec.
+!endcategory
+!category time "Time"
 
 #
 # time
@@ -687,6 +693,9 @@ watch                   4 hours    # time a sentry stands watch or a ship's
                                    # crew is on duty.
 bell                    1|8 watch  # Bell would be sounded every 30 minutes.
 
+!endcategory
+!category decimal_time "French Revolutionary Time"
+
 # French Revolutionary Time or Decimal Time.  It was Proposed during
 # the French Revolution.  A few clocks were made, but it never caught
 # on.  In 1998 Swatch defined a time measurement called ".beat" and
@@ -696,6 +705,9 @@ decimalhour             1|10 day
 decimalminute           1|100 decimalhour
 decimalsecond           1|100 decimalminute
 beat                    decimalminute          # Swatch Internet Time
+
+!endcategory
+!category angular "Angular Measurements"
 
 #
 # angular measure
@@ -736,15 +748,8 @@ seclongitude            circle (seconds/day) # Astronomers measure longitude
                                      # (which they call right ascension) in
                                      # time units by dividing the equator into
                                      # 24 hours instead of 360 degrees.
-#
-# Some geometric formulas
-#
-
-#circlearea(r)   units=[m;m^2] range=[0,) pi r^2 ; sqrt(circlearea/pi)
-#spherevolume(r) units=[m;m^3] range=[0,) 4|3 pi r^3 ; \
-#                                         cuberoot(spherevolume/4|3 pi)
-#spherevol()     spherevolume
-#square(x)       range=[0,)          x^2 ; sqrt(square)
+!endcategory
+!category solid_angles "Solid Angle Measurements"
 
 #
 # Solid angle measure
@@ -759,11 +764,12 @@ squarearcsec            squaresecond
 sphericalrightangle     0.5 pi sr
 octant                  0.5 pi sr
 
+!endcategory
+!category concentrations "Concentrations"
+
 #
 # Concentration measures
 #
-
-!category concentrations "Concentrations"
 
 percent                 0.01
 %                       percent
@@ -790,14 +796,15 @@ basispoint              0.01 %    # Used in finance
 fine                    1|1000    # Measure of gold purity
 
 !endcategory
-
+!category ph "pH Scale"
 # The pH scale is used to measure the concentration of hydronium (H3O+) ions in
 # a solution.  A neutral solution has a pH of 7 as a result of dissociated
 # water molecules.
 
 #pH(x) units=[1;mol/liter] range=(0,) 10^(-x) mol/liter ; (-log(pH liters/mol))
 
-
+!endcategory
+!category temp "Temperature"
 #
 # Temperature
 #
@@ -820,12 +827,6 @@ temperature_difference  kelvin
 # centigrade definition, but the Kelvin scale depends on the triple point of
 # water rather than a melting point, so it can be measured accurately.
 
-#tempC(x) units=[1;K] domain=[-273.15,) range=[0,) \
-#                             x K + stdtemp ; (tempC +(-stdtemp))/K
-#tempcelsius() tempC
-#degcelsius              K
-#degC                    K
-
 # Fahrenheit defined his temperature scale by setting 0 to the coldest
 # temperature he could produce in his lab with a salt water solution and by
 # setting 96 degrees to body heat.  In Fahrenheit's words:
@@ -837,13 +838,6 @@ temperature_difference  kelvin
 #    third point, designated as 96, is obtained if the thermometer
 #    is placed in the mouth so as to acquire the heat of a healthy
 #    man."  (D. G. Fahrenheit, Phil. Trans. (London) 33, 78, 1724)
-
-#tempF(x) units=[1;K] domain=[-459.67,) range=[0,) \
-#                (x+(-32)) degF + stdtemp ; (tempF+(-stdtemp))/degF + 32
-#tempfahrenheit() tempF
-#degfahrenheit           5|9 degC
-#degF                    5|9 degC
-
 
 degreesrankine          5|9 K             # The Rankine scale has the
 degrankine              degreesrankine    # Fahrenheit degree, but its zero
@@ -862,66 +856,11 @@ zerofahrenheit          zerocelsius - 32 degR
 zerodelisle             373.15 kelvin
 zeroromer               zerocelsius - 7.5 romer_absolute
 
-#tempreaumur(x)    units=[1;K] domain=[-218.52,) range=[0,) \
-#                  x degreaumur+stdtemp ; (tempreaumur+(-stdtemp))/degreaumur
-#degreaumur              10|8 degC # The Reaumur scale was used in Europe and
-                                  # particularly in France.  It is defined
-                                  # to be 0 at the freezing point of water
-                                  # and 80 at the boiling point.  Reaumur
-                                  # apparently selected 80 because it is
-                                  # divisible by many numbers.
-
 degK                    K         # "Degrees Kelvin" is forbidden usage.
 tempK                   K         # For consistency
 
-# Gas mark is implemented below but in a terribly ugly way.  There is
-# a simple formula, but it requires a conditional which is not
-# presently supported.
-#
-# The formula to convert to degrees Fahrenheit is:
-#
-# 25 log2(gasmark) + k_f   gasmark<=1
-# 25 (gasmark-1) + k_f     gasmark>=1
-#
-# k_f = 275
-#
-#gasmark[degR] \
-#  .0625    634.67 \
-#  .125     659.67 \
-#  .25      684.67 \
-#  .5       709.67 \
-#  1        734.67 \
-#  2        759.67 \
-#  3        784.67 \
-#  4        809.67 \
-#  5        834.67 \
-#  6        859.67 \
-#  7        884.67 \
-#  8        909.67 \
-#  9        934.67 \
-#  10       959.67
-
-# Units cannot handle wind chill or heat index because they are two variable
-# functions, but they are included here for your edification.  Clearly these
-# equations are the result of a model fitting operation.
-#
-# wind chill index (WCI) a measurement of the combined cooling effect of low
-#      air temperature and wind on the human body. The index was first defined
-#      by the American Antarctic explorer Paul Siple in 1939. As currently used
-#      by U.S. meteorologists, the wind chill index is computed from the
-#      temperature T (in °F) and wind speed V (in mi/hr) using the formula:
-#          WCI = 0.0817(3.71 sqrt(V) + 5.81 - 0.25V)(T - 91.4) + 91.4.
-#      For very low wind speeds, below 4 mi/hr, the WCI is actually higher than
-#      the air temperature, but for higher wind speeds it is lower than the air
-#      temperature.
-#
-# heat index (HI or HX) a measure of the combined effect of heat and
-#      humidity on the human body. U.S. meteorologists compute the index
-#      from the temperature T (in °F) and the relative humidity H (as a
-#      value from 0 to 1).
-#        HI = -42.379 + 2.04901523 T + 1014.333127 H - 22.475541 TH
-#             - .00683783 T^2 - 548.1717 H^2 + 0.122874 T^2 H + 8.5282 T H^2
-#             - 0.0199 T^2 H^2.
+!endcategory
+!category constants "Physical Constants"
 
 #
 # Physical constants
@@ -929,7 +868,6 @@ tempK                   K         # For consistency
 
 # Basic constants
 
-!category constants "Physical Constants"
 
 π                       3.14159265358979323846
 pi                      π
@@ -1111,12 +1049,12 @@ kcal_mol                kcal_th / mol N_A   # kcal/mol is used as a unit of
                                             #   energy by physical chemists.
 
 !endcategory
+!category cgs "CGS Units"
 
 #
 # CGS system based on centimeter, gram and second
 #
 
-!category cgs "CGS Units"
 
 dyne                    cm gram / s^2   # force
 dyn                     dyne
@@ -1247,6 +1185,7 @@ siemensunit             0.9534 ohm    # Resistance of a meter long column of
                                       #   mercury with a 1 mm cross section.
 
 !endcategory
+!category circuit_board "Printed circuit board units"
 
 #
 # Printed circuit board units.
@@ -1264,11 +1203,12 @@ copperdensity           8.89 g/cm^3             # The "ounce" measures the
 ouncecopper             oz / ft^2 copperdensity #   thickness of copper used
 ozcu                    ouncecopper             #   in circuitboard fabrication
 
+!endcategory
+!category radiometric "Radiometric Units"
+
 #
 # Radiometric units
 #
-
-!category radiometric "Radiometric Units"
 
 # radiant_energy                    energy       # Basic unit of radiation
 # radiant_energy_density            energy / volume
@@ -1294,12 +1234,11 @@ spectral_exposure_frequency     ? energy / area frequency
 # spectral_exposure_wavelength      energy / volume
 
 !endcategory
+!category photometric "Photometric Units"
 
 #
 # Photometric units
 #
-
-!category photometric "Photometric Units"
 
 luminous_intensity      ? cd
 luminous_flux           ? luminous_intensity solid_angle
@@ -1585,6 +1524,7 @@ C_illum         C_apex1961
 #    Determination of ISO Speed.
 
 !endcategory
+!category astronomical_time "Astronomical time measurements"
 
 #
 # Astronomical time measurements
@@ -1609,8 +1549,6 @@ C_illum         C_apex1961
 # See "Mathematical Astronomy Morsels" by Jean Meeus for more details
 # and a description of how to compute the correction to mean time.
 #
-
-time                    ? s
 
 anomalisticyear         365.2596 days       # The time between successive
                                             #   perihelion passages of the
@@ -1729,6 +1667,9 @@ islamicmonth            1|12 islamicyear # They have 29 day and 30 day months.
 # 3rd, 6th, 8th, 11th, 14th, 17th, and 19th years of a 19 year cycle.  This
 # gives leap years that last 383, 384, or 385 days.
 
+!endcategory
+!category earth_moon "Earth and Moon"
+
 # Objects on the earth are charted relative to a perfect ellipsoid whose
 # dimensions are specified by different organizations.  The ellipsoid is
 # specified by an equatorial radius and a flattening value which defines the
@@ -1781,12 +1722,14 @@ au                     astronomicalunit # ephemeris for the above described
                                         # astronomical unit.  (See the NASA
                                         # site listed above.)
 
+!endcategory
+!category atomic "Atomic Units"
+
 #
 # The Hartree system of atomic units, derived from fundamental units
 # of mass (of electron), action (planck's constant), charge, and
 # the coulomb constant.
-
-!category atomic "Atomic Units"
+#
 
 # Fundamental units
 
@@ -1804,6 +1747,7 @@ atomicenergy            hbar / atomictime
 hartree                 atomicenergy
 
 !endcategory
+!category thermal_entropy "Thermal entropy units"
 
 #
 # These thermal units treat entropy as charge, from [5]
@@ -1817,12 +1761,17 @@ fourier                 thermalohm
 thermalhenry            J K^2/W^2  # thermal inductance
 thermalvolt             K          # thermal potential difference
 
+!endcategory
 
-#
-# United States units
-#
+#############################################################################
+#                                                                           #
+# United States units                                                       #
+#                                                                           #
+#############################################################################
 
-# linear measure
+!category us_survey "US Survey Measures"
+
+# Survey measures
 
 # The US Metric Law of 1866 legalized the metric system in the USA and
 # defined the meter in terms of the British system with the exact
@@ -1847,10 +1796,6 @@ thermalvolt             K          # thermal potential difference
 # NIST Handbook 44, 2011 ed., Appendix C.
 # Canadian Journal of Physics, 1959, 37:(1) 84, 10.1139/p59-014.
 
-# Survey measures
-
-!category us_survey "US Survey Measures"
-
 surveyfoot              1200|3937 m
 surveyfeet              surveyfoot
 surveyft                surveyfoot
@@ -1863,10 +1808,9 @@ surveymile              5280 surveyfoot
 surveymi                surveymile
 
 !endcategory
+!category int_customary "International Customary Length Measures"
 
 # International measures
-
-!category int_customary "International Customary Length Measures"
 
 ?? International yard and pound, since July 1, 1959.
 inch                    2.54 cm
@@ -1911,10 +1855,9 @@ intfurlong              furlong
 intleague               league
 
 !endcategory
+!category us_survey "US Survey Measures"
 
 # surveyor's measure
-
-!category us_survey "US Survey Measures"
 
 surveyorschain          66 surveyft
 surveychain             surveyorschain
@@ -1970,10 +1913,10 @@ mendenhallyard          surveyyard
 internationalyard       yard
 
 !endcategory
+!category int_nautical "International Nautical Units"
 
 # international nautical measures
 
-!category int_nautical "International Nautical Units"
 
 intfathom               6 ft     # Originally defined as the distance from
                                  #   fingertip to fingertip with arms fully
@@ -1994,10 +1937,9 @@ cable                   intcable              # international cable
 cablelength             cable
 
 !endcategory
+!category us_nautical "US Survey Nautical Units"
 
 # survey nautical measures
-
-!category us_nautical "US Survey Nautical Units"
 
 surveynauticalmile      6080.20 surveyfoot # Before 1954
 surveyfathom            6 surveyfoot
@@ -2010,10 +1952,9 @@ click                   km       # US military slang
 klick                   click
 
 !endcategory
+!category avoirdupois "Avoirdupois Weights"
 
 # Avoirdupois weight
-
-!category avoirdupois "Avoirdupois Weights"
 
 ?? International yard and pound, since July 1, 1959. Avoirdupois.
 pound                   0.45359237 kg   # The one normally used
@@ -2037,11 +1978,10 @@ shortquarterweight      1|4 shortton
 shortquarter            shortquarterweight
 
 !endcategory
+!category troy "Troy Weights"
 
 # Troy Weight.  In 1828 the troy pound was made the first United States
 # standard weight.  It was to be used to regulate coinage.
-
-!category troy "Troy Weights"
 
 troypound               5760 grain
 troyounce               1|12 troypound
@@ -2056,10 +1996,9 @@ brassayton              mg brton / troyounce
 fineounce               troyounce       # A troy ounce of 99.5% pure gold
 
 !endcategory
+!category jewelers "Jewelers' Units"
 
 # Some other jewelers units
-
-!category jewelers "Jewelers' Units"
 
 metriccarat             0.2 gram        # Defined in 1907
 metricgrain             50 mg
@@ -2074,10 +2013,9 @@ momme                   3.75 grams      # Traditional Japanese unit based
                                         # was adopted in 1891.
 
 !endcategory
+!category apothecary "Apothecaries' Weights"
 
 # Apothecaries' weight
-
-!category apothecary "Apothecaries' Weights"
 
 appound                 troypound
 apounce                 troyounce
@@ -2085,10 +2023,9 @@ apdram                  1|8 apounce
 apscruple               1|3 apdram
 
 !endcategory
+!category us_volume "US Volume Measures"
 
 # Liquid measure
-
-!category us_volume "US Volume Measures"
 
 usgallon                231 in^3        # US liquid measure is derived from
 gal                     gallon          # the British wine gallon of 1707.
@@ -2156,12 +2093,11 @@ heapedbushel            1.278 usbushel# The following explanation for this
                                       #   have an 18.5 inch diameter.
 
 !endcategory
+!category us_grain "US Grain Measures"
 
 # Grain measures.  The bushel as it is used by farmers in the USA is actually
 # a measure of mass which varies for different commodities.  Canada uses the
 # same bushel masses for most commodities, but not for oats.
-
-!category us_grain "US Grain Measures"
 
 wheatbushel             60 lb
 soybeanbushel           60 lb
@@ -2173,10 +2109,9 @@ ricebushel              45 lb
 canada_oatbushel        34 lb
 
 !endcategory
+!category wine "Wine and Spirits Measures"
 
 # Wine and Spirits measure
-
-!category wine "Wine and Spirits Measures"
 
 ponyvolume              1 usfloz
 jigger                  1.5 usfloz   # Can vary between 1 and 2 usfloz
@@ -2193,20 +2128,18 @@ metricfifth             750 ml
 metricquart             1 liter
 
 !endcategory
+!category br_bottles "British Bottle Sizes"
 
 # Old British bottle size
-
-!category br_bottles "British Bottle Sizes"
 
 reputedquart            1|6 brgallon
 reputedpint             1|2 reputedquart
 brwinebottle            reputedquart       # Very close to 1|5 winegallon
 
 !endcategory
+!category fr_bottle "French Champagne Bottle Sizes"
 
 # French champagne bottle sizes
-
-!category fr_bottle "French CHampagne Bottle Sizes"
 
 split                   200 ml
 jeroboam                2 magnum
@@ -2217,25 +2150,23 @@ balthazar               8 magnum
 nebuchadnezzar          10 magnum
 
 !endcategory
+!category water_hardness "Water Hardness Measures"
 
 #
 # Water is "hard" if it contains various minerals, expecially calcium
 # carbonate.
 #
 
-!category water_hardness "Water Hardness Measures"
-
 clarkdegree     grains/brgallon # Content by weigh of calcium carbonate
 gpg             grains/usgallon # Divide by water's density to convert to
                                 #   a dimensionless concentration measure
 
 !endcategory
+!category shoes "Shoe Measures"
 
 #
 # Shoe measures
 #
-
-!category shoes "Shoe Measures"
 
 shoeiron                1|48 inch    # Used to measure leather in soles
 shoeounce               1|64 inch    # Used to measure non-sole shoe leather
@@ -2271,6 +2202,7 @@ shoe_girls0             (3+7|12) inch
 europeshoesize          2|3 cm
 
 !endcategory
+!category usa_slang "USA Slang Units"
 
 #
 # USA slang units
@@ -2283,9 +2215,15 @@ usfootballfield         100 yards
 canadafootballfield     110 yards    # And 65 yards wide
 marathon                26 miles + 385 yards
 
-#
-# British
-#
+!endcategory
+
+#############################################################################
+#                                                                           #
+# British units                                                             #
+#                                                                           #
+#############################################################################
+
+!category br_length "British Length Measures"
 
 # The length measure in the UK was defined by a bronze bar manufactured in
 # 1844.  Various conversions were sanctioned for convenience at different
@@ -2301,8 +2239,6 @@ marathon                26 miles + 385 yards
 #   Johnson found the yard to be
 #   0.91439841 meters.
 #   Used starting in the 1930's.
-
-!category br_length "British Length Measures"
 
 UKSJJyard               0.91439841 meter
 UKSJJfoot               1|3 UKSJJyard
@@ -2363,11 +2299,10 @@ seamile                 6000 ft
 shackle                 15 fathoms            # Adopted 1949 by British navy
 
 !endcategory
+!category br_weight "British Weight Measures"
 
 # British Imperial weight is mostly the same as US weight.  A few extra
 # units are added here.
-
-!category br_weight "British Weight Measures"
 
 clove                   7 lb
 stone                   14 lb
@@ -2379,10 +2314,9 @@ longton                 20 brhundredweight
 brton                   longton
 
 !endcategory
+!category br_volume "British Volume Measures"
 
 # British Imperial volume measures
-
-!category br_volume "British Volume Measures"
 
 brminim                 1|60 brdram
 brscruple               1|3 brdram
@@ -2487,10 +2421,9 @@ imperialbeerbutt        brbeerbutt
 imperialfirkin          brfirkin
 
 !endcategory
+!category br_length "British Length Measures" # obscure
 
 # obscure British lengths
-
-!category br_length "British Length Measures"
 
 barleycorn              1|3 UKinch   # Given in Realm of Measure as the
                                      # difference between successive shoe sizes
@@ -2511,6 +2444,7 @@ goad                    4.5 UKft     # used for cloth, possibly named after the
                                      #   stick used for prodding animals.
 
 !endcategory
+!category br_length "British Length Measures" # misc. obscure
 
 # misc obscure British units
 
@@ -2545,11 +2479,19 @@ oestradiol              estradiol
 oestriol                estriol
 oestetrol               estetrol
 
+!endcategory
+
+#############################################################################
+#                                                                           #
+# Misc. Customary units                                                     #
+#                                                                           #
+#############################################################################
+
+!category human_measures "Human Body Measurements"
+
 #
 # Units derived the human body (may not be very accurate)
 #
-
-!category human_measures "Human Body Measurements"
 
 geometricpace           5 ft   # distance between points where the same
                                # foot hits the ground
@@ -2579,12 +2521,11 @@ smoot              5 ft + 7 in # Created as part of an MIT fraternity prank.
                                #   customary 6 ft spacing.
 
 !endcategory
+!category us_volume "US Volume Measures"
 
 #
 # Cooking measures
 #
-
-!category us_volume "US Volume Measures"
 
 # Common abbreviations
 
@@ -2634,10 +2575,9 @@ number5can              7 uscups
 number10can             105 usfloz
 
 !endcategory
+!category br_volume "British Volume Measures"
 
 # British measures
-
-!category br_volume "British Volume Measures"
 
 brcup                   1|2 brpint
 brteacup                1|3 brpint
@@ -2652,10 +2592,9 @@ brtbsp                  brtablespoon
 brtblsp                 brtablespoon
 
 !endcategory
+!category au_volume "Australian Volume Measures"
 
 # Australian
-
-!category au_volume "Australian Volume Measures"
 
 australiatablespoon     20 ml
 austbl                  australiatablespoon
@@ -2665,11 +2604,15 @@ australiateaspoon       1|4 australiatablespoon
 austsp                  australiateaspoon
 
 !endcategory
+!category italian "Italian Measures"
 
 # Italian
 
 etto                    100 g          # Used for buying items like meat and
 etti                    etto           #   cheese.
+
+!endcategory
+!category chinese "Chinese Measures"
 
 # Chinese
 
@@ -2679,6 +2622,9 @@ tael                    1|16 oldcatty  # Should the tael be defined both ways?
 mace                    0.1 tael
 oldpicul                100 oldcatty
 picul                   100 catty      # Chinese usage
+
+!endcategory
+!category indian "Indian Measures"
 
 # Indian
 
@@ -2691,9 +2637,15 @@ chittak                 1|16 seer
 tola                    1|5 chittak
 ollock                  1|4 liter      # Is this right?
 
+!endcategory
+!category japanese "Japanese Measures"
+
 # Japanese
 
 japancup                200 ml
+
+!endcategory
+!category density "Density Measures"
 
 #
 # Density measures.  Density has traditionally been measured on a variety of
@@ -2878,11 +2830,12 @@ baumeconst 145      # US value
 #                              141.5 g/cm^3 / (x+131.5) ; \
 #                              141.5 (g/cm^3) / apidegree + (-131.5)
 
+!endcategory
+!category derived_customary "Derived Customary Units"
+
 #
 # Units derived from imperial system
 #
-
-!category derived_customary "Derived Customary Units"
 
 ouncedal                oz ft / s^2     # force which accelerates an ounce
                                         #    at 1 ft/s^2
@@ -2967,16 +2920,9 @@ RU                     U             #   than its U measurement indicates to
 count                  /pound        # For measuring the size of shrimp
 
 !endcategory
-
-#
-# Other units of work, energy, power, etc
-#
-
-energy                  ? force length
+!category calories "Calories"
 
 # Calories: energy to raise a gram of water one degree celsius
-
-!category calories "Calories"
 
 cal_IT                  4.1868 J     # International Table calorie
 cal_th                  4.184 J      # Thermochemical calorie
@@ -2994,6 +2940,7 @@ thermie              1e6 cal_fifteen # Heat required to raise the
                                      # water from 14.5 to 15.5 degC.
 
 !endcategory
+!category thermal "Thermal Units"
 
 # btu definitions: energy to raise a pound of water 1 degF
 
@@ -3013,7 +2960,8 @@ therm                   UStherm
 celsiusheatunit         cal lb K / gram K
 chu                     celsiusheatunit
 
-power                   ? energy / time
+!endcategory
+!category electrical "Electrical Units"
 
 # "Apparent" average power in an AC circuit, the product of rms voltage
 # and rms current, equal to the true power in watts when voltage and
@@ -3023,10 +2971,11 @@ VA                      volt ampere
 
 kWh                     kilowatt hour
 
+!endcategory
+!category horses "Horse Units"
+
 # The horsepower is supposedly the power of one horse pulling.   Obviously
 # different people had different horses.
-
-!category horses "Horse Units"
 
 horsepower              550 foot pound force / sec    # Invented by James Watt
 mechanicalhorsepower    horsepower
@@ -3040,6 +2989,7 @@ donkeypower             250 W
 chevalvapeur            metrichorsepower
 
 !endcategory
+!category heat_transfer "Heat Transfer Measures"
 
 #
 # Heat Transfer
@@ -3082,6 +3032,8 @@ clo                     0.155 K m^2 / W # Supposed to be the insulance
                                            # value of 0.875 ft^2 degF hr / btu.
 tog                     0.1 K m^2 / W   # Also used for clothing.
 
+!endcategory
+!category bel "Decibel"
 
 # The bel was defined by engineers of Bell Laboratories to describe the
 # reduction in audio level over a length of one mile. It was originally
@@ -3131,6 +3083,8 @@ tog                     0.1 K m^2 / W   # Also used for clothing.
 #                                    ~dB(dBSIL / (1e-12 W/m^2)) # intensity
 #dBSWL(x) units=[1;W] range=(0,) dB(x) 1e-12 W; ~dB(dBSWL/1e-12 W)
 
+!endcategory
+!category misc_other "Misc. other measures"
 
 # Misc other measures
 
@@ -3150,6 +3104,9 @@ tnt                     1e9 cal_th / ton# So you can write tons tnt. This
 airwatt                 8.5 (ft^3/min) inH2O # Measure of vacuum power as
                                              # pressure times air flow.
 
+!endcategory
+!category permeability "Permeability Measures"
+
 #
 # Permeability: The permeability or permeance, n, of a substance determines
 # how fast vapor flows through the substance.  The formula W = n A dP
@@ -3163,6 +3120,9 @@ perm_0                  perm_0C
 perm                    perm_0C
 perm_23C                grain / hr ft^2 in pressure_column_23C of Hg
 perm_twentythree        perm_23C
+
+!endcategory
+!category counting "Counting measures"
 
 #
 # Counting measures
@@ -3197,11 +3157,12 @@ perfectream             516
 bundle                  2 reams
 bale                    5 bundles
 
+!endcategory
+!category paper "Paper Sizes"
+
 #
 # Paper measures
 #
-
-!category paper "Paper Sizes"
 
 # USA paper sizes
 
@@ -3388,12 +3349,11 @@ papercaliper            in paperdensity
 paperpoint              pointthickness paperdensity
 
 !endcategory
+!category printing "Printing Units"
 
 #
 # Printing
 #
-
-!category printing "Printing Units"
 
 fournierpoint           0.1648 inch / 12  # First definition of the printers
                                           # point made by Pierre Fournier who
@@ -3496,13 +3456,12 @@ kleine_sabon            72 didotpoint
 grobe_sabon             84 didotpoint
 
 !endcategory
+!category compuing "Computing Units"
 
 #
 # Information theory units.  Note that the name "entropy" is used both
 # to measure information and as a physical quantity.
 #
-
-!category compuing "Computing Units"
 
 information             ? bit
 
@@ -3590,14 +3549,13 @@ dvdspeed                 1385 kB/s   # This is the "1x" speed of a DVD using
                        # See http://www.osta.org/technology/dvdqa/dvdqa4.htm
 
 !endcategory
+!category music "Musical Measures"
 
 #
 # Musical measures.  Musical intervals expressed as ratios.  Multiply
 # two intervals together to get the sum of the interval.  The function
 # musicalcent can be used to convert ratios to cents.
 #
-
-!category music "Musical Measures"
 
 # Perfect intervals
 
@@ -3647,12 +3605,11 @@ hemidemisemiquaver      sixtyfourthnote
 semidemisemiquaver      hemidemisemiquaver
 
 !endcategory
+!category cloth "Yarn and Cloth Measures"
 
 #
 # yarn and cloth measures
 #
-
-!category cloth "Yarn and Cloth Measures"
 
 # yarn linear density
 
@@ -3697,12 +3654,11 @@ silkmm                  silkmomme        # But it is also defined as
                                          # the true source definition.
 
 !endcategory
+!category dosage "Drug Dosage"
 
 #
 # drug dosage
 #
-
-!category dosage "Drug Dosage"
 
 mcg                     microgram        # Frequently used for vitamins
 iudiptheria             62.8 microgram   # IU is for international unit
@@ -3729,6 +3685,7 @@ frenchcathetersize      1|3 mm           # measure used for the outer diameter
 charriere               frenchcathetersize
 
 !endcategory
+!category fixups "Irregular Unit Pefixes"
 
 #
 # fixup units for times when prefix handling doesn't do the job
@@ -3740,11 +3697,12 @@ kilohm                  kiloohm
 microhm                 microohm
 megalerg                megaerg    # 'L' added to make it pronounceable [18].
 
+!endcategory
+!category wood "Wood Measures"
+
 #
 # Units used for measuring volume of wood
 #
-
-!category wood "Wood Measures"
 
 cord                    4*4*8 ft^3   # 4 ft by 4 ft by 8 ft bundle of wood
 facecord                1|2 cord
@@ -3796,12 +3754,11 @@ poundcut            pound / gallon
 lbcut               poundcut
 
 !endcategory
+!category flow_units "Fluid Flow Units"
 
 #
 # Gas and Liquid flow units
 #
-
-!category flow_units "Fluid Flow Units"
 
 #FLUID_FLOW              VOLUME / TIME
 
@@ -3874,6 +3831,7 @@ slph                    atm liter/hour
 lusec                   liter micron Hg / s  # Used in vacuum science
 
 !endcategory
+!category atmospheric "Atmospheric Measures"
 
 # US Standard Atmosphere (1976)
 # Atmospheric temperature and pressure vs. geometric height above sea level
@@ -3885,8 +3843,6 @@ lusec                   liter micron Hg / s  # Used in vacuum science
 # https://en.wikipedia.org/wiki/Polytropic_process, some authors reverse
 # the definitions of "exponent" and "index."  The functions below assume
 # the following parameters:
-
-!category atmospheric "Atmospheric Measures"
 
 # temperature lapse rate, -dT/dz, in troposphere
 
@@ -4023,6 +3979,7 @@ earthradUSAtm	6356766 m
 #    gaugepressure(x psi) ; ~gaugepressure(psig) / psi
 
 !endcategory
+!category gauges "Wire Gauges"
 
 #
 # Wire Gauge
@@ -4039,16 +3996,12 @@ earthradUSAtm	6356766 m
 # Alternatively, you can use the following units:
 #
 
-!category gauges "Wire Gauges"
-
 g00                      (-1)
 g000                     (-2)
 g0000                    (-3)
 g00000                   (-4)
 g000000                  (-5)
 g0000000                 (-6)
-
-!endcategory
 
 # American Wire Gauge (AWG) or Brown & Sharpe Gauge appears to be the most
 # important gauge. ASTM B-258 specifies that this gauge is based on geometric
@@ -4151,6 +4104,9 @@ g0000000                 (-6)
 #       27 0.5    \
 #       28 1
 
+!endcategory
+!category screw_sizes "Screw sizes"
+
 #
 # Screw sizes
 #
@@ -4160,6 +4116,9 @@ g0000000                 (-6)
 
 #screwgauge(g) units=[1;m] range=[0,) \
 #              (.06 + .013 g) in ; (screwgauge/in + (-.06)) / .013
+
+!endcategory
+!category grits "Grit Sizes"
 
 #
 # Abrasive grit size
@@ -4432,8 +4391,6 @@ g0000000                 (-6)
 # http://dmtsharp.com/products/colorcode.htm
 #
 
-!category grits "Grit Sizes"
-
 dmtxxcoarse  120 micron    # 120 mesh
 dmtsilver    dmtxxcoarse
 dmtxx        dmtxxcoarse
@@ -4479,6 +4436,7 @@ hardwhitearkansas        11 micron
 washita                  35 micron
 
 !endcategory
+!category ring_sizes "Ring Sizes"
 
 #
 # Ring size. All ring sizes are given as the circumference of the ring.
@@ -4507,8 +4465,6 @@ washita                  35 micron
 # The new sizes are close to the old ones.  Sometimes it's necessary to go
 # beyond size Z to Z+1, Z+2, etc.
 
-!category ring_sizes "Ring Sizes"
-
 sizeAring               37.50 mm
 sizeBring               38.75 mm
 sizeCring               40.00 mm
@@ -4536,8 +4492,6 @@ sizeXring               66.25 mm
 sizeYring               67.50 mm
 sizeZring               68.75 mm
 
-!endcategory
-
 # Japanese sizes start with size 1 at a 13mm inside diameter and each size is
 # 1|3 mm larger in diameter than the previous one.  They are multiplied by pi
 # to give circumference.
@@ -4548,6 +4502,9 @@ sizeZring               68.75 mm
 # The European ring sizes are the length of the circumference in mm minus 40.
 
 #euringsize(n)  units=[1;mm] (n+40) mm ; euringsize/mm + (-40)
+
+!endcategory
+!category abbrevs "Abbreviations"
 
 #
 # Abbreviations
@@ -4575,6 +4532,9 @@ Wh                      W hour
 hph                     hp hour
 plf                     lb / foot    # pounds per linear foot
 
+!endcategory
+!category compat "Compatibility with unix units"
+
 #
 # Compatibility units with unix version
 #
@@ -4596,11 +4556,12 @@ beV                     GeV
 bev                     beV
 coul                    C
 
+!endcategory
+!category radioactivity "Radioactivity Units"
+
 #
 # Radioactivity units
 #
-
-!category radioactivity "Radioactivity Units"
 
 becquerel               /s           # Activity of radioactive source
 Bq                      becquerel    #
@@ -4659,6 +4620,7 @@ eman                    1e-7 Ci/m^3  # radioactive concentration
 mache                   3.7e-7 Ci/m^3
 
 !endcategory
+!category population "Population units"
 
 #
 # population units
@@ -4670,11 +4632,12 @@ death                   people
 capita                  people
 percapita               /capita
 
+!endcategory
+!category dozenal "Dozenal Units"
+
 # TGM dozen based unit system listed on the "dozenal" forum
 # http://www.dozenalsociety.org.uk/apps/tgm.htm.  These units are
 # proposed as an allegedly more rational alternative to the SI system.
-
-!category dozenal "Dozenal Units"
 
 Tim                     12^-4 hour         # Time
 Grafut                  gravity Tim^2      # Length based on gravity
@@ -4722,6 +4685,7 @@ Lefi-                   12^-11
 Zennili-                12^-12
 
 !endcategory
+!category japanese "Traditional Japanese Units"
 
 #
 # Traditional Japanese units (shakkanhou)
@@ -4743,8 +4707,6 @@ Zennili-                12^-12
 
 # Japanese Proportions.  These are still in everyday use.  They also
 # get used as units to represent the proportion of the standard unit.
-
-!category japanese "Traditional Japanese Units"
 
 wari_proportion      1|10
 wari                 wari_proportion
@@ -4872,11 +4834,10 @@ kwan                 kan         # This was the old pronounciation of the unit.
                                  # 1950.
 
 !endcategory
+!category taiwan "Taiwanese Units"
 
 # http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement
 # says: "Volume measure in Taiwan is largely metric".
-
-!category taiwan "Taiwanese Units"
 
 taijin               kin      # http://zh.wikipedia.org/wiki/台斤
 tailiang             10 monme # http://zh.wikipedia.org/wiki/台斤
@@ -4886,6 +4847,7 @@ taiqian              monme    # http://zh.wikipedia.org/wiki/台制
 台錢                 taiqian
 
 !endcategory
+!category australian "Australian units"
 
 #
 # Australian unit
@@ -4893,6 +4855,8 @@ taiqian              monme    # http://zh.wikipedia.org/wiki/台制
 
 australiasquare         (10 ft)^2   # Used for house area
 
+!endcategory
+!category german "German units"
 
 #
 # A few German units as currently in use.
@@ -4902,11 +4866,12 @@ zentner                 50 kg
 doppelzentner           2 zentner
 pfund                   500 g
 
+!endcategory
+!category russian "Traditional Russian Units"
+
 #
 # Some traditional Russian measures
 #
-
-!category russian "Traditional Russian Units"
 
 # length
 
@@ -5007,14 +4972,12 @@ uncia                   унция
 apfunt                  фунт
 
 !endcategory
-
+!category french "French Old Measures"
 
 #
 # Old French distance measures, from French Weights and Measures
 # Before the Revolution by Zupko
 #
-
-!category french "French Old Measures"
 
 frenchfoot              144|443.296 m     # pied de roi, the standard of Paris.
 pied                    frenchfoot        #   Half of the hashimicubit,
@@ -5040,13 +5003,12 @@ frenchgrain             1|18827.15 kg     # Weight of a wheat grain, hence
 frenchpound             9216 frenchgrain
 
 !endcategory
+!category scots "Scotland Measures"
 
 #
 # Before the Imperial Weights and Measures Act of 1824, various different
 # weights and measures were in use in different places.
 #
-
-!category scots "Scotland Measures"
 
 # Scots linear measure
 
@@ -5066,10 +5028,9 @@ scotsrood        40 scotsfall^2
 scotsacre        4 scotsrood
 
 !endcategory
+!category irish "Ireland Measures"
 
 # Irish linear measure
-
-!category irish "Ireland Measures"
 
 irishinch       UKinch
 irishpalm       3 irishinch
@@ -5093,10 +5054,9 @@ irishrood       40 irishpole^2
 irishacre       4 irishrood
 
 !endcategory
+!category winchester_wine "Winchester Wine Measures"
 
 # English wine capacity measures (Winchester measures)
-
-!category winchester_wine "Winchester Wine Measures"
 
 winepint       1|2 winequart
 winequart      1|4 winegallon
@@ -5131,7 +5091,6 @@ winepipe       winebutt
 winetun        2 winebutt
 
 !endcategory
-
 !category wine "Wine and Spirits Measures"
 
 # English beer and ale measures used 1803-1824 and used for beer before 1688
@@ -5150,7 +5109,6 @@ alebarrel      34 alegallon
 alehogshead    1.5 alebarrel
 
 !endcategory
-
 !category scots "Scotland Measures"
 
 # Scots capacity measure
@@ -5188,7 +5146,6 @@ tronpound      9520 grain
 tronstone      16 tronpound
 
 !endcategory
-
 !category irish "Ireland Measures"
 
 # Irish liquid capacity measure
@@ -5215,7 +5172,6 @@ irishdrybarrel 2 irishstrike
 irishquarter   2 irishbarrel
 
 !endcategory
-
 !category english "English Measurements"
 
 # English Tower weights, abolished in 1528
@@ -5257,17 +5213,19 @@ woollast    6 woolsarpler
 
 !endcategory
 
-#
-# Ancient history units:  There tends to be uncertainty in the definitions
-#                         of the units in this section
-# These units are from [11]
+#############################################################################
+#                                                                           #
+# Ancient history units:  There tends to be uncertainty in the definitions  #
+#                         of the units in this section                      #
+# These units are from [11]                                                 #
+#############################################################################
+
+!category roman "Roman Measures"
 
 # Roman measure.  The Romans had a well defined distance measure, but their
 # measures of weight were poor.  They adopted local weights in different
 # regions without distinguishing among them so that there are half a dozen
 # different Roman "standard" weight systems.
-
-!category roman "Roman Measures"
 
 romanfoot    296 mm          # There is some uncertainty in this definition
 romanfeet    romanfoot       # from which all the other units are derived.
@@ -5381,10 +5339,9 @@ romanaspound    4210 grain    # Old pound based on bronze coinage, the
                               # earliest money of Rome BC 338 to BC 268.
 
 !endcategory
+!category egyptian "Egyptian Measures"
 
 # Egyptian length measure
-
-!category egyptian "Egyptian Measures"
 
 egyptianroyalcubit      20.63 in    # plus or minus .2 in
 egyptianpalm            1|7 egyptianroyalcubit
@@ -5398,10 +5355,9 @@ remendigit       1|40 doubleremen # side length of 1 royal egyptian cubit.
                                   # the royal cubit.
 
 !endcategory
+!category greek "Greek Measures"
 
 # Greek length measures
-
-!category greek "Greek Measures"
 
 greekfoot               12.45 in      # Listed as being derived from the
 greekfeet               greekfoot     # Egyptian Royal cubit in [11].  It is
@@ -5466,13 +5422,12 @@ attictalent             60 atticmina     # Supposedly the mass of a cubic foot
                                          # of water (whichever foot was in use)
 
 !endcategory
+!category northern_cubic "Northern Cubic and Foot"
 
 # "Northern" cubit and foot.  This was used by the pre-Aryan civilization in
 # the Indus valley.  It was used in Mesopotamia, Egypt, North Africa, China,
 # central and Western Europe until modern times when it was displaced by
 # the metric system.
-
-!category northern_cubic "Northern Cubic and Foot"
 
 northerncubit           26.6 in           # plus/minus .2 in
 northernfoot            1|2 northerncubit
@@ -5489,11 +5444,10 @@ susi                    assyriansusi
 persianroyalcubit       7 assyrianpalm
 
 !endcategory
+!category arabic "Arabic Measures"
 
 # Arabic measures.  The arabic standards were meticulously kept.  Glass weights
 # accurate to .2 grains were made during AD 714-900.
-
-!category arabic "Arabic Measures"
 
 hashimicubit            25.56 in          # Standard of linear measure used
                                           # in Persian dominions of the Arabic
@@ -5521,6 +5475,7 @@ traderotl               12 tradewukiyeh
 arabictradepound        traderotl
 
 !endcategory
+!category misc_ancient "Misc. ancient units"
 
 # Miscellaneous ancient units
 
@@ -5532,6 +5487,8 @@ li                      10|27.8 mile  # Chinese unit of length
                                       #   100 li is considered a day's march
 liang                   11|3 oz       # Chinese weight unit
 
+!endcategory
+!category medieval_time "Medieval time units"
 
 # Medieval time units.  According to the OED, these appear in Du Cange
 # by Papias.
@@ -5542,6 +5499,9 @@ timeostent              1|60 hour
 timeounce               1|8 timeostent
 timeatom                1|47 timeounce
 
+!endcategory
+!category jeweler_grains "Jeweler grains"
+
 # Given in [15], these subdivisions of the grain were supposedly used
 # by jewelers.  The mite may have been used but the blanc could not
 # have been accurately measured.
@@ -5550,6 +5510,9 @@ mite                    1|20 grain
 droit                   1|24 mite
 periot                  1|20 droit
 blanc                   1|24 periot
+
+!endcategory
+!category us_default "Aliases for US units"
 
 #
 # Localization
@@ -5589,6 +5552,9 @@ hogshead                ushogshead
 # firkin                  brfirkin
 # hogshead                brhogshead
 
+!endcategory
+!category unicode "Unicode aliases"
+
 ⅛-                      1|8
 ¼-                      1|4
 ⅜-                      3|8
@@ -5604,9 +5570,9 @@ hogshead                ushogshead
 ⅖-                      2|5
 ⅗-                      3|5
 ⅘-                      4|5
-# U+2150-               1|7  For some reason these characters are getting
-# U+2151-               1|9  flagged as invalid UTF8.
-# U+2152-               1|10
+⅐-                      1|7
+⅑-                      1|9
+⅒-                      1|10
 ℯ                       2.71828182845904523536 #exp(1)      # U+212F, base of natural log
 e                       ℯ
 
@@ -5749,17 +5715,15 @@ röntgen                 roentgen
 #㏟                      A/m     Invalid on Mac
 #㏿                      gal     Invalid on Mac
 
-############################################################################
-#
-# Substances
-#
-############################################################################
+!endcategory
 
-#
-# Assorted
-#
+#############################################################################
+#                                                                           #
+# Substances                                                                #
+#                                                                           #
+#############################################################################
 
-!category substances "Substances"
+!category subst_compounds "Compounds"
 
 water {
     density             mass gram / volume cm^3
@@ -5878,6 +5842,9 @@ soil {
     specific_heat       specific_energy 0.835 J g^-1 / temperature K
 }
 
+!endcategory
+!category particles "Fundamental particles"
+
 #
 # Fundamental particles
 #
@@ -5951,6 +5918,9 @@ triton {
 light {
     speed               const light_speed           2.99792458e8 m/s
 }
+
+!endcategory
+!category celestial "Celestial bodies"
 
 #
 # Celestial bodies
@@ -6109,6 +6079,9 @@ pluto {
     year                const pluto_year        247.92065 julianyear
 }
 
+!endcategory
+!category fuels "Fuels"
+
 #
 # Energy densities of various fuels
 #
@@ -6206,6 +6179,9 @@ propane {
 butane {
     energy_density      energy 124 MJ / volume m^3
 }
+
+!endcategory
+!category cooking "Cooking ingredients"
 
 # densities of cooking ingredients from The Cake Bible by Rose Levy Beranbaum
 # so you can convert '2 cups sugar' to grams, for example, or in the other
@@ -6349,6 +6325,9 @@ egg {
     volume_white        const egg_white    2 tbsp
     volume_yolk         const egg_yolk     3.5 ustsp
 }
+
+!endcategory
+!category elements "Atomic elements"
 
 #
 # Atomic weights.  The atomic weight of an element is the ratio of the mass of
@@ -7010,6 +6989,9 @@ zirconium {
     specific_heat   specific_energy 0.27 J g^-1 / temperature K
 }
 
+!endcategory
+!category air "Air"
+
 # The atmospheric composition listed is from NASA Earth Fact Sheet (accessed
 # 28 August 2015)
 # http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
@@ -7026,6 +7008,9 @@ air               78.08   % nitrogen 2 \
               +    1.7  ppm (carbon + 4 hydrogen) \
               +    1.14 ppm krypton \
               +    0.55 ppm hydrogen 2
+
+!endcategory
+!category organic_chem "Organic chemistry"
 
 # Various abbreviations used in organic chemistry.
 
@@ -7048,6 +7033,9 @@ acetyl {
 phenyl {
     molar_mass      mass 77.1057 g / amount mol
 }
+
+!endcategory
+!category bio_compounds "Biological compounds"
 
 # Biological or immunological activity of reference preparations.
 
