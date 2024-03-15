@@ -2470,7 +2470,6 @@ metre                   meter
 gramme                  gram
 litre                   liter
 dioptre                 diopter
-aluminium               aluminum
 sulphur                 sulfur
 androstenolone          dehydroepiandrosterone
 androstanolone          dihydrotestosterone
@@ -6318,144 +6317,173 @@ egg {
 # lived isotope.
 #
 
+#!symbol actinium Ac # conflicts with acetyl
 actinium {
+    atomic_number   const actinium_atomic_number 89
     molar_mass      mass 227.0278 g / amount mol
 }
 
 !symbol aluminum Al
 aluminum {
+    atomic_number   const aluminum_atomic_number 13
     molar_mass      mass 26.981539 g / amount mol
     specific_heat   specific_energy 0.91 J g^-1 / temperature K
 }
+aluminium           aluminum
 
 americium {
+    atomic_number   const aluminum_atomic_number 95
     ?? Longest lived. 241.06
     molar_mass      mass 243.0614 g / amount mol
 }
 
 !symbol antimony Sb
 antimony {
+	atomic_number   const antimony_atomic_number 51
     molar_mass      mass 121.760 g / amount mol
     specific_heat   specific_energy 0.21 J g^-1 / temperature K
 }
 
 !symbol argon Ar
 argon {
+    atomic_number   const argon_atomic_number 18
     molar_mass      mass 39.948 g / amount mol
     specific_heat   specific_energy 0.5203 J g^-1 / temperature K
 }
 
 !symbol arsenic As
 arsenic {
+    atomic_number   const arsenic_atomic_number 33
     molar_mass      mass 74.92159 g / amount mol
 }
 
 astatine {
+    atomic_number   const astatine_atomic_number 85
     ?? Longest lived.
     molar_mass      mass 209.9871 g / amount mol
 }
 
 !symbol barium Ba
 barium {
+    atomic_number   const barium_atomic_number 56
     molar_mass      mass 137.327 g / amount mol
     specific_heat   specific_energy 0.20 J g^-1 / temperature K
 }
 
 berkelium {
+    atomic_number   const berkelium_atomic_number 97
     ?? Longest lived. 249.08
     molar_mass      mass 247.0703 g / amount mol
 }
 
 !symbol beryllium Be
 beryllium {
+    atomic_number   const beryllium_atomic_number 4
     molar_mass      mass 9.012182 g / amount mol
     specific_heat   specific_energy 1.83 J g^-1 / temperature K
 }
 
 !symbol bismuth Bi
 bismuth {
+    atomic_number   const bismuth_atomic_number 83
     molar_mass      mass 208.98037 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 bohrium {
+    atomic_number   const bohrium_atomic_number 107
     molar_mass      mass 272.13826 g / amount mol
 }
 
 !symbol boron B
 boron {
+    atomic_number   const boron_atomic_number 5
     molar_mass      mass 10.811 g / amount mol
 }
 
 !symbol bromine Br
 bromine {
+    atomic_number   const bromine_atomic_number 35
     molar_mass      mass 79.904 g / amount mol
 }
 
 !symbol cadmium Cd
 cadmium {
+    atomic_number   const cadmium_atomic_number 48
     molar_mass      mass 112.411 g / amount mol
     specific_heat   specific_energy 0.23 J g^-1 / temperature K
 }
 
 !symbol calcium Ca
 calcium {
+    atomic_number   const calcium_atomic_number 20
     molar_mass      mass 40.078 g / amount mol
 }
 
 californium {
+    atomic_number   const californium_atomic_number 98
     ?? Longest lived. 252.08
     molar_mass      mass 251.0796 g / amount mol
 }
 
 !symbol carbon C
 carbon {
+    atomic_number   const carbon_atomic_number 6
     molar_mass      mass 12.011 g / amount mol
 }
 
 !symbol cerium Ce
 cerium {
+    atomic_number   const cerium_atomic_number 58
     molar_mass      mass 140.115 g / amount mol
 }
 
 !symbol cesium Cs
 cesium {
+    atomic_number   const cesium_atomic_number 55
     molar_mass      mass 132.90543 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
 }
 
 !symbol chlorine Cl
 chlorine {
+    atomic_number   const chlorine_atomic_number 17
     molar_mass      mass 35.4527 g / amount mol
 }
 
 !symbol chromium Cr
 chromium {
+    atomic_number   const chromium_atomic_number 24
     molar_mass      mass 51.9961 g / amount mol
     specific_heat   specific_energy 0.46 J g^-1 / temperature K
 }
 
 !symbol cobalt Co
 cobalt {
+    atomic_number   const cobalt_atomic_number 27
     molar_mass      mass 58.93320 g / amount mol
     specific_heat   specific_energy 0.42 J g^-1 / temperature K
 }
 
 copernicium {
+    atomic_number   const copernicium_atomic_number 112
     molar_mass      mass 285.17712 g / amount mol
 }
 
 !symbol copper Cu
 copper {
+    atomic_number   const copper_atomic_number 29
     molar_mass      mass 63.546 g / amount mol
     specific_heat   specific_energy 0.39 J g^-1 / temperature K
 }
 
 curium {
+    atomic_number   const curium_atomic_number 96
     molar_mass      mass 247.0703 g / amount mol
 }
 
 darmstadtium {
+    atomic_number   const darmstadtium_atomic_number 110
     molar_mass      mass 281.16451 g / amount mol
 }
 
@@ -6465,183 +6493,217 @@ deuterium {
 }
 
 dubnium {
+    atomic_number   const dubnium_atomic_number 105
     molar_mass      mass 268.12567 g / amount mol
 }
 
 !symbol dysprosium Dy
 dysprosium {
+    atomic_number   const dysprosium_atomic_number 66
     molar_mass      mass 162.50 g / amount mol
 }
 
 einsteinium {
+    atomic_number   const einsteinium_atomic_number 99
     ?? Longest lived.
     molar_mass      mass 252.083 g / amount mol
 }
 
 !symbol erbium Er
 erbium {
+    atomic_number   const erbium_atomic_number 68
     molar_mass      mass 167.26 g / amount mol
 }
 
 !symbol europium Eu
 europium {
+    atomic_number   const europium_atomic_number 63
     molar_mass      mass 151.965 g / amount mol
 }
 
 fermium {
+    atomic_number   const fermium_atomic_number 100
     ?? Longest lived.
     molar_mass      mass 257.0951 g / amount mol
 }
 
 flerovium {
+    atomic_number   const flerovium_atomic_number 114
     molar_mass      mass 289.19042 g / amount mol
 }
 
 !symbol fluorine F
 fluorine {
+    atomic_number   const fluorine_atomic_number 9
     molar_mass      mass 18.9984032 g / amount mol
 }
 
 francium {
+    atomic_number   const francium_atomic_number 87
     ?? Longest lived
     molar_mass      mass 223.0197 g / amount mol
 }
 
 !symbol gadolinium Gd
 gadolinium {
+    atomic_number   const gadolinium_atomic_number 64
     molar_mass      mass 157.25 g / amount mol
 }
 
 !symbol gallium Ga
 gallium {
+    atomic_number   const gallium_atomic_number 31
     molar_mass      mass 69.723 g / amount mol
     specific_heat   specific_energy 0.37 J g^-1 / temperature K
 }
 
 !symbol germanium Ge
 germanium {
+    atomic_number   const germanium_atomic_number 32
     molar_mass      mass 72.61 g / amount mol
     specific_heat   specific_energy 0.32 J g^-1 / temperature K
 }
 
 !symbol gold Au
 gold {
+    atomic_number   const gold_atomic_number 79
     molar_mass      mass 196.96654 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 !symbol hafnium Hf
 hafnium {
+    atomic_number   const hafnium_atomic_number 72
     molar_mass      mass 178.49 g / amount mol
     specific_heat   specific_energy 0.14 J g^-1 / temperature K
 }
 
 hassium {
+    atomic_number   const hassium_atomic_number 108
     molar_mass      mass 270.13429 g / amount mol
 }
 
 !symbol helium He
 helium {
+    atomic_number   const helium_atomic_number 2
     molar_mass      mass 4.002602 g / amount mol
 }
 
 !symbol holmium Ho
 holmium {
+    atomic_number   const holmium_atomic_number 67
     molar_mass      mass 164.93032 g / amount mol
     specific_heat   specific_energy 5.1932 J g^-1 / temperature K
 }
 
 !symbol hydrogen H
 hydrogen {
+    atomic_number   const hydrogen_atomic_number 1
     molar_mass      mass 1.00794 g / amount mol
     specific_heat   specific_energy 14.3 J g^-1 / temperature K
 }
 
 !symbol indium In
 indium {
+    atomic_number   const indium_atomic_number 49
     molar_mass      mass 114.818 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
 }
 
 !symbol iodine I
 iodine {
+    atomic_number   const iodine_atomic_number 53
     molar_mass      mass 126.90447 g / amount mol
     specific_heat   specific_energy 2.15 J g^-1 / temperature K
 }
 
 !symbol iridium Ir
 iridium {
+    atomic_number   const iridium_atomic_number 77
     molar_mass      mass 192.217 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 !symbol iron Fe
 iron {
+    atomic_number   const iron_atomic_number 26
     molar_mass      mass 55.845 g / amount mol
     specific_heat   specific_energy 0.45 J g^-1 / temperature K
 }
 
 !symbol krypton Kr
 krypton {
+    atomic_number   const krypton_atomic_number 36
     molar_mass      mass 83.80 g / amount mol
 }
 
 !symbol lanthanum La
 lanthanum {
+    atomic_number   const lanthanum_atomic_number 57
     molar_mass      mass 138.9055 g / amount mol
     specific_heat   specific_energy 0.195 J g^-1 / temperature K
 }
 
 lawrencium {
+    atomic_number   const lawrencium_atomic_number 103
     ?? Longest lived.
     molar_mass      mass 262.11 g / amount mol
 }
 
 !symbol lead Pb
 lead {
+    atomic_number   const lead_atomic_number 82
     molar_mass      mass 207.2 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 !symbol lithium Li
 lithium {
+    atomic_number   const lithium_atomic_number 3
     molar_mass      mass 6.941 g / amount mol
     specific_heat   specific_energy 3.57 J g^-1 / temperature K
 }
 
 livermorium {
+    atomic_number   const livermorium_atomic_number 116
     molar_mass      mass 293.20449 g / amount mol
 }
 
 !symbol lutetium Lu
 lutetium {
+    atomic_number   const lutetium_atomic_number 71
     molar_mass      mass 174.967 g / amount mol
     specific_heat   specific_energy 0.15 J g^-1 / temperature K
 }
 
 !symbol magnesium Mg
 magnesium {
+    atomic_number   const magnesium_atomic_number 12
     molar_mass      mass 24.3050 g / amount mol
     specific_heat   specific_energy 1.05 J g^-1 / temperature K
 }
 
 !symbol manganese Mn
 manganese {
+    atomic_number   const manganese_atomic_number 25
     molar_mass      mass 54.93805 g / amount mol
     specific_heat   specific_energy 0.48 J g^-1 / temperature K
 }
 
 meitnerium {
+    atomic_number   const meitnerium_atomic_number 109
     molar_mass      mass 276.15159 g / amount mol
 }
 
 mendelevium {
+    atomic_number   const mendelevium_atomic_number 101
     ?? Longest lived
     molar_mass      mass 258.10 g / amount mol
 }
 
 !symbol mercury Hg
 mercury {
+    atomic_number       const mercury_atomic_number 80
     molar_mass          mass 200.59 g / amount mol
     specific_heat       specific_energy 0.14 J g^-1 / temperature K
     density             mass 13.5951 gram / volume cm^3
@@ -6665,248 +6727,294 @@ inHg                    pressure of inch mercury
 
 !symbol molybdenum Mo
 molybdenum {
+    atomic_number   const molybdenum_atomic_number 42
     molar_mass      mass 95.94 g / amount mol
     specific_heat   specific_energy 0.25 J g^-1 / temperature K
 }
 
 !symbol neodymium Nd
 neodymium {
+    atomic_number   const neodymium_atomic_number 60
     molar_mass      mass 144.24 g / amount mol
 }
 
 !symbol neon Ne
 neon {
+    atomic_number   const neon_atomic_number 10
     molar_mass      mass 20.1797 g / amount mol
 }
 
 neptunium {
+    atomic_number   const neptunium_atomic_number 93
     molar_mass      mass 237.0482 g / amount mol
 }
 
 !symbol nickel Ni
 nickel {
+    atomic_number   const nickel_atomic_number 28
     molar_mass      mass 58.6934 g / amount mol
     specific_heat   specific_energy 0.44 J g^-1 / temperature K
 }
 
 !symbol niobium Nb
 niobium {
+    atomic_number   const niobium_atomic_number 41
     molar_mass      mass 92.90638 g / amount mol
 }
 
 !symbol nitrogen N
 nitrogen {
+    atomic_number   const nitrogen_atomic_number 7
     molar_mass      mass 14.00674 g / amount mol
 }
 
 nobelium {
+    atomic_number   const nobelium_atomic_number 102
     ?? Longest lived.
     molar_mass      mass 259.1009 g / amount mol
 }
 
 !symbol osmium Os
 osmium {
+    atomic_number   const osmium_atomic_number 76
     molar_mass      mass 190.23 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 !symbol oxygen O
 oxygen {
+    atomic_number   const oxygen_atomic_number 8
     molar_mass      mass 15.9994 g / amount mol
 }
 
 !symbol palladium Pa
 palladium {
+    atomic_number   const palladium_atomic_number 46
     molar_mass      mass 106.42 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
 }
 
 !symbol phosphorus P
 phosphorus {
+    atomic_number   const phosphorus_atomic_number 15
     molar_mass      mass 30.973762 g / amount mol
 }
 
 !symbol platinum Pt
 platinum {
+    atomic_number   const platinum_atomic_number 78
     molar_mass      mass 195.08 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 !symbol plutonium Pu
 plutonium {
+    atomic_number   const plutonium_atomic_number 94
     ?? Longest lived. 239.05
     molar_mass      mass 244.0642 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 polonium {
+    atomic_number   const polonium_atomic_number 84
     ?? Longest lived. 209.98
     molar_mass      mass 208.9824 g / amount mol
 }
 
 !symbol potassium K
 potassium {
+    atomic_number   const potassium_atomic_number 19
     molar_mass      mass 39.0983 g / amount mol
     specific_heat   specific_energy 0.75 J g^-1 / temperature K
 }
 
 !symbol praseodymium Pr
 praseodymium {
+    atomic_number   const praseodymium_atomic_number 59
     molar_mass      mass 140.90765 g / amount mol
 }
 
 promethium {
+    atomic_number   const promethium_atomic_number 61
     ?? Longest lived. 146.92
     molar_mass      mass 144.9127 g / amount mol
 }
 
 protactinium {
+    atomic_number   const protactinium_atomic_number 91
     molar_mass      mass 231.03588 g / amount mol
 }
 
 radium {
+    atomic_number   const radium_atomic_number 88
     molar_mass      mass 226.0254 g / amount mol
 }
 
 radon {
+    atomic_number   const radon_atomic_number 86
     ?? Longest lived.
     molar_mass      mass 222.0176 g / amount mol
 }
 
 !symbol rhenium Re
 rhenium {
+    atomic_number   const rhenium_atomic_number 75
     molar_mass      mass 186.207 g / amount mol
     specific_heat   specific_energy 0.14 J g^-1 / temperature K
 }
 
 !symbol rhodium Rh
 rhodium {
+    atomic_number   const rhodium_atomic_number 45
     molar_mass      mass 102.90550 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
 }
 
 roentgenium {
+    atomic_number   const roentgenium_atomic_number 111
     molar_mass      mass 280.16514 g / amount mol
 }
 
 !symbol rubidium Rb
 rubidium {
+    atomic_number   const rubidium_atomic_number 37
     molar_mass      mass 85.4678 g / amount mol
     specific_heat   specific_energy 0.36 J g^-1 / temperature K
 }
 
 !symbol ruthenium Ru
 ruthenium {
+    atomic_number   const ruthenium_atomic_number 44
     molar_mass      mass 101.07 g / amount mol
     specific_heat   specific_energy 0.24 J g^-1 / temperature K
 }
 
 rutherfordium {
+    atomic_number   const rutherfordium_atomic_number 104
     molar_mass      mass 267.12179 g / amount mol
 }
 
 !symbol samarium Sm
 samarium {
+    atomic_number   const samarium_atomic_number 62
     molar_mass      mass 150.36 g / amount mol
 }
 
 !symbol scandium Sc
 scandium {
+    atomic_number   const scandium_atomic_number 21
     molar_mass      mass 44.955910 g / amount mol
     specific_heat   specific_energy 0.57  J g^-1 / temperature K
 }
 
 seaborgium {
+    atomic_number   const seaborgium_atomic_number 106
     molar_mass      mass 271.13393 g / amount mol
 }
 
 !symbol selenium Se
 selenium {
+    atomic_number   const selenium_atomic_number 34
     molar_mass      mass 78.96 g / amount mol
     specific_heat   specific_energy 0.32 J g^-1 / temperature K
 }
 
 !symbol silicon Si
 silicon {
+    atomic_number   const silicon_atomic_number 14
     molar_mass      mass 28.0855 g / amount mol
     specific_heat   specific_energy 0.71 J g^-1 / temperature K
 }
 
 !symbol silver Ag
 silver {
+    atomic_number   const silver_atomic_number 47
     molar_mass      mass 107.8682 g / amount mol
     specific_heat   specific_energy 0.23 J g^-1 / temperature K
 }
 
 !symbol sodium Na
 sodium {
+    atomic_number   const sodium_atomic_number 11
     molar_mass      mass 22.989768 g / amount mol
     specific_heat   specific_energy 1.21 J g^-1 / temperature K
 }
 
 !symbol strontium Sr
 strontium {
+    atomic_number   const strontium_atomic_number 38
     molar_mass      mass 87.62 g / amount mol
     specific_heat   specific_energy 0.30 J g^-1 / temperature K
 }
 
 !symbol sulfur S
 sulfur {
+    atomic_number   const sulfur_atomic_number 16
     molar_mass      mass 32.066 g / amount mol
 }
 
 !symbol tantalum Ta
 tantalum {
+    atomic_number   const tantalum_atomic_number 73
     molar_mass      mass 180.9479 g / amount mol
     specific_heat   specific_energy 0.14 J g^-1 / temperature K
 }
 
 technetium {
+    atomic_number   const technetium_atomic_number 43
     ?? Longest lived. 98.906
     molar_mass      mass 97.9072 g / amount mol
 }
 
 !symbol tellurium Te
 tellurium {
+    atomic_number   const tellurium_atomic_number 52
     molar_mass      mass 127.60 g / amount mol
 }
 
 !symbol terbium Tb
 terbium {
+    atomic_number   const terbium_atomic_number 65
     molar_mass      mass 158.92534 g / amount mol
 }
 
 !symbol thallium Tl
 thallium {
+    atomic_number   const thallium_atomic_number 81
     molar_mass      mass 204.3833 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 !symbol thorium Th
 thorium {
+    atomic_number   const thorium_atomic_number 90
     molar_mass      mass 232.0381 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
 
 !symbol thullium Tm
 thullium {
+    atomic_number   const thullium_atomic_number 69
     molar_mass      mass 168.93421 g / amount mol
 }
 
 !symbol tin Sn
 tin {
+    atomic_number   const tin_atomic_number 50
     molar_mass      mass 118.710 g / amount mol
     specific_heat   specific_energy 0.21 J g^-1 / temperature K
 }
 
 !symbol titanium Ti
 titanium {
+    atomic_number   const titanium_atomic_number 22
     molar_mass      mass 47.867 g / amount mol
     specific_heat   specific_energy 0.54 J g^-1 / temperature K
 }
 
 !symbol tungsten W
 tungsten {
+    atomic_number   const tungsten_atomic_number 74
     molar_mass      mass 183.84 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
@@ -6916,32 +7024,32 @@ oganesson {
     atomic_number   const oganesson_atomic_number 118
     molar_mass      mass 294.21392 g / amount mol
 }
+ununoctium   oganesson
 
 !symbol moscovium Mc
 moscovium {
     atomic_number   const moscovium_atomic_number 115
     molar_mass      mass 288.19274 g / amount mol
 }
+ununpentium  moscovium
 
 !symbol tennessine Ts
 tennessine {
     atomic_number   const tennessine_atomic_number 117
     molar_mass      mass 292.20746 g / amount mol
 }
+ununseptium  tennessine
 
 !symbol nihonium Nh
 nihonium  {
     atomic_number   const nihonium_atomic_number 113
     molar_mass      mass 284.17873 g / amount mol
 }
-
 ununtrium    nihonium
-ununseptium  tennessine
-ununpentium  moscovium
-ununoctium   oganesson
 
 !symbol uranium U
 uranium {
+    atomic_number   const uranium_atomic_number 92
     molar_mass      mass 238.0289 g / amount mol
     specific_heat   specific_energy 0.12 J g^-1 / temperature K
     molar_mass_235  mass_235 235.0439299 g / amount_235 mol
@@ -6957,34 +7065,40 @@ uranium {
 
 !symbol vanadium V
 vanadium {
+    atomic_number   const vanadium_atomic_number 23
     molar_mass      mass 50.9415 g / amount mol
     specific_heat   specific_energy 0.39 J g^-1 / temperature K
 }
 
 !symbol xenon Xe
 xenon {
+    atomic_number   const xenon_atomic_number 54
     molar_mass      mass 131.29 g / amount mol
 }
 
 !symbol ytterbium Yb
 ytterbium {
+    atomic_number   const ytterbium_atomic_number 70
     molar_mass      mass 173.04 g / amount mol
 }
 
 !symbol yttrium Y
 yttrium {
+    atomic_number   const yttrium_atomic_number 39
     molar_mass      mass 88.90585 g / amount mol
     specific_heat   specific_energy 0.30 J g^-1 / temperature K
 }
 
 !symbol zinc Zn
 zinc {
+    atomic_number   const zinc_atomic_number 30
     molar_mass      mass 65.39 g / amount mol
     specific_heat   specific_energy 0.39 J g^-1 / temperature K
 }
 
 !symbol zirconium Zr
 zirconium {
+    atomic_number   const zirconium_atomic_number 40
     molar_mass      mass 91.224 g / amount mol
     specific_heat   specific_energy 0.27 J g^-1 / temperature K
 }
