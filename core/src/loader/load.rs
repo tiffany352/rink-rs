@@ -333,7 +333,8 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
             resolver.docs.insert(id.clone(), doc);
         }
         if let Some(category) = category {
-            if id.namespace != Namespace::Prefix {
+            // for now, only allow units to have categories.
+            if id.namespace == Namespace::Unit {
                 resolver.categories.insert(id.clone(), category);
             }
         }
