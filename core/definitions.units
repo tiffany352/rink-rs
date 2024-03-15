@@ -113,16 +113,6 @@
 #
 ###########################################################################
 
-!locale en_US
-!  set UNITS_ENGLISH US
-!endlocale
-
-!locale en_GB
-!  set UNITS_ENGLISH GB
-!endlocale
-
-!set UNITS_ENGLISH US   # Default setting for English units
-
 ###########################################################################
 #                                                                         #
 # Primitive units.  Any unit defined to contain a '!' character is a      #
@@ -4787,10 +4777,8 @@ kanejakujou        jou
 # http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement
 taichi             shaku   # http://zh.wikipedia.org/wiki/台尺
 taicun             ja_sun  # http://zh.wikipedia.org/wiki/台制
-!utf8
 台尺               taichi  # via Hanyu Pinyin romanizations
 台寸               taicun
-!endutf8
 
 # In context of clothing, shaku is different from architecture
 # http://www.scinet.co.jp/sci/sanwa/kakizaki-essay54.html
@@ -4825,12 +4813,10 @@ ping                 tsubo     # http://zh.wikipedia.org/wiki/坪
 jia                  2934 ping # http://zh.wikipedia.org/wiki/甲_(单位)
 #fen                  1|10 jia  # http://zh.wikipedia.org/wiki/分
 fen_area             1|10 jia  # Protection against future collisions
-!utf8
 坪                   ping      # via Hanyu Pinyin romanizations
 甲                   jia
 #分                   fen
 分地                 fen_area  # Protection against future collisions
-!endutf8
 
 # Japanese architecture is based on a "standard" size of tatami mat.
 # Room sizes today are given in number of tatami, and this number
@@ -4895,11 +4881,9 @@ kwan                 kan         # This was the old pronounciation of the unit.
 taijin               kin      # http://zh.wikipedia.org/wiki/台斤
 tailiang             10 monme # http://zh.wikipedia.org/wiki/台斤
 taiqian              monme    # http://zh.wikipedia.org/wiki/台制
-!utf8
 台斤                 taijin # via Hanyu Pinyin romanizations
 台兩                 tailiang
 台錢                 taiqian
-!endutf8
 
 !endcategory
 
@@ -5571,7 +5555,6 @@ blanc                   1|24 periot
 # Localization
 #
 
-!var UNITS_ENGLISH US
 hundredweight           ushundredweight
 ton                     uston
 scruple                 apscruple
@@ -5586,9 +5569,7 @@ minim                   minimvolume
 pony                    ponyvolume
 firkin                  usfirkin
 hogshead                ushogshead
-!endvar
 
-# !var UNITS_ENGLISH GB
 # hundredweight           brhundredweight
 # ton                     brton
 # scruple                 brscruple
@@ -5607,14 +5588,7 @@ hogshead                ushogshead
 # grand                   brgrand
 # firkin                  brfirkin
 # hogshead                brhogshead
-# !endvar
 
-!varnot UNITS_ENGLISH GB US
-!message Unknown value for environment variable UNITS_ENGLISH.  Should be GB or US.
-!endvar
-
-
-!utf8
 ⅛-                      1|8
 ¼-                      1|4
 ⅜-                      3|8
@@ -5774,8 +5748,6 @@ röntgen                 roentgen
 #㏞                      V/m     Invalid on Mac
 #㏟                      A/m     Invalid on Mac
 #㏿                      gal     Invalid on Mac
-
-!endutf8
 
 ############################################################################
 #
