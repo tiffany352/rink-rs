@@ -5748,29 +5748,6 @@ wc                      pressure_column of water
 mmH2O                   pressure of mm water
 inH2O                   pressure of inch water
 
-!symbol mercury Hg
-mercury {
-    density             mass 13.5951 gram / volume cm^3
-    pressure_column     pressure 13.5951 gram force cm^-2 / column cm
-    specific_heat       specific_energy 0.14 J g^-1 / temperature K
-    molar_mass          mass 200.59 g / amount mol
-
-    # These units, when used to form
-    # pressure measures, are not accurate
-    # because of considerations of the
-    # revised practical temperature scale.
-    pressure_column_10C pressure_10C 13.5708 force gram cm^-2 / column_10C cm
-    pressure_column_20C pressure_20C 13.5462 force gram cm^-2 / column_20C cm
-    pressure_column_23C pressure_23C 13.5386 force gram cm^-2 / column_23C cm
-    pressure_column_30C pressure_30C 13.5217 force gram cm^-2 / column_30C cm
-    pressure_column_40C pressure_40C 13.4973 force gram cm^-2 / column_40C cm
-    pressure_column_60F pressure_60F 13.5574 force gram cm^-2 / column_60F cm
-}
-
-Hg                      mercury
-mmHg                    pressure of mm mercury
-inHg                    pressure of inch mercury
-
 ammonia {
     specific_heat       specific_energy 4.6 J g^-1 / temperature K
 }
@@ -6662,6 +6639,29 @@ mendelevium {
     ?? Longest lived
     molar_mass      mass 258.10 g / amount mol
 }
+
+!symbol mercury Hg
+mercury {
+    molar_mass          mass 200.59 g / amount mol
+    specific_heat       specific_energy 0.14 J g^-1 / temperature K
+    density             mass 13.5951 gram / volume cm^3
+    pressure_column     pressure 13.5951 gram force cm^-2 / column cm
+
+    # These units, when used to form
+    # pressure measures, are not accurate
+    # because of considerations of the
+    # revised practical temperature scale.
+    pressure_column_10C pressure_10C 13.5708 force gram cm^-2 / column_10C cm
+    pressure_column_20C pressure_20C 13.5462 force gram cm^-2 / column_20C cm
+    pressure_column_23C pressure_23C 13.5386 force gram cm^-2 / column_23C cm
+    pressure_column_30C pressure_30C 13.5217 force gram cm^-2 / column_30C cm
+    pressure_column_40C pressure_40C 13.4973 force gram cm^-2 / column_40C cm
+    pressure_column_60F pressure_60F 13.5574 force gram cm^-2 / column_60F cm
+}
+
+Hg                      mercury
+mmHg                    pressure of mm mercury
+inHg                    pressure of inch mercury
 
 !symbol molybdenum Mo
 molybdenum {
