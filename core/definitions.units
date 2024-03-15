@@ -7074,22 +7074,6 @@ estetrol                C18H24O4
 
 ############################################################################
 #
-# Unit list aliases
-#
-# These provide a shorthand for conversions to unit lists.
-#
-############################################################################
-
-!unitlist hms hr;min;sec
-!unitlist time year;day;hr;min;sec
-!unitlist dms deg;arcmin;arcsec
-!unitlist ftin ft;in;1|8 in
-!unitlist inchfine in;1|8 in;1|16 in;1|32 in;1|64 in
-!unitlist usvol cup;3|4 cup;2|3 cup;1|2 cup;1|3 cup;1|4 cup;\
-                tbsp;tsp;1|2 tsp;1|4 tsp;1|8 tsp
-
-############################################################################
-#
 # The following units were in the unix units database but do not appear in
 # this file:
 #
