@@ -6732,6 +6732,13 @@ molybdenum {
     specific_heat   specific_energy 0.25 J g^-1 / temperature K
 }
 
+!symbol moscovium Mc
+moscovium {
+    atomic_number   const moscovium_atomic_number 115
+    molar_mass      mass 288.19274 g / amount mol
+}
+ununpentium  moscovium
+
 !symbol neodymium Nd
 neodymium {
     atomic_number   const neodymium_atomic_number 60
@@ -6756,6 +6763,13 @@ nickel {
     specific_heat   specific_energy 0.44 J g^-1 / temperature K
 }
 
+!symbol nihonium Nh
+nihonium  {
+    atomic_number   const nihonium_atomic_number 113
+    molar_mass      mass 284.17873 g / amount mol
+}
+ununtrium    nihonium
+
 !symbol niobium Nb
 niobium {
     atomic_number   const niobium_atomic_number 41
@@ -6773,6 +6787,13 @@ nobelium {
     ?? Longest lived.
     molar_mass      mass 259.1009 g / amount mol
 }
+
+!symbol oganesson Og
+oganesson {
+    atomic_number   const oganesson_atomic_number 118
+    molar_mass      mass 294.21392 g / amount mol
+}
+ununoctium   oganesson
 
 !symbol osmium Os
 osmium {
@@ -6972,6 +6993,13 @@ tellurium {
     molar_mass      mass 127.60 g / amount mol
 }
 
+!symbol tennessine Ts
+tennessine {
+    atomic_number   const tennessine_atomic_number 117
+    molar_mass      mass 292.20746 g / amount mol
+}
+ununseptium  tennessine
+
 !symbol terbium Tb
 terbium {
     atomic_number   const terbium_atomic_number 65
@@ -7018,34 +7046,6 @@ tungsten {
     molar_mass      mass 183.84 g / amount mol
     specific_heat   specific_energy 0.13 J g^-1 / temperature K
 }
-
-!symbol oganesson Og
-oganesson {
-    atomic_number   const oganesson_atomic_number 118
-    molar_mass      mass 294.21392 g / amount mol
-}
-ununoctium   oganesson
-
-!symbol moscovium Mc
-moscovium {
-    atomic_number   const moscovium_atomic_number 115
-    molar_mass      mass 288.19274 g / amount mol
-}
-ununpentium  moscovium
-
-!symbol tennessine Ts
-tennessine {
-    atomic_number   const tennessine_atomic_number 117
-    molar_mass      mass 292.20746 g / amount mol
-}
-ununseptium  tennessine
-
-!symbol nihonium Nh
-nihonium  {
-    atomic_number   const nihonium_atomic_number 113
-    molar_mass      mass 284.17873 g / amount mol
-}
-ununtrium    nihonium
 
 !symbol uranium U
 uranium {
