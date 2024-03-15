@@ -574,12 +574,16 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
         }
     }
 
-    for (name, val) in resolver.categories {
+    for (name, category_name) in resolver.categories {
         let name = name.name.to_string();
-        if ctx.registry.categories.insert(name.clone(), val).is_some() {
-            resolver
-                .errors
-                .push(format!("Category conflict for {}", name));
+        if let Some(existing_category) = ctx
+            .registry
+            .categories
+            .insert(name.clone(), category_name.clone())
+        {
+            resolver.errors.push(format!(
+                "Category conflict: {name} is in both {category_name} and {existing_category}"
+            ));
         }
     }
 
