@@ -333,7 +333,9 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
             resolver.docs.insert(id.clone(), doc);
         }
         if let Some(category) = category {
-            resolver.categories.insert(id.clone(), category);
+            if id.namespace != Namespace::Prefix {
+                resolver.categories.insert(id.clone(), category);
+            }
         }
         if resolver.input.insert(id.clone(), def).is_some() {
             let namespace = match id.namespace {
@@ -425,12 +427,8 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
                             .push(format!("Warning: Conflicting substances for {}", id));
                     }
                 }
-                Ok(_) => resolver
-                    .errors
-                    .push(format!("{} is not a number", id)),
-                Err(e) => resolver
-                    .errors
-                    .push(format!("{} is malformed: {}", id, e)),
+                Ok(_) => resolver.errors.push(format!("{} is not a number", id)),
+                Err(e) => resolver.errors.push(format!("{} is malformed: {}", id, e)),
             },
             Def::Prefix { ref expr, is_long } => match eval_prefix(&prefix_lookup, &expr.0) {
                 Ok(value) => {
