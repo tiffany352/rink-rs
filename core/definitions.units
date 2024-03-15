@@ -2470,13 +2470,6 @@ metre                   meter
 gramme                  gram
 litre                   liter
 dioptre                 diopter
-sulphur                 sulfur
-androstenolone          dehydroepiandrosterone
-androstanolone          dihydrotestosterone
-oestrone                estrone
-oestradiol              estradiol
-oestriol                estriol
-oestetrol               estetrol
 
 !endcategory
 
@@ -6973,6 +6966,7 @@ sulfur {
     atomic_number   const sulfur_atomic_number 16
     molar_mass      mass 32.066 g / amount mol
 }
+sulphur             sulfur
 
 !symbol tantalum Ta
 tantalum {
@@ -7171,6 +7165,13 @@ estrone                 C18H22O2
 estradiol               C18H24O2
 estriol                 C18H24O3
 estetrol                C18H24O4
+
+androstenolone          dehydroepiandrosterone
+androstanolone          dihydrotestosterone
+oestrone                estrone
+oestradiol              estradiol
+oestriol                estriol
+oestetrol               estetrol
 
 !endcategory
 
