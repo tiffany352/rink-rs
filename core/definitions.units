@@ -10,6 +10,7 @@
 #   such as support for non-UTF8 encodings.
 # - Adding a concept of "substances" unique to Rink.
 # - Adding some syntax such as doc comments.
+# - Adopted "New SI" (26th CGPM, 2018).
 #
 ############################################################################
 #
