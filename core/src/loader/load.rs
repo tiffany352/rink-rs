@@ -8,6 +8,7 @@ use crate::runtime::{Properties, Property, Substance, Value};
 use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 use std::collections::{BTreeMap, BTreeSet};
 use std::convert::TryInto;
+use std::fmt;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -23,6 +24,17 @@ enum Namespace {
 struct Id {
     namespace: Namespace,
     name: Rc<String>,
+}
+
+impl fmt::Display for Id {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.namespace {
+            Namespace::Unit => write!(f, "unit {}", self.name),
+            Namespace::Prefix => write!(f, "prefix {}-", self.name),
+            Namespace::Quantity => write!(f, "quantity {}", self.name),
+            Namespace::Category => write!(f, "category {}", self.name),
+        }
+    }
 }
 
 struct Resolver {
@@ -125,7 +137,7 @@ impl Resolver {
     fn visit(&mut self, id: &Id) {
         if self.temp_marks.get(id).is_some() {
             self.errors
-                .push(format!("Unit {:?} has a dependency cycle", id));
+                .push(format!("Unit {} has a dependency cycle", id));
             return;
         }
         if self.unmarked.get(id).is_some() {
@@ -321,16 +333,19 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
             resolver.docs.insert(id.clone(), doc);
         }
         if let Some(category) = category {
-            resolver.categories.insert(id.clone(), category);
+            // for now, only allow units to have categories.
+            if id.namespace == Namespace::Unit {
+                resolver.categories.insert(id.clone(), category);
+            }
         }
         if resolver.input.insert(id.clone(), def).is_some() {
             let namespace = match id.namespace {
                 Namespace::Prefix => "prefixes",
                 Namespace::Quantity => "quantities",
                 Namespace::Unit => "units",
-                Namespace::Category => "category",
+                Namespace::Category => "categories",
             };
-            if namespace != "category" {
+            if id.namespace != Namespace::Category {
                 resolver
                     .errors
                     .push(format!("warning: multiple {} named {}", namespace, id.name));
@@ -410,15 +425,11 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
                     if ctx.registry.substances.insert(name.clone(), sub).is_some() {
                         resolver
                             .errors
-                            .push(format!("Warning: Conflicting substances for {}", name));
+                            .push(format!("Warning: Conflicting substances for {}", id));
                     }
                 }
-                Ok(_) => resolver
-                    .errors
-                    .push(format!("Unit {} is not a number", name)),
-                Err(e) => resolver
-                    .errors
-                    .push(format!("Unit {} is malformed: {}", name, e)),
+                Ok(_) => resolver.errors.push(format!("{} is not a number", id)),
+                Err(e) => resolver.errors.push(format!("{} is malformed: {}", id, e)),
             },
             Def::Prefix { ref expr, is_long } => match eval_prefix(&prefix_lookup, &expr.0) {
                 Ok(value) => {
@@ -567,19 +578,23 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
         };
     }
 
-    for (name, val) in resolver.docs {
-        let name = name.name.to_string();
-        if ctx.registry.docs.insert(name.clone(), val).is_some() {
-            resolver.errors.push(format!("Doc conflict for {}", name));
+    for (id, val) in resolver.docs {
+        let name = id.name.to_string();
+        if ctx.registry.docs.insert(name, val).is_some() {
+            resolver.errors.push(format!("Doc conflict for {}", id));
         }
     }
 
-    for (name, val) in resolver.categories {
-        let name = name.name.to_string();
-        if ctx.registry.categories.insert(name.clone(), val).is_some() {
-            resolver
-                .errors
-                .push(format!("Category conflict for {}", name));
+    for (id, category_name) in resolver.categories {
+        let name = id.name.to_string();
+        if let Some(existing_category) = ctx
+            .registry
+            .categories
+            .insert(name.clone(), category_name.clone())
+        {
+            resolver.errors.push(format!(
+                "Category conflict: {id} is in both {category_name} and {existing_category}"
+            ));
         }
     }
 

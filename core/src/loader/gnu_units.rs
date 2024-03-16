@@ -347,14 +347,28 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                         _ => println!("Malformed symbol directive"),
                     }
                 }
-                _ => loop {
-                    match iter.peek().cloned().unwrap() {
-                        Token::Newline | Token::Eof => break,
-                        _ => {
-                            iter.next();
+                Token::Ident(ref s) => {
+                    println!("Unknown directive !{s}");
+                    loop {
+                        match iter.peek().cloned().unwrap() {
+                            Token::Newline | Token::Eof => break,
+                            _ => {
+                                iter.next();
+                            }
                         }
                     }
-                },
+                }
+                _ => {
+                    println!("syntax error: expected ident after !");
+                    loop {
+                        match iter.peek().cloned().unwrap() {
+                            Token::Newline | Token::Eof => break,
+                            _ => {
+                                iter.next();
+                            }
+                        }
+                    }
+                }
             },
             Token::Doc(line) => {
                 doc = match doc.take() {
