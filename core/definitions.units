@@ -221,15 +221,6 @@ bit       !
 IU                              !
 
 !endcategory
-!category biology                                           "Biology"
-# XXX: conflates “biological activity” and “immunological activity” to
-# avoid a conflicting quantities warning; some biological agents have
-# more than one reference preparation and/or more than one type of
-# biological activity [WHO TRS 932 pp. 80–81], but it’s unclear how
-# we would map such agents to Rink’s substance/property model
-biological_activity             ? IU
-biological_activity_density     ? mass / biological_activity
-!endcategory
 
 ###########################################################################
 #                                                                         #
@@ -585,6 +576,14 @@ specific_energy         ? energy / mass
 molar_mass              ? mass / amount
 flow_rate               ? volume / time
 pressure_column         ? pressure / length
+
+# XXX: conflates “biological activity” and “immunological activity” to
+# avoid a conflicting quantities warning; some biological agents have
+# more than one reference preparation and/or more than one type of
+# biological activity [WHO TRS 932 pp. 80–81], but it’s unclear how
+# we would map such agents to Rink’s substance/property model
+biological_activity             ? IU
+biological_activity_density     ? mass / biological_activity
 
 !endcategory
 !category metric_misc                    "Miscellaneous Metric Units"
