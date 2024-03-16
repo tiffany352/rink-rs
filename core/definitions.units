@@ -528,9 +528,18 @@ shankh                  1e17
 !category si_derived                               "SI Derived Units"
 
 #
-# Named SI derived units (officially accepted)
+# Named SI derived units (officially accepted by the BIPM)
+# See also:
+#   <https://en.wikipedia.org/wiki/SI_derived_unit>
+#   SI Brochure
 #
 
+#radian                 m/m          # plane angle (see base_units)
+#rad                    radian
+#steradian              m^2/m^2      # solid angle
+#sr                     steradian
+hertz                   /s           # frequency
+Hz                      hertz
 newton                  kg m / s^2   # force
 N                       newton
 pascal                  N/m^2        # pressure or stress
@@ -543,19 +552,32 @@ coulomb                 A s          # charge
 C                       coulomb
 volt                    W/A          # potential difference
 V                       volt
-ohm                     V/A          # electrical resistance
-siemens                 A/V          # electrical conductance
-S                       siemens
 farad                   C/V          # capacitance
 F                       farad
+ohm                     V/A          # electrical resistance
+Ω                       ohm
+siemens                 A/V          # electrical conductance
+S                       siemens
 weber                   V s          # magnetic flux
 Wb                      weber
-henry                   Wb/A         # inductance
-H                       henry
 tesla                   Wb/m^2       # magnetic flux density
 T                       tesla
-hertz                   /s           # frequency
-Hz                      hertz
+henry                   Wb/A         # inductance
+H                       henry
+#degC                   K            # temperature (hardcoded in Rink)
+#°C                     celsius
+lumen                   cd sr        # luminous flux
+lm                      lumen
+lux                     lm/m^2       # illuminance
+lx                      lux
+becquerel               /s           # radioactivity
+Bq                      becquerel
+gray                    J/kg         # absorbed dose
+Gy                      gray
+sievert                 J/kg         # equivalent dose
+Sv                      sievert
+katal                   mol/sec      # catalytic activity
+kat                     katal
 
 !endcategory
 !category quantities                                     "Quantities"
@@ -725,8 +747,6 @@ pfu                    / cm^2 sr s # particle flux unit -- Used to measure
                                    #   angle per detector area per second. [18]
 pyron            cal_IT / cm^2 min # Measures heat flow from solar radiation,
                                    #   from Greek work "pyr" for fire.
-katal                   mol/sec    # Measure of the amount of a catalyst.  One
-kat                     katal      #   katal of catalyst enables the reaction
                                    #   to consume or produce on mol/sec.
 !endcategory
 !category time                                                 "Time"
@@ -1331,9 +1351,6 @@ violle                  20.17 cd      # luminous intensity of 1 cm^2 of
                                       #   platinum at its temperature of
                                       #   solidification (2045 K)
 
-lumen                   cd sr         # Luminous flux (luminous energy per
-lm                      lumen         #    time unit)
-
 talbot                  lumen s       # Luminous energy
 lumberg                 talbot        # References give these values for
 lumerg                  talbot        #    lumerg and lumberg both.  Note that
@@ -1341,9 +1358,7 @@ lumerg                  talbot        #    lumerg and lumberg both.  Note that
                                       #    lumerg should be 1e-7 talbots so
                                       #    that lumergs/erg = talbots/joule.
                                       #    lumerg = luminous erg
-lux                     lm/m^2        # Illuminance or exitance (luminous
-lx                      lux           #   flux incident on or coming from
-phot                    lumen / cm^2  #   a surface)
+phot                    lumen / cm^2  #
 ph                      phot          #
 footcandle              lumen/ft^2    # Illuminance from a 1 candela source
                                       #    at a distance of one foot
@@ -4634,16 +4649,12 @@ coul                    C
 # Radioactivity units
 #
 
-becquerel               /s           # Activity of radioactive source
-Bq                      becquerel    #
 curie                   3.7e10 Bq    # Defined in 1910 as the radioactivity
 Ci                      curie        # emitted by the amount of radon that is
                                      # in equilibrium with 1 gram of radium.
 rutherford              1e6 Bq       #
 
 radiation_dose          gray
-gray                    J/kg         # Absorbed dose of radiation
-Gy                      gray         #
 rad                     1e-2 Gy      # From Radiation Absorbed Dose
 rep                     8.38 mGy     # Roentgen Equivalent Physical, the amount
                                      #   of radiation which , absorbed in the
@@ -4651,8 +4662,6 @@ rep                     8.38 mGy     # Roentgen Equivalent Physical, the amount
                                      #   of energy as 1 roentgen of X rays
                                      #   would, or 97 ergs.
 
-sievert                 J/kg         # Dose equivalent:  dosage that has the
-Sv                      sievert      #   same effect on human tissues as 200
 rem                     1e-2 Sv      #   keV X-rays.  Different types of
                                      #   radiation are weighted by the
                                      #   Relative Biological Effectiveness
@@ -5664,7 +5673,6 @@ röntgen                 roentgen
 ℓ                       liter      # unofficial abbreviation used in some places
 
 Ω                       ohm       # Ohm symbol U+2126
-Ω                       ohm       # Greek capital omega U+03A9
 ℧                       mho
 ʒ                        dram     # U+0292
 ℈                       scruple
