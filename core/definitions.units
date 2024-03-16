@@ -600,70 +600,105 @@ Sv                      sievert
 kat                     katal
 
 !endcategory
-!category quantities                                     "Quantities"
+!category si_quantities                               "SI quantities"
+#
+# Quantities that are listed in the SI Brochure, 9th edition.
+#
 
+# Base quantities
+time                    ? s
+length                  ? m
+mass                    ? kg
+current                 ? A               # electric current
+temperature             ? K               # thermodynamic temperature
+amount                  ? mol             # amount of substance
+luminous_intensity      ? cd
+
+# Expressed in terms of base quantities
+area                    ? length^2
+volume                  ? length^3
+velocity                ? length / time
+acceleration            ? velocity / time
+#wavenumber             ? length^-1       # not generic enough
+density                 ? mass / volume   # density, mass density
+area_density            ? mass / area     # area density
+specific_volume         ? volume / mass
+current_density         ? current / area
+magnetization           ? current / length    # magnetic field strength
+molar_concentration     ? amount / volume # amount of substance concentration
+#mass_concentration     ? mass / volume   # conflict with density
+luminance               ? luminous_intensity / area
+
+# Derived quantities
+angle                   ? radian          # plane angle
+solid_angle             ? sr
+frequency               ? time^-1
+force                   ? acceleration mass
+pressure                ? force / area
+#stress                 ? force / area    # conflicts with pressure
+energy                  ? force length    # energy, work, amount of heat
+power                   ? energy / time   # power, radiant flux
+charge                  ? A s             # electric charge
+electrical_potential    ? power / current # electric potential difference,
+                                          #   voltage, electric tension
+capacitance             ? charge / electrical_potential
+resistance              ? electrical_potential / current
+conductance             ? resistance^-1
+magnetic_flux           ? electrical_potential time
+magnetic_flux_density   ? magnetic_flux / area
+inductance              ? magnetic_flux / current
+#celsius_temperature                      # celsius isn't a base unit in Rink
+luminous_flux           ? luminous_intensity solid_angle
+illuminance             ? luminous_flux / area
+#radioactivity          ? time^-1         # conflicts with frequency
+#absorbed_dose          ? energy / mass   # conflicts with specific_energy
+#equivalent_dose        ? energy / mass   # conflicts with specific_energy
+catalytic_activity      ? amount / time
+
+# Expressed in terms of derived quantities
+viscosity               ? pressure time             # dynamic viscosity
+#force_moment           ? force length              # conflicts with energy
+surface_tension         ? energy / area
+angular_velocity        ? angle / time              # also angular frequency
+angular_acceleration    ? angle / time^2
+heat_flux_density       ? power / area              # also irradiance
+entropy                 ? energy / temperature      # heat capacity
+specific_heat_capacity  ? energy / mass temperature # also specific entropy
+specific_energy         ? energy / mass
+thermal_conductivity    ? power / area (temperature/length)
+#energy_density         ? energy / volume           # conflicts with pressure
+electric_field          ? force / charge            # electric field strength
+electric_charge_density ? charge / volume
+electric_displacement   ? charge / area             # also electric flux density
+permittivity            ? capacitance / length
+permeability            ? inductance / length
+chemical_potential      ? energy / amount           # molar energy
+molar_entropy           ? entropy / amount          # also molar heat capacity
+radiation_exposure      ? charge / mass             # exposure (x- and γ-rays)
+absorbed_dose_rate      ? specific_energy / time
+radiant_intensity       ? power / solid_angle
+radiance                ? power / solid_angle area
+reaction_rate           ? amount / volume time      # catalytic activity
+                                                    #   concentration
+
+!endcategory
+!category quantities                                     "Quantities"
 #
 # Quantities. These are shown within parentheses in every rink query.
 #
 
 dimensionless           ? 1
-length                  ? m
-area                    ? length^2
-volume                  ? length^3
-time                    ? s
-mass                    ? kg
-current                 ? A
-amount                  ? mol
-angle                   ? radian
-solid_angle             ? sr
-force                   ? acceleration mass
-pressure                ? force / area
-#stress                 ? force / area # conflicts with pressure
-energy                  ? force length
-power                   ? energy / time
-charge                  ? A s
-capacitance             ? charge / electrical_potential
-resistance              ? electrical_potential / current
-conductance             ? resistance^-1
-inductance              ? magnetic_flux / current
-frequency               ? time^-1
-velocity                ? length / time
-acceleration            ? velocity / time
 jerk                    ? acceleration / time
 snap                    ? jerk / time
 crackle                 ? snap / time
 pop                     ? crackle / time
-density                 ? mass / volume
 linear_density          ? mass / length
-viscosity               ? pressure time
 kinematic_viscosity     ? viscosity / density
-magnetic_flux           ? electrical_potential time
-magnetic_flux_density   ? magnetic_flux / area
-magnetization           ? current / length
-electrical_potential    ? power / current
-electric_field          ? force / charge
-entropy                 ? energy / temperature
 thermal_inductance      ? energy temperature^2 / power^2
-permittivity            ? capacitance / length
-permeability            ? inductance / length
 angular_momentum        ? mass area / time
-area_density            ? mass / area
-catalytic_activity      ? amount / time
-chemical_potential      ? energy / amount
-molar_concentration     ? amount / volume
-current_density         ? current / area
-electric_charge_density ? charge / volume
-electric_displacement   ? charge / area
 impulse                 ? mass length / time
-heat_flux_density       ? power / area
-molar_entropy           ? entropy / amount
 moment_of_inertia       ? mass area
-reaction_rate           ? amount / volume time
-specific_heat_capacity  ? energy / mass temperature
-specific_volume         ? volume / mass
-surface_tension         ? energy / area
 fuel_efficiency         ? area^-1
-specific_energy         ? energy / mass
 molar_mass              ? mass / amount
 flow_rate               ? volume / time
 pressure_column         ? pressure / length
@@ -916,7 +951,6 @@ fine                    1|1000    # Measure of gold purity
 # with "temp".
 #
 
-temperature             ? K
 temperature_difference  kelvin
 
 # In 1741 Anders Celsius introduced a temperature scale with water boiling at
@@ -1334,10 +1368,8 @@ ozcu                    ouncecopper             #   in circuitboard fabrication
 # radiant_flux                      power 
 # spectral_flux_frequency           power / frequency
 spectral_flux_wavelength        ? power / length
-radiant_intensity               ? power / solid_angle
 spectral_intensity_frequency    ? power / solid_angle frequency
 spectral_intensity_wavelength   ? power / solid_angle length
-radiance                        ? power / solid_angle area
 spectral_radiance_frequency     ? power / solid_angle area frequency
 spectral_radiance_wavelength    ? power / solid_angle volume
 # spectral_irradiance_frequency     power / area frequency
@@ -1359,10 +1391,7 @@ spectral_exposure_frequency     ? energy / area frequency
 # Photometric units
 #
 
-luminous_intensity      ? cd
-luminous_flux           ? luminous_intensity solid_angle
 luminous_energy         ? luminous_flux time
-illuminance             ? luminous_flux / area
 
 candle                  1.02 candela  # Standard unit for luminous intensity
 hefnerunit              0.9 candle    #   in use before candela
@@ -1392,8 +1421,6 @@ nox                     1e-3 lux      # These two units were proposed for
 skot                    1e-3 apostilb # measurements relating to dark adapted
                                       # eyes.
 # Luminance measures
-
-luminance               ? luminous_intensity / area
 
 nit                     cd/m^2        # Luminance: the intensity per projected
 stilb                   cd / cm^2     # area of an extended luminous source.
@@ -3107,7 +3134,6 @@ chevalvapeur            metrichorsepower
 # cross sectional area, t is the time, and L is the length (thickness).
 # Thermal conductivity is a material property.
 
-thermal_conductivity    ? power / area (temperature/length)
 thermal_resistivity     ? 1/thermal_conductivity
 
 # Thermal conductance is the rate at which heat flows across a given
