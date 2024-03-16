@@ -141,44 +141,62 @@
 # SI units
 #
 
-?? Equal to the mass of the international prototype of the
-?? kilogram. 3rd CGPM (1901, CR, 70).
+?? The kilogram, symbol kg, is the SI unit of mass. It is defined by
+?? taking the fixed numerical value of the Planck constant h to be
+?? 6.626 070 15 × 10^–34 when expressed in the unit J s, which is equal
+?? to kg m^2 s^–1, where the metre and the second are defined in terms
+?? of c and Δν_Cs. 26th CGPM (2018, CR; 211)
 kg        !kilogram
 
-?? Duration of 9192631770 periods of the radiation corresponding to
-?? the transition between the two hyperfine levels of the ground state
-?? of the cesium-133 atom at rest at a temperature of 0 K. 13th CGPM
-?? (1968/68, Resolution 1; CR; 103).
+?? The second, symbol s, is the SI unit of time. It is defined by
+?? taking the fixed numerical value of the caesium frequency Δν_Cs,
+?? the unperturbed ground-state hyperfine transition frequency of the
+?? caesium 133 atom, to be 9 192 631 770 when expressed in the unit Hz,
+?? which is equal to s^–1. 26th CGPM (2018, CR; 211)
 s         !second
 
-?? Length of the path travelled by light in vacuum during a time
-?? interval of 1 / 299 792 458 of a second. 17th CGPM (1983, CR, 70).
+?? The metre, symbol m, is the SI unit of length. It is defined by
+?? taking the fixed numerical value of the speed of light in vacuum c
+?? to be 299 792 458 when expressed in the unit m/s, where the second
+?? is defined in terms of Δν_Cs. 26th CGPM (2018, CR; 211)
 m         !meter
 
-?? The constant current which, if maintained in two straight parallel
-?? conductors of infinite length, of negligible circular
-?? cross-section, and placed 1 meter apart in vacuum, would produce
-?? between those conductors a force equal to 2e-7 newton per meter of
-?? length. 9th CGPM (1948).
+?? The ampere, symbol A, is the SI unit of electric current. It is
+?? defined by taking the fixed numerical value of the elementary charge
+?? e to be 1.602 176 634 × 10^–19 when expressed in the unit C, which
+?? is equal to A s, where the second is defined in terms of Δν_Cs.
+?? 26th CGPM (2018, CR; 211)
 A         !ampere
 amp       A
 
-?? The luminous intensity, in a given direction, of a source that
-?? emits monochromatic radiation of frequency 540e12 hertz and that
-?? has a radiant intensity in that direction of 1/683 watt per
-?? steradian. 16th CGPM (1979, Resolution 3; CR, 100).
+?? The candela, symbol cd, is the SI unit of luminous intensity in a
+?? given direction. It is defined by taking the fixed numerical value
+?? of the luminous efficacy of monochromatic radiation of frequency
+?? 540 × 10^12 Hz, Kcd, to be 683 when expressed in the unit lm W^–1,
+?? which is equal to cd sr W^–1, or cd sr kg^–1 m^–2 s^3, where the
+?? kilogram, metre and second are defined in terms of h, c and Δν_Cs.
+?? 26th CGPM (2018, CR; 211)
 cd        !candela
 
-?? The amount of substance a system which contains as many elementary
-?? entities as there are atoms in 0.012 kilogram of carbon 12 at rest
-?? and in their ground state. When the mole is used, the elementary
-?? entities must be specified and may be atoms, molecules, ions,
-?? electrons, other particles, or specified groups of such
-?? particles. 14th CGPM (1971, Resolution 3; CR, 78).
+?? The mole, symbol mol, is the SI unit of amount of substance. One
+?? mole contains exactly 6.022 140 76 × 10^23 elementary entities.
+?? This number is the fixed numerical value of the Avogadro constant,
+?? N_A, when expressed in the unit mol^–1 and is called the Avogadro
+?? number.
+??
+?? The amount of substance, symbol n, of a system is a measure of the
+?? number of specified elementary entities. An elementary entity may
+?? be an atom, a molecule, an ion, an electron, any other particle
+?? or specified group of particles.
+?? 26th CGPM (2018, CR; 211)
 mol       !mole
 
-?? The fraction 1 / 273.16 of the thermodynamic temperature of the
-?? triple point of water. 13th CGPM (1967/68, Resolution 4; CR, 104).
+?? The kelvin, symbol K, is the SI unit of thermodynamic temperature.
+?? It is defined by taking the fixed numerical value of the Boltzmann
+?? constant k to be 1.380 649 × 10^–23 when expressed in the unit
+?? J K^–1, which is equal to kg m^2 s^–2 K^–1, where the kilogram,
+?? metre and second are defined in terms of h, c and Δν_Cs.
+?? 26th CGPM (2018, CR; 211)
 K         !kelvin
 
 !endcategory
@@ -888,10 +906,15 @@ pi                      π
 tau                     τ
 c                       speed of light   # speed of light in vacuum (exact)
 #light                   c
-mu0                     4 pi 1e-7 H/m    # permeability of vacuum (exact)
-epsilon0                1/mu0 c^2        # permittivity of vacuum (exact)
+?? The vacuum magnetic permeability constant μ_0.
+?? Measured as 1.256 637 062 12(19) x 10^-6 N A^-2.
+?? CODATA recommended values, 2018
+mu0                     1.25663706212e-6 N A^-2   # permeability of vacuum
+epsilon0                1/mu0 c^2        # permittivity of vacuum
 mass_energy             c^2              # convert mass to energy
-planck_constant         6.626070040e-34 J s
+?? The Planck constant h. Defined as exactly 6.626 070 15 × 10^–34 J s.
+?? 26th CGPM (2018, Resolution 1; CR, 210).
+planck_constant         6.626070015e-34 J s
 hbar                    planck_constant / 2 pi
 spin                    hbar
 G               6.67408e-11 N m^2 / kg^2 # Newtonian gravitational constant
@@ -899,6 +922,11 @@ G               6.67408e-11 N m^2 / kg^2 # Newtonian gravitational constant
                                          #    The relative uncertainty on this
                                          #    is 1e-4.
 coulombconst            1/4 pi epsilon0  # listed as "k" sometimes
+
+?? Δν_Cs, the unperturbed ground-state hyperfine transition frequency
+?? of the caesium 133 atom. Defined as exactly 9 192 631 770 Hz.
+?? 26th CGPM (2018, CR; 211)
+v_Cs                    9192631770 Hz
 
 # Physico-chemical constants
 
@@ -911,11 +939,15 @@ amu_chem                1.66026e-27 kg   # 1|16 of the weighted average mass of
 amu_phys                1.65981e-27 kg   # 1|16 of the mass of a neutral
                                          #   oxygen 16 atom
 dalton                  u                # Maybe this should be amu_chem?
-avogadro                grams/amu mol    # size of a mole
+?? Avogadro constant, representing the number of particles in 1 mole.
+?? 26th CGPM (2018, Resolution 1; CR, 210).
+avogadro               6.02214076e23/mol # size of a mole
 N_A                     avogadro
 gasconstant             boltzmann N_A    # molar gas constant
 R                       gasconstant
-boltzmann             1.38064852e-23 J/K # Boltzmann constant
+?? Boltzmann constant. Defined as exactly 1.380 649 x 10^–23.
+?? 26th CGPM (2018, Resolution 1; CR, 210).
+boltzmann               1.380649e-23 J/K # Boltzmann constant
 #k                       boltzmann
 kboltzmann              boltzmann
 molarvolume         mol R stdtemp / atm  # Volume occupied by one mole of an
@@ -992,7 +1024,10 @@ R_H                     10967760 /m      #   can be expressed as
                                          #        m_e c alpha^2 / 2 h
                                          #   with a loss of 4 digits
                                          #   of precision.
-alpha                   7.2973525664e-3  # The fine structure constant was
+?? The fine structure constant α.
+?? Measured as 7.297 352 5693(11) x 10^-3.
+?? CODATA recommended values, 2018
+alpha                   7.2973525693e-3  # The fine structure constant was
                                          #   introduced to explain fine
                                          #   structure visible in spectral
                                          #   lines.  It can be computed from
@@ -5836,7 +5871,9 @@ soil {
 
 electron {
     mass                const electron_mass         5.48579909070e-4 u
-    charge              const electron_charge       1.6021766208e-19 C
+    ?? Defined as exactly 1.602 176 634 × 10^–19 C.
+    ?? 26th CGPM (2018, Resolution 1; CR, 210).
+    charge              const electron_charge       1.602176634e-19 C
     radius              const electron_radius       ((1/4 pi epsilon0) \
                                                     charge^2 / mass c^2)
     wavelength          const electron_wavelength   planck_constant / mass c
@@ -5898,6 +5935,9 @@ triton {
 }
 
 light {
+    ?? Speed that light travels in a vacuum.
+    ?? Defined as exactly 299 792 458 m/s.
+    ?? 26th CGPM (2018, Resolution 1; CR, 210).
     speed               const light_speed           2.99792458e8 m/s
 }
 
