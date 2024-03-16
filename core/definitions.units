@@ -249,6 +249,20 @@ IU                              !
 
 !category prefixes                                         "Prefixes"
 
+#
+# SI prefixes. These are standardized through CGPM resolutions.
+# The set has been expanded over time.
+# - 1795: milli through kilo
+# - 1873: mega and micro
+# - 1960: giga, tera, nano, and pico
+# - 1964: femto, atto
+# - 1975: peta, exa
+# - 1991: zetta, yotta, zepto, and yocto
+# - 2022: ronna, quetta, ronto, quecto
+#
+
+quetta-                 1e30     # Latin decem, "ten"
+ronna-                  1e27     # Greek ennéa, "nine"
 yotta-                  1e24     # Greek or Latin octo, "eight"
 zetta-                  1e21     # Latin septem, "seven"
 exa-                    1e18     # Greek hex, "six"
@@ -271,29 +285,11 @@ femto-                  1e-15    # Danish-Norwegian femten, "fifteen"
 atto-                   1e-18    # Danish-Norwegian atten, "eighteen"
 zepto-                  1e-21    # Latin septem, "seven"
 yocto-                  1e-24    # Greek or Latin octo, "eight"
+ronto-                  1e-27    # Greek ennéa, "nine"
+quecto-                 1e-30    # Latin decem, "ten"
 
-quarter--               1|4
-semi--                  0.5
-demi--                  0.5
-hemi--                  0.5
-half-                   0.5
-double-                 2
-triple-                 3
-treble-                 3
-
-kibi-                   2^10     # In response to the convention of illegally
-mebi-                   2^20     # and confusingly using metric prefixes for
-gibi-                   2^30     # powers of two, the International
-tebi-                   2^40     # Electrotechnical Commission aproved these
-pebi-                   2^50     # binary prefixes for use in 1998.  If you
-exbi-                   2^60     # want to refer to "megabytes" using the
-Ki--                    kibi     # binary definition, use these prefixes.
-Mi--                    mebi
-Gi--                    gibi
-Ti--                    tebi
-Pi--                    pebi
-Ei--                    exbi
-
+Q--                     quetta
+R--                     ronna
 Y--                     yotta
 Z--                     zetta
 E--                     exa
@@ -314,6 +310,40 @@ f--                     femto
 a--                     atto
 z--                     zepto
 y--                     yocto
+r--                     ronto
+q--                     quecto
+
+#
+# Binary prefixes
+#
+
+kibi-                   2^10     # In response to the convention of illegally
+mebi-                   2^20     # and confusingly using metric prefixes for
+gibi-                   2^30     # powers of two, the International
+tebi-                   2^40     # Electrotechnical Commission aproved these
+pebi-                   2^50     # binary prefixes for use in 1998.  If you
+exbi-                   2^60     # want to refer to "megabytes" using the
+zebi-                   2^70     # binary definition, use these prefixes.
+yobi-                   2^80     #
+Ki--                    kibi     # In 1999, an ammendment was published
+Mi--                    mebi     # that added pebi- and exbi-. The third
+Gi--                    gibi     # edition of the standard in 2005 added
+Ti--                    tebi     # zebi- and yobi-.
+Pi--                    pebi
+Ei--                    exbi
+Zi--                    zebi
+Yi--                    yobi
+
+# Common fractions
+
+quarter--               1|4
+semi--                  0.5
+demi--                  0.5
+hemi--                  0.5
+half-                   0.5
+double-                 2
+triple-                 3
+treble-                 3
 
 !endcategory
 !category numbers                                           "Numbers"
