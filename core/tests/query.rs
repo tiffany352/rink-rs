@@ -48,7 +48,7 @@ fn test_starts_with(input: &str, output: &str) {
 fn test_definition() {
     test(
         "watt",
-        "Definition: watt = J / s = 1 watt (power; kg m^2 / s^3)",
+        "Definition: watt = J / s = 1 watt (power; kg m^2 / s^3). SI derived unit for power or radiant flux.",
     );
 }
 

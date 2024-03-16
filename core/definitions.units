@@ -536,25 +536,44 @@ shankh                  1e17
 
 #radian                 m/m          # plane angle (see base_units)
 #steradian              m^2/m^2      # solid angle
+?? SI derived unit for frequency.
 hertz                   /s           # frequency
+?? SI derived unit for force.
 newton                  kg m / s^2   # force
+?? SI derived unit for pressure or stress.
 pascal                  N/m^2        # pressure or stress
+?? SI derived unit for energy, work, or heat.
 joule                   N m          # energy
+?? SI derived unit for power or radiant flux.
 watt                    J/s          # power
+?? SI derived unit for charge.
 coulomb                 A s          # charge
+?? SI derived unit for electrical potential difference.
 volt                    W/A          # potential difference
+?? SI derived unit for electrical capacitance.
 farad                   C/V          # capacitance
+?? SI derived unit for electrical resistance.
 ohm                     V/A          # electrical resistance
+?? SI derived unit for electrical conductance.
 siemens                 A/V          # electrical conductance
+?? SI derived unit for magnetic flux.
 weber                   V s          # magnetic flux
+?? SI derived unit for magnetic induction or magnetic flux density.
 tesla                   Wb/m^2       # magnetic flux density
+?? SI derived unit for electrical inductance.
 henry                   Wb/A         # inductance
 #degC                   K            # temperature (hardcoded in Rink)
+?? SI derived unit for luminous flux.
 lumen                   cd sr        # luminous flux
+?? SI derived unit for illuminance.
 lux                     lm/m^2       # illuminance
+?? SI derived unit for radioactivity (particle decays per unit time).
 becquerel               /s           # radioactivity
+?? SI derived unit for absorbed dose of ionizing radiation.
 gray                    J/kg         # absorbed dose
+?? SI derived unit for equivalent dose of ionizing radiation.
 sievert                 J/kg         # equivalent dose
+?? SI derived unit for catalytic activity.
 katal                   mol/sec      # catalytic activity
 
 #rad                    radian
