@@ -224,7 +224,7 @@ IU                              !
 
 ###########################################################################
 #                                                                         #
-# Prefixes (longer names must come first)                                 #
+# Prefixes and Number Systems                                             #
 #                                                                         #
 ###########################################################################
 
@@ -341,7 +341,7 @@ million                 1e6
 
 centillion              1e303
 googol                  1e100
-# googolplex            10^googol # familiar large number equal to 10^googol. 
+# googolplex            10^googol # familiar large number equal to 10^googol.
                                   # These numbers give overflows.
 
 !endcategory
