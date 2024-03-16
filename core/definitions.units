@@ -535,48 +535,49 @@ shankh                  1e17
 #
 
 #radian                 m/m          # plane angle (see base_units)
-#rad                    radian
 #steradian              m^2/m^2      # solid angle
-#sr                     steradian
 hertz                   /s           # frequency
-Hz                      hertz
 newton                  kg m / s^2   # force
-N                       newton
 pascal                  N/m^2        # pressure or stress
-Pa                      pascal
 joule                   N m          # energy
-J                       joule
 watt                    J/s          # power
-W                       watt
 coulomb                 A s          # charge
-C                       coulomb
 volt                    W/A          # potential difference
-V                       volt
 farad                   C/V          # capacitance
-F                       farad
 ohm                     V/A          # electrical resistance
-Ω                       ohm
 siemens                 A/V          # electrical conductance
-S                       siemens
 weber                   V s          # magnetic flux
-Wb                      weber
 tesla                   Wb/m^2       # magnetic flux density
-T                       tesla
 henry                   Wb/A         # inductance
-H                       henry
 #degC                   K            # temperature (hardcoded in Rink)
-#°C                     celsius
 lumen                   cd sr        # luminous flux
-lm                      lumen
 lux                     lm/m^2       # illuminance
-lx                      lux
 becquerel               /s           # radioactivity
-Bq                      becquerel
 gray                    J/kg         # absorbed dose
-Gy                      gray
 sievert                 J/kg         # equivalent dose
-Sv                      sievert
 katal                   mol/sec      # catalytic activity
+
+#rad                    radian
+#sr                     steradian
+Hz                      hertz
+N                       newton
+Pa                      pascal
+J                       joule
+W                       watt
+C                       coulomb
+V                       volt
+F                       farad
+Ω                       ohm
+S                       siemens
+Wb                      weber
+T                       tesla
+H                       henry
+#°C                     celsius
+lm                      lumen
+lx                      lux
+Bq                      becquerel
+Gy                      gray
+Sv                      sievert
 kat                     katal
 
 !endcategory
