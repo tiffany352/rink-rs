@@ -1012,31 +1012,35 @@ tau                     τ
 c                       speed of light   # speed of light in vacuum (exact)
 #light                   c
 ?? The vacuum magnetic permeability constant μ_0.
-?? Measured as 1.256 637 062 12(19) x 10^-6 N A^-2.
-?? CODATA recommended values, 2018
+?? Uncertainty is 1.5 x 10^-10.
+?? 2018 CODATA recommended values
 mu0                     1.25663706212e-6 N A^-2   # permeability of vacuum
 epsilon0                1/mu0 c^2        # permittivity of vacuum
 mass_energy             c^2              # convert mass to energy
 ?? The Planck constant h. Defined as exactly 6.626 070 15 × 10^–34 J s.
 ?? 26th CGPM (2018, Resolution 1; CR, 210).
-planck_constant         6.626070015e-34 J s
+planck_constant         6.62607015e-34 J s
 hbar                    planck_constant / 2 pi
 spin                    hbar
-G               6.67408e-11 N m^2 / kg^2 # Newtonian gravitational constant
-                                         #    This is the NIST 2006 value.
-                                         #    The relative uncertainty on this
-                                         #    is 1e-4.
+?? The Newtonian constant of gravitation, G.
+?? Uncertainty is 2.2 x 10^-5
+?? 2018 CODATA recommended values
+G                       6.67430e-11 N m^2 / kg^2
 coulombconst            1/4 pi epsilon0  # listed as "k" sometimes
 
 ?? Δν_Cs, the unperturbed ground-state hyperfine transition frequency
-?? of the caesium 133 atom. Defined as exactly 9 192 631 770 Hz.
+?? of the caesium 133 atom. Value is exact by definition.
 ?? 26th CGPM (2018, CR; 211)
 v_Cs                    9192631770 Hz
 
 # Physico-chemical constants
 
-atomicmassunit        1.660539040e-27 kg # atomic mass unit (defined to be
-u                       atomicmassunit   #   1|12 of the mass of carbon 12)
+?? The atomic mass unit, or dalton, is 1|12th the mass of of a
+?? carbon-12 atom in its ground state.
+?? Uncertainty is 3.0 x 10^-10
+?? 2018 CODATA recommended values
+atomicmassunit          1.66053906660e-27 kg
+u                       atomicmassunit
 amu                     atomicmassunit
 amu_chem                1.66026e-27 kg   # 1|16 of the weighted average mass of
                                          #   the 3 naturally occuring neutral
@@ -1045,14 +1049,15 @@ amu_phys                1.65981e-27 kg   # 1|16 of the mass of a neutral
                                          #   oxygen 16 atom
 dalton                  u                # Maybe this should be amu_chem?
 ?? Avogadro constant, representing the number of particles in 1 mole.
+?? Value is exact by definition.
 ?? 26th CGPM (2018, Resolution 1; CR, 210).
-avogadro               6.02214076e23/mol # size of a mole
+avogadro                6.02214076e23/mol
 N_A                     avogadro
 gasconstant             boltzmann N_A    # molar gas constant
 R                       gasconstant
-?? Boltzmann constant. Defined as exactly 1.380 649 x 10^–23.
+?? Boltzmann constant. Value is exact by definition.
 ?? 26th CGPM (2018, Resolution 1; CR, 210).
-boltzmann               1.380649e-23 J/K # Boltzmann constant
+boltzmann               1.380649e-23 J/K
 #k                       boltzmann
 kboltzmann              boltzmann
 molarvolume         mol R stdtemp / atm  # Volume occupied by one mole of an
@@ -1063,17 +1068,22 @@ loschmidt     avogadro mol / molarvolume # Molecules per cubic meter of an
 stefanboltzmann pi^2 boltzmann^4 / 60 hbar^3 c^2 # The power per area radiated by a
 sigma                   stefanboltzmann  #   blackbody at temperature T is
                                          #   given by sigma T^4.
-wiendisplacement        2.8977729e-3 m K # Wien's Displacement Law gives the
-                                         #   frequency at which the the Planck
-                                         #   spectrum has maximum intensity.
-                                         #   The relation is lambda T = b where
-                                         #   lambda is wavelength, T is
-                                         #   temperature and b is the Wien
-                                         #   displacement.  This relation is
-                                         #   used to determine the temperature
-                                         #   of stars.
+
+?? Wien's Displacement Law gives the frequency at which the the
+?? Planck spectrum has maximum intensity. The relation is lambda
+?? T = b where lambda is wavelength, T is temperature and b is
+?? the Wien displacement. This relation is used to determine the
+?? temperature of stars. Defined exactly as hc / ku in terms of
+?? the planck constant h, the speed of light c, the boltzmann
+?? constant k, and the value u for which
+?? 5*(1-exp(u)) + u*exp(u) = 0. Value is truncated.
+?? 2018 CODATA recommended values
+wiendisplacement        2.897771955e-3 m K
+
+
+K_J   2 electroncharge / planck_constant
 K_J90 483597.9 GHz/V    # Direct measurement of the volt is difficult.  Until
-K_J   483597.8525 GHz/V #   recently, laboratories kept Weston cadmium cells as
+                        #   recently, laboratories kept Weston cadmium cells as
                         #   a reference, but they could drift.  In 1987 the
                         #   CGPM officially recommended the use of the
                         #   Josephson effect as a laboratory representation of
@@ -1084,11 +1094,15 @@ K_J   483597.8525 GHz/V #   recently, laboratories kept Weston cadmium cells as
                         #   applied across the superconductors.  This frequency
                         #   can be very accurately measured.  The Josephson
                         #   constant K_J, which is equal to 2e/h, relates the
-                        #   measured frequency to the potential.  Two values
-                        #   given, the conventional (exact) value from 1990 and
-                        #   the current CODATA measured value.
+                        #   measured frequency to the potential.  In 2019 the
+                        #   values of the e and h were fixed, meaning that K_J
+                        #   now has an exact value as well. Two values given,
+                        #   the conventional (exact) value from 1990 and the
+                        #   current definition.
+
+R_K   planck_constant / electroncharge^2
 R_K90 25812.807 ohm     # Measurement of the ohm also presents difficulties.
-R_K   25812.8074555 ohm #   The old approach involved maintaining resistances
+                        #   The old approach involved maintaining resistances
                         #   that were subject to drift.  The new standard is
                         #   based on the Hall effect.  When a current carrying
                         #   ribbon is placed in a magnetic field, a potential
