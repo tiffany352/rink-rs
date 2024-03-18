@@ -5969,14 +5969,16 @@ soil {
 # defined as h / m c where m is the mass of the particle.
 
 electron {
-    mass                const electron_mass         5.48579909070e-4 u
+    ?? Uncertainty is 1.6 x 10^-14. 2018 CODATA recommended values
+    mass                const electron_mass         5.48579909065e-4 u
     ?? Defined as exactly 1.602 176 634 × 10^–19 C.
-    ?? 26th CGPM (2018, Resolution 1; CR, 210).
+    ?? 26th CGPM (2018, Resolution 1; CR, 210)
     charge              const electron_charge       1.602176634e-19 C
     radius              const electron_radius       ((1/4 pi epsilon0) \
                                                     charge^2 / mass c^2)
     wavelength          const electron_wavelength   planck_constant / mass c
-    magnetic_moment     const electron_moment       -928.4764620e-26 J/T
+    ?? Uncertainty is 2.8 x 10^-33. 2018 CODATA recommended values
+    magnetic_moment     const electron_moment       -9.2847647043e-24 J/T
 }
 
 electronmass            mass of electron
@@ -5984,18 +5986,23 @@ electroncharge          charge of electron
 m_e                     electronmass
 
 proton {
-    mass                const proton_mass           1.007276466879 u
+    ?? Uncertainty is 5.3 x 10^-11. 2018 CODATA recommended values
+    mass                const proton_mass           1.007276466621 u
     wavelength          const proton_wavelength     planck_constant / mass c
-    charge_radius       const proton_radius         0.8751e-15 m
-    magnetic_moment     const proton_moment         1.4106067873e-26 J/T
+    ?? Uncertainty is 1.9 x 10^-19. 2018 CODATA recommended values
+    charge_radius       const proton_radius         0.8414e-15 m
+    ?? Uncertainty is 6.0 x 10^-36. 2018 CODATA recommended values
+    magnetic_moment     const proton_moment         1.41060679736e-26 J/T
 }
 
 m_p                     mass of proton
 
 neutron {
-    mass                const neutron_mass          1.00866491588 u
+    ?? Uncertainty is 4.9 x 10^-10. 2018 CODATA recommended values
+    mass                const neutron_mass          1.00866491595 u
     wavelength          const neutron_wavelength    planck_constant / mass c
-    magnetic_moment     const neutron_moment        -0.96623650e-26 J/T
+    ?? Uncertainty is 2.3 x 10^-33. 2018 CODATA recommended values
+    magnetic_moment     const neutron_moment        -0.96623651e-26 J/T
 }
 
 m_n                     mass of neutron
