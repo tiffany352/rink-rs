@@ -119,6 +119,8 @@ fn test_substance() {
                     s("velocity", Quantity),
                     s(")", Plain),
                 ]),
+                s(". ", Plain),
+                s("Speed that light travels in a vacuum. Defined as exactly 299 792 458 m/s. 26th CGPM (2018, Resolution 1; CR, 210).", DocString),
             ]),
         ],
     );
@@ -139,7 +141,7 @@ fn test_duration() {
     );
 }
 
-const METER_DOC: &'static str = "Length of the path travelled by light in vacuum during a time interval of 1 / 299\u{2009}792\u{2009}458 of a second. 17th CGPM (1983, CR, 70).";
+const METER_DOC: &'static str = "The metre, symbol m, is the SI unit of length. It is defined by taking the fixed numerical value of the speed of light in vacuum c to be 299 792 458 when expressed in the unit m/s, where the second is defined in terms of Δν_Cs. 26th CGPM (2018, CR; 211)";
 
 #[test]
 fn test_definition() {

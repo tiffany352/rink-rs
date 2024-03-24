@@ -48,7 +48,7 @@ fn test_starts_with(input: &str, output: &str) {
 fn test_definition() {
     test(
         "watt",
-        "Definition: watt = J / s = 1 watt (power; kg m^2 / s^3)",
+        "Definition: watt = J / s = 1 watt (power; kg m^2 / s^3). SI derived unit for power or radiant flux.",
     );
 }
 
@@ -93,7 +93,7 @@ fn test_number_regress() {
 fn test_lookup() {
     test(
         "pcs",
-        "Definition: parsec = approx. 32.31314 petameter (length; m)",
+        "Definition: parsec = approx. 30.85677 petameter (length; m)",
     );
 }
 
@@ -594,8 +594,12 @@ fn test_conversion_to_list() {
 fn test_definition_with_doc() {
     test(
         "mass",
-        "Definition: kilogram = base unit of mass. Equal to the mass of the \
-         international prototype of the kilogram. 3rd CGPM (1901, CR, 70).",
+        "Definition: kilogram = base unit of mass. The kilogram, symbol kg, \
+            is the SI unit of mass. It is defined by taking the fixed \
+            numerical value of the Planck constant h to be 6.626 070 15 × \
+            10^–34 when expressed in the unit J s, which is equal to kg m^2 \
+            s^–1, where the metre and the second are defined in terms of c \
+            and Δν_Cs. 26th CGPM (2018, CR; 211)",
     );
 }
 

@@ -10,6 +10,7 @@
 #   such as support for non-UTF8 encodings.
 # - Adding a concept of "substances" unique to Rink.
 # - Adding some syntax such as doc comments.
+# - Adopted "New SI" (26th CGPM, 2018).
 #
 ############################################################################
 #
@@ -141,44 +142,62 @@
 # SI units
 #
 
-?? Equal to the mass of the international prototype of the
-?? kilogram. 3rd CGPM (1901, CR, 70).
+?? The kilogram, symbol kg, is the SI unit of mass. It is defined by
+?? taking the fixed numerical value of the Planck constant h to be
+?? 6.626 070 15 × 10^–34 when expressed in the unit J s, which is equal
+?? to kg m^2 s^–1, where the metre and the second are defined in terms
+?? of c and Δν_Cs. 26th CGPM (2018, CR; 211)
 kg        !kilogram
 
-?? Duration of 9192631770 periods of the radiation corresponding to
-?? the transition between the two hyperfine levels of the ground state
-?? of the cesium-133 atom at rest at a temperature of 0 K. 13th CGPM
-?? (1968/68, Resolution 1; CR; 103).
+?? The second, symbol s, is the SI unit of time. It is defined by
+?? taking the fixed numerical value of the caesium frequency Δν_Cs,
+?? the unperturbed ground-state hyperfine transition frequency of the
+?? caesium 133 atom, to be 9 192 631 770 when expressed in the unit Hz,
+?? which is equal to s^–1. 26th CGPM (2018, CR; 211)
 s         !second
 
-?? Length of the path travelled by light in vacuum during a time
-?? interval of 1 / 299 792 458 of a second. 17th CGPM (1983, CR, 70).
+?? The metre, symbol m, is the SI unit of length. It is defined by
+?? taking the fixed numerical value of the speed of light in vacuum c
+?? to be 299 792 458 when expressed in the unit m/s, where the second
+?? is defined in terms of Δν_Cs. 26th CGPM (2018, CR; 211)
 m         !meter
 
-?? The constant current which, if maintained in two straight parallel
-?? conductors of infinite length, of negligible circular
-?? cross-section, and placed 1 meter apart in vacuum, would produce
-?? between those conductors a force equal to 2e-7 newton per meter of
-?? length. 9th CGPM (1948).
+?? The ampere, symbol A, is the SI unit of electric current. It is
+?? defined by taking the fixed numerical value of the elementary charge
+?? e to be 1.602 176 634 × 10^–19 when expressed in the unit C, which
+?? is equal to A s, where the second is defined in terms of Δν_Cs.
+?? 26th CGPM (2018, CR; 211)
 A         !ampere
 amp       A
 
-?? The luminous intensity, in a given direction, of a source that
-?? emits monochromatic radiation of frequency 540e12 hertz and that
-?? has a radiant intensity in that direction of 1/683 watt per
-?? steradian. 16th CGPM (1979, Resolution 3; CR, 100).
+?? The candela, symbol cd, is the SI unit of luminous intensity in a
+?? given direction. It is defined by taking the fixed numerical value
+?? of the luminous efficacy of monochromatic radiation of frequency
+?? 540 × 10^12 Hz, Kcd, to be 683 when expressed in the unit lm W^–1,
+?? which is equal to cd sr W^–1, or cd sr kg^–1 m^–2 s^3, where the
+?? kilogram, metre and second are defined in terms of h, c and Δν_Cs.
+?? 26th CGPM (2018, CR; 211)
 cd        !candela
 
-?? The amount of substance a system which contains as many elementary
-?? entities as there are atoms in 0.012 kilogram of carbon 12 at rest
-?? and in their ground state. When the mole is used, the elementary
-?? entities must be specified and may be atoms, molecules, ions,
-?? electrons, other particles, or specified groups of such
-?? particles. 14th CGPM (1971, Resolution 3; CR, 78).
+?? The mole, symbol mol, is the SI unit of amount of substance. One
+?? mole contains exactly 6.022 140 76 × 10^23 elementary entities.
+?? This number is the fixed numerical value of the Avogadro constant,
+?? N_A, when expressed in the unit mol^–1 and is called the Avogadro
+?? number.
+??
+?? The amount of substance, symbol n, of a system is a measure of the
+?? number of specified elementary entities. An elementary entity may
+?? be an atom, a molecule, an ion, an electron, any other particle
+?? or specified group of particles.
+?? 26th CGPM (2018, CR; 211)
 mol       !mole
 
-?? The fraction 1 / 273.16 of the thermodynamic temperature of the
-?? triple point of water. 13th CGPM (1967/68, Resolution 4; CR, 104).
+?? The kelvin, symbol K, is the SI unit of thermodynamic temperature.
+?? It is defined by taking the fixed numerical value of the Boltzmann
+?? constant k to be 1.380 649 × 10^–23 when expressed in the unit
+?? J K^–1, which is equal to kg m^2 s^–2 K^–1, where the kilogram,
+?? metre and second are defined in terms of h, c and Δν_Cs.
+?? 26th CGPM (2018, CR; 211)
 K         !kelvin
 
 !endcategory
@@ -230,6 +249,20 @@ IU                              !
 
 !category prefixes                                         "Prefixes"
 
+#
+# SI prefixes. These are standardized through CGPM resolutions.
+# The set has been expanded over time.
+# - 1795: milli through kilo
+# - 1873: mega and micro
+# - 1960: giga, tera, nano, and pico
+# - 1964: femto, atto
+# - 1975: peta, exa
+# - 1991: zetta, yotta, zepto, and yocto
+# - 2022: ronna, quetta, ronto, quecto
+#
+
+quetta-                 1e30     # Latin decem, "ten"
+ronna-                  1e27     # Greek ennéa, "nine"
 yotta-                  1e24     # Greek or Latin octo, "eight"
 zetta-                  1e21     # Latin septem, "seven"
 exa-                    1e18     # Greek hex, "six"
@@ -252,29 +285,11 @@ femto-                  1e-15    # Danish-Norwegian femten, "fifteen"
 atto-                   1e-18    # Danish-Norwegian atten, "eighteen"
 zepto-                  1e-21    # Latin septem, "seven"
 yocto-                  1e-24    # Greek or Latin octo, "eight"
+ronto-                  1e-27    # Greek ennéa, "nine"
+quecto-                 1e-30    # Latin decem, "ten"
 
-quarter--               1|4
-semi--                  0.5
-demi--                  0.5
-hemi--                  0.5
-half-                   0.5
-double-                 2
-triple-                 3
-treble-                 3
-
-kibi-                   2^10     # In response to the convention of illegally
-mebi-                   2^20     # and confusingly using metric prefixes for
-gibi-                   2^30     # powers of two, the International
-tebi-                   2^40     # Electrotechnical Commission aproved these
-pebi-                   2^50     # binary prefixes for use in 1998.  If you
-exbi-                   2^60     # want to refer to "megabytes" using the
-Ki--                    kibi     # binary definition, use these prefixes.
-Mi--                    mebi
-Gi--                    gibi
-Ti--                    tebi
-Pi--                    pebi
-Ei--                    exbi
-
+Q--                     quetta
+R--                     ronna
 Y--                     yotta
 Z--                     zetta
 E--                     exa
@@ -295,6 +310,40 @@ f--                     femto
 a--                     atto
 z--                     zepto
 y--                     yocto
+r--                     ronto
+q--                     quecto
+
+#
+# Binary prefixes
+#
+
+kibi-                   2^10     # In response to the convention of illegally
+mebi-                   2^20     # and confusingly using metric prefixes for
+gibi-                   2^30     # powers of two, the International
+tebi-                   2^40     # Electrotechnical Commission aproved these
+pebi-                   2^50     # binary prefixes for use in 1998.  If you
+exbi-                   2^60     # want to refer to "megabytes" using the
+zebi-                   2^70     # binary definition, use these prefixes.
+yobi-                   2^80     #
+Ki--                    kibi     # In 1999, an ammendment was published
+Mi--                    mebi     # that added pebi- and exbi-. The third
+Gi--                    gibi     # edition of the standard in 2005 added
+Ti--                    tebi     # zebi- and yobi-.
+Pi--                    pebi
+Ei--                    exbi
+Zi--                    zebi
+Yi--                    yobi
+
+# Common fractions
+
+quarter--               1|4
+semi--                  0.5
+demi--                  0.5
+hemi--                  0.5
+half-                   0.5
+double-                 2
+triple-                 3
+treble-                 3
 
 !endcategory
 !category numbers                                           "Numbers"
@@ -479,100 +528,177 @@ shankh                  1e17
 !category si_derived                               "SI Derived Units"
 
 #
-# Named SI derived units (officially accepted)
+# Named SI derived units (officially accepted by the BIPM)
+# See also:
+#   <https://en.wikipedia.org/wiki/SI_derived_unit>
+#   SI Brochure
 #
 
-newton                  kg m / s^2   # force
-N                       newton
-pascal                  N/m^2        # pressure or stress
-Pa                      pascal
-joule                   N m          # energy
-J                       joule
-watt                    J/s          # power
-W                       watt
-coulomb                 A s          # charge
-C                       coulomb
-volt                    W/A          # potential difference
-V                       volt
-ohm                     V/A          # electrical resistance
-siemens                 A/V          # electrical conductance
-S                       siemens
-farad                   C/V          # capacitance
-F                       farad
-weber                   V s          # magnetic flux
-Wb                      weber
-henry                   Wb/A         # inductance
-H                       henry
-tesla                   Wb/m^2       # magnetic flux density
-T                       tesla
+#radian                 m/m          # plane angle (see base_units)
+#steradian              m^2/m^2      # solid angle
+?? SI derived unit for frequency.
 hertz                   /s           # frequency
+?? SI derived unit for force.
+newton                  kg m / s^2   # force
+?? SI derived unit for pressure or stress.
+pascal                  N/m^2        # pressure or stress
+?? SI derived unit for energy, work, or heat.
+joule                   N m          # energy
+?? SI derived unit for power or radiant flux.
+watt                    J/s          # power
+?? SI derived unit for charge.
+coulomb                 A s          # charge
+?? SI derived unit for electrical potential difference.
+volt                    W/A          # potential difference
+?? SI derived unit for electrical capacitance.
+farad                   C/V          # capacitance
+?? SI derived unit for electrical resistance.
+ohm                     V/A          # electrical resistance
+?? SI derived unit for electrical conductance.
+siemens                 A/V          # electrical conductance
+?? SI derived unit for magnetic flux.
+weber                   V s          # magnetic flux
+?? SI derived unit for magnetic induction or magnetic flux density.
+tesla                   Wb/m^2       # magnetic flux density
+?? SI derived unit for electrical inductance.
+henry                   Wb/A         # inductance
+#degC                   K            # temperature (hardcoded in Rink)
+?? SI derived unit for luminous flux.
+lumen                   cd sr        # luminous flux
+?? SI derived unit for illuminance.
+lux                     lm/m^2       # illuminance
+?? SI derived unit for radioactivity (particle decays per unit time).
+becquerel               /s           # radioactivity
+?? SI derived unit for absorbed dose of ionizing radiation.
+gray                    J/kg         # absorbed dose
+?? SI derived unit for equivalent dose of ionizing radiation.
+sievert                 J/kg         # equivalent dose
+?? SI derived unit for catalytic activity.
+katal                   mol/sec      # catalytic activity
+
+#rad                    radian
+#sr                     steradian
 Hz                      hertz
+N                       newton
+Pa                      pascal
+J                       joule
+W                       watt
+C                       coulomb
+V                       volt
+F                       farad
+Ω                       ohm
+S                       siemens
+Wb                      weber
+T                       tesla
+H                       henry
+#°C                     celsius
+lm                      lumen
+lx                      lux
+Bq                      becquerel
+Gy                      gray
+Sv                      sievert
+kat                     katal
+
+!endcategory
+!category si_quantities                               "SI quantities"
+#
+# Quantities that are listed in the SI Brochure, 9th edition.
+#
+
+# Base quantities
+time                    ? s
+length                  ? m
+mass                    ? kg
+current                 ? A               # electric current
+temperature             ? K               # thermodynamic temperature
+amount                  ? mol             # amount of substance
+luminous_intensity      ? cd
+
+# Expressed in terms of base quantities
+area                    ? length^2
+volume                  ? length^3
+velocity                ? length / time
+acceleration            ? velocity / time
+#wavenumber             ? length^-1       # not generic enough
+density                 ? mass / volume   # density, mass density
+area_density            ? mass / area     # area density
+specific_volume         ? volume / mass
+current_density         ? current / area
+magnetization           ? current / length    # magnetic field strength
+molar_concentration     ? amount / volume # amount of substance concentration
+#mass_concentration     ? mass / volume   # conflict with density
+luminance               ? luminous_intensity / area
+
+# Derived quantities
+angle                   ? radian          # plane angle
+solid_angle             ? sr
+frequency               ? time^-1
+force                   ? acceleration mass
+pressure                ? force / area
+#stress                 ? force / area    # conflicts with pressure
+energy                  ? force length    # energy, work, amount of heat
+power                   ? energy / time   # power, radiant flux
+charge                  ? A s             # electric charge
+electrical_potential    ? power / current # electric potential difference,
+                                          #   voltage, electric tension
+capacitance             ? charge / electrical_potential
+resistance              ? electrical_potential / current
+conductance             ? resistance^-1
+magnetic_flux           ? electrical_potential time
+magnetic_flux_density   ? magnetic_flux / area
+inductance              ? magnetic_flux / current
+#celsius_temperature                      # celsius isn't a base unit in Rink
+luminous_flux           ? luminous_intensity solid_angle
+illuminance             ? luminous_flux / area
+#radioactivity          ? time^-1         # conflicts with frequency
+#absorbed_dose          ? energy / mass   # conflicts with specific_energy
+#equivalent_dose        ? energy / mass   # conflicts with specific_energy
+catalytic_activity      ? amount / time
+
+# Expressed in terms of derived quantities
+viscosity               ? pressure time             # dynamic viscosity
+#force_moment           ? force length              # conflicts with energy
+surface_tension         ? energy / area
+angular_velocity        ? angle / time              # also angular frequency
+angular_acceleration    ? angle / time^2
+heat_flux_density       ? power / area              # also irradiance
+entropy                 ? energy / temperature      # heat capacity
+specific_heat_capacity  ? energy / mass temperature # also specific entropy
+specific_energy         ? energy / mass
+thermal_conductivity    ? power / area (temperature/length)
+#energy_density         ? energy / volume           # conflicts with pressure
+electric_field          ? force / charge            # electric field strength
+electric_charge_density ? charge / volume
+electric_displacement   ? charge / area             # also electric flux density
+permittivity            ? capacitance / length
+permeability            ? inductance / length
+chemical_potential      ? energy / amount           # molar energy
+molar_entropy           ? entropy / amount          # also molar heat capacity
+radiation_exposure      ? charge / mass             # exposure (x- and γ-rays)
+absorbed_dose_rate      ? specific_energy / time
+radiant_intensity       ? power / solid_angle
+radiance                ? power / solid_angle area
+reaction_rate           ? amount / volume time      # catalytic activity
+                                                    #   concentration
 
 !endcategory
 !category quantities                                     "Quantities"
-
 #
 # Quantities. These are shown within parentheses in every rink query.
 #
 
 dimensionless           ? 1
-length                  ? m
-area                    ? length^2
-volume                  ? length^3
-time                    ? s
-mass                    ? kg
-current                 ? A
-amount                  ? mol
-angle                   ? radian
-solid_angle             ? sr
-force                   ? acceleration mass
-pressure                ? force / area
-#stress                 ? force / area # conflicts with pressure
-energy                  ? force length
-power                   ? energy / time
-charge                  ? A s
-capacitance             ? charge / electrical_potential
-resistance              ? electrical_potential / current
-conductance             ? resistance^-1
-inductance              ? magnetic_flux / current
-frequency               ? time^-1
-velocity                ? length / time
-acceleration            ? velocity / time
 jerk                    ? acceleration / time
 snap                    ? jerk / time
 crackle                 ? snap / time
 pop                     ? crackle / time
-density                 ? mass / volume
 linear_density          ? mass / length
-viscosity               ? pressure time
 kinematic_viscosity     ? viscosity / density
-magnetic_flux           ? electrical_potential time
-magnetic_flux_density   ? magnetic_flux / area
-magnetization           ? current / length
-electrical_potential    ? power / current
-electric_field          ? force / charge
-entropy                 ? energy / temperature
 thermal_inductance      ? energy temperature^2 / power^2
-permittivity            ? capacitance / length
-permeability            ? inductance / length
 angular_momentum        ? mass area / time
-area_density            ? mass / area
-catalytic_activity      ? amount / time
-chemical_potential      ? energy / amount
-molar_concentration     ? amount / volume
-current_density         ? current / area
-electric_charge_density ? charge / volume
-electric_displacement   ? charge / area
 impulse                 ? mass length / time
-heat_flux_density       ? power / area
-molar_entropy           ? entropy / amount
 moment_of_inertia       ? mass area
-reaction_rate           ? amount / volume time
-specific_heat_capacity  ? energy / mass temperature
-specific_volume         ? volume / mass
-surface_tension         ? energy / area
 fuel_efficiency         ? area^-1
-specific_energy         ? energy / mass
 molar_mass              ? mass / amount
 flow_rate               ? volume / time
 pressure_column         ? pressure / length
@@ -676,8 +802,6 @@ pfu                    / cm^2 sr s # particle flux unit -- Used to measure
                                    #   angle per detector area per second. [18]
 pyron            cal_IT / cm^2 min # Measures heat flow from solar radiation,
                                    #   from Greek work "pyr" for fire.
-katal                   mol/sec    # Measure of the amount of a catalyst.  One
-kat                     katal      #   katal of catalyst enables the reaction
                                    #   to consume or produce on mol/sec.
 !endcategory
 !category time                                                 "Time"
@@ -827,7 +951,6 @@ fine                    1|1000    # Measure of gold purity
 # with "temp".
 #
 
-temperature             ? K
 temperature_difference  kelvin
 
 # In 1741 Anders Celsius introduced a temperature scale with water boiling at
@@ -888,22 +1011,36 @@ pi                      π
 tau                     τ
 c                       speed of light   # speed of light in vacuum (exact)
 #light                   c
-mu0                     4 pi 1e-7 H/m    # permeability of vacuum (exact)
-epsilon0                1/mu0 c^2        # permittivity of vacuum (exact)
+?? The vacuum magnetic permeability constant μ_0.
+?? Uncertainty is 1.5 x 10^-10.
+?? 2018 CODATA recommended values
+mu0                     1.25663706212e-6 N A^-2   # permeability of vacuum
+epsilon0                1/mu0 c^2        # permittivity of vacuum
 mass_energy             c^2              # convert mass to energy
-planck_constant         6.626070040e-34 J s
+?? The Planck constant h. Defined as exactly 6.626 070 15 × 10^–34 J s.
+?? 26th CGPM (2018, Resolution 1; CR, 210).
+planck_constant         6.62607015e-34 J s
 hbar                    planck_constant / 2 pi
 spin                    hbar
-G               6.67408e-11 N m^2 / kg^2 # Newtonian gravitational constant
-                                         #    This is the NIST 2006 value.
-                                         #    The relative uncertainty on this
-                                         #    is 1e-4.
+?? The Newtonian constant of gravitation, G.
+?? Uncertainty is 1.5e-15.
+?? 2018 CODATA recommended values
+G                       6.67430e-11 N m^2 / kg^2
 coulombconst            1/4 pi epsilon0  # listed as "k" sometimes
+
+?? Δν_Cs, the unperturbed ground-state hyperfine transition frequency
+?? of the caesium 133 atom. Value is exact by definition.
+?? 26th CGPM (2018, CR; 211)
+v_Cs                    9192631770 Hz
 
 # Physico-chemical constants
 
-atomicmassunit        1.660539040e-27 kg # atomic mass unit (defined to be
-u                       atomicmassunit   #   1|12 of the mass of carbon 12)
+?? The atomic mass unit, or dalton, is 1|12th the mass of of a
+?? carbon-12 atom in its ground state.
+?? Uncertainty is 3.0 x 10^-10 kg
+?? 2018 CODATA recommended values
+atomicmassunit          1.66053906660e-27 kg
+u                       atomicmassunit
 amu                     atomicmassunit
 amu_chem                1.66026e-27 kg   # 1|16 of the weighted average mass of
                                          #   the 3 naturally occuring neutral
@@ -911,11 +1048,16 @@ amu_chem                1.66026e-27 kg   # 1|16 of the weighted average mass of
 amu_phys                1.65981e-27 kg   # 1|16 of the mass of a neutral
                                          #   oxygen 16 atom
 dalton                  u                # Maybe this should be amu_chem?
-avogadro                grams/amu mol    # size of a mole
+?? Avogadro constant, representing the number of particles in 1 mole.
+?? Value is exact by definition.
+?? 26th CGPM (2018, Resolution 1; CR, 210).
+avogadro                6.02214076e23/mol
 N_A                     avogadro
 gasconstant             boltzmann N_A    # molar gas constant
 R                       gasconstant
-boltzmann             1.38064852e-23 J/K # Boltzmann constant
+?? Boltzmann constant. Value is exact by definition.
+?? 26th CGPM (2018, Resolution 1; CR, 210).
+boltzmann               1.380649e-23 J/K
 #k                       boltzmann
 kboltzmann              boltzmann
 molarvolume         mol R stdtemp / atm  # Volume occupied by one mole of an
@@ -926,17 +1068,22 @@ loschmidt     avogadro mol / molarvolume # Molecules per cubic meter of an
 stefanboltzmann pi^2 boltzmann^4 / 60 hbar^3 c^2 # The power per area radiated by a
 sigma                   stefanboltzmann  #   blackbody at temperature T is
                                          #   given by sigma T^4.
-wiendisplacement        2.8977729e-3 m K # Wien's Displacement Law gives the
-                                         #   frequency at which the the Planck
-                                         #   spectrum has maximum intensity.
-                                         #   The relation is lambda T = b where
-                                         #   lambda is wavelength, T is
-                                         #   temperature and b is the Wien
-                                         #   displacement.  This relation is
-                                         #   used to determine the temperature
-                                         #   of stars.
+
+?? Wien's Displacement Law gives the frequency at which the the
+?? Planck spectrum has maximum intensity. The relation is lambda
+?? T = b where lambda is wavelength, T is temperature and b is
+?? the Wien displacement. This relation is used to determine the
+?? temperature of stars. Defined exactly as hc / ku in terms of
+?? the planck constant h, the speed of light c, the boltzmann
+?? constant k, and the value u for which
+?? 5*(1-exp(u)) + u*exp(u) = 0. Value is truncated.
+?? 2018 CODATA recommended values
+wiendisplacement        2.897771955e-3 m K
+
+
+K_J   2 electroncharge / planck_constant
 K_J90 483597.9 GHz/V    # Direct measurement of the volt is difficult.  Until
-K_J   483597.8525 GHz/V #   recently, laboratories kept Weston cadmium cells as
+                        #   recently, laboratories kept Weston cadmium cells as
                         #   a reference, but they could drift.  In 1987 the
                         #   CGPM officially recommended the use of the
                         #   Josephson effect as a laboratory representation of
@@ -947,11 +1094,15 @@ K_J   483597.8525 GHz/V #   recently, laboratories kept Weston cadmium cells as
                         #   applied across the superconductors.  This frequency
                         #   can be very accurately measured.  The Josephson
                         #   constant K_J, which is equal to 2e/h, relates the
-                        #   measured frequency to the potential.  Two values
-                        #   given, the conventional (exact) value from 1990 and
-                        #   the current CODATA measured value.
+                        #   measured frequency to the potential.  In 2019 the
+                        #   values of the e and h were fixed, meaning that K_J
+                        #   now has an exact value as well. Two values given,
+                        #   the conventional (exact) value from 1990 and the
+                        #   current definition.
+
+R_K   planck_constant / electroncharge^2
 R_K90 25812.807 ohm     # Measurement of the ohm also presents difficulties.
-R_K   25812.8074555 ohm #   The old approach involved maintaining resistances
+                        #   The old approach involved maintaining resistances
                         #   that were subject to drift.  The new standard is
                         #   based on the Hall effect.  When a current carrying
                         #   ribbon is placed in a magnetic field, a potential
@@ -992,7 +1143,10 @@ R_H                     10967760 /m      #   can be expressed as
                                          #        m_e c alpha^2 / 2 h
                                          #   with a loss of 4 digits
                                          #   of precision.
-alpha                   7.2973525664e-3  # The fine structure constant was
+?? The fine structure constant α.
+?? Measured as 7.297 352 5693(11) x 10^-3.
+?? CODATA recommended values, 2018
+alpha                   7.2973525693e-3  # The fine structure constant was
                                          #   introduced to explain fine
                                          #   structure visible in spectral
                                          #   lines.  It can be computed from
@@ -1005,7 +1159,8 @@ prout                   185.5 keV        # nuclear binding energy equal to 1|12
                                          #   binding energy of the deuteron
 # Planck constants
 
-planckmass              2.17651e-8 kg     # sqrt(hbar c / G)
+?? Equivalent to sqrt(hbar c / G). 2018 CODATA recommended values
+planckmass              2.176434e-8 kg
 m_P                     planckmass
 plancktime              hbar / planckmass c^2
 t_P                     plancktime
@@ -1035,7 +1190,10 @@ lightyear               c julianyear # The 365.25 day year is specified in
 ly                      lightyear    # NIST publication 811
 lightsecond             c s
 lightminute             c min
-parsec                  32313140071200 km
+?? A parsec was the distance at which a star will have a parallax of 1
+?? arcsecond as seen from Earth. In 2015, IAU Resolution B2 redefined
+?? the parsec to be exactly 648 000|pi astronomical units.
+parsec                  648000|pi au
 pc                      parsec
 #parsec                  au / tan(arcsec)    # Unit of length equal to distance
 #pc                      parsec              #   from the sun to a point having
@@ -1228,10 +1386,8 @@ ozcu                    ouncecopper             #   in circuitboard fabrication
 # radiant_flux                      power 
 # spectral_flux_frequency           power / frequency
 spectral_flux_wavelength        ? power / length
-radiant_intensity               ? power / solid_angle
 spectral_intensity_frequency    ? power / solid_angle frequency
 spectral_intensity_wavelength   ? power / solid_angle length
-radiance                        ? power / solid_angle area
 spectral_radiance_frequency     ? power / solid_angle area frequency
 spectral_radiance_wavelength    ? power / solid_angle volume
 # spectral_irradiance_frequency     power / area frequency
@@ -1253,10 +1409,7 @@ spectral_exposure_frequency     ? energy / area frequency
 # Photometric units
 #
 
-luminous_intensity      ? cd
-luminous_flux           ? luminous_intensity solid_angle
 luminous_energy         ? luminous_flux time
-illuminance             ? luminous_flux / area
 
 candle                  1.02 candela  # Standard unit for luminous intensity
 hefnerunit              0.9 candle    #   in use before candela
@@ -1265,9 +1418,6 @@ violle                  20.17 cd      # luminous intensity of 1 cm^2 of
                                       #   platinum at its temperature of
                                       #   solidification (2045 K)
 
-lumen                   cd sr         # Luminous flux (luminous energy per
-lm                      lumen         #    time unit)
-
 talbot                  lumen s       # Luminous energy
 lumberg                 talbot        # References give these values for
 lumerg                  talbot        #    lumerg and lumberg both.  Note that
@@ -1275,9 +1425,7 @@ lumerg                  talbot        #    lumerg and lumberg both.  Note that
                                       #    lumerg should be 1e-7 talbots so
                                       #    that lumergs/erg = talbots/joule.
                                       #    lumerg = luminous erg
-lux                     lm/m^2        # Illuminance or exitance (luminous
-lx                      lux           #   flux incident on or coming from
-phot                    lumen / cm^2  #   a surface)
+phot                    lumen / cm^2  #
 ph                      phot          #
 footcandle              lumen/ft^2    # Illuminance from a 1 candela source
                                       #    at a distance of one foot
@@ -1291,8 +1439,6 @@ nox                     1e-3 lux      # These two units were proposed for
 skot                    1e-3 apostilb # measurements relating to dark adapted
                                       # eyes.
 # Luminance measures
-
-luminance               ? luminous_intensity / area
 
 nit                     cd/m^2        # Luminance: the intensity per projected
 stilb                   cd / cm^2     # area of an extended luminous source.
@@ -1730,7 +1876,9 @@ gaussianyear      (2 pi / gauss_k) days # Year that corresponds to the Gaussian
                                         # gravitational constant. This is a
                                         # fictional year, and doesn't
                                         # correspond to any celestial event.
-astronomicalunit         149597870700 m # IAU definition from 2012, exact
+?? Represents approximately the distance between the Earth and the Sun.
+?? Defined as exactly 149 597 870 700 m in 2012 by IAU Resolution B2.
+astronomicalunit         149597870700 m
 au                     astronomicalunit # ephemeris for the above described
                                         # astronomical unit.  (See the NASA
                                         # site listed above.)
@@ -3006,7 +3154,6 @@ chevalvapeur            metrichorsepower
 # cross sectional area, t is the time, and L is the length (thickness).
 # Thermal conductivity is a material property.
 
-thermal_conductivity    ? power / area (temperature/length)
 thermal_resistivity     ? 1/thermal_conductivity
 
 # Thermal conductance is the rate at which heat flows across a given
@@ -4568,16 +4715,12 @@ coul                    C
 # Radioactivity units
 #
 
-becquerel               /s           # Activity of radioactive source
-Bq                      becquerel    #
 curie                   3.7e10 Bq    # Defined in 1910 as the radioactivity
 Ci                      curie        # emitted by the amount of radon that is
                                      # in equilibrium with 1 gram of radium.
 rutherford              1e6 Bq       #
 
 radiation_dose          gray
-gray                    J/kg         # Absorbed dose of radiation
-Gy                      gray         #
 rad                     1e-2 Gy      # From Radiation Absorbed Dose
 rep                     8.38 mGy     # Roentgen Equivalent Physical, the amount
                                      #   of radiation which , absorbed in the
@@ -4585,8 +4728,6 @@ rep                     8.38 mGy     # Roentgen Equivalent Physical, the amount
                                      #   of energy as 1 roentgen of X rays
                                      #   would, or 97 ergs.
 
-sievert                 J/kg         # Dose equivalent:  dosage that has the
-Sv                      sievert      #   same effect on human tissues as 200
 rem                     1e-2 Sv      #   keV X-rays.  Different types of
                                      #   radiation are weighted by the
                                      #   Relative Biological Effectiveness
@@ -5598,7 +5739,6 @@ röntgen                 roentgen
 ℓ                       liter      # unofficial abbreviation used in some places
 
 Ω                       ohm       # Ohm symbol U+2126
-Ω                       ohm       # Greek capital omega U+03A9
 ℧                       mho
 ʒ                        dram     # U+0292
 ℈                       scruple
@@ -5835,12 +5975,16 @@ soil {
 # defined as h / m c where m is the mass of the particle.
 
 electron {
-    mass                const electron_mass         5.48579909070e-4 u
-    charge              const electron_charge       1.6021766208e-19 C
+    ?? Uncertainty is 1.6 x 10^-14 u. 2018 CODATA recommended values
+    mass                const electron_mass         5.48579909065e-4 u
+    ?? Defined as exactly 1.602 176 634 × 10^–19 C.
+    ?? 26th CGPM (2018, Resolution 1; CR, 210)
+    charge              const electron_charge       1.602176634e-19 C
     radius              const electron_radius       ((1/4 pi epsilon0) \
                                                     charge^2 / mass c^2)
     wavelength          const electron_wavelength   planck_constant / mass c
-    magnetic_moment     const electron_moment       -928.4764620e-26 J/T
+    ?? Uncertainty is 2.8 x 10^-33 J/T. 2018 CODATA recommended values
+    magnetic_moment     const electron_moment       -9.2847647043e-24 J/T
 }
 
 electronmass            mass of electron
@@ -5848,56 +5992,75 @@ electroncharge          charge of electron
 m_e                     electronmass
 
 proton {
-    mass                const proton_mass           1.007276466879 u
+    ?? Uncertainty is 5.3 x 10^-11 u. 2018 CODATA recommended values
+    mass                const proton_mass           1.007276466621 u
     wavelength          const proton_wavelength     planck_constant / mass c
-    charge_radius       const proton_radius         0.8751e-15 m
-    magnetic_moment     const proton_moment         1.4106067873e-26 J/T
+    ?? Uncertainty is 1.9 x 10^-19 m. 2018 CODATA recommended values
+    charge_radius       const proton_radius         0.8414e-15 m
+    ?? Uncertainty is 6.0 x 10^-36 J/T. 2018 CODATA recommended values
+    magnetic_moment     const proton_moment         1.41060679736e-26 J/T
 }
 
 m_p                     mass of proton
 
 neutron {
-    mass                const neutron_mass          1.00866491588 u
+    ?? Uncertainty is 4.9 x 10^-10 u. 2018 CODATA recommended values
+    mass                const neutron_mass          1.00866491595 u
     wavelength          const neutron_wavelength    planck_constant / mass c
-    magnetic_moment     const neutron_moment        -0.96623650e-26 J/T
+    ?? Uncertainty is 2.3 x 10^-33 J/T. 2018 CODATA recommended values
+    magnetic_moment     const neutron_moment        -0.96623651e-26 J/T
 }
 
 m_n                     mass of neutron
 
 deuteron {
+    ?? Uncertainty 4.0 x 10^-11 u. 2018 CODATA recommended values
     mass                const deuteron_mass         2.013553212745 u
-    charge_radius       const deuteron_radius       2.1413e-15 m
-    magnetic_moment     const deuteron_moment       0.4330735040e-26 J/T
+    ?? Uncertainty is 7.4 x 10^-19 m. 2018 CODATA recommended values
+    charge_radius       const deuteron_radius       2.12799e-15 m
+    ?? Uncertainty is 1.1 x 10^-35 J/T. 2018 CODATA recommended values
+    magnetic_moment     const deuteron_moment       4.330735094e-27 J/T
 }
 
 m_d                     mass of deuteron
 
 muon {
-    mass                const muon_mass             0.1134289257 u
-    magnetic_moment     const muon_moment           -4.49044826e-26 J/T
+    ?? Uncertainty is 2.5 x 10^-9 u. 2018 CODATA recommended values
+    mass                const muon_mass             0.1134289259 u
+    ?? Uncertainty is 1.0 x 10^-33 J/T. 2018 CODATA recommended values
+    magnetic_moment     const muon_moment           -4.49044830e-26 J/T
 }
 
 m_mu                    mass of muon
 
 helion {
-    mass                const helion_mass           3.01493224673 u
-    magnetic_moment     const helion_moment         -1.074617522e-26 J/T
+    ?? Uncertainty is 9.7 x 10^-11 u. 2018 CODATA recommended values
+    mass                const helion_mass           3.014932247175 u
+    ?? Uncertainty is 1.3 x 10^-34 J/T. 2018 CODATA recommended values
+    magnetic_moment     const helion_moment         -1.074617532e-26 J/T
 }
 
 tauparticle {
-    mass                const tau_mass              1.90749 u
+    ?? Uncertainty is 0.00013 u. 2018 CODATA recommended values
+    mass                const tau_mass              1.90754 u
 }
 
 alphaparticle {
+    ?? Uncertainty is 6.3 x 10^-11 u. 2018 CODATA recommended values
     mass                const alpha_mass            4.001506179127 u
 }
 
 triton {
-    mass                const triton_mass           3.01550071632 u
-    magnetic_moment     const triton_moment         1.504609503e-26 J/T
+    ?? Uncertainty is 1.2 x 10^-10. 2018 CODATA recommended values
+    mass                const triton_mass           3.01550071621 u
+    ?? Uncertainty is 3.0 x 10^-35 J/T. 2018 CODATA recommended values
+    magnetic_moment     const triton_moment         1.5046095202e-26 J/T
 }
 
 light {
+    ?? Speed that light travels in a vacuum.
+    ?? Defined as exactly 299 792 458 m/s.
+    ?? 26th CGPM (2018, Resolution 1; CR, 210).
     speed               const light_speed           2.99792458e8 m/s
 }
 
