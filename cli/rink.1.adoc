@@ -37,6 +37,25 @@ OPTIONS
 --version::
 	Prints the current version and then exits.
 
+EXIT STATUS
+------------
+
+Returns 0 unless an error prevented rink from starting up.
+
+ENVIRONMENT
+-----------
+
+NO_COLORS::
+	If set to a non-empty string, rink will disable colored text rendering.
+
+FILES
+-----
+Rink looks for a configuration file in `$XDG_CONFIG_DIR/rink/config.toml`, see
+rink(5).
+
+Rink relies on some data files, which are found using a search path. See
+rink-defs(5) and rink-dates(5).
+
 BUGS
 ----
 
@@ -44,5 +63,4 @@ BUGS
 
 SEE ALSO
 --------
-
-rink(5)
+rink(5), rink-defs(5), rink-dates(5)

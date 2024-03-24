@@ -157,4 +157,4 @@ macOS::
 
 SEE ALSO
 --------
-rink(1)
+rink(1), rink-defs(5), rink-dates(5)

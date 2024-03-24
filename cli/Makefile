@@ -26,6 +26,8 @@ bin:
 man:
 	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink.1.adoc
 	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink.5.adoc
+	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink-defs.5.adoc
+	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink-dates.5.adoc
 
 install: all
 	$(CARGO) install --no-track --root $(DESTDIR) --path $(srcdir) --no-default-features
