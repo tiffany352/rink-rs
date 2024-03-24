@@ -1159,7 +1159,8 @@ prout                   185.5 keV        # nuclear binding energy equal to 1|12
                                          #   binding energy of the deuteron
 # Planck constants
 
-planckmass              2.17651e-8 kg     # sqrt(hbar c / G)
+?? Equivalent to sqrt(hbar c / G). 2018 CODATA recommended values
+planckmass              2.176434e-8 kg
 m_P                     planckmass
 plancktime              hbar / planckmass c^2
 t_P                     plancktime
