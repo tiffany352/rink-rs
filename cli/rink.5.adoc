@@ -1,0 +1,160 @@
+rink(5)
+=======
+
+NAME
+----
+rink - TOML configuration file format.
+
+SYNTAX
+------
+Rink's configuration file uses the TOML format.
+
+Duration types accept common suffixes like `ms`, `s`, `h`, `d`, `y`.
+Size types accept suffixes like `MB`.
+
+Color strings are a set of keywords separated by spaces. The following
+keywords are understood:
+
+* `black`, `red`, `green`, `yellow`, `blue`, `purple`, `cyan`, `white`:
+    Sets the color to that ANSI color.
+* `dim`/`dimmed`: Uses a dimmed variant of the color instead of the
+    bright variant.
+* `bold`, `italic`, `underline`/`under`, `strikethrough`: Formatting.
+* `hidden`/`none`: Makes the text invisible.
+* `on`: The color keyword after this will apply to the background
+    instead of the foreground. Example: `black` on `red`.
+* `default`/`plain`: Results in unstyled text.
+* integers 0 to 255: Extended terminal color palette codes.
+* `#ffffff`: Hex codes can be used to specify truecolor.
+* `rgb(0,0,0)`: RGB values can be used to specify truecolor. No spaces
+    are allowed after the commas.
+
+RINK
+----
+The `[rink]` section.
+
+prompt = <string>::
+	The text that will be displayed before the cursor, to hint
+	interactivity. Should include the space character.
+
+	Default: "> "
+
+long_output = <bool>::
+	Breaks lists, such as search results, over multiple lines. Requires
+	a Unicode-capable terminal.
+
+	Default: false
+
+CURRENCY
+--------
+The `[currency]` section.
+
+enabled = <bool>::
+	Currency fetching can be disabled for those that don't want it.
+
+	Default: true
+
+endpoint = <url>::
+	Allows pointing to alternate Rink-Web instances, or to any other API
+	that offers a compatible format.
+
+	Default: "https://rinkcalc.app/data/currency.json"
+
+timeout = <duration>::
+	How long to wait for currency fetching before giving up.
+
+	Default: "2s"
+
+cache_duration = <duration>::
+	How long to wait before considering the cached currency data stale.
+
+	Default: "1h"
+
+COLORS
+------
+The `[colors]` section.
+
+enabled = <bool>::
+	Set to true to turn on colored output.
+
+	Default: true, or false if the NO_COLOR environment variable is set.
+
+theme = <string>::
+	Sets the active theme. See the THEMES section.
+
+	Default: "default"
+
+THEMES
+------
+The `[themes]` section. This section is a dictionary, each theme should be
+created as `[themes.my_theme]`. These options are specific to each.
+
+plain = <color>::
+	Generic text. This will be used often.
+
+	Default: "default"
+
+error = <color>::
+	Error messages.
+
+	Default: "red"
+
+unit = <color>::
+	The names of units, like `kilogram`.
+
+	Default: "cyan"
+
+quantity = <color>::
+	The names of physical quantities, like `length` and `time`. These
+	are shown in parentheses on every query.
+
+	Default: "dimmed cyan"
+
+number = <color>::
+	Numbers that appear in outputs.
+
+	Default: "default"
+
+user_input = <color>::
+	Used when rink is quoting user input back, such as in unit not found
+	errors.
+
+	Default: "bold"
+
+doc_string = <color>::
+	Used when rink is showing informational text that's part of the
+	definition of a unit, like `meter`.
+
+	Default: "italic"
+
+pow = <color>::
+	The `^2` in `m/s^2`.
+
+	Default: "default"
+
+prop_name = <color>::
+	Names of properties in substances, like the `speed` in `speed of
+	light`.
+
+	Default: "cyan"
+
+date_time = <color>::
+	Date time objects, that can be obtained with the hash notation or
+	`now`.
+
+	Default: "default"
+
+FILES
+-----
+Linux::
+	`$XDG_CONFIG_DIR/rink/config.toml`
+
+Windows::
+	`{FOLDERID_RoamingAppData}\rink\config.toml`
+
+macOS::
+	`$HOME/Library/Application Support/rink/config.toml`
+
+SEE ALSO
+--------
+rink(1)

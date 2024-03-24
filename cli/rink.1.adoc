@@ -1,0 +1,48 @@
+rink(1)
+=======
+
+NAME
+----
+rink - Unit calculator and dimensional analysis tool
+
+SYNPOSIS
+--------
+[verse]
+'rink'
+'rink' [EXPR]...
+'rink' -f <file>
+'rink' (-h | -V | --config-path)
+
+DESCRIPTION
+-----------
+Rink is a unit conversion and calculation tool which can be used for
+both small and simple arithmetic and more complex dimensionality
+analysis and other tasks.
+
+OPTIONS
+-------
+--config-path::
+	Prints a path to the config file, then exits.
+
+-f::
+--file <file>::
+	Reads expressions from a file, one per line, printing them to stdout
+	and then exitting.
+
+-h::
+--help::
+	Print help information and then exits.
+
+-V::
+--version::
+	Prints the current version and then exits.
+
+BUGS
+----
+
+<https://github.com/tiffany352/rink-rs/issues>
+
+SEE ALSO
+--------
+
+rink(5)
