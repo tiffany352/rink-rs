@@ -1189,7 +1189,10 @@ lightyear               c julianyear # The 365.25 day year is specified in
 ly                      lightyear    # NIST publication 811
 lightsecond             c s
 lightminute             c min
-parsec                  32313140071200 km
+?? A parsec was the distance at which a star will have a parallax of 1
+?? arcsecond as seen from Earth. In 2015, IAU Resolution B2 redefined
+?? the parsec to be exactly 648 000|pi astronomical units.
+parsec                  648000|pi au
 pc                      parsec
 #parsec                  au / tan(arcsec)    # Unit of length equal to distance
 #pc                      parsec              #   from the sun to a point having
@@ -1872,7 +1875,9 @@ gaussianyear      (2 pi / gauss_k) days # Year that corresponds to the Gaussian
                                         # gravitational constant. This is a
                                         # fictional year, and doesn't
                                         # correspond to any celestial event.
-astronomicalunit         149597870700 m # IAU definition from 2012, exact
+?? Represents approximately the distance between the Earth and the Sun.
+?? Defined as exactly 149 597 870 700 m in 2012 by IAU Resolution B2.
+astronomicalunit         149597870700 m
 au                     astronomicalunit # ephemeris for the above described
                                         # astronomical unit.  (See the NASA
                                         # site listed above.)
