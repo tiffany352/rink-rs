@@ -1023,7 +1023,7 @@ planck_constant         6.62607015e-34 J s
 hbar                    planck_constant / 2 pi
 spin                    hbar
 ?? The Newtonian constant of gravitation, G.
-?? Uncertainty is 0.000022
+?? Uncertainty is 1.5e-15.
 ?? 2018 CODATA recommended values
 G                       6.67430e-11 N m^2 / kg^2
 coulombconst            1/4 pi epsilon0  # listed as "k" sometimes
