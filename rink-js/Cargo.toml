@@ -17,7 +17,7 @@ default = ["console_error_panic_hook"]
 [dependencies.rink-core]
 path = "../core"
 version = "0.7"
-features = ["gpl"]
+features = ["bundle-files"]
 
 [dependencies]
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
