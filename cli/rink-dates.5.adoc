@@ -114,5 +114,4 @@ Rink searches the following locations:
 
 SEE ALSO
 --------
-rink(1), rink(5), rink-defs(5)
-
+rink(1), rink(5), rink(7), rink-defs(5)

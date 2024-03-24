@@ -26,6 +26,7 @@ bin:
 man:
 	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink.1.adoc
 	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink.5.adoc
+	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink.7.adoc
 	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink-defs.5.adoc
 	$(ASCIIDOCTOR) -b manpage $(srcdir)/rink-dates.5.adoc
 

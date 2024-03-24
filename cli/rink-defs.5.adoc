@@ -272,4 +272,4 @@ Notable differences include:
 
 SEE ALSO
 --------
-rink(1), rink(5), rink-dates(5)
+rink(1), rink(5), rink(7), rink-dates(5)
