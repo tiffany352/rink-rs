@@ -104,7 +104,7 @@ impl Context {
 
         let mut base_defs = {
             use rink_core::loader::gnu_units;
-            let defs = rink_core::CURRENCY_FILE;
+            let defs = rink_core::CURRENCY_FILE.unwrap();
             let mut iter = gnu_units::TokenIterator::new(defs).peekable();
             gnu_units::parse(&mut iter)
         };
