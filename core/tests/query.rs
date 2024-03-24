@@ -93,7 +93,7 @@ fn test_number_regress() {
 fn test_lookup() {
     test(
         "pcs",
-        "Definition: parsec = approx. 32.31314 petameter (length; m)",
+        "Definition: parsec = approx. 30.85677 petameter (length; m)",
     );
 }
 
