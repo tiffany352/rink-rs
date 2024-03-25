@@ -1,5 +1,8 @@
 rink(1)
 =======
+:doctype: manpage
+:manmanual: Rink Manual
+:mansource: Rink Manual
 
 NAME
 ----
