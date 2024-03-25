@@ -8,10 +8,10 @@ rink - Unit calculator and dimensional analysis tool
 SYNPOSIS
 --------
 [verse]
-'rink'
-'rink' [EXPR]...
-'rink' -f <file>
-'rink' (-h | -V | --config-path)
+**rink**
+**rink** [_EXPR_]...
+**rink -f** <__FILE__>
+**rink** (**-h** | **-V** | **--config-path**)
 
 DESCRIPTION
 -----------
@@ -21,20 +21,20 @@ analysis and other tasks.
 
 OPTIONS
 -------
---config-path::
+**--config-path**::
 	Prints a path to the config file, then exits.
 
--f::
---file <file>::
+**-f**::
+**--file** <__file__>::
 	Reads expressions from a file, one per line, printing them to stdout
 	and then exitting.
 
--h::
---help::
+**-h**::
+**--help**::
 	Print help information and then exits.
 
--V::
---version::
+**-V**::
+**--version**::
 	Prints the current version and then exits.
 
 EXIT STATUS
@@ -45,16 +45,17 @@ Returns 0 unless an error prevented rink from starting up.
 ENVIRONMENT
 -----------
 
-NO_COLORS::
-	If set to a non-empty string, rink will disable colored text rendering.
+**NO_COLORS**::
+	If set to a non-empty string, rink will disable colored text
+	rendering.
 
 FILES
 -----
-Rink looks for a configuration file in `$XDG_CONFIG_DIR/rink/config.toml`, see
-rink(5).
+Rink looks for a configuration file in
+`$XDG_CONFIG_DIR/rink/config.toml`, see rink(5).
 
-Rink relies on some data files, which are found using a search path. See
-rink-defs(5) and rink-dates(5).
+Rink relies on some data files, which are found using a search path.
+See rink-defs(5) and rink-dates(5).
 
 BUGS
 ----
