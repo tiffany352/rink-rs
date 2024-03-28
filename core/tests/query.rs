@@ -12,7 +12,7 @@ thread_local! {
         // Use a fixed time, this one is the timestamp of the first
         // commit to Rink (in -04:00 originally, but use local time here
         // for determinism.)
-        ctx.set_time(Local.from_local_datetime(&NaiveDate::from_ymd(2016, 8, 2).and_hms(15, 33, 19)).unwrap());
+        ctx.set_time(Local.from_local_datetime(&NaiveDate::from_ymd_opt(2016, 8, 2).unwrap().and_hms_opt(15, 33, 19).unwrap()).unwrap());
         ctx.use_humanize = true;
         ctx
     };
