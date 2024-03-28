@@ -10,6 +10,10 @@ keywords = ["unit", "math", "conversion", "cli", "tool"]
 categories = ["command-line-utilities", "mathematics", "science"]
 edition = "2018"
 
+[features]
+default = ["bundle-files"]
+bundle-files = ["rink-core/bundle-files"]
+
 [dependencies]
 clap = "3"
 dirs = "4"

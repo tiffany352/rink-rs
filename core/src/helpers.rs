@@ -9,13 +9,20 @@ use crate::{
     Context,
 };
 
-#[cfg(feature = "gpl")]
+#[cfg(feature = "bundle-files")]
 pub static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.units"));
-#[cfg(not(feature = "gpl"))]
+#[cfg(not(feature = "bundle-files"))]
 pub static DEFAULT_FILE: Option<&'static str> = None;
 
-pub static DATES_FILE: &str = include_str!("../datepatterns.txt");
-pub static CURRENCY_FILE: &str = include_str!("../currency.units");
+#[cfg(feature = "bundle-files")]
+pub static DATES_FILE: Option<&'static str> = Some(include_str!("../datepatterns.txt"));
+#[cfg(not(feature = "bundle-files"))]
+pub static DATES_FILE: Option<&'static str> = None;
+
+#[cfg(feature = "bundle-files")]
+pub static CURRENCY_FILE: Option<&'static str> = Some(include_str!("../currency.units"));
+#[cfg(not(feature = "bundle-files"))]
+pub static CURRENCY_FILE: Option<&'static str> = None;
 
 pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
     ctx.update_time();
@@ -41,18 +48,17 @@ pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
 }
 
 /// Tries to create a context that has core definitions only (contents
-/// of definitions.units), will fail if the GPL feature isn't enabled.
+/// of definitions.units), will fail if the bundle-files feature isn't enabled.
 /// Mainly intended for unit testing.
 pub fn simple_context() -> Result<Context, String> {
-    let units = match DEFAULT_FILE {
-        Some(units) => units,
-        None => return Err("GPL feature not enabled, cannot create simple context.".to_owned()),
-    };
+    let message = "bundle-files feature not enabled, cannot create simple context.";
 
+    let units = DEFAULT_FILE.ok_or(message.to_owned())?;
     let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
     let units = gnu_units::parse(&mut iter);
 
-    let dates = crate::parsing::datetime::parse_datefile(DATES_FILE);
+    let dates = DATES_FILE.ok_or(message.to_owned())?;
+    let dates = crate::parsing::datetime::parse_datefile(dates);
 
     let mut ctx = Context::new();
     ctx.load(units)?;
