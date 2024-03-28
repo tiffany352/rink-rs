@@ -306,12 +306,12 @@ fn attempt(
                     )
                 })
                 .map(GenericDateTime::Timezone),
-            (Ok(time), Err(_)) => Ok(now.with_timezone(&tz).date().and_time(time).unwrap())
-                .map(GenericDateTime::Timezone),
+            (Ok(time), Err(_)) => {
+                Ok(now.with_timezone(&tz).with_time(time).unwrap()).map(GenericDateTime::Timezone)
+            }
             (Err(_), Ok(date)) => tz
-                .from_local_date(&date)
+                .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
                 .earliest()
-                .map(|x| x.and_hms(0, 0, 0))
                 .ok_or_else(|| {
                     (
                         "Datetime does not represent a valid moment in time".to_string(),
@@ -324,7 +324,7 @@ fn attempt(
     } else {
         let offset = parsed
             .to_fixed_offset()
-            .unwrap_or_else(|_| FixedOffset::east(0));
+            .unwrap_or_else(|_| FixedOffset::east_opt(0).unwrap());
         match (time, date) {
             (Ok(time), Ok(date)) => offset
                 .from_local_datetime(&date.and_time(time))
@@ -337,12 +337,11 @@ fn attempt(
                 })
                 .map(GenericDateTime::Fixed),
             (Ok(time), Err(_)) => Ok(GenericDateTime::Fixed(
-                now.with_timezone(&offset).date().and_time(time).unwrap(),
+                now.with_timezone(&offset).with_time(time).unwrap(),
             )),
             (Err(_), Ok(date)) => offset
-                .from_local_date(&date)
+                .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
                 .earliest()
-                .map(|x| x.and_hms(0, 0, 0))
                 .ok_or_else(|| {
                     (
                         "Datetime does not represent a valid moment in time".to_string(),

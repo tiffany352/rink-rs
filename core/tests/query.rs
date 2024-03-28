@@ -206,6 +206,11 @@ fn test_offset_conversion() {
 }
 
 #[test]
+fn test_relative_date() {
+    test("#03:30 pm#", "2016-08-02 15:30:00 +00:00 (7 hours ago)");
+}
+
+#[test]
 fn test_time_hms() {
     test("ks", "16 minute, 40 second (time)");
     test("nanosecond", "1 nanosecond (time)");
