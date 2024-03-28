@@ -13,7 +13,7 @@ use crate::output::{
 };
 use crate::parsing::{datetime, formula};
 use crate::types::{BaseUnit, Dimensionality, GenericDateTime, Number, Numeric};
-use chrono::{DateTime, FixedOffset};
+use chrono::FixedOffset;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
@@ -24,7 +24,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
 
     match *expr {
         Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(GenericDateTime::Fixed(
-            DateTime::from_utc(ctx.now.naive_utc(), *ctx.now.offset()),
+            ctx.now.fixed_offset(),
         ))),
         Expr::Unit { ref name } => ctx
             .lookup(name)
@@ -931,7 +931,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            let top = top.with_timezone(&FixedOffset::east(off as i32));
+            let top = top.with_timezone(&FixedOffset::east_opt(off as i32).unwrap());
             Ok(QueryReply::Date(DateReply::new(ctx, top)))
         }
         Query::Convert(ref top, Conversion::Timezone(tz), None, Digits::Default) => {

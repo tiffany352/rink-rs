@@ -5,7 +5,7 @@
 use crate::output::{Digits, NumericParts};
 use crate::types::{BigInt, BigRat};
 use serde_derive::{Deserialize, Serialize};
-use std::cmp::{Ordering, PartialOrd};
+use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Number type.

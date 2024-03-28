@@ -46,7 +46,7 @@ impl Context {
         Context {
             registry: Registry::default(),
             temporaries: BTreeMap::new(),
-            now: Local.timestamp(0, 0),
+            now: Local.timestamp_opt(0, 0).unwrap(),
             use_humanize: true,
             save_previous_result: false,
             previous_result: None,

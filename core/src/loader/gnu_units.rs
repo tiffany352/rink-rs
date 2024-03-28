@@ -573,7 +573,6 @@ pub fn tokens(iter: &mut Iter<'_>) -> Vec<Token> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::Expr;
 
     fn do_parse(s: &str) -> Expr {
         let mut iter = TokenIterator::new(s).peekable();
