@@ -9,7 +9,6 @@ use crate::output::Digits;
 use chrono::{DateTime, TimeZone};
 use serde_derive::Serialize;
 use std::collections::BTreeMap;
-use std::convert::From;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::iter::once;
 use std::rc::Rc;

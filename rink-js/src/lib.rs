@@ -4,11 +4,9 @@
 
 use chrono::{Local, TimeZone};
 use js_sys::Date;
-use rink_core;
 use rink_core::ast;
 use rink_core::parsing::text_query;
 use serde_derive::*;
-use serde_json;
 use wasm_bindgen::prelude::*;
 
 // Use `wee_alloc` as the global allocator.
@@ -61,7 +59,7 @@ impl Query {
 
     #[wasm_bindgen(js_name = getExpr)]
     pub fn get_expr(&self) -> JsValue {
-        JsValue::from_serde(&self.query).unwrap()
+        serde_wasm_bindgen::to_value(&self.query).unwrap()
     }
 }
 
@@ -83,18 +81,8 @@ impl Context {
 
     #[wasm_bindgen(js_name = setTime)]
     pub fn set_time(&mut self, date: Date) {
-        let year = date.get_utc_full_year();
-        let month = date.get_utc_month() + 1;
-        let day = date.get_utc_date();
-        let hour = date.get_utc_hours();
-        let min = date.get_utc_minutes();
-        let sec = date.get_utc_seconds();
-        let millis = date.get_utc_milliseconds();
-        self.context.set_time(
-            Local
-                .ymd(year as i32, month, day)
-                .and_hms_milli(hour, min, sec, millis),
-        );
+        self.context
+            .set_time(Local.timestamp_millis_opt(date.value_of() as i64).unwrap());
     }
 
     #[wasm_bindgen(js_name = loadCurrency)]
@@ -122,7 +110,7 @@ impl Context {
     #[wasm_bindgen]
     pub fn eval(&mut self, expr: &Query) -> JsValue {
         let value = Success::from(self.context.eval_query(&expr.query));
-        match JsValue::from_serde(&value) {
+        match serde_wasm_bindgen::to_value(&value) {
             Ok(value) => value,
             Err(err) => format!("Failed to serialize: {}\n{:#?}", err, value).into(),
         }
