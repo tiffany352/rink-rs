@@ -8,8 +8,8 @@ Name
 ----
 rink - TOML configuration file format.
 
-Syntax
-------
+Description
+-----------
 Rink's configuration file uses the TOML format.
 
 Duration types accept common suffixes like `ms`, `s`, `h`, `d`, `y`.
@@ -33,7 +33,7 @@ keywords are understood:
     are allowed after the commas.
 
 Rink
-----
+~~~~
 The `[rink]` section.
 
 prompt = <string>::
@@ -49,7 +49,7 @@ long_output = <bool>::
 	Default: false
 
 Currency
---------
+~~~~~~~~
 The `[currency]` section.
 
 enabled = <bool>::
@@ -74,7 +74,7 @@ cache_duration = <duration>::
 	Default: "1h"
 
 Colors
-------
+~~~~~~
 The `[colors]` section.
 
 enabled = <bool>::
@@ -88,7 +88,7 @@ theme = <string>::
 	Default: "default"
 
 Themes
-------
+~~~~~~
 The `[themes]` section. This section is a dictionary, each theme should be
 created as `[themes.my_theme]`. These options are specific to each.
 
