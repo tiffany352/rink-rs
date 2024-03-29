@@ -4,11 +4,11 @@ rink(5)
 :manmanual: Rink Manual
 :mansource: Rink Manual
 
-NAME
+Name
 ----
 rink - TOML configuration file format.
 
-SYNTAX
+Syntax
 ------
 Rink's configuration file uses the TOML format.
 
@@ -32,7 +32,7 @@ keywords are understood:
 * `rgb(0,0,0)`: RGB values can be used to specify truecolor. No spaces
     are allowed after the commas.
 
-RINK
+Rink
 ----
 The `[rink]` section.
 
@@ -48,7 +48,7 @@ long_output = <bool>::
 
 	Default: false
 
-CURRENCY
+Currency
 --------
 The `[currency]` section.
 
@@ -73,7 +73,7 @@ cache_duration = <duration>::
 
 	Default: "1h"
 
-COLORS
+Colors
 ------
 The `[colors]` section.
 
@@ -87,7 +87,7 @@ theme = <string>::
 
 	Default: "default"
 
-THEMES
+Themes
 ------
 The `[themes]` section. This section is a dictionary, each theme should be
 created as `[themes.my_theme]`. These options are specific to each.
@@ -147,7 +147,7 @@ date_time = <color>::
 
 	Default: "default"
 
-FILES
+Files
 -----
 Linux::
 	`$XDG_CONFIG_DIR/rink/config.toml`
@@ -158,6 +158,6 @@ Windows::
 macOS::
 	`$HOME/Library/Application Support/rink/config.toml`
 
-SEE ALSO
+See also
 --------
 rink(1), rink(7), rink-defs(5), rink-dates(5)

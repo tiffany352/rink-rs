@@ -4,19 +4,19 @@ rink-dates(5)
 :manmanual: Rink Manual
 :mansource: Rink Manual
 
-NAME
+Name
 ----
 
 rink-dates - Rink file format for date patterns
 
-SYNPOSIS
+Synposis
 --------
 
 Rink allows specifying datetimes using `#date#` syntax in queries. This
 file defines the patterns that are used to try to match the specified
 date.
 
-DESCRIPTION
+Description
 -----------
 
 Blank lines are ignored. Lines starting with # are ignored.
@@ -106,7 +106,7 @@ weekday::
 `'<anything>'`::
 	Wrapping text in single quotes will match that text literally.
 
-FILES
+Files
 -----
 
 Rink searches the following locations:
@@ -115,6 +115,6 @@ Rink searches the following locations:
 * `$XDG_CONFIG_DIR/rink/datepatterns.txt`
 * `/usr/share/rink/datepatterns.txt`
 
-SEE ALSO
+See also
 --------
 rink(1), rink(5), rink(7), rink-defs(5)

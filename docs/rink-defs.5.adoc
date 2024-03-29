@@ -4,12 +4,12 @@ rink-defs(5)
 :manmanual: Rink Manual
 :mansource: Rink Manual
 
-NAME
+Name
 ----
 
 rink-defs - Rink's `definition.units` format
 
-DESCRIPTION
+Description
 -----------
 
 The units database is a textual document containing the definitions of
@@ -23,7 +23,7 @@ end.
  # This line is a comment
  # And so is this
 
-UNITS
+Units
 ~~~~~
 
 Units are defined with their name and their definition separated by
@@ -43,7 +43,7 @@ you query a definition.
 ?? multiple lines.
 foot                    12 inch
 
-SUBSTANCES
+Substances
 ~~~~~~~~~~
 
 Substances can represent either a specific object (such as the Earth, or
@@ -70,7 +70,7 @@ The two syntax variants for properties are:
  [name] const [output name] [expression]
  [name] [input name] [input expression] / [output name] [output expression]
 
-CATEGORIES
+Categories
 ~~~~~~~~~~
 
 Units inside the same category will be grouped together in the UI when
@@ -81,7 +81,7 @@ display name as a string literal.
 [listing]
 !category us_survey "US survey measures"
 
-BASE UNITS
+Base units
 ~~~~~~~~~~
 
 Base units are impossible to define in terms of another unit without
@@ -100,7 +100,7 @@ so. Examples include radians and bits.
 ?? kilogram. 3rd CGPM (1901, CR, 70).
 kg        !kilogram
 
-QUANTITIES
+Quantities
 ~~~~~~~~~~
 
 Quantities are shown in parentheses whenever rink displays a unit.
@@ -119,7 +119,7 @@ Unlike units, quantities have no numerical value (not even a value of
 length                  ? meter
 area                    ? length^2
 
-PREFIXES
+Prefixes
 ~~~~~~~~
 
 Prefixes allow input of units like `gigabytes`, `megameters`,
@@ -144,7 +144,7 @@ other prefixes, and not units.
 kilo-                   1e3
 k--                     kilo
 
-GUIDELINES
+Guidelines
 ----------
 
 These guidelines mainly apply when contributing to the upstream
@@ -245,7 +245,7 @@ significant figures as are currently known. For example, if a number is
 known to ±0.000003, then it should be listed to 6 digits after the
 decimal point.
 
-FILES
+Files
 -----
 
 Rink searches for the definitions file in these locations:
@@ -261,7 +261,7 @@ file in these locations:
 * `$XDG_CONFIG_DIR/rink/currency.units`
 * `/usr/share/rink/currency.units`
 
-HISTORY
+History
 -------
 
 Rink's units database was originally based on GNU Units and inherits
@@ -273,6 +273,6 @@ Notable differences include:
 - Addition of documentation comments starting with `??`.
 - Addition of substances.
 
-SEE ALSO
+See also
 --------
 rink(1), rink(5), rink(7), rink-dates(5)

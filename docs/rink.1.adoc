@@ -4,11 +4,11 @@ rink(1)
 :manmanual: Rink Manual
 :mansource: Rink Manual
 
-NAME
+Name
 ----
 rink - Unit calculator and dimensional analysis tool
 
-SYNPOSIS
+Synposis
 --------
 [verse]
 **rink**
@@ -16,13 +16,13 @@ SYNPOSIS
 **rink -f** <__FILE__>
 **rink** (**-h** | **-V** | **--config-path**)
 
-DESCRIPTION
+Description
 -----------
 Rink is a unit conversion and calculation tool which can be used for
 both small and simple arithmetic and more complex dimensionality
 analysis and other tasks.
 
-OPTIONS
+Options
 -------
 **--config-path**::
 	Prints a path to the config file, then exits.
@@ -40,19 +40,19 @@ OPTIONS
 **--version**::
 	Prints the current version and then exits.
 
-EXIT STATUS
+Exit status
 ------------
 
 Returns 0 unless an error prevented rink from starting up.
 
-ENVIRONMENT
+Environment
 -----------
 
 **NO_COLORS**::
 	If set to a non-empty string, rink will disable colored text
 	rendering.
 
-FILES
+Files
 -----
 Rink looks for a configuration file in
 `$XDG_CONFIG_DIR/rink/config.toml`, see rink(5).
@@ -60,11 +60,11 @@ Rink looks for a configuration file in
 Rink relies on some data files, which are found using a search path.
 See rink-defs(5) and rink-dates(5).
 
-BUGS
+Bugs
 ----
 
 <https://github.com/tiffany352/rink-rs/issues>
 
-SEE ALSO
+See also
 --------
 rink(5), rink(7), rink-defs(5), rink-dates(5)

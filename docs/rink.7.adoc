@@ -4,18 +4,18 @@ rink(7)
 :manmanual: Rink Manual
 :mansource: Rink Manual
 
-NAME
+Name
 ----
 rink - Query language documentation
 
-SYNPOSIS
+Synposis
 --------
 Rink's query language follows a somewhat natural language style for its
 syntax. Many expressions like *3.5 meters to feet* will work without any
 modification. This manual is meant for those who want to get a deeper
 understanding of the query language.
 
-DESCRIPTION
+Description
 -----------
 
 In order to understand Rink, an understanding of units themselves is
@@ -509,7 +509,7 @@ of the substance available.
 If the result of a calculation results in a substance, Rink will show
 all of the properties applicable for the given amount.
 
-REFERENCE
+Reference
 ---------
 
 The full list of units is specified in the file `definitions.units` (see
@@ -702,6 +702,6 @@ rationals.
 - `acosh(x)`: Inverse hyperbolic cosine function.
 - `atanh(x)`: Inverse hyperbolic tangent function.
 
-SEE ALSO
+See also
 --------
 rink(1), rink(5), rink-defs(5), rink-dates(5)
