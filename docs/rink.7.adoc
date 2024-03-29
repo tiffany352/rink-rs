@@ -1,6 +1,7 @@
 = rink(7)
 :manmanual: Rink Manual
 :mansource: Rink Manual
+:toc:
 
 Name
 ----
@@ -184,9 +185,8 @@ Temperature
 	285.15 K (temperature)
 
 Temperature scales are operators with higher precedence than addition,
-and lower than multiplication. See the section on
-[temperature conversions](#toplevel.conversions.temperature) for more
-detailed syntax.
+and lower than multiplication. See the <<temperature-conversions>>
+section for more detailed syntax.
 
 Inline Definitions
 ~~~~~~~~~~~~~~~~~~
@@ -267,6 +267,7 @@ A unit list is a comma- or semicolon- delimited list of units with the
 same dimensionality, which can be used for breaking down numbers into
 more familiar quantities.
 
+[#temperature-conversions]
 Temperature conversion
 ^^^^^^^^^^^^^^^^^^^^^^
 
