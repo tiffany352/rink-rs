@@ -1,6 +1,5 @@
 rink-dates(5)
 =============
-:doctype: manpage
 :manmanual: Rink Manual
 :mansource: Rink Manual
 

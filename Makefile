@@ -5,6 +5,7 @@ FETCHFLAGS   := --locked
 CARGOFLAGS   := --release --locked --offline --no-default-features
 ASCIIDOCTOR  := asciidoctor
 MANFLAGS     := -b manpage -D build
+HTMLFLAGS    := -D build
 INSTALL      := install
 
 prefix       := /usr/local
@@ -38,6 +39,13 @@ man:
 	$(ASCIIDOCTOR) $(MANFLAGS) $(srcdir)/docs/rink.7.adoc
 	$(ASCIIDOCTOR) $(MANFLAGS) $(srcdir)/docs/rink-defs.5.adoc
 	$(ASCIIDOCTOR) $(MANFLAGS) $(srcdir)/docs/rink-dates.5.adoc
+
+htmldoc:
+	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink.1.adoc
+	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink.5.adoc
+	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink.7.adoc
+	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink-defs.5.adoc
+	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink-dates.5.adoc
 
 install: all
 	$(INSTALL) -Dm 0755 target/release/rink $(bindir)

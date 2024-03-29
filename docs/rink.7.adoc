@@ -1,6 +1,5 @@
 rink(7)
 =======
-:doctype: manpage
 :manmanual: Rink Manual
 :mansource: Rink Manual
 
@@ -22,26 +21,26 @@ In order to understand Rink, an understanding of units themselves is
 required. Fundamentally, a *unit* is a way of assigning a concrete
 value to a specific *quantity* such as length, volume, energy, power,
 current, etc. Each *quantity* can be reduced into other quantities
-(for example, area is length x length), except for 7 *base units*.
+(for example, area is length × length), except for 7 *base units*.
 
-The 7 *base units* (as well as their SI *units*):
+The 7 *base units* (as well as the physical quantities they represent):
 
-* length (meters)
-* time (seconds)
-* mass (kilograms)
-* current (amperes)
-* temperature (kelvin)
-* amount of substance (mol)
-* human-subjective luminous intensity (candela)
+* meter (length)
+* second (time)
+* kilogram (mass)
+* ampere (current)
+* kelvin (temperature)
+* mol (amount of substance)
+* candela (human-subjective luminous intensity)
 
 In addition, Rink defines a few non-SI base units:
 
-* money (euro)
-* information (bit)
-* angle (radian)
-* solid angle (steradian)
-* musical note length (wholenote)
-* biological activity (IU)
+* euro (money)
+* bit (information)
+* radian (angle)
+* steradian (solid angle)
+* wholenote (musical note length)
+* IU (biological activity)
 
 Each of these quantities is treated as irreducible. The 7 base units
 are the foundations of SI, and customary systems as well. (Customary
@@ -51,7 +50,7 @@ Every *unit* is composed of two parts: A numerical value, and its
 *dimensionality*. The dimensionality is how a unit relates itself to
 the *base units*. Each base unit is raised to a certain power to
 construct the dimensionality. For example, the dimensionality of the
-quantity of acceleration is length^1^ * time^-2^ and then the rest of
+quantity of acceleration is `length^1` × `time^-2` and then the rest of
 the base units are to the 0th power, which is to say that they do not
 matter. Two units are considered *conformable* if they have matching
 dimensionalities, and they can then be used in conversions.
@@ -61,8 +60,8 @@ math on them*.
 
 - Adding two units produces a new unit with matching dimensionality.
 - Multiplying two units produces a new unit with its dimensionality as
-  each base unit multiplied together, e.g. velocity (length time^-1^) *
-  hertz (time^-1^) = acceleration (length time^-2^).
+  each base unit multiplied together, e.g. velocity (`length time^-1`) *
+  hertz (`time^-1`) = acceleration (`length time^-2`).
 - Dividing two units is like multiplication, but taking away from the
   base units. A unit divided by itself is *dimensionless*, it has no
   quantity. Normal numbers are dimensionless.
@@ -287,43 +286,23 @@ multiplication, but tighter than addition.
 
 Available temperature scales:
 
-`degC`::
-`°C`::
-`celsius`::
-`℃`::
+`degC`, `°C`, `celsius`, `℃`::
 	**Celsius**, the standard scale in most countries.
 
-`degF`::
-`°F`::
-`fahrenheit`::
-`℉`::
+`degF`, `°F`, `fahrenheit`, `℉`::
 	**Fahrenheit**, the scale used in households across the United States.
 
-`degRé`::
-`°Ré`::
-`degRe`::
-`°Re`::
-`réaumur`::
-`reaumur`::
-	**Réaumur**: A historical scale once used throughout Europe.
+`degRé`, `°Ré`, `degRe`, `°Re`, `réaumur`, `reaumur`::
+	**Réaumur**, A historical scale once used throughout Europe.
 
-`degRø`::
-`°Rø`::
-`degRo`::
-`°Ro`::
-`rømer`::
-`romer`::
-	**Romer**: Another historical scale.
+`degRø`, `°Rø`, `degRo`, `°Ro`, `rømer`, `romer`::
+	**Romer**, Another historical scale.
 
-`degN`::
-`°N`::
-`degnewton`::
-	**Newton**: A historical scale created by Isaac Newton.
+`degN`, `°N`, `degnewton`::
+	**Newton**, A historical scale created by Isaac Newton.
 
-`degDe`::
-`°De`::
-`delisle`::
-	**Delisle**: A historical scale which, alongside the original
+`degDe`, `°De`, `delisle`::
+	**Delisle**, A historical scale which, alongside the original
 	Celsius scale, is reversed from the scales we are used to today. Its
 	zero point is boiling water, and the freezing point of water is
 	150°De.
@@ -355,19 +334,13 @@ followed by the rest of your conversion. Allowed bases are currently 2
 through 36. There are some special base names which are also
 recognized:
 
-`hex`::
-`hexadecimal`::
-`base16`::
+`hex`, `hexadecimal`, `base16`::
 	Base 16.
 
-`oct`::
-`octal`::
-`base8`::
+`oct`, `octal`, `base8`::
 	Base 8.
 
-`bin`::
-`binary`::
-`base2`::
+`bin`, `binary`, `base2`::
 	Base 2.
 
 Digits modifier
@@ -407,7 +380,7 @@ Units for
 	poncelet, sccm, sccs, scfh, scfm, slph, slpm, solarluminosity,
 	tonrefrigeration, waterhorsepower, watt
 
-The `units for`, `units of`, and `units` commands will find more units
+The *units for*, *units of*, and *units* commands will find more units
 which match the dimensionality of the one specified.
 
 Factorization
@@ -493,13 +466,13 @@ and has a name itself. Countable objects often have properties with an
 input being dimensionless, so that you do not need to specify an
 amount to extract the property.
 
-The properties of a substance are accessed with the `of` operator
-(*property* **of** *substance*), which reads a multiplication expression
-following it, so you may have to wrap it in parentheses.
+The properties of a substance are accessed with the *of* operator
+(<_property_> *of* <_substance_>), which reads a multiplication
+expression following it, so you may have to wrap it in parentheses.
 
 Substances can be used in conversions, and can be added and multiplied
 to transform them. Multiplication will change the amount of the
-substance you have, so that you can write `kg egg` to specify one
+substance you have, so that you can write *kg egg* to specify one
 kilogram of eggs. Addition will combine certain properties (currently
 only `molar_mass`) to create a new substance entirely. Conversions of
 substances allow you to get multiple results simultaneously, for
@@ -541,84 +514,88 @@ SI derived
 Substances
 ~~~~~~~~~~
 
-- Water `water`
-- Mercury (Hg) `mercury`
-- Compounds and materials
-  - Ammonia `ammonia`
-  - Freon `freon`
-  - Tissue `tissue`
-  - Diamond `diamond`
-  - Graphite `graphite`
-  - Water ice `ice`
-  - Asphalt `asphalt`
-  - Brick `brick`
-  - Concrete `cocnrete`
-  - Silica glass `glass_silica`
-  - Flint glass `glass_flint`
-  - Pyrex glass `glass_pyrex`
-  - Gypsum `gypsum`
-  - Marble `marble`
-  - Sand `sand`
-  - Soil `soil`
-  - Air `air`
-- Particles
-  - Electron `electron`
-  - Proton `proton`
-  - Neutron `neutron`
-  - Deuterium nucleus `deuteron`
-  - Muon `muon`
-  - Helium nucleus `helion`
-  - Tau `tauparticle`
-  - Alpha `alphaparticle`
-  - Tritium nucleus `triton`
-- Celestial bodies
-  - Sun `sun`
-  - Mercury `mercury_planet`
-  - Venus `venus`
-  - Earth `earth`
-  - Earth's moon `moon`
-  - Mars `mars`
-  - Jupiter `jupiter`
-  - Saturn `saturn`
-  - Uranus `uranus`
-  - Neptune `neptune`
-  - Pluto `pluto`
-- Fuels
-  - Crude oil `oil`
-  - Coal `coal`
-  - Natural gas `naturalgas`
-  - Charcoal `charcoal`
-  - Wood `wood`
-  - Ethanol `ethanol`
-  - Diesel `diesel`
-  - Gasoline `gasoline`
-  - Heating oil `heating_oil`
-  - Fuel oil `fueloil`
-  - Propane `propane`
-  - Butane `butane`
-- Foods
-  - Butter `butter`
-  - Clarified butter `butter_clarified`
-  - Cocoa butter `cocoa_butter`
-  - Vegetable shortening `shortening`
-  - Vegetable oil `vegetable_oil`
-  - Olive oil `olive_oil`
-  - Flour `cakeflour`, `flour`, `breadflour`
-  - Corn starch `cornstarch`
-  - Cocoa `dutchcocoa`, `cocoa`
-  - Heavy cream `heavycream`
-  - Milk `milk`
-  - Sour cream `sourcream`
-  - Molasses `molasses`
-  - Corn syrup `corrnsyrup`
-  - Honey `honey`
-  - Sugar `sugar`
-  - Powdered sugar `powdered_sugar`
-  - Brown sugar `brownsugar_light`, `brownsugar_dark`
-  - Baking powder `baking_powder`
-  - Salt `salt`, `koshersalt`
-  - Egg `egg`
-- Elements 1 through 118, by name (e.g. `helium`)
+Compounds and materials::
+	- Water `water`
+	- Ammonia `ammonia`
+	- Freon `freon`
+	- Tissue `tissue`
+	- Diamond `diamond`
+	- Graphite `graphite`
+	- Water ice `ice`
+	- Asphalt `asphalt`
+	- Brick `brick`
+	- Concrete `cocnrete`
+	- Silica glass `glass_silica`
+	- Flint glass `glass_flint`
+	- Pyrex glass `glass_pyrex`
+	- Gypsum `gypsum`
+	- Marble `marble`
+	- Sand `sand`
+	- Soil `soil`
+	- Air `air`
+
+Particles::
+	- Electron `electron`
+	- Proton `proton`
+	- Neutron `neutron`
+	- Deuterium nucleus `deuteron`
+	- Muon `muon`
+	- Helium nucleus `helion`
+	- Tau `tauparticle`
+	- Alpha `alphaparticle`
+	- Tritium nucleus `triton`
+
+Celestial bodies::
+	- Sun `sun`
+	- Mercury `mercury_planet`
+	- Venus `venus`
+	- Earth `earth`
+	- Earth's moon `moon`
+	- Mars `mars`
+	- Jupiter `jupiter`
+	- Saturn `saturn`
+	- Uranus `uranus`
+	- Neptune `neptune`
+	- Pluto `pluto`
+
+Fuels::
+	- Crude oil `oil`
+	- Coal `coal`
+	- Natural gas `naturalgas`
+	- Charcoal `charcoal`
+	- Wood `wood`
+	- Ethanol `ethanol`
+	- Diesel `diesel`
+	- Gasoline `gasoline`
+	- Heating oil `heating_oil`
+	- Fuel oil `fueloil`
+	- Propane `propane`
+	- Butane `butane`
+
+Foods::
+	- Butter `butter`
+	- Clarified butter `butter_clarified`
+	- Cocoa butter `cocoa_butter`
+	- Vegetable shortening `shortening`
+	- Vegetable oil `vegetable_oil`
+	- Olive oil `olive_oil`
+	- Flour `cakeflour`, `flour`, `breadflour`
+	- Corn starch `cornstarch`
+	- Cocoa `dutchcocoa`, `cocoa`
+	- Heavy cream `heavycream`
+	- Milk `milk`
+	- Sour cream `sourcream`
+	- Molasses `molasses`
+	- Corn syrup `corrnsyrup`
+	- Honey `honey`
+	- Sugar `sugar`
+	- Powdered sugar `powdered_sugar`
+	- Brown sugar `brownsugar_light`, `brownsugar_dark`
+	- Baking powder `baking_powder`
+	- Salt `salt`, `koshersalt`
+	- Egg `egg`
+
+Elements 1 through 118, by name (e.g. `helium`)
 
 Constants
 ~~~~~~~~~
