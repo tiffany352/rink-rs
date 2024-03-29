@@ -10,7 +10,7 @@ rink-dates - Rink file format for date patterns
 Synposis
 --------
 
-Rink allows specifying datetimes using `#date#` syntax in queries. This
+Rink allows specifying datetimes using **\#date#** syntax in queries. This
 file defines the patterns that are used to try to match the specified
 date.
 
@@ -24,84 +24,84 @@ match. part of the sequence can be wrapped with [] to make it optional.
 
 The valid keywords are:
 
-fullyear::
+**fullyear**::
 	The full 4 digit year, like 2024. Must be exactly 4 digits.
 
-shortyear::
+**shortyear**::
 	Shortened 2-digit year, like 24. Must be exactly 2 digits.
 
-century::
+**century**::
 	The year with the last 2 digits cut off, like 20. Not the same as
 	the actual century number (which would be 21). Must be exactly 2 digits.
 
-monthnum::
+**monthnum**::
 	The current month number, like 03. Must be exactly 2 digits.
 
-day::
+**day**::
 	The current day of the month, like 3. Can be any number of digits.
 
-fullday::
+**fullday**::
 	The current day of the month, like 03. Must be exactly 2 digits.
 
-min::
+**min**::
 	The current minute of the hour, like 05. Must be exactly 2 digits.
 
-ordinal::
+**ordinal**::
 	The current day of the year, like 083. Must be exactly 3 digits.
 
-isoyear::
+**isoyear**::
 	The ISO year, like -0001. Must be exactly 4 digits. ISO year unifies
 	CE and BCE such that 1BC is year 0, and 2BCE is year -1.
 
-unix::
+**unix**::
 	Unix timestamp, i.e. the number of 1/86400ths of a day elapsed since
 	January 1st, 1970. Can be any number of digits.
 
-year::
+**year**::
 	The current year, like 2024. Can be any number of digits.
 
-adbc::
+**adbc**::
 	Looks for `ad`, `ce`, `bc`, or `bce` (case insensitive). This allows
 	specifying dates prior to year 1 CE.
 
-hour12::
+**hour12**::
 	The current hour on a 12-hour clock. Must be exactly 2 digits.
 
-hour24::
+**hour24**::
 	The current hour on a 24-hour clock. Must be exactly 2 digits.
 
-meridiem::
+**meridiem**::
 	Looks for `am` or `pm` (case insensitive). This allows specifying
 	12-hour time.
 
-sec::
+**sec**::
 	The current second of the current minute. Must be exactly 2 digits.
 	Can optionally have a decimal point to specify time smaller than a
 	second.
 
-offset::
+**offset**::
 	Matches a timezone offset. This can either be the name of a timezone
 	like `US/Pacific` or a fixed offset. The fixed offset can either be
 	in the form +07:00 or +0700.
 
-monthname::
+**monthname**::
 	Matches English month names, case insensitive. Recognizes 3-letter
 	names (like jan, feb, mar) and full names.
 
-weekday::
+**weekday**::
 	Makes English weekday names, case insensitive. Recognizes 3-letter
 	names (like mon, tue, wed) and full names.
 
-`-`::
+**`-`**::
 	Matches a literal `-` character.
 
-`:`::
+**`:`**::
 	Matches a literal `:` character.
 
 ` `::
 	A single space will match any amount of whitespace.
 
-`'<anything>'`::
+**`'`** <__anything__> **`'`**::
 	Wrapping text in single quotes will match that text literally.
 
 Files
@@ -110,7 +110,7 @@ Files
 Rink searches the following locations:
 
 * `./rink/datepatterns.txt`
-* `$XDG_CONFIG_DIR/rink/datepatterns.txt`
+* `__$XDG_CONFIG_DIR__/rink/datepatterns.txt`
 * `/usr/share/rink/datepatterns.txt`
 
 See also
