@@ -1,5 +1,4 @@
-rink(1)
-=======
+= rink(1)
 :manmanual: Rink Manual
 :mansource: Rink Manual
 
@@ -66,4 +65,6 @@ Bugs
 
 See also
 --------
-rink(5), rink(7), rink-defs(5), rink-dates(5)
+xref:rink.5.adoc[rink(5)], xref:rink.7.adoc[rink(7)],
+xref:rink-defs.5.adoc[rink-defs(5)],
+xref:rink-dates.5.adoc[rink-dates(5)]

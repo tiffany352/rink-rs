@@ -1,5 +1,4 @@
-rink-defs(5)
-============
+= rink-defs(5)
 :manmanual: Rink Manual
 :mansource: Rink Manual
 
@@ -267,6 +266,7 @@ Rink's units database was originally based on GNU Units and inherits
 much of its syntax from there.
 
 Notable differences include:
+
 - Removal of `!locale`, `!set`, `!utf8`, and other pragmas not used by Rink.
 - Addition of `!category` and `!endcategory`.
 - Addition of documentation comments starting with `??`.
@@ -274,4 +274,5 @@ Notable differences include:
 
 See also
 --------
-rink(1), rink(5), rink(7), rink-dates(5)
+xref:rink.1.adoc[rink(1)], xref:rink.5.adoc[rink(5)],
+xref:rink.7.adoc[rink(7)], xref:rink-dates.5.adoc[rink-dates(5)]
