@@ -5,7 +5,7 @@ FETCHFLAGS   := --locked
 CARGOFLAGS   := --release --locked --offline --no-default-features
 ASCIIDOCTOR  := asciidoctor
 MANFLAGS     := -b manpage -D build
-HTMLFLAGS    := -D build
+HTMLFLAGS    := -D build -a toc=left -a toclevels=3 -a sectlinks
 INSTALL      := install
 
 prefix       := /usr/local

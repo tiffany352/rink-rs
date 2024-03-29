@@ -1,7 +1,6 @@
 = rink(7)
 :manmanual: Rink Manual
 :mansource: Rink Manual
-:toc:
 
 Name
 ----
@@ -650,7 +649,7 @@ rink(5).)
 - South Africa rand `ZAR`
 
 Functions
-^^^^^^^^^
+~~~~~~~~~
 
 Currently, all of these result in machine float fallback, because
 their results are real numbers that cannot be precisely represented as
