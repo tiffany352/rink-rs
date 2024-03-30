@@ -29,7 +29,7 @@ Describes (hopefully) everything you need to know to use Rink's
 expression language.
 
 * [CLI man page](./docs/rink.1.adoc)
-* [CLI config.toml](./docs/rink.5.adoc)the trick is that 
+* [CLI config.toml](./docs/rink.5.adoc)
 
 ## [Web Interface: rinkcalc.app](https://rinkcalc.app)
 
