@@ -834,7 +834,7 @@ pub fn parse_query(iter: &mut Iter<'_>) -> Query {
                         Conversion::Expr(parse_eq(&mut old))
                     }
                 }
-                Token::Ident(ref s) if Tz::from_str(s).is_ok() => Conversion::Timezone(
+                Token::Ident(ref s) if is_valid_timezone(s) => Conversion::Timezone(
                     Tz::from_str(s).expect("Running from_str a second time failed"),
                 ),
                 _ => Conversion::Expr(parse_eq(iter)),
@@ -843,6 +843,11 @@ pub fn parse_query(iter: &mut Iter<'_>) -> Query {
         }
         _ => Query::Expr(left),
     }
+}
+
+fn is_valid_timezone(s: &String) -> bool {
+    use std::str::FromStr;
+    s != "GB" && Tz::from_str(s).is_ok()
 }
 
 #[cfg(test)]

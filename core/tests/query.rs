@@ -550,6 +550,14 @@ fn test_to_timezone() {
 }
 
 #[test]
+fn test_gb_is_gigabytes() {
+    test(
+        "56kbps * 1 year -> GB",
+        "approx. 220.8984 gigabyte (information)",
+    )
+}
+
+#[test]
 fn test_missing_base() {
     test("3 -> base", "Expected decimal base, got eof");
 }
