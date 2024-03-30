@@ -566,6 +566,11 @@ fn test_time_range_checking() {
     );
     test("#0000-00-00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected monthnum in range 1..=12, got 00");
     test("#0000-01-00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected fullday in range 1..=31, got 00");
+    test("#00:00:00#", "2016-08-02 00:00:00 +00:00 (a day ago)");
+    test(
+        "#00:00:61#",
+        "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got :61",
+    );
 }
 
 #[test]

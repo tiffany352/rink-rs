@@ -177,8 +177,12 @@ where
             "sec" => match tok {
                 Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
                     let value = u32::from_str_radix(&**s, 10).unwrap();
-                    out.second = Some(value);
-                    Ok(())
+                    if value <= 60 {
+                        out.second = Some(value);
+                        Ok(())
+                    } else {
+                        Err(format!("Expected 2-digit sec in range 0..=60, got {}", s))
+                    }
                 }
                 Some(DateToken::Number(ref s, Some(ref f))) if s.len() == 2 => {
                     let secs = u32::from_str_radix(&**s, 10).unwrap();
