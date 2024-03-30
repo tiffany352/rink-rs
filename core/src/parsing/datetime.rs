@@ -11,6 +11,33 @@ use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::FromStr;
 
+fn numeric_match(
+    tok: Option<&DateToken>,
+    name: &str,
+    digits: usize,
+    range: std::ops::RangeInclusive<i32>,
+) -> Result<i32, String> {
+    let tok = tok.ok_or_else(|| format!("Expected {}-digit {}, got eof", digits, name))?;
+
+    match tok {
+        DateToken::Number(ref s, None) if digits == 0 || s.len() == digits => {
+            let value = i32::from_str_radix(&**s, 10).unwrap();
+            if range.contains(&value) {
+                Ok(value)
+            } else {
+                Err(format!("Expected {} in range {:?}, got {}", name, range, s))
+            }
+        }
+        DateToken::Number(ref s, None) => Err(format!(
+            "Expected {}-digit {}, got {} digits",
+            digits,
+            name,
+            s.len()
+        )),
+        x => Err(format!("Expected {}-digit {}, got {}", digits, name, x)),
+    }
+}
+
 pub fn parse_date<I>(
     out: &mut Parsed,
     out_tz: &mut Option<Tz>,
@@ -32,37 +59,6 @@ where
             Some(ref x) => format!("`{}`", x.borrow()),
             None => "eof".to_owned(),
         }
-    }
-
-    macro_rules! numeric_match {
-        ($name:expr, $digits:expr, $field:ident, $range:expr) => {
-            match tok {
-                Some(DateToken::Number(ref s, None)) if $digits == 0 || s.len() == $digits => {
-                    let value = i32::from_str_radix(&**s, 10).unwrap();
-                    if $range.contains(&value) {
-                        out.$field = Some(value as _);
-                        Ok(())
-                    } else {
-                        Err(format!(
-                            "Expected {} in range {:?}, got {}",
-                            $name, $range, s
-                        ))
-                    }
-                }
-                Some(DateToken::Number(ref s, None)) => Err(format!(
-                    "Expected {}-digit {}, got {} digits",
-                    $digits,
-                    $name,
-                    s.len()
-                )),
-                x => Err(format!(
-                    "Expected {}-digit {}, got {}",
-                    $digits,
-                    $name,
-                    ts(x)
-                )),
-            }
-        };
     }
 
     let mut advance = true;
@@ -90,17 +86,50 @@ where
             x => Err(format!("Expected `{}`, got {}", l, ts(x))),
         },
         Some(&DatePattern::Match(ref what)) => match &**what {
-            "fullyear" => numeric_match!("fullyear", 4, year, ..9999),
-            "shortyear" => numeric_match!("shortyear", 2, year_mod_100, ..99),
-            "century" => numeric_match!("century", 2, year_div_100, ..99),
-            "monthnum" => numeric_match!("monthnum", 2, month, 1..=12),
-            "day" => numeric_match!("day", 0, day, 1..=31),
-            "fullday" => numeric_match!("fullday", 2, day, 1..=31),
-            "min" => numeric_match!("min", 2, minute, 0..60),
-            "ordinal" => numeric_match!("ordinal", 3, ordinal, 1..=366),
-            "isoyear" => numeric_match!("isoyear", 4, isoyear, ..9999),
-            "isoweek" => numeric_match!("isoweek", 2, isoweek, 1..=53),
-            "unix" => numeric_match!("unix", 0, timestamp, ..i32::MAX),
+            "fullyear" => numeric_match(tok.as_ref(), "fullyear", 4, 0..=9999).and_then(|v| {
+                out.year = Some(v);
+                Ok(())
+            }),
+            "shortyear" => numeric_match(tok.as_ref(), "shortyear", 2, 0..=99).and_then(|v| {
+                out.year_mod_100 = Some(v);
+                Ok(())
+            }),
+            "century" => numeric_match(tok.as_ref(), "century", 2, 0..=99).and_then(|v| {
+                out.year_div_100 = Some(v);
+                Ok(())
+            }),
+            "monthnum" => numeric_match(tok.as_ref(), "monthnum", 2, 1..=12).and_then(|v| {
+                out.month = Some(v as u32);
+                Ok(())
+            }),
+            "day" => numeric_match(tok.as_ref(), "day", 0, 1..=31).and_then(|v| {
+                out.day = Some(v as u32);
+                Ok(())
+            }),
+            "fullday" => numeric_match(tok.as_ref(), "fullday", 2, 1..=31).and_then(|v| {
+                out.day = Some(v as u32);
+                Ok(())
+            }),
+            "min" => numeric_match(tok.as_ref(), "min", 2, 0..=60).and_then(|v| {
+                out.minute = Some(v as u32);
+                Ok(())
+            }),
+            "ordinal" => numeric_match(tok.as_ref(), "ordinal", 3, 1..=366).and_then(|v| {
+                out.ordinal = Some(v as u32);
+                Ok(())
+            }),
+            "isoyear" => numeric_match(tok.as_ref(), "isoyear", 4, 0..=9999).and_then(|v| {
+                out.isoyear = Some(v);
+                Ok(())
+            }),
+            "isoweek" => numeric_match(tok.as_ref(), "isoweek", 2, 1..=53).and_then(|v| {
+                out.isoweek = Some(v as u32);
+                Ok(())
+            }),
+            "unix" => numeric_match(tok.as_ref(), "unix", 0, 0..=i32::MAX).and_then(|v| {
+                out.timestamp = Some(v as i64);
+                Ok(())
+            }),
             "year" => {
                 advance = false;
                 let x = take!(DateToken::Dash | DateToken::Plus | DateToken::Number(_, None));
