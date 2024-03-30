@@ -7,7 +7,7 @@ use num::cast::ToPrimitive;
 use num::traits::{Num, One, Zero};
 use std::cmp::Ord;
 use std::fmt;
-use std::ops::{BitAnd, BitOr, BitXor, Div, Mul, Rem};
+use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Rem, Sub};
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct BigInt {
@@ -93,6 +93,26 @@ impl From<i64> for BigInt {
 impl From<i32> for BigInt {
     fn from(value: i32) -> BigInt {
         (value as i64).into()
+    }
+}
+
+impl<'a> Add for &'a BigInt {
+    type Output = BigInt;
+
+    fn add(self, rhs: &'a BigInt) -> BigInt {
+        BigInt {
+            inner: &self.inner + &rhs.inner,
+        }
+    }
+}
+
+impl<'a> Sub for &'a BigInt {
+    type Output = BigInt;
+
+    fn sub(self, rhs: &'a BigInt) -> BigInt {
+        BigInt {
+            inner: &self.inner - &rhs.inner,
+        }
     }
 }
 

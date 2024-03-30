@@ -126,6 +126,29 @@ impl BigRat {
                 buf.push('.');
                 placed_decimal = true;
             }
+
+            // Indicate recurring decimal sequences up to 10 digits
+            // long. The rule here checks if the current remainder
+            // (`cursor`) divides cleanly into b^N-1 where b is the base
+            // and N is the number of digits to check, then the result
+            // of that division is the digits that recur. So for example
+            // in 1/7, after the decimal point the remainder will be
+            // 1/7, and 7 divides cleanly into 999999 to produce 142857,
+            // the digits which recur. For remainders with a numerator
+            // other than 1, we ignore the remainder when doing this
+            // check, and then multiply the digits by it afterwards.
+            if placed_decimal {
+                for i in 1..10 {
+                    let test = &(BigInt::from(base as i64)).pow(i) - &one;
+                    if &test % &cursor.denom() == BigInt::zero() {
+                        // Recurring digits
+                        let digits = &(&test / &cursor.denom()) * &cursor.numer();
+                        buf.push_str(&format!("[{:0width$}]...", digits, width = i as usize));
+                        return (true, buf);
+                    }
+                }
+            }
+
             let digit = &(&(&cursor.numer() * &ten) / &cursor.denom()) % &ten;
             let v: Option<i64> = digit.as_int();
             let v = v.unwrap();

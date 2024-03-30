@@ -270,19 +270,19 @@ mod tests {
     fn test_recurring_fraction() {
         assert_eq!(
             Numeric::from_frac(1, 3).to_string(10, Digits::Default),
-            (false, "0.3333333".to_owned())
+            (true, "0.[3]...".to_owned())
         );
         assert_eq!(
             Numeric::from_frac(2, 3).to_string(10, Digits::Default),
-            (false, "0.6666666".to_owned())
+            (true, "0.[6]...".to_owned())
         );
         assert_eq!(
             Numeric::from_frac(1, 7).to_string(10, Digits::Default),
-            (false, "0.1428571".to_owned())
+            (true, "0.[142857]...".to_owned())
         );
         assert_eq!(
             Numeric::from_frac(1000, 3).to_string(10, Digits::Default),
-            (false, "333.3333".to_owned())
+            (true, "333.[3]...".to_owned())
         );
     }
 
@@ -306,7 +306,7 @@ mod tests {
         );
         assert_eq!(
             Numeric::from_frac(-1000, 3).to_string(10, Digits::Default),
-            (false, "-333.3333".to_owned())
+            (true, "-333.[3]...".to_owned())
         );
         assert_eq!(
             Numeric::from_frac(-1_000_000_000_000_000i64, 1).to_string(10, Digits::Default),
@@ -334,11 +334,11 @@ mod tests {
         );
         assert_eq!(
             Numeric::from_frac(1, 3).to_string(2, Digits::Default),
-            (false, "0.01010101".to_owned())
+            (true, "0.[01]...".to_owned())
         );
         assert_eq!(
             Numeric::from_frac(-1000, 3).to_string(2, Digits::Default),
-            (false, "-101001101.01".to_owned())
+            (true, "-101001101.[01]...".to_owned())
         );
         assert_eq!(
             Numeric::from_frac(-1_000_000_000_000_000i64, 1).to_string(2, Digits::Default),
