@@ -38,8 +38,12 @@ impl Expr {
         Expr::Call { func, args }
     }
 
-    pub fn new_mul(exprs: Vec<Expr>) -> Expr {
-        Expr::Mul { exprs }
+    pub fn new_mul(mut exprs: Vec<Expr>) -> Expr {
+        if exprs.len() == 1 {
+            exprs.pop().unwrap()
+        } else {
+            Expr::Mul { exprs }
+        }
     }
 
     pub fn new_bin(op: BinOpType, numer: Expr, denom: Expr) -> Expr {
@@ -111,6 +115,12 @@ impl Precedence {
             BinOpType::Sub => Precedence::Add,
             BinOpType::Pow => Precedence::Pow,
             BinOpType::Frac => Precedence::Div,
+            BinOpType::ShiftL => Precedence::Div,
+            BinOpType::ShiftR => Precedence::Div,
+            BinOpType::Mod => Precedence::Div,
+            BinOpType::And => Precedence::Div,
+            BinOpType::Or => Precedence::Div,
+            BinOpType::Xor => Precedence::Div,
             BinOpType::Equals => Precedence::Equals,
         }
     }
@@ -121,6 +131,12 @@ impl Precedence {
             BinOpType::Sub => Precedence::Div,
             BinOpType::Pow => Precedence::Term,
             BinOpType::Frac => Precedence::Mul,
+            BinOpType::ShiftL => Precedence::Mul,
+            BinOpType::ShiftR => Precedence::Mul,
+            BinOpType::Mod => Precedence::Mul,
+            BinOpType::And => Precedence::Mul,
+            BinOpType::Or => Precedence::Mul,
+            BinOpType::Xor => Precedence::Mul,
             BinOpType::Equals => Precedence::Add,
         }
     }

@@ -6,7 +6,7 @@ use crate::output::{Digits, NumericParts};
 use crate::types::{BigInt, BigRat};
 use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 /// Number type.
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -79,6 +79,19 @@ impl Numeric {
                 let rational = BigRat::from(x);
                 (rational.numer(), rational.denom())
             }
+        }
+    }
+
+    pub fn as_bigint(&self) -> Option<BigInt> {
+        match *self {
+            Numeric::Rational(ref rational) => {
+                if rational.denom() == BigInt::one() {
+                    Some(rational.numer())
+                } else {
+                    None
+                }
+            }
+            Numeric::Float(_) => None,
         }
     }
 
@@ -283,6 +296,7 @@ num_binop!(Add, add);
 num_binop!(Sub, sub);
 num_binop!(Mul, mul);
 num_binop!(Div, div);
+num_binop!(Rem, rem);
 
 impl<'a> Neg for &'a Numeric {
     type Output = Numeric;

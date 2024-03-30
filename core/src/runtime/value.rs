@@ -194,3 +194,59 @@ impl<'a, 'b> Div<&'b Value> for &'a Value {
         }
     }
 }
+
+impl Value {
+    pub fn shl(&self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) => {
+                left.shl(right).map(Value::Number)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
+        }
+    }
+
+    pub fn shr(&self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) => {
+                left.shr(right).map(Value::Number)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
+        }
+    }
+
+    pub fn rem(&self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) => {
+                left.rem(right).map(Value::Number)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
+        }
+    }
+
+    pub fn and(&self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) => {
+                left.and(right).map(Value::Number)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
+        }
+    }
+
+    pub fn or(&self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) => {
+                left.or(right).map(Value::Number)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
+        }
+    }
+
+    pub fn xor(&self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (&Value::Number(ref left), &Value::Number(ref right)) => {
+                left.xor(right).map(Value::Number)
+            }
+            (_, _) => Err("Operation is not defined".to_string()),
+        }
+    }
+}

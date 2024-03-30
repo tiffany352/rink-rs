@@ -8,7 +8,7 @@ use num::traits::{sign::Signed, One, Zero};
 use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ord;
 use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 use super::BigInt;
 
@@ -133,6 +133,16 @@ impl<'a> Div for &'a BigRat {
     fn div(self, rhs: &'a BigRat) -> BigRat {
         BigRat {
             inner: &self.inner / &rhs.inner,
+        }
+    }
+}
+
+impl<'a> Rem for &'a BigRat {
+    type Output = BigRat;
+
+    fn rem(self, rhs: &'a BigRat) -> BigRat {
+        BigRat {
+            inner: &self.inner % &rhs.inner,
         }
     }
 }

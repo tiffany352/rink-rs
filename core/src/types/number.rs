@@ -161,6 +161,107 @@ impl Number {
         }
     }
 
+    pub fn shl(&self, exp: &Number) -> Result<Number, String> {
+        if !exp.dimless() {
+            return Err("Right-hand to << must be dimensionless".to_string());
+        }
+        if exp.value.abs() >= Numeric::from(1 << 31) {
+            return Err("Right-hand to << is too large".to_string());
+        }
+        let (num, den) = exp.value.to_rational();
+        if den != BigInt::one() {
+            return Err("Right-hand to << must be an integer".to_string());
+        }
+        let exp = num.as_int().unwrap();
+        let two = BigInt::from(2i64);
+        let exp = two.pow(exp as u32);
+        Ok(Number {
+            value: &self.value * &Numeric::from(exp),
+            unit: self.unit.clone(),
+        })
+    }
+
+    pub fn shr(&self, exp: &Number) -> Result<Number, String> {
+        if !exp.dimless() {
+            return Err("Right-hand to >> must be dimensionless".to_string());
+        }
+        if exp.value.abs() >= Numeric::from(1 << 31) {
+            return Err("Right-hand to >> is too large".to_string());
+        }
+        let (num, den) = exp.value.to_rational();
+        if den != BigInt::one() {
+            return Err("Right-hand to >> must be an integer".to_string());
+        }
+        let exp = num.as_int().unwrap();
+        let two = BigInt::from(2i64);
+        let exp = two.pow(exp as u32);
+        Ok(Number {
+            value: &self.value / &Numeric::from(exp),
+            unit: self.unit.clone(),
+        })
+    }
+
+    pub fn rem(&self, rhs: &Number) -> Result<Number, String> {
+        if self.unit != rhs.unit {
+            return Err("Arguments to `mod` must have matching dimensionality".to_string());
+        }
+        Ok(Number {
+            value: &self.value % &rhs.value,
+            unit: self.unit.clone(),
+        })
+    }
+
+    pub fn and(&self, rhs: &Number) -> Result<Number, String> {
+        if !self.dimless() || !rhs.dimless() {
+            return Err("Arguments to `and` must be dimensionless".to_string());
+        }
+        let left = self.value.as_bigint();
+        let right = rhs.value.as_bigint();
+
+        if let (Some(left), Some(right)) = (left, right) {
+            Ok(Number {
+                value: Numeric::from(&left & &right),
+                unit: self.unit.clone(),
+            })
+        } else {
+            return Err("Arguments to `and` must be integers".to_string());
+        }
+    }
+
+    pub fn or(&self, rhs: &Number) -> Result<Number, String> {
+        if !self.dimless() || !rhs.dimless() {
+            return Err("Arguments to `or` must be dimensionless".to_string());
+        }
+        let left = self.value.as_bigint();
+        let right = rhs.value.as_bigint();
+
+        if let (Some(left), Some(right)) = (left, right) {
+            Ok(Number {
+                value: Numeric::from(&left | &right),
+                unit: self.unit.clone(),
+            })
+        } else {
+            return Err("Arguments to `or` must be integers".to_string());
+        }
+    }
+
+    pub fn xor(&self, rhs: &Number) -> Result<Number, String> {
+        if !self.dimless() || !rhs.dimless() {
+            return Err("Arguments to `xor` must be dimensionless".to_string());
+        }
+        let left = self.value.as_bigint();
+        let right = rhs.value.as_bigint();
+
+        if let (Some(left), Some(right)) = (left, right) {
+            Ok(Number {
+                value: Numeric::from(&left ^ &right),
+                unit: self.unit.clone(),
+            })
+        } else {
+            return Err("Arguments to `xor` must be integers".to_string());
+        }
+    }
+
     pub fn numeric_value(&self, base: u8, digits: Digits) -> (Option<String>, Option<String>) {
         self.value.string_repr(base, digits)
     }

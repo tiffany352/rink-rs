@@ -91,6 +91,12 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                 BinOpType::Frac => left.div(&right),
                 BinOpType::Pow => left.pow(&right),
                 BinOpType::Equals => panic!("Should be unreachable"),
+                BinOpType::ShiftL => left.shl(&right),
+                BinOpType::ShiftR => left.shr(&right),
+                BinOpType::Mod => left.rem(&right),
+                BinOpType::And => left.and(&right),
+                BinOpType::Or => left.or(&right),
+                BinOpType::Xor => left.xor(&right),
             };
             result.map_err(|e| {
                 QueryError::generic(format!(
@@ -485,6 +491,31 @@ pub fn eval_unit_name(
                         .collect::<BTreeMap<_, _>>(),
                     left_value.pow(right as i32),
                 ))
+            }
+            BinOpType::ShiftL => todo!(),
+            BinOpType::ShiftR => todo!(),
+            BinOpType::Mod => {
+                let (left_unit, left) = eval_unit_name(ctx, &binop.left)?;
+                let (right_unit, _right) = eval_unit_name(ctx, &binop.right)?;
+
+                if left_unit != right_unit {
+                    return Err(QueryError::generic(
+                        "Modulo of values with differing dimensions is not meaningful".to_string(),
+                    ));
+                }
+                Ok((left_unit, left))
+            }
+            BinOpType::And | BinOpType::Or | BinOpType::Xor => {
+                let (left_unit, left) = eval_unit_name(ctx, &binop.left)?;
+                let (right_unit, _right) = eval_unit_name(ctx, &binop.right)?;
+
+                if !left_unit.is_empty() || !right_unit.is_empty() {
+                    return Err(QueryError::generic(format!(
+                        "Arguments to {:?} must be dimensionless",
+                        binop.op
+                    )));
+                }
+                Ok((left_unit, left))
             }
         },
         Expr::Mul { ref exprs } => {
