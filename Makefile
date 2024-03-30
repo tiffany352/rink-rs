@@ -48,7 +48,7 @@ htmldoc:
 	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink-dates.5.adoc
 
 install: all
-	$(INSTALL) -Dm 0755 target/release/rink $(bindir)
+	$(INSTALL) -Dm 0755 target/release/rink -t $(bindir)
 	$(INSTALL) -Dm 0644 $(srcdir)/core/definitions.units -t $(datadir)/rink
 	$(INSTALL) -Dm 0644 $(srcdir)/core/datepatterns.txt -t $(datadir)/rink
 	$(INSTALL) -Dm 0644 $(srcdir)/core/currency.units -t $(datadir)/rink
