@@ -35,12 +35,19 @@ where
     }
 
     macro_rules! numeric_match {
-        ($name:expr, $digits:expr, $field:ident) => {
+        ($name:expr, $digits:expr, $field:ident, $range:expr) => {
             match tok {
                 Some(DateToken::Number(ref s, None)) if $digits == 0 || s.len() == $digits => {
                     let value = i32::from_str_radix(&**s, 10).unwrap();
-                    out.$field = Some(value as _);
-                    Ok(())
+                    if $range.contains(&value) {
+                        out.$field = Some(value as _);
+                        Ok(())
+                    } else {
+                        Err(format!(
+                            "Expected {} in range {:?}, got {}",
+                            $name, $range, s
+                        ))
+                    }
                 }
                 Some(DateToken::Number(ref s, None)) => Err(format!(
                     "Expected {}-digit {}, got {} digits",
@@ -83,17 +90,17 @@ where
             x => Err(format!("Expected `{}`, got {}", l, ts(x))),
         },
         Some(&DatePattern::Match(ref what)) => match &**what {
-            "fullyear" => numeric_match!("fullyear", 4, year),
-            "shortyear" => numeric_match!("shortyear", 2, year_mod_100),
-            "century" => numeric_match!("century", 2, year_div_100),
-            "monthnum" => numeric_match!("monthnum", 2, month),
-            "day" => numeric_match!("day", 0, day),
-            "fullday" => numeric_match!("fullday", 2, day),
-            "min" => numeric_match!("min", 2, minute),
-            "ordinal" => numeric_match!("ordinal", 3, ordinal),
-            "isoyear" => numeric_match!("isoyear", 4, isoyear),
-            "isoweek" => numeric_match!("isoweek", 2, isoweek),
-            "unix" => numeric_match!("unix", 0, timestamp),
+            "fullyear" => numeric_match!("fullyear", 4, year, ..9999),
+            "shortyear" => numeric_match!("shortyear", 2, year_mod_100, ..99),
+            "century" => numeric_match!("century", 2, year_div_100, ..99),
+            "monthnum" => numeric_match!("monthnum", 2, month, 1..=12),
+            "day" => numeric_match!("day", 0, day, 1..=31),
+            "fullday" => numeric_match!("fullday", 2, day, 1..=31),
+            "min" => numeric_match!("min", 2, minute, 0..60),
+            "ordinal" => numeric_match!("ordinal", 3, ordinal, 1..=366),
+            "isoyear" => numeric_match!("isoyear", 4, isoyear, ..9999),
+            "isoweek" => numeric_match!("isoweek", 2, isoweek, 1..=53),
+            "unix" => numeric_match!("unix", 0, timestamp, ..i32::MAX),
             "year" => {
                 advance = false;
                 let x = take!(DateToken::Dash | DateToken::Plus | DateToken::Number(_, None));

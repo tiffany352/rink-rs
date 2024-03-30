@@ -550,6 +550,25 @@ fn test_to_timezone() {
 }
 
 #[test]
+fn test_time_range_checking() {
+    test("#00:00#", "2016-08-02 00:00:00 +00:00 (a day ago)");
+    test("#23:59#", "2016-08-02 23:59:00 +00:00 (in an hour)");
+    test("#12:00 am#", "2016-08-02 00:00:00 +00:00 (a day ago)");
+    test("#12:00 pm#", "2016-08-02 12:00:00 +00:00 (10 hours ago)");
+    test("#24:00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected `-`, got `:`");
+    test(
+        "#00:00 pm",
+        "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got  pm",
+    );
+    test(
+        "#13:00 am#",
+        "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got  am",
+    );
+    test("#0000-00-00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected monthnum in range 1..=12, got 00");
+    test("#0000-01-00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected fullday in range 1..=31, got 00");
+}
+
+#[test]
 fn test_gb_is_gigabytes() {
     test(
         "56kbps * 1 year -> GB",
