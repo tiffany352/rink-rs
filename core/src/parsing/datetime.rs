@@ -21,12 +21,11 @@ fn numeric_match(
 
     match tok {
         DateToken::Number(ref s, None) if digits == 0 || s.len() == digits => {
-            let value = i32::from_str_radix(&**s, 10).unwrap();
-            if range.contains(&value) {
-                Ok(value)
-            } else {
-                Err(format!("Expected {} in range {:?}, got {}", name, range, s))
-            }
+            let value = i32::from_str_radix(&**s, 10);
+            value
+                .ok()
+                .filter(|value| range.contains(&value))
+                .ok_or(format!("Expected {} in range {:?}, got {}", name, range, s))
         }
         DateToken::Number(ref s, None) => Err(format!(
             "Expected {}-digit {}, got {} digits",
@@ -143,9 +142,13 @@ where
                     Some(x) => x,
                     None => take!(DateToken::Number(x, None), x),
                 };
-                let value = i32::from_str_radix(&*num, 10).unwrap();
-                out.year = Some(value * sign);
-                Ok(())
+                let value = i32::from_str_radix(&*num, 10);
+                if let Ok(value) = value {
+                    out.year = Some(value * sign);
+                    Ok(())
+                } else {
+                    Err(format!("Expected year, got out of range value"))
+                }
             }
             "adbc" => match tok {
                 Some(DateToken::Literal(ref s))
@@ -163,8 +166,10 @@ where
             },
             "hour12" => match tok {
                 Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10).unwrap();
-                    if value > 0 && value <= 12 {
+                    let value = u32::from_str_radix(&**s, 10)
+                        .ok()
+                        .filter(|&value| value > 0 && value <= 12);
+                    if let Some(value) = value {
                         out.hour_mod_12 = Some(value % 12);
                         Ok(())
                     } else {
@@ -178,8 +183,10 @@ where
             },
             "hour24" => match tok {
                 Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10).unwrap();
-                    if value < 24 {
+                    let value = u32::from_str_radix(&**s, 10)
+                        .ok()
+                        .filter(|&value| value < 24);
+                    if let Some(value) = value {
                         out.hour_div_12 = Some(value / 12);
                         out.hour_mod_12 = Some(value % 12);
                         Ok(())
@@ -205,8 +212,10 @@ where
             },
             "sec" => match tok {
                 Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10).unwrap();
-                    if value <= 60 {
+                    let value = u32::from_str_radix(&**s, 10)
+                        .ok()
+                        .filter(|&value| value <= 60);
+                    if let Some(value) = value {
                         out.second = Some(value);
                         Ok(())
                     } else {
@@ -214,12 +223,16 @@ where
                     }
                 }
                 Some(DateToken::Number(ref s, Some(ref f))) if s.len() == 2 => {
-                    let secs = u32::from_str_radix(&**s, 10).unwrap();
-                    let nsecs =
-                        u32::from_str_radix(&**f, 10).unwrap() * 10u32.pow(9 - f.len() as u32);
-                    out.second = Some(secs);
-                    out.nanosecond = Some(nsecs);
-                    Ok(())
+                    let secs = u32::from_str_radix(&**s, 10);
+                    let nsecs = u32::from_str_radix(&**f, 10);
+                    if let (Ok(secs), Ok(nsecs)) = (secs, nsecs) {
+                        let nsecs = nsecs * 10u32.pow(9 - f.len() as u32);
+                        out.second = Some(secs);
+                        out.nanosecond = Some(nsecs);
+                        Ok(())
+                    } else {
+                        Err(format!("Expected 2-digit sec, got {}.{}", s, f))
+                    }
                 }
                 x => Err(format!("Expected 2-digit sec, got {}", ts(x))),
             },
@@ -245,14 +258,21 @@ where
                         let m = h % 100;
                         let h = h / 100;
                         out.offset = Some(s * (h * 3600 + m * 60));
-                    } else {
+                        Ok(())
+                    } else if h.len() <= 2 {
                         let h = i32::from_str_radix(&*h, 10).unwrap();
                         take!(DateToken::Colon);
                         let m = take!(DateToken::Number(s, None), s);
-                        let m = i32::from_str_radix(&*m, 10).unwrap();
-                        out.offset = Some(s * (h * 3600 + m * 60));
+                        if m.len() == 2 {
+                            let m = i32::from_str_radix(&*m, 10).unwrap();
+                            out.offset = Some(s * (h * 3600 + m * 60));
+                            Ok(())
+                        } else {
+                            Err(format!("Expected 2 digits after : in offset, got {}", m))
+                        }
+                    } else {
+                        Err(format!("Expected offset, got {}", h))
                     }
-                    Ok(())
                 }
             }
             "monthname" => match tok {

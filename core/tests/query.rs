@@ -571,6 +571,8 @@ fn test_time_range_checking() {
         "#00:00:61#",
         "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got :61",
     );
+    // used to panic
+    test("#99999999999999#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected year, got out of range value");
 }
 
 #[test]
