@@ -1,6 +1,5 @@
 # Rink
 
-[![Build Status](https://travis-ci.org/tiffany352/rink-rs.svg?branch=master)](https://travis-ci.org/tiffany352/rink-rs)
 [![codecov](https://codecov.io/gh/tiffany352/rink-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/tiffany352/rink-rs)
 [![crates.io](https://img.shields.io/crates/v/rink)](https://crates.io/crates/rink)
 [![downloads](https://img.shields.io/crates/d/rink)](https://crates.io/crates/rink)
@@ -24,10 +23,13 @@ Unique features:
 - Open source
 - First-class support for non-absolute temperature scales
 
-## [Manual](https://github.com/tiffany352/rink-rs/wiki/Rink-Manual)
+## [Manual](./docs/rink.7.adoc)
 
 Describes (hopefully) everything you need to know to use Rink's
 expression language.
+
+* [CLI man page](./docs/rink.1.adoc)
+* [CLI config.toml](./docs/rink.5.adoc)the trick is that 
 
 ## [Web Interface: rinkcalc.app](https://rinkcalc.app)
 
