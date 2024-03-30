@@ -138,13 +138,19 @@ impl BigRat {
             // other than 1, we ignore the remainder when doing this
             // check, and then multiply the digits by it afterwards.
             if placed_decimal {
-                for i in 1..10 {
-                    let test = &(BigInt::from(base as i64)).pow(i) - &one;
-                    if &test % &cursor.denom() == BigInt::zero() {
-                        // Recurring digits
-                        let digits = &(&test / &cursor.denom()) * &cursor.numer();
-                        buf.push_str(&format!("[{:0width$}]...", digits, width = i as usize));
-                        return (true, buf);
+                // Do this in machine ints because the extra range
+                // isn't necessary.
+                if let (Some(numer), Some(denom)) =
+                    (cursor.numer().as_int(), cursor.denom().as_int())
+                {
+                    for i in 1..10 {
+                        let test = (base as i64).pow(i) - 1;
+                        if test % denom == 0 {
+                            // Recurring digits
+                            let digits = (test / denom) * numer;
+                            buf.push_str(&format!("[{:0width$}]...", digits, width = i as usize));
+                            return (true, buf);
+                        }
                     }
                 }
             }
