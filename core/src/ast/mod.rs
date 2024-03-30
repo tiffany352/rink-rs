@@ -48,6 +48,12 @@ pub enum BinOpType {
     Frac,
     Pow,
     Equals,
+    ShiftL,
+    ShiftR,
+    Mod,
+    And,
+    Or,
+    Xor,
 }
 
 impl BinOpType {
@@ -58,6 +64,12 @@ impl BinOpType {
             BinOpType::Frac => " / ",
             BinOpType::Pow => "^",
             BinOpType::Equals => " = ",
+            BinOpType::ShiftL => " << ",
+            BinOpType::ShiftR => " >> ",
+            BinOpType::Mod => " mod ",
+            BinOpType::And => " and ",
+            BinOpType::Or => " or ",
+            BinOpType::Xor => " xor ",
         }
     }
 }

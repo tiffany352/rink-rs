@@ -745,3 +745,42 @@ fn test_tim() {
         "Definition: Tim = 12^-4 hour = 3125/18, approx. 173.6111 millisecond (time; s)",
     );
 }
+
+#[test]
+fn test_extra_operators() {
+    test("37 inches mod feet to inch", "1 inch (length)");
+    test("3 meters << 4", "48 meter (length)");
+    test(
+        "0xf78d286b099b xor 0x500431f2abf4 to digits hex",
+        "a7891999a26f (dimensionless)",
+    );
+    test(
+        "0xf78d286b099b and 0x500431f2abf4 to digits hex",
+        "500420620990 (dimensionless)",
+    );
+    test(
+        "0xf78d286b099b or 0x500431f2abf4 to digits hex",
+        "f78d39fbabff (dimensionless)",
+    );
+    test("12 meter mod 16 second", "Arguments to `mod` must have matching dimensionality: <12 meter (length)> mod <16 second (time)>");
+    test(
+        "meter << meter",
+        "Right-hand to << must be dimensionless: <1 meter (length)> << <1 meter (length)>",
+    );
+    test(
+        "meter >> meter",
+        "Right-hand to >> must be dimensionless: <1 meter (length)> >> <1 meter (length)>",
+    );
+    test(
+        "meter and meter",
+        "Arguments to `and` must be dimensionless: <1 meter (length)> and <1 meter (length)>",
+    );
+    test(
+        "meter or meter",
+        "Arguments to `or` must be dimensionless: <1 meter (length)> or <1 meter (length)>",
+    );
+    test(
+        "meter xor meter",
+        "Arguments to `xor` must be dimensionless: <1 meter (length)> xor <1 meter (length)>",
+    );
+}

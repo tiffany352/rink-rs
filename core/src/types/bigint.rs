@@ -7,7 +7,7 @@ use num::cast::ToPrimitive;
 use num::traits::{Num, One, Zero};
 use std::cmp::Ord;
 use std::fmt;
-use std::ops::{Div, Mul, Rem};
+use std::ops::{BitAnd, BitOr, BitXor, Div, Mul, Rem};
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct BigInt {
@@ -116,6 +116,36 @@ impl<'a> Rem for &'a BigInt {
     fn rem(self, rhs: &'a BigInt) -> BigInt {
         BigInt {
             inner: &self.inner % &rhs.inner,
+        }
+    }
+}
+
+impl<'a> BitAnd for &'a BigInt {
+    type Output = BigInt;
+
+    fn bitand(self, rhs: &'a BigInt) -> BigInt {
+        BigInt {
+            inner: &self.inner & &rhs.inner,
+        }
+    }
+}
+
+impl<'a> BitOr for &'a BigInt {
+    type Output = BigInt;
+
+    fn bitor(self, rhs: &'a BigInt) -> BigInt {
+        BigInt {
+            inner: &self.inner | &rhs.inner,
+        }
+    }
+}
+
+impl<'a> BitXor for &'a BigInt {
+    type Output = BigInt;
+
+    fn bitxor(self, rhs: &'a BigInt) -> BigInt {
+        BigInt {
+            inner: &self.inner ^ &rhs.inner,
         }
     }
 }

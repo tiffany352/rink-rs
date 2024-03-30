@@ -32,6 +32,12 @@ pub enum Token {
     Asterisk,
     DashArrow,
     Colon,
+    DoubleLAngle,
+    DoubleRAngle,
+    KeywordMod,
+    KeywordXor,
+    KeywordOr,
+    KeywordAnd,
     Date(Vec<DateToken>),
     Comma,
     Degree(Degree),
@@ -61,6 +67,12 @@ fn describe(token: &Token) -> String {
         Token::Asterisk => "`*`".to_owned(),
         Token::DashArrow => "`->`".to_owned(),
         Token::Colon => "`:`".to_owned(),
+        Token::DoubleLAngle => "`<<`".to_owned(),
+        Token::DoubleRAngle => "`>>`".to_owned(),
+        Token::KeywordMod => "`mod`".to_owned(),
+        Token::KeywordXor => "`xor`".to_owned(),
+        Token::KeywordOr => "`or`".to_owned(),
+        Token::KeywordAnd => "`and`".to_owned(),
         Token::Date(_) => "date literal".to_owned(),
         Token::Comma => "`,`".to_owned(),
         Token::Percent => "%".to_owned(),
@@ -101,6 +113,14 @@ impl<'a> Iterator for TokenIterator<'a> {
             '|' | '\u{2215}' => Token::Pipe,
             ':' => Token::Colon,
             '→' => Token::DashArrow,
+            '<' if self.0.peek().cloned() == Some('<') => {
+                self.0.next();
+                Token::DoubleLAngle
+            }
+            '>' if self.0.peek().cloned() == Some('>') => {
+                self.0.next();
+                Token::DoubleRAngle
+            }
             '*' => {
                 if self.0.peek().cloned() == Some('*') {
                     self.0.next();
@@ -434,6 +454,10 @@ impl<'a> Iterator for TokenIterator<'a> {
                     "degN" | "°N" | "degnewton" => Token::Degree(Degree::Newton),
                     "per" => Token::Slash,
                     "to" | "in" => Token::DashArrow,
+                    "mod" => Token::KeywordMod,
+                    "and" => Token::KeywordAnd,
+                    "or" => Token::KeywordOr,
+                    "xor" => Token::KeywordXor,
                     _ => Token::Ident(buf),
                 }
             }
@@ -607,6 +631,12 @@ fn parse_juxt(iter: &mut Iter<'_>) -> Expr {
             | Token::DashArrow
             | Token::RPar
             | Token::Newline
+            | Token::DoubleLAngle
+            | Token::DoubleRAngle
+            | Token::KeywordMod
+            | Token::KeywordAnd
+            | Token::KeywordOr
+            | Token::KeywordXor
             | Token::Comment(_)
             | Token::Eof => break,
             Token::Degree(deg) => {
@@ -629,16 +659,42 @@ fn parse_div(iter: &mut Iter<'_>) -> Expr {
         match iter.peek().cloned().unwrap() {
             Token::Slash => {
                 iter.next();
-                let left = if terms.len() == 1 {
-                    terms.pop().unwrap()
-                } else {
-                    Expr::new_mul(terms.drain(..).collect())
-                };
+                let left = Expr::new_mul(terms.drain(..).collect());
                 terms = vec![Expr::new_frac(left, parse_juxt(iter))];
             }
             Token::Asterisk => {
                 iter.next();
                 terms.push(parse_juxt(iter));
+            }
+            Token::DoubleLAngle => {
+                iter.next();
+                let left = Expr::new_mul(terms.drain(..).collect());
+                terms = vec![Expr::new_bin(BinOpType::ShiftL, left, parse_juxt(iter))];
+            }
+            Token::DoubleRAngle => {
+                iter.next();
+                let left = Expr::new_mul(terms.drain(..).collect());
+                terms = vec![Expr::new_bin(BinOpType::ShiftR, left, parse_juxt(iter))];
+            }
+            Token::KeywordMod => {
+                iter.next();
+                let left = Expr::new_mul(terms.drain(..).collect());
+                terms = vec![Expr::new_bin(BinOpType::Mod, left, parse_juxt(iter))];
+            }
+            Token::KeywordAnd => {
+                iter.next();
+                let left = Expr::new_mul(terms.drain(..).collect());
+                terms = vec![Expr::new_bin(BinOpType::And, left, parse_juxt(iter))];
+            }
+            Token::KeywordOr => {
+                iter.next();
+                let left = Expr::new_mul(terms.drain(..).collect());
+                terms = vec![Expr::new_bin(BinOpType::Or, left, parse_juxt(iter))];
+            }
+            Token::KeywordXor => {
+                iter.next();
+                let left = Expr::new_mul(terms.drain(..).collect());
+                terms = vec![Expr::new_bin(BinOpType::Xor, left, parse_juxt(iter))];
             }
             _ => break,
         }
@@ -876,6 +932,17 @@ mod test {
         );
         assert_eq!(parse("a|b c / g e|f"), "(a / b) c / g (e / f)");
         assert_eq!(parse("a / b / c"), "(a / b) / c");
+    }
+
+    #[test]
+    fn parse_extra_ops() {
+        assert_eq!(parse("a b mod c d"), "a b mod c d");
+        assert_eq!(parse("a b << c d"), "a b << c d");
+        assert_eq!(parse("a b >> c d"), "a b >> c d");
+        assert_eq!(parse("a b and c d"), "a b and c d");
+        assert_eq!(parse("a b or c d"), "a b or c d");
+        assert_eq!(parse("a b xor c d"), "a b xor c d");
+        assert_eq!(parse("a / b c mod d e / f"), "((a / b c) mod d e) / f");
     }
 
     #[test]
