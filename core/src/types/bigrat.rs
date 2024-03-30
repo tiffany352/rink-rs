@@ -148,7 +148,12 @@ impl BigRat {
                         if test % denom == 0 {
                             // Recurring digits
                             let digits = (test / denom) * numer;
-                            buf.push_str(&format!("[{:0width$}]...", digits, width = i as usize));
+                            buf.push('[');
+                            for n in 1..=i {
+                                let digit = digits / (base as i64).pow(i - n) % base as i64;
+                                buf.push(std::char::from_digit(digit as u32, base as u32).unwrap());
+                            }
+                            buf.push_str("]...");
                             return (true, buf);
                         }
                     }

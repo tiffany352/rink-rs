@@ -337,6 +337,18 @@ mod tests {
             (true, "0.[01]...".to_owned())
         );
         assert_eq!(
+            Numeric::from_frac(1, 5).to_string(2, Digits::Default),
+            (true, "0.[0011]...".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1, 7).to_string(2, Digits::Default),
+            (true, "0.[001]...".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1, 9).to_string(2, Digits::Default),
+            (true, "0.[000111]...".to_owned())
+        );
+        assert_eq!(
             Numeric::from_frac(-1000, 3).to_string(2, Digits::Default),
             (true, "-101001101.[01]...".to_owned())
         );
