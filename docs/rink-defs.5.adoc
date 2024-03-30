@@ -1,0 +1,278 @@
+= rink-defs(5)
+:manmanual: Rink Manual
+:mansource: Rink Manual
+
+Name
+----
+
+rink-defs - Rink's `definition.units` format
+
+Description
+-----------
+
+The units database is a textual document containing the definitions of
+units, prefixes, base units, quantities, and substances.
+
+Comments start with `#` and continue to the end of the line. Blank lines
+are ignored. Comments can be placed on the same line as units, at the
+end.
+
+[listing]
+ # This line is a comment
+ # And so is this
+
+Units
+~~~~~
+
+Units are defined with their name and their definition separated by
+whitespace. A definition can be broken over multiple lines using `\` if
+desired.
+
+[listing]
+foot                    12 inch
+
+Documentation comments are lines starting with `??`. They apply to the
+next definition following them. They are shown to end users in Rink when
+you query a definition.
+
+[listing]
+?? International yard and pound, since July 1, 1959.
+?? Documentation comments can be broken over
+?? multiple lines.
+foot                    12 inch
+
+Substances
+~~~~~~~~~~
+
+Substances can represent either a specific object (such as the Earth, or
+the Sun), a material such as water or concrete, a chemical molecule, an
+element of the periodic table, or an elementary particle.
+
+A substance has a name, an optional symbol (used for chemical formulas),
+and contains a list of properties inside of a {} block.
+
+Properties can either be "const", which is mainly used for countable
+objects such as a particle, or they can be a ratio, such as the density
+of a material.
+
+[listing]
+neutron {
+    mass                const neutron_mass          1.00866491588 u
+    wavelength          const neutron_wavelength    planck_constant / mass c
+    magnetic_moment     const neutron_moment        -0.96623650e-26 J/T
+}
+
+The two syntax variants for properties are:
+
+[listing]
+ [name] const [output name] [expression]
+ [name] [input name] [input expression] / [output name] [output expression]
+
+Categories
+~~~~~~~~~~
+
+Units inside the same category will be grouped together in the UI when
+doing searches and other operations. A category is started using the
+`!category` pragma which takes an identifier (`lower_snake_case`) and a
+display name as a string literal.
+
+[listing]
+!category us_survey "US survey measures"
+
+Base units
+~~~~~~~~~~
+
+Base units are impossible to define in terms of another unit without
+creating a cycle. They represent fundamental physical quantities such as
+time, length, temperature, etc.
+
+The name is a shorthand form which is used when showing dimensionality
+(for example, the dimensionality of `acceleration` is `m / s^2`), while
+the long form is used for display purposes.
+
+New base units should only be added when there is a clear value to doing
+so. Examples include radians and bits.
+
+[listing]
+?? Equal to the mass of the international prototype of the
+?? kilogram. 3rd CGPM (1901, CR, 70).
+kg        !kilogram
+
+Quantities
+~~~~~~~~~~
+
+Quantities are shown in parentheses whenever rink displays a unit.
+They're very helpful for dimensional analysis, as it can be hard to
+remember that `kg m^2 / s^2` means the physical quantity of energy.
+
+Quantities are defined similar to units, but the definition starts with
+a ? character. Quantities are in a separate namespace from units, so the
+only valid names that can be used are the base units as well as other
+quantities.
+
+Unlike units, quantities have no numerical value (not even a value of
+1 like SI derived units).
+
+[listing]
+length                  ? meter
+area                    ? length^2
+
+Prefixes
+~~~~~~~~
+
+Prefixes allow input of units like `gigabytes`, `megameters`,
+`kiloseconds` without needing to explicitly define each one in the units
+database. Prefixes are always dimensionless.
+
+These should not be added frequently, only when it's relevant to some
+counting system. Examples include power of two byte prefixes (MiB, GiB,
+etc.) and Dozenal prefixes.
+
+Prefixes are split into two types, "long" prefixes and "short" prefixes.
+Short prefixes should generally only be 1 letter. Typically, short
+prefixes are aliases of their corresponding long prefix.
+
+Prefixes are defined similar to other units, but the name ends with a
+suffix of `-` (long prefixes) or `--` (short prefixes).
+
+Prefixes use their own namespace. Their definitions can only reference
+other prefixes, and not units.
+
+[listing]
+kilo-                   1e3
+k--                     kilo
+
+Guidelines
+----------
+
+These guidelines mainly apply when contributing to the upstream
+`definitions.units`.
+
+The units database should generally be wrapped so that it fits within
+80 columns, for ease of reading. Similarly, units definitions should
+generally be aligned vertically using spaces.
+
+Non-trivial units should generally have a documentation comment. This
+comment can explain what the unit means, as well as providing a citation
+for its value.
+
+If there are multiple ways to interpret how a unit should be defined,
+then mention which interpretation is being used. Unless it's implied by
+the name (e.g. `siderealyear`). Examples where units have multiple
+interpretations include:
+
+* Customary units may vary by country, and may even vary depending on
+  which year in that country. Such as US, British, Australian, and
+  International definitions of the foot.
+* Units that are inherently fuzzy or represent multiple sources. This
+  may include days (calendar, sidereal), years (calendar, sidereal,
+  tropical), and others.
+
+Doc comments should be written in US English. They should have sentence
+capitalization and full stops, like this guide is written in. Avoid
+run-on sentences.
+
+External links should include the protocol part (`https://`, `http://`).
+They should be wrapped with angle brackets, like `<https://example.com>`.
+
+Dates should be written in a longhand format such as `July 5th, 1982`.
+Do not use ambiguous formats like 2/3/99. It's often sufficient to only
+state the year.
+
+Comments in the definitions file are written for the benefit of other
+maintainers. They can include explanations for why units are defined a
+certain way. They can also state that certain units are part of a group
+or set.
+
+All units should be inside of a `!category` / `!endcategory` block.
+Category blocks should also enclose comments related to that category,
+and the `!category` pragma should immediately follow the last category's
+`!endcategory`. This is to allow the file to be easily browsed using Vim
+folds. The display name of a category should be in sentence case, and
+should be aligned to the 70th column.
+
+NAMING
+~~~~~~
+
+English names should be lowercase without separators. Words may be
+separated by underscores when it adds clarity. Examples include `foot`,
+`olympiccubit`, `usgallon`.
+
+If a shorthand is available, it should be added as an alias of the
+longer name. Examples include `ft` for `foot`, `B` for `byte`, and `Ω`
+for `ohm`.
+
+[listing]
+ft                      foot
+
+Some units are most commonly written in a non-Latin script. Use the
+non-Latin name as the canonical name, and add an ASCII-based one as an
+alias. Examples include `золотник`, `分地`.
+
+Some units are typically written with a symbol. Treat these similar to
+the non-Latin script names. Examples include `π` (Pi), `τ` (Tau).
+
+Legacy Unicode symbols should only be used as aliases of more standard
+names. This includes uncommon symbols such as `㎒` (Unicode symbol for
+Megahertz).
+
+If there are multiple names for a unit, then the one that's most typical
+should be the "canonical name". The canonical version should have the
+full definition, and the other names should be added as aliases pointing
+to the canonical version. Avoid duplicating the definition.
+
+DEFINITIONS
+~~~~~~~~~~~
+
+Units should be defined in terms of other related units when possible.
+The expression you use to define the unit will be visible to the end
+user. For example, a foot is defined as `12 inch` rather than as `304.8
+mm`. This is because there is already a separate entry for `inch`
+defined as `2.54 mm`. When displaying a unit's definition, Rink shows
+both the original definition as well as the absolute value. So for
+`foot` it shows that it's defined as `12 inch` which equals `304.8
+millimeter`.
+
+Rink can represent arbitrary precision rational numbers. The only
+limitation is how much memory is available. As a result, irrational
+numbers like Pi or Euler's constant should be defined to at least 20
+digits.
+
+Universal constants that are measured experimentally should have as many
+significant figures as are currently known. For example, if a number is
+known to ±0.000003, then it should be listed to 6 digits after the
+decimal point.
+
+Files
+-----
+
+Rink searches for the definitions file in these locations:
+
+* `./rink/definitions.units`
+* `$XDG_CONFIG_DIR/rink/definitions.units`
+* `/usr/share/rink/definitions.units`
+
+When live currency fetching is enabled, Rink also looks for a currency
+file in these locations:
+
+* `./rink/currency.units`
+* `$XDG_CONFIG_DIR/rink/currency.units`
+* `/usr/share/rink/currency.units`
+
+History
+-------
+
+Rink's units database was originally based on GNU Units and inherits
+much of its syntax from there.
+
+Notable differences include:
+
+- Removal of `!locale`, `!set`, `!utf8`, and other pragmas not used by Rink.
+- Addition of `!category` and `!endcategory`.
+- Addition of documentation comments starting with `??`.
+- Addition of substances.
+
+See also
+--------
+xref:rink.1.adoc[rink(1)], xref:rink.5.adoc[rink(5)],
+xref:rink.7.adoc[rink(7)], xref:rink-dates.5.adoc[rink-dates(5)]

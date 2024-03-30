@@ -1,0 +1,70 @@
+= rink(1)
+:manmanual: Rink Manual
+:mansource: Rink Manual
+
+Name
+----
+rink - Unit calculator and dimensional analysis tool
+
+Synposis
+--------
+[verse]
+**rink**
+**rink** [_EXPR_]...
+**rink -f** <__FILE__>
+**rink** (**-h** | **-V** | **--config-path**)
+
+Description
+-----------
+Rink is a unit conversion and calculation tool which can be used for
+both small and simple arithmetic and more complex dimensionality
+analysis and other tasks.
+
+Options
+-------
+**--config-path**::
+	Prints a path to the config file, then exits.
+
+**-f**::
+**--file** <__file__>::
+	Reads expressions from a file, one per line, printing them to stdout
+	and then exitting.
+
+**-h**::
+**--help**::
+	Print help information and then exits.
+
+**-V**::
+**--version**::
+	Prints the current version and then exits.
+
+Exit status
+------------
+
+Returns 0 unless an error prevented rink from starting up.
+
+Environment
+-----------
+
+**NO_COLORS**::
+	If set to a non-empty string, rink will disable colored text
+	rendering.
+
+Files
+-----
+Rink looks for a configuration file in
+`$XDG_CONFIG_DIR/rink/config.toml`, see rink(5).
+
+Rink relies on some data files, which are found using a search path.
+See rink-defs(5) and rink-dates(5).
+
+Bugs
+----
+
+<https://github.com/tiffany352/rink-rs/issues>
+
+See also
+--------
+xref:rink.5.adoc[rink(5)], xref:rink.7.adoc[rink(7)],
+xref:rink-defs.5.adoc[rink-defs(5)],
+xref:rink-dates.5.adoc[rink-dates(5)]

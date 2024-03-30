@@ -10,8 +10,8 @@ keywords = ["unit", "math", "conversion"]
 edition = "2018"
 
 [features]
-default = ["chrono-humanize", "gpl"]
-gpl = []
+default = ["chrono-humanize"]
+bundle-files = []
 
 [dependencies]
 num = { version = "0.4.0", features = ["serde"] }

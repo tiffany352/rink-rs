@@ -254,6 +254,21 @@ fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
     serde_json::from_str(&contents).wrap_err("Invalid JSON")
 }
 
+fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBuf]) -> Result<()> {
+    let base = read_from_search_path("currency.units", search_path)
+        .or_else(|err| CURRENCY_FILE.map(ToOwned::to_owned).ok_or(err)).wrap_err("Rink was not built with a bundled currency.units file, and one was not found in the search path.")?;
+
+    let mut base_defs = gnu_units::parse_str(&base);
+    let mut live_defs = load_live_currency(config)?;
+
+    let mut defs = vec![];
+    defs.append(&mut base_defs.defs);
+    defs.append(&mut live_defs.defs);
+    ctx.load(ast::Defs { defs }).map_err(|err| eyre!(err))?;
+
+    Ok(())
+}
+
 pub fn read_config() -> Result<Config> {
     match read_to_string(config_path("config.toml")?) {
         // Hard fail if the file has invalid TOML.
@@ -271,14 +286,17 @@ pub fn load(config: &Config) -> Result<Context> {
     if let Some(config_dir) = dirs::config_dir() {
         search_path.push(config_dir);
     }
+    if let Some(prefix) = option_env!("RINK_PATH") {
+        search_path.push(prefix.into());
+    }
 
     // Read definitions.units
     let units = read_from_search_path("definitions.units", &search_path)
-        .or_else(|err| DEFAULT_FILE.map(ToOwned::to_owned).ok_or(err).wrap_err("Rink was not built with a bundled definitions file, and one was not found in the search path."))?;
+        .or_else(|err| DEFAULT_FILE.map(ToOwned::to_owned).ok_or(err).wrap_err("Rink was not built with a bundled definitions.units file, and one was not found in the search path."))?;
 
     // Read datepatterns.txt
     let dates = read_from_search_path("datepatterns.txt", &search_path)
-        .unwrap_or_else(|_| DATES_FILE.to_owned());
+        .or_else(|err| DATES_FILE.map(ToOwned::to_owned).ok_or(err).wrap_err("Rink was not built with a bundled datepatterns.txt file, and one was not found in the search path."))?;
 
     let mut ctx = Context::new();
     ctx.save_previous_result = true;
@@ -288,17 +306,8 @@ pub fn load(config: &Config) -> Result<Context> {
 
     // Load currency data.
     if config.currency.enabled {
-        match load_live_currency(&config.currency) {
-            Ok(mut live_defs) => {
-                let mut base_defs = gnu_units::parse_str(
-                    &read_from_search_path("currency.units", &search_path)
-                        .unwrap_or_else(|_| CURRENCY_FILE.to_owned()),
-                );
-                let mut defs = vec![];
-                defs.append(&mut base_defs.defs);
-                defs.append(&mut live_defs.defs);
-                ctx.load(ast::Defs { defs }).map_err(|err| eyre!(err))?;
-            }
+        match try_load_currency(&config.currency, &mut ctx, &search_path) {
+            Ok(()) => (),
             Err(err) => {
                 println!("{:?}", err.wrap_err("Failed to load currency data"));
             }
