@@ -4,6 +4,7 @@ Requirements:
 
 - Rust compiler toolchain (stable build)
 - `asciidoctor` for building manpages
+- `make`
 
 Rink requires several data files in order to work. By default these are
 baked into the binary so that `cargo install` will work, but for distro
@@ -11,6 +12,12 @@ packaging these should probably go into `/usr/share` instead. The
 makefile will do this automatically.
 
 ## Makefile-based method
+
+```sh
+make fetch
+make all prefix=/usr
+make install prefix=/usr DESTDIR=$pkgdir
+```
 
 A makefile is provided for easier packaging.
 
