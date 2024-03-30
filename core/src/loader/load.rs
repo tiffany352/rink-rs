@@ -379,7 +379,6 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
     decomposition_units.insert("tesla");
     decomposition_units.insert("lumen");
     decomposition_units.insert("lux");
-    decomposition_units.insert("gray");
     decomposition_units.insert("katal");
 
     let mut prefix_lookup = BTreeMap::new();

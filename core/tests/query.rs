@@ -351,7 +351,7 @@ fn test_unary_operators() {
 
 #[test]
 fn test_equals() {
-    test("a = kg N / W^2", "1 second^2 / gray meter");
+    test("a = kg N / W^2", "1 second^4 / meter^3");
     test(
         "1 = kg",
         "= is currently only used for inline unit definitions: expected unit, got 1",
