@@ -320,8 +320,107 @@ mod tests {
     #[test]
     fn test_tostring_simple() {
         assert_eq!(
+            Numeric::from_frac(1, 1).to_string(10, Digits::Default),
+            (true, "1".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1, 2).to_string(10, Digits::Default),
+            (true, "0.5".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1, 8).to_string(10, Digits::Default),
+            (true, "0.125".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(7, 8).to_string(10, Digits::Default),
+            (true, "0.875".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(123456, 100).to_string(10, Digits::Default),
+            (true, "1234.56".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_recurring_fraction() {
+        assert_eq!(
             Numeric::from_frac(1, 3).to_string(10, Digits::Default),
             (false, "0.3333333".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(2, 3).to_string(10, Digits::Default),
+            (false, "0.6666666".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1, 7).to_string(10, Digits::Default),
+            (false, "0.1428571".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1000, 3).to_string(10, Digits::Default),
+            (false, "333.3333".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_exponent() {
+        assert_eq!(
+            Numeric::from_frac(1_000_000_000_000_000i64, 1).to_string(10, Digits::Default),
+            (true, "1.0e15".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1_000_000_000_000_000i64, 3).to_string(10, Digits::Default),
+            (false, "3.333333e14".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_negatives() {
+        assert_eq!(
+            Numeric::from_frac(-123, 1).to_string(10, Digits::Default),
+            (true, "-123".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(-1000, 3).to_string(10, Digits::Default),
+            (false, "-333.3333".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(-1_000_000_000_000_000i64, 1).to_string(10, Digits::Default),
+            (true, "-1.0e15".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_base2() {
+        assert_eq!(
+            Numeric::from_frac(1, 1).to_string(2, Digits::Default),
+            (true, "1".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(2, 1).to_string(2, Digits::Default),
+            (true, "10".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(3, 1).to_string(2, Digits::Default),
+            (true, "11".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1, 2).to_string(2, Digits::Default),
+            (true, "0.1".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(1, 3).to_string(2, Digits::Default),
+            (false, "0.01010101".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(-1000, 3).to_string(2, Digits::Default),
+            (false, "-101001101.01".to_owned())
+        );
+        assert_eq!(
+            Numeric::from_frac(-1_000_000_000_000_000i64, 1).to_string(2, Digits::Default),
+            (
+                true,
+                "-11100011010111111010100100110001101000000000000000".to_owned()
+            )
         );
     }
 }
