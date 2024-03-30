@@ -128,8 +128,15 @@ where
             "hour12" => match tok {
                 Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
                     let value = u32::from_str_radix(&**s, 10).unwrap();
-                    out.hour_mod_12 = Some(value % 12);
-                    Ok(())
+                    if value < 12 {
+                        out.hour_mod_12 = Some(value % 12);
+                        Ok(())
+                    } else {
+                        Err(format!(
+                            "Expected 2-digit hour12, got out of range value {}",
+                            s
+                        ))
+                    }
                 }
                 x => Err(format!("Expected 2-digit hour12, got {}", ts(x))),
             },
