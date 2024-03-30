@@ -11,6 +11,33 @@ use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::FromStr;
 
+fn parse_fixed(value: &str, digits: usize) -> Option<i32> {
+    if digits != 0 && value.len() != digits {
+        return None;
+    }
+    i32::from_str_radix(value, 10).ok()
+}
+
+fn parse_range(value: &str, digits: usize, range: std::ops::RangeInclusive<i32>) -> Option<i32> {
+    parse_fixed(value, digits).filter(|v| range.contains(v))
+}
+
+fn numeric_match(
+    tok: Option<&DateToken>,
+    name: &str,
+    digits: usize,
+    range: std::ops::RangeInclusive<i32>,
+) -> Result<i32, String> {
+    let tok = tok.ok_or_else(|| format!("Expected {}-digit {}, got eof", digits, name))?;
+
+    if let DateToken::Number(ref s, None) = tok {
+        parse_range(s, digits, range.clone())
+            .ok_or(format!("Expected {} in range {:?}, got {}", name, range, s))
+    } else {
+        Err(format!("Expected {}-digit {}, got {}", digits, name, tok))
+    }
+}
+
 pub fn parse_date<I>(
     out: &mut Parsed,
     out_tz: &mut Option<Tz>,
@@ -32,30 +59,6 @@ where
             Some(ref x) => format!("`{}`", x.borrow()),
             None => "eof".to_owned(),
         }
-    }
-
-    macro_rules! numeric_match {
-        ($name:expr, $digits:expr, $field:ident) => {
-            match tok {
-                Some(DateToken::Number(ref s, None)) if $digits == 0 || s.len() == $digits => {
-                    let value = i32::from_str_radix(&**s, 10).unwrap();
-                    out.$field = Some(value as _);
-                    Ok(())
-                }
-                Some(DateToken::Number(ref s, None)) => Err(format!(
-                    "Expected {}-digit {}, got {} digits",
-                    $digits,
-                    $name,
-                    s.len()
-                )),
-                x => Err(format!(
-                    "Expected {}-digit {}, got {}",
-                    $digits,
-                    $name,
-                    ts(x)
-                )),
-            }
-        };
     }
 
     let mut advance = true;
@@ -83,17 +86,50 @@ where
             x => Err(format!("Expected `{}`, got {}", l, ts(x))),
         },
         Some(&DatePattern::Match(ref what)) => match &**what {
-            "fullyear" => numeric_match!("fullyear", 4, year),
-            "shortyear" => numeric_match!("shortyear", 2, year_mod_100),
-            "century" => numeric_match!("century", 2, year_div_100),
-            "monthnum" => numeric_match!("monthnum", 2, month),
-            "day" => numeric_match!("day", 0, day),
-            "fullday" => numeric_match!("fullday", 2, day),
-            "min" => numeric_match!("min", 2, minute),
-            "ordinal" => numeric_match!("ordinal", 3, ordinal),
-            "isoyear" => numeric_match!("isoyear", 4, isoyear),
-            "isoweek" => numeric_match!("isoweek", 2, isoweek),
-            "unix" => numeric_match!("unix", 0, timestamp),
+            "fullyear" => numeric_match(tok.as_ref(), "fullyear", 4, 0..=9999).and_then(|v| {
+                out.year = Some(v);
+                Ok(())
+            }),
+            "shortyear" => numeric_match(tok.as_ref(), "shortyear", 2, 0..=99).and_then(|v| {
+                out.year_mod_100 = Some(v);
+                Ok(())
+            }),
+            "century" => numeric_match(tok.as_ref(), "century", 2, 0..=99).and_then(|v| {
+                out.year_div_100 = Some(v);
+                Ok(())
+            }),
+            "monthnum" => numeric_match(tok.as_ref(), "monthnum", 2, 1..=12).and_then(|v| {
+                out.month = Some(v as u32);
+                Ok(())
+            }),
+            "day" => numeric_match(tok.as_ref(), "day", 0, 1..=31).and_then(|v| {
+                out.day = Some(v as u32);
+                Ok(())
+            }),
+            "fullday" => numeric_match(tok.as_ref(), "fullday", 2, 1..=31).and_then(|v| {
+                out.day = Some(v as u32);
+                Ok(())
+            }),
+            "min" => numeric_match(tok.as_ref(), "min", 2, 0..=60).and_then(|v| {
+                out.minute = Some(v as u32);
+                Ok(())
+            }),
+            "ordinal" => numeric_match(tok.as_ref(), "ordinal", 3, 1..=366).and_then(|v| {
+                out.ordinal = Some(v as u32);
+                Ok(())
+            }),
+            "isoyear" => numeric_match(tok.as_ref(), "isoyear", 4, 0..=9999).and_then(|v| {
+                out.isoyear = Some(v);
+                Ok(())
+            }),
+            "isoweek" => numeric_match(tok.as_ref(), "isoweek", 2, 1..=53).and_then(|v| {
+                out.isoweek = Some(v as u32);
+                Ok(())
+            }),
+            "unix" => numeric_match(tok.as_ref(), "unix", 0, 0..=i32::MAX).and_then(|v| {
+                out.timestamp = Some(v as i64);
+                Ok(())
+            }),
             "year" => {
                 advance = false;
                 let x = take!(DateToken::Dash | DateToken::Plus | DateToken::Number(_, None));
@@ -107,9 +143,13 @@ where
                     Some(x) => x,
                     None => take!(DateToken::Number(x, None), x),
                 };
-                let value = i32::from_str_radix(&*num, 10).unwrap();
-                out.year = Some(value * sign);
-                Ok(())
+                let value = i32::from_str_radix(&*num, 10);
+                if let Ok(value) = value {
+                    out.year = Some(value * sign);
+                    Ok(())
+                } else {
+                    Err(format!("Expected year, got out of range value"))
+                }
             }
             "adbc" => match tok {
                 Some(DateToken::Literal(ref s))
@@ -126,19 +166,31 @@ where
                 x => Err(format!("Expected AD/BC or CE/BCE, got {}", ts(x))),
             },
             "hour12" => match tok {
-                Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10).unwrap();
-                    out.hour_mod_12 = Some(value % 12);
-                    Ok(())
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 2, 1..=12) {
+                        out.hour_mod_12 = Some(value as u32 % 12);
+                        Ok(())
+                    } else {
+                        Err(format!(
+                            "Expected 2-digit hour12, got out of range value {}",
+                            s
+                        ))
+                    }
                 }
                 x => Err(format!("Expected 2-digit hour12, got {}", ts(x))),
             },
             "hour24" => match tok {
-                Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10).unwrap();
-                    out.hour_div_12 = Some(value / 12);
-                    out.hour_mod_12 = Some(value % 12);
-                    Ok(())
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 2, 0..=23) {
+                        out.hour_div_12 = Some(value as u32 / 12);
+                        out.hour_mod_12 = Some(value as u32 % 12);
+                        Ok(())
+                    } else {
+                        Err(format!(
+                            "Expected 2-digit hour24, got out of range value {}",
+                            s
+                        ))
+                    }
                 }
                 x => Err(format!("Expected 2-digit hour24, got {}", ts(x))),
             },
@@ -154,18 +206,25 @@ where
                 x => Err(format!("Expected AM/PM, got {}", ts(x))),
             },
             "sec" => match tok {
-                Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10).unwrap();
-                    out.second = Some(value);
-                    Ok(())
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 2, 0..=60) {
+                        out.second = Some(value as u32);
+                        Ok(())
+                    } else {
+                        Err(format!("Expected 2-digit sec in range 0..=60, got {}", s))
+                    }
                 }
                 Some(DateToken::Number(ref s, Some(ref f))) if s.len() == 2 => {
-                    let secs = u32::from_str_radix(&**s, 10).unwrap();
-                    let nsecs =
-                        u32::from_str_radix(&**f, 10).unwrap() * 10u32.pow(9 - f.len() as u32);
-                    out.second = Some(secs);
-                    out.nanosecond = Some(nsecs);
-                    Ok(())
+                    let secs = u32::from_str_radix(&**s, 10);
+                    let nsecs = u32::from_str_radix(&**f, 10);
+                    if let (Ok(secs), Ok(nsecs)) = (secs, nsecs) {
+                        let nsecs = nsecs * 10u32.pow(9 - f.len() as u32);
+                        out.second = Some(secs);
+                        out.nanosecond = Some(nsecs);
+                        Ok(())
+                    } else {
+                        Err(format!("Expected 2-digit sec, got {}.{}", s, f))
+                    }
                 }
                 x => Err(format!("Expected 2-digit sec, got {}", ts(x))),
             },
@@ -186,19 +245,23 @@ where
                         _ => unreachable!(),
                     };
                     let h = take!(DateToken::Number(s, None), s);
-                    if h.len() == 4 {
-                        let h = i32::from_str_radix(&*h, 10).unwrap();
-                        let m = h % 100;
-                        let h = h / 100;
+                    if let Some(hm) = parse_fixed(&h, 4) {
+                        let m = hm % 100;
+                        let h = hm / 100;
                         out.offset = Some(s * (h * 3600 + m * 60));
-                    } else {
-                        let h = i32::from_str_radix(&*h, 10).unwrap();
+                        Ok(())
+                    } else if let Ok(h) = i32::from_str_radix(&h, 10) {
                         take!(DateToken::Colon);
                         let m = take!(DateToken::Number(s, None), s);
-                        let m = i32::from_str_radix(&*m, 10).unwrap();
-                        out.offset = Some(s * (h * 3600 + m * 60));
+                        if let Some(m) = parse_range(&m, 2, 0..=59) {
+                            out.offset = Some(s * (h * 3600 + m * 60));
+                            Ok(())
+                        } else {
+                            Err(format!("Expected 2 digits after : in offset, got {}", m))
+                        }
+                    } else {
+                        Err(format!("Expected offset, got {}", h))
                     }
-                    Ok(())
                 }
             }
             "monthname" => match tok {
@@ -624,7 +687,10 @@ mod tests {
     fn wrong_length_24h() {
         let date = vec![DateToken::Number("7".into(), None)];
         let (res, _) = parse(date, "hour24");
-        assert_eq!(res, Err(format!("Expected 2-digit hour24, got `{}`", 7)));
+        assert_eq!(
+            res,
+            Err(format!("Expected 2-digit hour24, got out of range value 7"))
+        );
     }
 
     #[test]

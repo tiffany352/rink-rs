@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use chrono::{Local, NaiveDate, TimeZone};
+use chrono::{FixedOffset, TimeZone};
 use rink_core::parsing::text_query;
 use rink_core::Context;
 
@@ -12,7 +12,8 @@ thread_local! {
         // Use a fixed time, this one is the timestamp of the first
         // commit to Rink (in -04:00 originally, but use local time here
         // for determinism.)
-        ctx.set_time(Local.from_local_datetime(&NaiveDate::from_ymd_opt(2016, 8, 2).unwrap().and_hms_opt(15, 33, 19).unwrap()).unwrap());
+        let date = FixedOffset::east_opt(-4*60*60).unwrap().with_ymd_and_hms(2016, 8, 2, 15, 33, 19).unwrap();
+        ctx.set_time(date.into());
         ctx.use_humanize = true;
         ctx
     };
@@ -547,6 +548,32 @@ fn test_to_timezone() {
         "#2000-01-01 12:46 Asia/Tokyo# -> GMT",
         "2000-01-01 03:46:00 GMT",
     );
+}
+
+#[test]
+fn test_time_range_checking() {
+    test("#00:00#", "2016-08-02 00:00:00 +00:00 (19 hours ago)");
+    test("#23:59#", "2016-08-02 23:59:00 +00:00 (in 4 hours)");
+    test("#12:00 am#", "2016-08-02 00:00:00 +00:00 (19 hours ago)");
+    test("#12:00 pm#", "2016-08-02 12:00:00 +00:00 (7 hours ago)");
+    test("#24:00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected `-`, got `:`");
+    test(
+        "#00:00 pm",
+        "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got  pm",
+    );
+    test(
+        "#13:00 am#",
+        "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got  am",
+    );
+    test("#0000-00-00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected monthnum in range 1..=12, got 00");
+    test("#0000-01-00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected fullday in range 1..=31, got 00");
+    test("#00:00:00#", "2016-08-02 00:00:00 +00:00 (19 hours ago)");
+    test(
+        "#00:00:61#",
+        "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got :61",
+    );
+    // used to panic
+    test("#99999999999999#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected year, got out of range value");
 }
 
 #[test]
