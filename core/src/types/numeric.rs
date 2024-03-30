@@ -35,6 +35,10 @@ impl Numeric {
         Numeric::Rational(BigRat::zero())
     }
 
+    pub fn from_frac(num: impl Into<BigInt>, den: impl Into<BigInt>) -> Numeric {
+        Numeric::Rational(BigRat::ratio(&num.into(), &den.into()))
+    }
+
     pub fn abs(&self) -> Numeric {
         match *self {
             Numeric::Rational(ref rational) => Numeric::Rational(rational.abs()),
@@ -306,5 +310,18 @@ impl<'a> Neg for &'a Numeric {
             Numeric::Rational(ref rational) => Numeric::Rational(-rational),
             Numeric::Float(f) => Numeric::Float(-f),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{output::Digits, types::Numeric};
+
+    #[test]
+    fn test_tostring_simple() {
+        assert_eq!(
+            Numeric::from_frac(1, 3).to_string(10, Digits::Default),
+            (false, "0.3333333".to_owned())
+        );
     }
 }

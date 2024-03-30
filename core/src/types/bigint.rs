@@ -90,6 +90,12 @@ impl From<i64> for BigInt {
     }
 }
 
+impl From<i32> for BigInt {
+    fn from(value: i32) -> BigInt {
+        (value as i64).into()
+    }
+}
+
 impl<'a> Mul for &'a BigInt {
     type Output = BigInt;
 
