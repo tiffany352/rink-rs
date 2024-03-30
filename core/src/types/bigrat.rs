@@ -10,6 +10,8 @@ use std::cmp::Ord;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
+use crate::output::Digits;
+
 use super::BigInt;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -65,6 +67,80 @@ impl BigRat {
 
     pub fn as_float(&self) -> f64 {
         self.inner.to_f64().unwrap()
+    }
+
+    pub fn to_string(&self, base: u8, digits: Digits) -> (bool, String) {
+        let sign = *self < BigRat::zero();
+        let rational = self.abs();
+        let num = rational.numer();
+        let den = rational.denom();
+        let intdigits = (&num / &den).size_in_base(base) as u32;
+        let mut buf = String::new();
+        if sign {
+            buf.push('-');
+        }
+        let zero = BigRat::zero();
+        let one = BigInt::one();
+        let ten = BigInt::from(base as u64);
+        let ten_rational = BigRat::ratio(&ten, &one);
+        let mut cursor = &rational / &BigRat::ratio(&ten.pow(intdigits), &one);
+        let mut n = 0;
+        let mut only_zeros = true;
+        let mut zeros = 0;
+        let mut placed_decimal = false;
+        loop {
+            let exact = cursor == zero;
+            let use_sci = if digits != Digits::Default
+                || den == one && (base == 2 || base == 8 || base == 16 || base == 32)
+            {
+                false
+            } else {
+                intdigits + zeros > 9 * 10 / base as u32
+            };
+            let placed_ints = n >= intdigits;
+            let ndigits = match digits {
+                Digits::Default | Digits::FullInt => 6,
+                Digits::Digits(n) => intdigits as i32 + n as i32,
+            };
+            let bail = (exact && (placed_ints || use_sci))
+                || (n as i32 - zeros as i32 > ndigits && use_sci)
+                || n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, ndigits);
+            if bail && use_sci {
+                // scientific notation
+                let off = if n < intdigits { 0 } else { zeros };
+                buf = buf[off as usize + placed_decimal as usize + sign as usize..].to_owned();
+                buf.insert(1, '.');
+                if buf.len() == 2 {
+                    buf.insert(2, '0');
+                }
+                if sign {
+                    buf.insert(0, '-');
+                }
+                buf.push_str(&*format!("e{}", intdigits as i32 - zeros as i32 - 1));
+                return (exact, buf);
+            }
+            if bail {
+                return (exact, buf);
+            }
+            if n == intdigits {
+                buf.push('.');
+                placed_decimal = true;
+            }
+            let digit = &(&(&cursor.numer() * &ten) / &cursor.denom()) % &ten;
+            let v: Option<i64> = digit.as_int();
+            let v = v.unwrap();
+            if v != 0 {
+                only_zeros = false
+            } else if only_zeros {
+                zeros += 1;
+            }
+            if !(v == 0 && only_zeros && n < intdigits - 1) {
+                buf.push(std::char::from_digit(v as u32, base as u32).unwrap());
+            }
+            cursor = &cursor * &ten_rational;
+            cursor = &cursor - &BigRat::ratio(&digit, &one);
+            n += 1;
+        }
     }
 }
 
