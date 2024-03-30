@@ -11,6 +11,17 @@ use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::FromStr;
 
+fn parse_fixed(value: &str, digits: usize) -> Option<i32> {
+    if digits != 0 && value.len() != digits {
+        return None;
+    }
+    i32::from_str_radix(value, 10).ok()
+}
+
+fn parse_range(value: &str, digits: usize, range: std::ops::RangeInclusive<i32>) -> Option<i32> {
+    parse_fixed(value, digits).filter(|v| range.contains(v))
+}
+
 fn numeric_match(
     tok: Option<&DateToken>,
     name: &str,
@@ -19,21 +30,11 @@ fn numeric_match(
 ) -> Result<i32, String> {
     let tok = tok.ok_or_else(|| format!("Expected {}-digit {}, got eof", digits, name))?;
 
-    match tok {
-        DateToken::Number(ref s, None) if digits == 0 || s.len() == digits => {
-            let value = i32::from_str_radix(&**s, 10);
-            value
-                .ok()
-                .filter(|value| range.contains(&value))
-                .ok_or(format!("Expected {} in range {:?}, got {}", name, range, s))
-        }
-        DateToken::Number(ref s, None) => Err(format!(
-            "Expected {}-digit {}, got {} digits",
-            digits,
-            name,
-            s.len()
-        )),
-        x => Err(format!("Expected {}-digit {}, got {}", digits, name, x)),
+    if let DateToken::Number(ref s, None) = tok {
+        parse_range(s, digits, range.clone())
+            .ok_or(format!("Expected {} in range {:?}, got {}", name, range, s))
+    } else {
+        Err(format!("Expected {}-digit {}, got {}", digits, name, tok))
     }
 }
 
@@ -165,12 +166,9 @@ where
                 x => Err(format!("Expected AD/BC or CE/BCE, got {}", ts(x))),
             },
             "hour12" => match tok {
-                Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10)
-                        .ok()
-                        .filter(|&value| value > 0 && value <= 12);
-                    if let Some(value) = value {
-                        out.hour_mod_12 = Some(value % 12);
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 2, 1..=12) {
+                        out.hour_mod_12 = Some(value as u32 % 12);
                         Ok(())
                     } else {
                         Err(format!(
@@ -182,13 +180,10 @@ where
                 x => Err(format!("Expected 2-digit hour12, got {}", ts(x))),
             },
             "hour24" => match tok {
-                Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10)
-                        .ok()
-                        .filter(|&value| value < 24);
-                    if let Some(value) = value {
-                        out.hour_div_12 = Some(value / 12);
-                        out.hour_mod_12 = Some(value % 12);
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 2, 0..=23) {
+                        out.hour_div_12 = Some(value as u32 / 12);
+                        out.hour_mod_12 = Some(value as u32 % 12);
                         Ok(())
                     } else {
                         Err(format!(
@@ -211,12 +206,9 @@ where
                 x => Err(format!("Expected AM/PM, got {}", ts(x))),
             },
             "sec" => match tok {
-                Some(DateToken::Number(ref s, None)) if s.len() == 2 => {
-                    let value = u32::from_str_radix(&**s, 10)
-                        .ok()
-                        .filter(|&value| value <= 60);
-                    if let Some(value) = value {
-                        out.second = Some(value);
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 2, 0..=60) {
+                        out.second = Some(value as u32);
                         Ok(())
                     } else {
                         Err(format!("Expected 2-digit sec in range 0..=60, got {}", s))
@@ -253,18 +245,15 @@ where
                         _ => unreachable!(),
                     };
                     let h = take!(DateToken::Number(s, None), s);
-                    if h.len() == 4 {
-                        let h = i32::from_str_radix(&*h, 10).unwrap();
-                        let m = h % 100;
-                        let h = h / 100;
+                    if let Some(hm) = parse_fixed(&h, 4) {
+                        let m = hm % 100;
+                        let h = hm / 100;
                         out.offset = Some(s * (h * 3600 + m * 60));
                         Ok(())
-                    } else if h.len() <= 2 {
-                        let h = i32::from_str_radix(&*h, 10).unwrap();
+                    } else if let Ok(h) = i32::from_str_radix(&h, 10) {
                         take!(DateToken::Colon);
                         let m = take!(DateToken::Number(s, None), s);
-                        if m.len() == 2 {
-                            let m = i32::from_str_radix(&*m, 10).unwrap();
+                        if let Some(m) = parse_range(&m, 2, 0..=59) {
                             out.offset = Some(s * (h * 3600 + m * 60));
                             Ok(())
                         } else {
@@ -698,7 +687,10 @@ mod tests {
     fn wrong_length_24h() {
         let date = vec![DateToken::Number("7".into(), None)];
         let (res, _) = parse(date, "hour24");
-        assert_eq!(res, Err(format!("Expected 2-digit hour24, got `{}`", 7)));
+        assert_eq!(
+            res,
+            Err(format!("Expected 2-digit hour24, got out of range value 7"))
+        );
     }
 
     #[test]
