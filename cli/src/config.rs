@@ -352,26 +352,23 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
         .tempfile_in(path.parent().unwrap())?;
 
     let mut easy = Easy::new();
-    easy.url(url).unwrap();
+    easy.url(url)?;
     easy.useragent(&format!(
         "rink-cli {} <{}>",
         env!("CARGO_PKG_VERSION"),
         env!("CARGO_PKG_REPOSITORY")
-    ))
-    .unwrap();
-    easy.timeout(timeout).unwrap();
+    ))?;
+    easy.timeout(timeout)?;
 
-    let mut write_handle = temp_file.as_file_mut().try_clone().unwrap();
+    let mut write_handle = temp_file.as_file_mut().try_clone()?;
     easy.write_function(move |data| {
         write_handle
             .write(data)
             .map_err(|_| curl::easy::WriteError::Pause)
-    })
-    .unwrap();
+    })?;
+    easy.perform()?;
 
-    easy.perform().unwrap();
-
-    let status = easy.response_code().unwrap();
+    let status = easy.response_code()?;
     if status != 200 {
         return Err(eyre!(
             "Received status {} while downloading {}",
@@ -414,11 +411,11 @@ fn cached(filename: &str, url: &str, expiration: Duration, timeout: Duration) ->
             "{:?}",
             Report::wrap_err(
                 err,
-                format!("Failed to refresh {}, using stale version", filename)
+                format!("Failed to refresh {}, using stale version", url)
             )
         );
         Ok(file)
     } else {
-        Err(err).wrap_err_with(|| format!("Failed to fetch {}", filename))
+        Err(err).wrap_err_with(|| format!("Failed to fetch {}", url))
     }
 }
