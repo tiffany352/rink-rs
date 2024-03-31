@@ -2,9 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use num::bigint::BigInt as NumInt;
-use num::cast::ToPrimitive;
-use num::traits::{Num, One, Zero};
+use num_bigint::BigInt as NumInt;
+use num_traits::{Num, One, ToPrimitive, Zero};
 use std::cmp::Ord;
 use std::fmt;
 use std::ops::{BitAnd, BitOr, BitXor, Div, Mul, Rem};
