@@ -6,6 +6,12 @@ Requirements:
 - `asciidoctor` for building manpages
 - `make`
 
+Additionally, if these libraries are present on the system, they will be
+used, otherwise they are statically linked:
+
+- `libcurl`
+- `libssl` (OpenSSL)
+
 Rink requires several data files in order to work. By default these are
 baked into the binary so that `cargo install` will work, but for distro
 packaging these should probably go into `/usr/share` instead. The
