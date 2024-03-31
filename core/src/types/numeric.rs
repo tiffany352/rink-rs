@@ -294,7 +294,7 @@ mod tests {
         );
         assert_eq!(
             Numeric::from_frac(1_000_000_000_000_000i64, 3).to_string(10, Digits::Default),
-            (false, "3.333333e14".to_owned())
+            (true, "3.[3]...e14".to_owned())
         );
     }
 

@@ -87,7 +87,7 @@ fn test_sqrt_errors() {
 
 #[test]
 fn test_number_regress() {
-    test("953 mega", "9.53e8 (dimensionless)");
+    test("953 mega", "953000000 (dimensionless)");
 }
 
 #[test]
@@ -521,7 +521,7 @@ fn test_digits() {
         "approx. 7.11801620446533345187845043255947530269622802734375 (dimensionless)",
     );
     test("1/7 -> digits 50", "0.[142857]... (dimensionless)");
-    test("trillion / 7", "approx. 1.428571e11 (dimensionless)");
+    test("trillion / 7", "1.[428571]...e11 (dimensionless)");
     test(
         "trillion / 7 to digits",
         "142857142857.[142857]... (dimensionless)",

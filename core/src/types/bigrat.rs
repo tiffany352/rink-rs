@@ -69,7 +69,7 @@ impl BigRat {
         self.inner.to_f64().unwrap()
     }
 
-    pub fn to_string(&self, base: u8, digits: Digits) -> (bool, String) {
+    fn to_digits_impl(&self, base: u8, digits: Digits) -> (bool, String) {
         let sign = *self < BigRat::zero();
         let rational = self.abs();
         let num = rational.numer();
@@ -90,35 +90,19 @@ impl BigRat {
         let mut placed_decimal = false;
         loop {
             let exact = cursor == zero;
-            let use_sci = if digits != Digits::Default
-                || den == one && (base == 2 || base == 8 || base == 16 || base == 32)
-            {
-                false
-            } else {
-                intdigits + zeros > 9 * 10 / base as u32
-            };
             let placed_ints = n >= intdigits;
             let ndigits = match digits {
                 Digits::Default | Digits::FullInt => 6,
                 Digits::Digits(n) => intdigits as i32 + n as i32,
             };
-            let bail = (exact && (placed_ints || use_sci))
-                || (n as i32 - zeros as i32 > ndigits && use_sci)
+            // Conditions for exiting:
+            // 1. The number is already exact and we've placed all the
+            //    integer positions, or
+            // 2. The number is not exact, but we've placed all the
+            //    integer positions, and we don't want to place anymore
+            //    digits as the number is getting too long.
+            let bail = (exact && placed_ints)
                 || n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, ndigits);
-            if bail && use_sci {
-                // scientific notation
-                let off = if n < intdigits { 0 } else { zeros };
-                buf = buf[off as usize + placed_decimal as usize + sign as usize..].to_owned();
-                buf.insert(1, '.');
-                if buf.len() == 2 {
-                    buf.insert(2, '0');
-                }
-                if sign {
-                    buf.insert(0, '-');
-                }
-                buf.push_str(&*format!("e{}", intdigits as i32 - zeros as i32 - 1));
-                return (exact, buf);
-            }
             if bail {
                 return (exact, buf);
             }
@@ -168,12 +152,53 @@ impl BigRat {
             } else if only_zeros {
                 zeros += 1;
             }
-            if !(v == 0 && only_zeros && n < intdigits - 1) {
+            if v != 0 || !only_zeros || n >= intdigits - 1 {
                 buf.push(std::char::from_digit(v as u32, base as u32).unwrap());
             }
             cursor = &cursor * &ten_rational;
             cursor = &cursor - &BigRat::ratio(&digit, &one);
             n += 1;
+        }
+    }
+
+    pub fn to_scientific(&self, base: u8, digits: Digits) -> (bool, String) {
+        let num = self.numer();
+        let den = self.denom();
+        let intdigits = (&num / &den).size_in_base(base) as u32 - 1;
+        let absexp = BigInt::from(base as i64).pow((intdigits as i64).abs() as u32);
+
+        let rational = if intdigits > 0 {
+            self * &BigRat::ratio(&BigInt::one(), &absexp)
+        } else {
+            self * &BigRat::ratio(&absexp, &BigInt::one())
+        };
+        let (is_exact, mut result) = rational.to_digits_impl(base, digits);
+        if !result.contains('.') {
+            result.push('.');
+            result.push('0');
+        }
+        result.push('e');
+        result.push_str(&format!("{}", intdigits));
+        (is_exact, result)
+    }
+
+    pub fn to_string(&self, base: u8, digits: Digits) -> (bool, String) {
+        if self == &BigRat::small_ratio(0, 1) {
+            return (true, "0".to_owned());
+        }
+
+        let abs = self.abs();
+        let is_computer_base = base == 2 || base == 8 || base == 16 || base == 32;
+        let is_computer_integer = is_computer_base && self.denom() == BigInt::one();
+        let can_use_sci = digits == Digits::Default && !is_computer_integer;
+
+        if can_use_sci
+            && (&abs >= &BigRat::small_ratio(1_000_000_000, 1)
+                || &abs <= &BigRat::small_ratio(1, 1_000_000_000))
+        {
+            self.to_scientific(base, digits)
+        } else {
+            self.to_digits_impl(base, digits)
         }
     }
 }
