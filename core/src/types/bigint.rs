@@ -3,10 +3,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use num_bigint::BigInt as NumInt;
-use num_traits::{Num, One, ToPrimitive, Zero};
+use num_traits::{Num, One, Signed, ToPrimitive, Zero};
 use std::cmp::Ord;
 use std::fmt;
-use std::ops::{BitAnd, BitOr, BitXor, Div, Mul, Rem};
+use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Rem, Sub};
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct BigInt {
@@ -56,8 +56,27 @@ impl BigInt {
             as usize
     }
 
+    pub fn next_power_of(&self, base: u8) -> usize {
+        let mut value = BigInt::one();
+        let base = BigInt::from(base as i64);
+        let mut i = 0;
+        loop {
+            if self <= &value {
+                break i;
+            }
+            value = &value * &base;
+            i += 1;
+        }
+    }
+
     pub fn as_int(&self) -> Option<i64> {
         self.inner.to_i64()
+    }
+
+    pub fn abs(&self) -> BigInt {
+        BigInt {
+            inner: self.inner.abs(),
+        }
     }
 }
 
@@ -85,6 +104,32 @@ impl From<i64> for BigInt {
     fn from(value: i64) -> BigInt {
         BigInt {
             inner: NumInt::from(value),
+        }
+    }
+}
+
+impl From<i32> for BigInt {
+    fn from(value: i32) -> BigInt {
+        (value as i64).into()
+    }
+}
+
+impl<'a> Add for &'a BigInt {
+    type Output = BigInt;
+
+    fn add(self, rhs: &'a BigInt) -> BigInt {
+        BigInt {
+            inner: &self.inner + &rhs.inner,
+        }
+    }
+}
+
+impl<'a> Sub for &'a BigInt {
+    type Output = BigInt;
+
+    fn sub(self, rhs: &'a BigInt) -> BigInt {
+        BigInt {
+            inner: &self.inner - &rhs.inner,
         }
     }
 }

@@ -87,7 +87,7 @@ fn test_sqrt_errors() {
 
 #[test]
 fn test_number_regress() {
-    test("953 mega", "9.53e8 (dimensionless)");
+    test("953 mega", "953000000 (dimensionless)");
 }
 
 #[test]
@@ -265,7 +265,7 @@ fn test_convert_to_substances() {
         "egg: USA large egg. \
          mass = 1 kilogram; \
          egg_shelled = 20 egg; \
-         egg_white = 100/3, approx. 33.33333 egg; \
+         egg_white = 33.[3]... egg; \
          egg_yolk = 5000/93, approx. 53.76344 egg",
     );
 }
@@ -393,7 +393,7 @@ fn test_functions() {
 
 #[test]
 fn test_equal_rhs() {
-    test("1 -> a=3", "1/3, approx. 0.3333333 a (dimensionless)");
+    test("1 -> a=3", "0.[3]... a (dimensionless)");
 }
 
 #[test]
@@ -520,14 +520,11 @@ fn test_digits() {
         "ln(1234) -> digits 100",
         "approx. 7.11801620446533345187845043255947530269622802734375 (dimensionless)",
     );
-    test(
-        "1/7 -> digits 50",
-        "1/7, approx. 0.1428571428571428571428571428571428571428571428571428 (dimensionless)",
-    );
-    test("trillion / 7", "approx. 1.428571e11 (dimensionless)");
+    test("1/7 -> digits 50", "0.[142857]... (dimensionless)");
+    test("trillion / 7", "1.[428571]...e11 (dimensionless)");
     test(
         "trillion / 7 to digits",
-        "approx. 142857142857.1 (dimensionless)",
+        "142857142857.[142857]... (dimensionless)",
     );
 }
 
@@ -742,7 +739,7 @@ fn test_tim() {
     // Issue #151, rink crashing due to stack overflow
     test(
         "Tim",
-        "Definition: Tim = 12^-4 hour = 3125/18, approx. 173.6111 millisecond (time; s)",
+        "Definition: Tim = 12^-4 hour = 173.6[1]... millisecond (time; s)",
     );
 }
 
