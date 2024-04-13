@@ -177,6 +177,33 @@ division.
 Powers have higher precedence than multiplication. Both `^` and `**`
 can be used.
 
+	> 11 mod 3
+	2  (dimensionless)
+	> meter mod foot
+	85.6 millimeter (length)
+
+The `mod` operator can be used to find the remainder of division. It has
+the same precedence as `*`. Requires both inputs to have the same
+dimensionality.
+
+	> 1 << 24
+	16777216  (dimensionless)
+	> 16 >> 2
+
+Equivalent to multiplying or dividing by a power of two. The right side
+must be dimensionless.
+
+	4  (dimensionless)
+	> 0b1010 and 0b1100 to base 2
+	1000  (dimensionless)
+	> 0b1010 or 0b1100 to base 2
+	1110  (dimensionless)
+	> 0b1010 xor 0b1100 to base 2
+	110  (dimensionless)
+
+Bitwise operators are supported. The inputs must be dimensionless, and
+also must be integers.
+
 Temperature
 ~~~~~~~~~~~
 
@@ -347,8 +374,8 @@ Digits modifier
 
 	> 2^128 -> digits
 	340282366920938463463374607431768211456 (dimensionless)
-	> 1/7 -> digits 50
-	1/7, approx. 0.1428571428571428571428571428571428571428571428571428 (dimensionless)
+	> 1/3937 -> digits
+	0.[000254000508001016002032004064008128016256032512065024130048260096520193040386080772161544323088646177292354584709169418338836677673355346710693421386842773685547371094742189484378968757937515875031750063500127, period 210]...  (dimensionless)
 	> googol -> digits
 	10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 (dimensionless)
 
@@ -364,6 +391,9 @@ specified.
 
 Trancendental numbers currently cannot be precisely represented, so
 asking for many digits of pi or e will produce unsatisfying results.
+
+Rink makes an attempt to find recurring decimals. If you ask it to print
+enough digits, it will find them.
 
 Trigonometric and logarithmic functions are currently implemented
 using a machine-float fallback, because their results cannot be
