@@ -4,24 +4,23 @@
 [![crates.io](https://img.shields.io/crates/v/rink)](https://crates.io/crates/rink)
 [![downloads](https://img.shields.io/crates/d/rink)](https://crates.io/crates/rink)
 
-Rink is a unit-aware calculator. It can be used for physics and
-engineering calculations, as well as dimensionality analysis.
+Rink is an open source unit-aware calculator. It can be used for physics
+and engineering calculations, as well as dimensionality analysis.
 
 Rink supports most systems of measurements including SI, CGS, natural,
 international customary, US customary, UK customary, as well as
 historical measurements. In addition, Rink supports currency
 conversions.
 
-Unique features:
+## Features
 
-- High-precision bignum rational arithmetic
-- Detailed error messages
-- Shows SI physical quantities
-- Finds applicable SI derived units automatically
-- Helps with dimensionality analysis, such as by offering unit
+* Arbitrary precision math
+* Shows SI physical quantities
+* Finds applicable SI derived units automatically
+* Detailed error messages
+* Helps with dimensionality analysis, such as by offering unit
   factorizations and finding units for quantities.
-- Open source
-- First-class support for non-absolute temperature scales
+* Temperature conversions
 
 ## [Manual](./docs/rink.7.adoc)
 
@@ -30,11 +29,6 @@ expression language.
 
 * [CLI man page](./docs/rink.1.adoc)
 * [CLI config.toml](./docs/rink.5.adoc)
-
-## [Web Interface: rinkcalc.app](https://rinkcalc.app)
-
-Rink is available via a web interface in addition to the terminal-based
-interface. Useful for doing calculations on mobile.
 
 ## Install
 
@@ -47,27 +41,56 @@ The most common version of Rink is the command line interface `rink`.
 | Nix             | `nix-env -i rink`    |
 | Scoop           | `scoop install rink` |
 
+## [Web Interface: rinkcalc.app](https://rinkcalc.app)
+
+Rink is available via a web interface in addition to the terminal-based
+interface. Useful for doing calculations on mobile.
+
 ## Examples
 
-```
-> kWh/year -> W
-0.1140795 watt (power)
-```
+How much does it cost to run my computer each year? Say it uses 100
+watts for 4 hours per day, and use the [US average electricity
+cost][elec].
+
+[elec]: https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_5_6_a
 
 ```
-> W -> J
-Conformance error: 1 watt (power) != 1 joule (energy)
-Suggestions: multiply left side by time, multiply right side by frequency
+> 0.1545$/kWh * 100W * (4 hours / day) to $/year
+approx. 22.57196 USD / tropicalyear
 ```
 
-```
-> gallon gasoline -> kWh
-approx. 36.63388 kWh (energy)
-```
+If you made a solid sphere of gold the size of the moon, what would the
+surface gravity be?
 
 ```
-> googol^100
-1.0e10000 (dimensionless)
+> volume of moon * (19.283 g/cm^3) * G / (radius of moon)^2
+approx. 9.365338 meter / second^2 (acceleration)
+> ans to gravity
+approx. 0.9549987 gravity (acceleration)
+```
+
+Ever heard someone joke about Americans measuring fuel efficiency as
+rods per hogshead? Let's try with the [average US car fuel
+efficiency][eff].
+
+[eff]: https://www.bts.gov/content/average-fuel-efficiency-us-passenger-cars-and-light-trucks
+
+```
+> 9.4 km/l to mpg
+approx. 22.11017 mpg (fuel_efficiency)
+> 9.4 km/l to rods per hogshead
+approx. 445741.0 rod / ushogshead (fuel_efficiency)
+```
+
+And then you wonder, wait, what even are these units anyway?
+
+```
+> hogshead
+Definition: ushogshead = 2 liquidbarrel = approx. 238480942.3 millimeter^3 (volume; m^3)
+> liquidbarrel
+Definition: liquidbarrel = 31.5 usgallon = approx. 119240471.1 millimeter^3 (volume; m^3)
+> rod
+Definition: rod = 5.5 yard = 5.0292 meter (length; m)
 ```
 
 ## Library Usage
@@ -76,23 +99,25 @@ approx. 36.63388 kWh (energy)
 
 ```toml
 [dependencies]
-rink-core = "0.6"
+rink-core = "0.7"
 ```
 
 ## License
 
-Rink source code is licensed under the Mozilla Public License, version 2. See [LICENSE-MPL](./LICENSE-MPL) for details.
+Rink source code is licensed under the Mozilla Public License,
+version 2. See [LICENSE-MPL](./LICENSE-MPL) for details.
 
 The data file `definitions.units` is licensed under the GNU General
 Public License, version 3. See [LICENSE-GPL](./LICENSE-GPL) for details.
 
-### Contribution
-
-Contribution guide can be found on the wiki: https://github.com/tiffany352/rink-rs/wiki#contribution-guide
+## Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally
 submitted for inclusion in the work will grant the rights lined out in
 the MPL, including larger works with secondary licenses.
+
+If you plan on making edits to `definitions.units`, check out the
+documentation here: [docs/rink-defs.5.adoc](./docs/rink-defs.5.adoc)
 
 ## Changelog
 
