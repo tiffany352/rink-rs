@@ -124,7 +124,8 @@ impl BigRat {
             let exact = cursor == zero;
             let placed_ints = n >= intdigits;
             let ndigits = match digits {
-                Digits::Default | Digits::FullInt => 6,
+                Digits::Default => 6,
+                Digits::FullInt => 1000,
                 Digits::Digits(n) => intdigits as i32 + n as i32,
             };
             // Conditions for exiting:
