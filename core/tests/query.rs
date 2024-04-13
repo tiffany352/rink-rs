@@ -380,15 +380,31 @@ fn test_functions() {
     test("log(27, 3)", "approx. 3 (dimensionless)");
 
     test("sin(pi/2)", "approx. 1 (dimensionless)");
-    test("cos(asin(0.5) - pi/2)", "approx. 0.5000000 (dimensionless)");
-    test("atan(tan(0.42))", "approx. 0.4199999 (dimensionless)");
-    test("acos(1)", "approx. 0 (dimensionless)");
+    test(
+        "cos(asin(0.5) - 0.5 pi radian)",
+        "approx. 0.5000000 (dimensionless)",
+    );
+    test("atan(tan(0.42))", "approx. 420 milliradian (angle)");
+    test("acos(1)", "approx. 0 radian (angle)");
     test("acosh(cosh(1))", "approx. 1 (dimensionless)");
     // test("asinh(sinh(0.123))", "approx. 0.1230000 (dimensionless)");
     // test("atanh(tanh(1.23))", "approx. 1.230000 (dimensionless)");
 
     test("hypot(3 m, 4 m)", "approx. 5 meter (length)");
-    test("atan2(7, 6)", "approx. 0.8621700 (dimensionless)");
+    test("atan2(7, 6)", "approx. 862.1700 milliradian (angle)");
+
+    test("sin(90deg)", "approx. 1 (dimensionless)");
+    test("cos(180deg)", "approx. -1 (dimensionless)");
+    test("tan(45deg)", "approx. 0.9999999 (dimensionless)");
+
+    test("asin(1) to deg", "approx. 90 degree (angle)");
+    test("acos(0) to deg", "approx. 90 degree (angle)");
+    test("atan(1) to deg", "approx. 45 degree (angle)");
+
+    test(
+        "atan2(6inch, 12foot) to deg",
+        "approx. 2.385944 degree (angle)",
+    );
 }
 
 #[test]

@@ -294,50 +294,77 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                 ),
                 Function::Sin => func!(
                     fn sin(num: Number) {
-                        Ok(Value::Number(Number {
-                            value: Numeric::Float(num.value.to_f64().sin()),
-                            unit: num.unit.clone(),
-                        }))
+                        let radian = Dimensionality::base_unit(BaseUnit::new("radian"));
+                        if !num.unit.is_dimensionless() && num.unit != radian {
+                            Err("sin() accepts only angles or dimensionless inputs".to_owned())
+                        } else {
+                            Ok(Value::Number(Number {
+                                value: Numeric::Float(num.value.to_f64().sin()),
+                                unit: Dimensionality::new(),
+                            }))
+                        }
                     }
                 ),
                 Function::Cos => func!(
                     fn cos(num: Number) {
-                        Ok(Value::Number(Number {
-                            value: Numeric::Float(num.value.to_f64().cos()),
-                            unit: num.unit.clone(),
-                        }))
+                        let radian = Dimensionality::base_unit(BaseUnit::new("radian"));
+                        if !num.unit.is_dimensionless() && num.unit != radian {
+                            Err("cos() accepts only angles or dimensionless inputs".to_owned())
+                        } else {
+                            Ok(Value::Number(Number {
+                                value: Numeric::Float(num.value.to_f64().cos()),
+                                unit: Dimensionality::new(),
+                            }))
+                        }
                     }
                 ),
                 Function::Tan => func!(
                     fn tan(num: Number) {
-                        Ok(Value::Number(Number {
-                            value: Numeric::Float(num.value.to_f64().tan()),
-                            unit: num.unit.clone(),
-                        }))
+                        let radian = Dimensionality::base_unit(BaseUnit::new("radian"));
+                        if !num.unit.is_dimensionless() && num.unit != radian {
+                            Err("tan() accepts only angles or dimensionless inputs".to_owned())
+                        } else {
+                            Ok(Value::Number(Number {
+                                value: Numeric::Float(num.value.to_f64().tan()),
+                                unit: Dimensionality::new(),
+                            }))
+                        }
                     }
                 ),
                 Function::Asin => func!(
                     fn asin(num: Number) {
-                        Ok(Value::Number(Number {
-                            value: Numeric::Float(num.value.to_f64().asin()),
-                            unit: num.unit.clone(),
-                        }))
+                        if !num.unit.is_dimensionless() {
+                            Err("asin() accepts only dimensionless inputs".to_owned())
+                        } else {
+                            Ok(Value::Number(Number {
+                                value: Numeric::Float(num.value.to_f64().asin()),
+                                unit: Dimensionality::base_unit(BaseUnit::new("radian")),
+                            }))
+                        }
                     }
                 ),
                 Function::Acos => func!(
                     fn acos(num: Number) {
-                        Ok(Value::Number(Number {
-                            value: Numeric::Float(num.value.to_f64().acos()),
-                            unit: num.unit.clone(),
-                        }))
+                        if !num.unit.is_dimensionless() {
+                            Err("acos() accepts only dimensionless inputs".to_owned())
+                        } else {
+                            Ok(Value::Number(Number {
+                                value: Numeric::Float(num.value.to_f64().acos()),
+                                unit: Dimensionality::base_unit(BaseUnit::new("radian")),
+                            }))
+                        }
                     }
                 ),
                 Function::Atan => func!(
                     fn atan(num: Number) {
-                        Ok(Value::Number(Number {
-                            value: Numeric::Float(num.value.to_f64().atan()),
-                            unit: num.unit.clone(),
-                        }))
+                        if !num.unit.is_dimensionless() {
+                            Err("atan() accepts only dimensionless inputs".to_owned())
+                        } else {
+                            Ok(Value::Number(Number {
+                                value: Numeric::Float(num.value.to_f64().atan()),
+                                unit: Dimensionality::base_unit(BaseUnit::new("radian")),
+                            }))
+                        }
                     }
                 ),
                 Function::Atan2 => func!(
@@ -347,7 +374,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                         } else {
                             Ok(Value::Number(Number {
                                 value: Numeric::Float(x.value.to_f64().atan2(y.value.to_f64())),
-                                unit: x.unit.clone(),
+                                unit: Dimensionality::base_unit(BaseUnit::new("radian")),
                             }))
                         }
                     }
