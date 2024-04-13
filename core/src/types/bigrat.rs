@@ -72,19 +72,18 @@ impl BigRat {
     // Checks if this is a small-period recurring number. Returns the
     // digits that recur as well as the period.
     //
-    // Indicate recurring decimal sequences up to 10 digits
-    // long. The rule here checks if the current remainder
-    // (`cursor`) divides cleanly into b^N-1 where b is the base
-    // and N is the number of digits to check, then the result
-    // of that division is the digits that recur. So for example
-    // in 1/7, after the decimal point the remainder will be
-    // 1/7, and 7 divides cleanly into 999999 to produce 142857,
-    // the digits which recur. For remainders with a numerator
-    // other than 1, we ignore the remainder when doing this
+    // Indicate recurring decimal sequences up to 10 digits long. The
+    // rule here checks if the current remainder (`cursor`) divides
+    // cleanly into b^N-1 where b is the base and N is the number of
+    // digits to check, then the result of that division is the digits
+    // that recur. So for example in 1/7, after the decimal point the
+    // remainder will be 1/7, and 7 divides cleanly into 999999 to
+    // produce 142857, the digits which recur. For remainders with a
+    // numerator other than 1, the numerator is ignored during this
     // check, and then multiply the digits by it afterwards.
     //
-    // This is done in machine ints because the extra range
-    // isn't necessary.
+    // This is done in machine ints because the extra range isn't
+    // necessary.
     fn is_recurring(&self, base: u8, max_period: u32) -> Option<(i64, u32)> {
         assert!(max_period < 18);
         let numer = self.numer().as_int()?;
@@ -129,16 +128,16 @@ impl BigRat {
                 Digits::Digits(n) => intdigits as i32 + n as i32,
             };
             // Conditions for exiting:
-            // 1. The number is already exact and we've placed all the
-            //    integer positions, or
-            // 2. The number is not exact, but we've placed all the
-            //    integer positions, and we don't want to place anymore
-            //    digits as the number is getting too long.
+            // 1. The number is already exact and all the integer
+            //    positions have been placed, or
+            // 2. The number is not exact, but all the integer positions
+            //    have been placed, and no more digits should be added
+            //    as the number is getting too long.
             let after_radix = n as i32 - zeros as i32;
             let max_radix = std::cmp::max(intdigits as i32, ndigits);
             let bail = (exact && placed_ints) || after_radix > max_radix;
 
-            // Before bailing we should first check if adding a few
+            // Before bailing, first check if adding a few
             // extra digits would yield a recurring decimal.
             if bail && !exact {
                 if let Some((digits, period)) = cursor.is_recurring(base, 4) {
@@ -164,7 +163,7 @@ impl BigRat {
             if placed_decimal {
                 // This catches really long period ones like 1/3937.
                 if let (index, false) = seen_remainders.insert_full(cursor.clone()) {
-                    // If the remainder is the same as a previous one, we know it's recurring.
+                    // If the remainder is the same as a previous one, then it's recurring.
                     let period = n - intdigits - index as u32;
                     buf.insert(buf.len() - period as usize, '[');
                     if period > 10 {
