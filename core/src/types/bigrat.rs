@@ -208,13 +208,24 @@ impl BigRat {
     pub fn to_scientific(&self, base: u8, digits: Digits) -> (bool, String) {
         let num = self.numer();
         let den = self.denom();
-        let intdigits = (&num / &den).size_in_base(base) as u32 - 1;
+        let absnum = num.abs();
+        let intdigits = if &absnum > &den {
+            (&absnum / &den).next_power_of(base) as i64 - 1
+        } else {
+            -((&den / &absnum).next_power_of(base) as i64)
+        };
         let absexp = BigInt::from(base as i64).pow((intdigits as i64).abs() as u32);
 
         let rational = if intdigits > 0 {
             self * &BigRat::ratio(&BigInt::one(), &absexp)
         } else {
             self * &BigRat::ratio(&absexp, &BigInt::one())
+        };
+        let ten = BigRat::small_ratio(base as i64, 1);
+        let (rational, intdigits) = if rational.abs() == ten {
+            (&rational / &ten, intdigits + 1)
+        } else {
+            (rational, intdigits)
         };
         let (is_exact, mut result) = rational.to_digits_impl(base, digits);
         if !result.contains('.') {
@@ -323,5 +334,68 @@ impl<'a> Rem for &'a BigRat {
         BigRat {
             inner: &self.inner % &rhs.inner,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        output::Digits,
+        types::{BigInt, BigRat},
+    };
+
+    #[test]
+    fn test_scientific_small() {
+        let googol = BigRat::ratio(&BigInt::pow(&BigInt::from(10), 100), &BigInt::one());
+        assert_eq!(
+            googol.to_scientific(10, Digits::Default),
+            (true, "1.0e100".to_owned())
+        );
+        assert_eq!(
+            (&BigRat::one() / &googol).to_scientific(10, Digits::Default),
+            (true, "1.0e-100".to_owned())
+        );
+        assert_eq!(
+            (-&googol).to_scientific(10, Digits::Default),
+            (true, "-1.0e100".to_owned())
+        );
+        assert_eq!(
+            (&-&BigRat::one() / &googol).to_scientific(10, Digits::Default),
+            (true, "-1.0e-100".to_owned())
+        );
+        let googol_plus = &googol + &BigRat::one();
+        assert_eq!(
+            googol_plus.to_scientific(10, Digits::Default),
+            (false, "1.000000e100".to_owned())
+        );
+        assert_eq!(
+            (&BigRat::one() / &googol_plus).to_scientific(10, Digits::Default),
+            (false, "9.999999e-101".to_owned())
+        );
+        assert_eq!(
+            (-&googol_plus).to_scientific(10, Digits::Default),
+            (false, "-1.000000e100".to_owned())
+        );
+        assert_eq!(
+            (&-&BigRat::one() / &googol_plus).to_scientific(10, Digits::Default),
+            (false, "-9.999999e-101".to_owned())
+        );
+        let googol_minus = &googol - &BigRat::one();
+        assert_eq!(
+            googol_minus.to_scientific(10, Digits::Default),
+            (false, "9.999999e99".to_owned())
+        );
+        assert_eq!(
+            (&BigRat::one() / &googol_minus).to_scientific(10, Digits::Default),
+            (false, "1.000000e-100".to_owned())
+        );
+        assert_eq!(
+            (-&googol_minus).to_scientific(10, Digits::Default),
+            (false, "-9.999999e99".to_owned())
+        );
+        assert_eq!(
+            (&-&BigRat::one() / &googol_minus).to_scientific(10, Digits::Default),
+            (false, "-1.000000e-100".to_owned())
+        );
     }
 }
