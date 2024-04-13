@@ -41,6 +41,10 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
     }
 }
 
+const HELP_TEXT: &'static str = "The rink manual can be found with `man 7 rink`, or online:
+https://github.com/tiffany352/rink-rs/blob/master/docs/rink.7.adoc
+To quit, type `quit` or press Ctrl+D.";
+
 pub fn interactive(config: &Config) -> Result<()> {
     let mut rl = Editor::<RinkHelper>::new();
 
@@ -78,11 +82,7 @@ pub fn interactive(config: &Config) -> Result<()> {
         let readline = rl.readline(&config.rink.prompt);
         match readline {
             Ok(ref line) if line == "help" => {
-                println!(
-                    "For information on how to use Rink, see the manual: \
-                     https://github.com/tiffany352/rink-rs/wiki/Rink-Manual\n\
-                     To quit, type `quit`."
-                );
+                println!("{}", HELP_TEXT);
             }
             Ok(ref line) if line == "quit" || line == ":q" || line == "exit" => {
                 save_history(&mut rl);
@@ -161,11 +161,7 @@ pub async fn interactive_sandboxed(config: Config) -> Result<()> {
         };
         match readline {
             Ok(ref line) if line == "help" => {
-                println!(
-                    "For information on how to use Rink, see the manual: \
-                     https://github.com/tiffany352/rink-rs/wiki/Rink-Manual\n\
-                     To quit, type `quit`."
-                );
+                println!("{}", HELP_TEXT);
             }
             Ok(ref line) if line == "quit" || line == ":q" || line == "exit" => {
                 save_history(&mut rl.lock().unwrap());
