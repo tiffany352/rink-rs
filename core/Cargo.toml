@@ -23,6 +23,7 @@ chrono-tz = { version = "0.5.2", default-features = false }
 chrono-humanize = { version = "0.1.2", optional = true }
 serde = { version = "1", features = ["rc"], default-features = false }
 serde_derive = "1"
+indexmap = "2"
 
 [dev_dependencies]
 serde_json = { version = "1", default-features = false }

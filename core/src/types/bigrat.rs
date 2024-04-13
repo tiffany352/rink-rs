@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use indexmap::IndexSet;
 use num_rational::BigRational as NumRat;
 use num_traits::{sign::Signed, One, ToPrimitive, Zero};
 use serde_derive::{Deserialize, Serialize};
@@ -13,7 +14,7 @@ use crate::output::Digits;
 
 use super::BigInt;
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
 pub struct BigRat {
     inner: NumRat,
 }
@@ -68,6 +69,37 @@ impl BigRat {
         self.inner.to_f64().unwrap()
     }
 
+    // Checks if this is a small-period recurring number. Returns the
+    // digits that recur as well as the period.
+    //
+    // Indicate recurring decimal sequences up to 10 digits
+    // long. The rule here checks if the current remainder
+    // (`cursor`) divides cleanly into b^N-1 where b is the base
+    // and N is the number of digits to check, then the result
+    // of that division is the digits that recur. So for example
+    // in 1/7, after the decimal point the remainder will be
+    // 1/7, and 7 divides cleanly into 999999 to produce 142857,
+    // the digits which recur. For remainders with a numerator
+    // other than 1, we ignore the remainder when doing this
+    // check, and then multiply the digits by it afterwards.
+    //
+    // This is done in machine ints because the extra range
+    // isn't necessary.
+    fn is_recurring(&self, base: u8, max_period: u32) -> Option<(i64, u32)> {
+        assert!(max_period < 18);
+        let numer = self.numer().as_int()?;
+        let denom = self.denom().as_int()?;
+        for i in 1..max_period {
+            let test = (base as i64).pow(i) - 1;
+            if test % denom == 0 {
+                // Recurring digits
+                let digits = (test / denom) * numer;
+                return Some((digits, i));
+            }
+        }
+        None
+    }
+
     fn to_digits_impl(&self, base: u8, digits: Digits) -> (bool, String) {
         let sign = *self < BigRat::zero();
         let rational = self.abs();
@@ -87,6 +119,7 @@ impl BigRat {
         let mut only_zeros = true;
         let mut zeros = 0;
         let mut placed_decimal = false;
+        let mut seen_remainders = IndexSet::new();
         loop {
             let exact = cursor == zero;
             let placed_ints = n >= intdigits;
@@ -100,8 +133,24 @@ impl BigRat {
             // 2. The number is not exact, but we've placed all the
             //    integer positions, and we don't want to place anymore
             //    digits as the number is getting too long.
-            let bail = (exact && placed_ints)
-                || n as i32 - zeros as i32 > ::std::cmp::max(intdigits as i32, ndigits);
+            let after_radix = n as i32 - zeros as i32;
+            let max_radix = std::cmp::max(intdigits as i32, ndigits);
+            let bail = (exact && placed_ints) || after_radix > max_radix;
+
+            // Before bailing we should first check if adding a few
+            // extra digits would yield a recurring decimal.
+            if bail && !exact {
+                if let Some((digits, period)) = cursor.is_recurring(base, 4) {
+                    buf.push('[');
+                    for n in 1..=period {
+                        let digit = digits / (base as i64).pow(period - n) % base as i64;
+                        buf.push(std::char::from_digit(digit as u32, base as u32).unwrap());
+                    }
+                    buf.push_str("]...");
+                    return (true, buf);
+                }
+            }
+
             if bail {
                 return (exact, buf);
             }
@@ -110,36 +159,31 @@ impl BigRat {
                 placed_decimal = true;
             }
 
-            // Indicate recurring decimal sequences up to 10 digits
-            // long. The rule here checks if the current remainder
-            // (`cursor`) divides cleanly into b^N-1 where b is the base
-            // and N is the number of digits to check, then the result
-            // of that division is the digits that recur. So for example
-            // in 1/7, after the decimal point the remainder will be
-            // 1/7, and 7 divides cleanly into 999999 to produce 142857,
-            // the digits which recur. For remainders with a numerator
-            // other than 1, we ignore the remainder when doing this
-            // check, and then multiply the digits by it afterwards.
+            // Handle recurring decimals
             if placed_decimal {
-                // Do this in machine ints because the extra range
-                // isn't necessary.
-                if let (Some(numer), Some(denom)) =
-                    (cursor.numer().as_int(), cursor.denom().as_int())
-                {
-                    for i in 1..10 {
-                        let test = (base as i64).pow(i) - 1;
-                        if test % denom == 0 {
-                            // Recurring digits
-                            let digits = (test / denom) * numer;
-                            buf.push('[');
-                            for n in 1..=i {
-                                let digit = digits / (base as i64).pow(i - n) % base as i64;
-                                buf.push(std::char::from_digit(digit as u32, base as u32).unwrap());
-                            }
-                            buf.push_str("]...");
-                            return (true, buf);
-                        }
+                // This catches really long period ones like 1/3937.
+                if let (index, false) = seen_remainders.insert_full(cursor.clone()) {
+                    // If the remainder is the same as a previous one, we know it's recurring.
+                    let period = n - intdigits - index as u32;
+                    buf.insert(buf.len() - period as usize, '[');
+                    if period > 10 {
+                        buf.push_str(", period ");
+                        buf.push_str(&period.to_string());
                     }
+                    buf.push_str("]...");
+                    return (true, buf);
+                }
+
+                // This catches really short period ones that would be
+                // missed from bailing early.
+                if let Some((digits, period)) = cursor.is_recurring(base, 10) {
+                    buf.push('[');
+                    for n in 1..=period {
+                        let digit = digits / (base as i64).pow(period - n) % base as i64;
+                        buf.push(std::char::from_digit(digit as u32, base as u32).unwrap());
+                    }
+                    buf.push_str("]...");
+                    return (true, buf);
                 }
             }
 
