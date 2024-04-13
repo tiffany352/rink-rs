@@ -5,8 +5,8 @@
 use crate::style_ser;
 use ansi_term::{Color, Style};
 use color_eyre::Result;
+use curl::easy::Easy;
 use eyre::{eyre, Report, WrapErr};
-use reqwest::header::USER_AGENT;
 use rink_core::output::fmt::FmtToken;
 use rink_core::parsing::datetime;
 use rink_core::Context;
@@ -14,7 +14,7 @@ use rink_core::{ast, loader::gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE}
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 use std::ffi::OsString;
-use std::io::{ErrorKind, Read, Seek, SeekFrom};
+use std::io::{ErrorKind, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -336,38 +336,13 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
 
     create_dir_all(path.parent().unwrap())?;
 
-    let client = reqwest::blocking::Client::builder()
-        .timeout(timeout)
-        .build()
-        .wrap_err("Creating HTTP client")?;
-
-    let mut response = client
-        .get(url)
-        .header(
-            USER_AGENT,
-            format!(
-                "rink-cli {} <{}>",
-                env!("CARGO_PKG_VERSION"),
-                env!("CARGO_PKG_REPOSITORY")
-            ),
-        )
-        .send()?;
-
-    let status = response.status();
-    if !status.is_success() {
-        return Err(eyre!(
-            "Received status {} while downloading {}",
-            status,
-            url
-        ));
-    }
-
     // Given a filename like `foo.json`, names the temp file something
     // similar, like `foo.ABCDEF.json`.
     let mut prefix = path.file_stem().unwrap().to_owned();
     prefix.push(".");
     let mut suffix = OsString::from(".");
     suffix.push(path.extension().unwrap());
+
     // The temp file should be created in the same directory as its
     // final home, as the default temporary file directory might not be
     // the same filesystem.
@@ -376,9 +351,31 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
         .suffix(&suffix)
         .tempfile_in(path.parent().unwrap())?;
 
-    response
-        .copy_to(temp_file.as_file_mut())
-        .wrap_err_with(|| format!("While dowloading {}", url))?;
+    let mut easy = Easy::new();
+    easy.url(url)?;
+    easy.useragent(&format!(
+        "rink-cli {} <{}>",
+        env!("CARGO_PKG_VERSION"),
+        env!("CARGO_PKG_REPOSITORY")
+    ))?;
+    easy.timeout(timeout)?;
+
+    let mut write_handle = temp_file.as_file_mut().try_clone()?;
+    easy.write_function(move |data| {
+        write_handle
+            .write(data)
+            .map_err(|_| curl::easy::WriteError::Pause)
+    })?;
+    easy.perform()?;
+
+    let status = easy.response_code()?;
+    if status != 200 {
+        return Err(eyre!(
+            "Received status {} while downloading {}",
+            status,
+            url
+        ));
+    }
 
     temp_file.as_file_mut().sync_all()?;
     temp_file.as_file_mut().seek(SeekFrom::Start(0))?;
@@ -414,11 +411,11 @@ fn cached(filename: &str, url: &str, expiration: Duration, timeout: Duration) ->
             "{:?}",
             Report::wrap_err(
                 err,
-                format!("Failed to refresh {}, using stale version", filename)
+                format!("Failed to refresh {}, using stale version", url)
             )
         );
         Ok(file)
     } else {
-        Err(err).wrap_err_with(|| format!("Failed to fetch {}", filename))
+        Err(err).wrap_err_with(|| format!("Failed to fetch {}", url))
     }
 }
