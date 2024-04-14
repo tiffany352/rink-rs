@@ -43,9 +43,15 @@ function buildHtml(tokens: [SpanOrList], parent: HTMLElement) {
 		if (token.type == "list") {
 			buildHtml(token.children, cur);
 		} else if (token.fmt == "pow") {
-			let text = token.text.replace(/^\^/, '');
+			let span = document.createElement("span");
+			span.classList.add(`hl-hidden`);
+			span.innerText = "^";
+
 			let sup = document.createElement("sup");
-			sup.innerText = text;
+			let text = token.text.replace(/^\^/, '');
+			sup.append(span, text);
+			sup.prepend(span);
+
 			cur.appendChild(sup);
 		} else if (token.fmt == "list_begin") {
 			ul = document.createElement("ul");

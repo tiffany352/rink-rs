@@ -54,3 +54,8 @@
 .hl-user-input {
 	font-family: var(--font-code);
 }
+
+/* invisible formatting text for when you copy-paste */
+.hl-hidden {
+	font-size: 0;
+}
