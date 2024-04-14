@@ -91,6 +91,9 @@ init().then(() => {
 	rinkDiv.innerHTML = '';
 	rinkDiv.appendChild(welcome);
 
+	let history = JSON.parse(window.localStorage.getItem("rink-history") || '[]');
+	let historyIndex = history.length;
+
 	function execute(queryString: string) {
 		let quote = document.createElement("blockquote");
 		quote.innerText = textEntry.value;
@@ -107,6 +110,10 @@ init().then(() => {
 		rinkDiv.appendChild(p);
 		textEntry.value = "";
 		window.scrollTo(0, document.body.scrollHeight);
+
+		history.push(queryString);
+		historyIndex = history.length;
+		window.localStorage.setItem("rink-history", JSON.stringify(history));
 	}
 
 	const urlParams = new URLSearchParams(window.location.search);
@@ -118,5 +125,22 @@ init().then(() => {
 	form.addEventListener("submit", (event) => {
 		event.preventDefault();
 		execute(textEntry.value);
+	});
+
+	textEntry.addEventListener("keydown", (event) => {
+		if (event instanceof KeyboardEvent && event.key == "ArrowUp") {
+			event.preventDefault();
+			historyIndex--;
+			if (historyIndex < 0) historyIndex = 0;
+			textEntry.value = history[historyIndex];
+		} else if (event instanceof KeyboardEvent && event.key == "ArrowDown") {
+			event.preventDefault();
+			historyIndex++;
+			if (historyIndex > history.length) historyIndex = history.length;
+			if (history[historyIndex])
+				textEntry.value = history[historyIndex];
+			else
+				textEntry.value = '';
+		}
 	});
 });
