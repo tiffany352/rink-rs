@@ -98,6 +98,11 @@ impl Context {
         Context { context }
     }
 
+    #[wasm_bindgen(js_name = setSavePreviousResult)]
+    pub fn set_save_previous_result(&mut self, value: bool) {
+        self.context.save_previous_result = value;
+    }
+
     #[wasm_bindgen(js_name = setTime)]
     pub fn set_time(&mut self, date: Date) {
         self.context
@@ -150,4 +155,9 @@ impl Context {
             Err(err) => format!("Failed to serialize: {}\n{:#?}", err, tokens).into(),
         }
     }
+}
+
+#[wasm_bindgen]
+pub fn version() -> String {
+    rink_core::version().to_owned()
 }

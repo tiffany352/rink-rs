@@ -66,3 +66,8 @@ pub fn simple_context() -> Result<Context, String> {
 
     Ok(ctx)
 }
+
+// Returns `env!("CARGO_PKG_VERSION")`, a string in `x.y.z` format.
+pub fn version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}

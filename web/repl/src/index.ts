@@ -8,7 +8,12 @@ init().then(() => {
   let textEntry: HTMLInputElement = document.querySelector("#query")!;
 
   let ctx = new rink.Context();
+  ctx.setSavePreviousResult(true);
   console.log(ctx);
+
+  let welcome = document.createElement("p");
+  welcome.innerText = `Rink ${rink.version()}`;
+  rinkDiv.appendChild(welcome);
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -22,22 +27,35 @@ init().then(() => {
     console.log(tokens);
 
     let p = document.createElement("p");
+    let ul: HTMLUListElement | null = null;
+    let cur: HTMLElement = p;
     for (const token of tokens) {
       if (token.fmt == "plain") {
-        p.appendChild(new Text(token.text));
+        cur.appendChild(new Text(token.text));
       } else if (token.fmt == "pow") {
         let text = token.text.replace(/^\^/, '');
         let sup = document.createElement("sup");
         sup.innerText = text;
-        p.appendChild(sup);
+        cur.appendChild(sup);
+      } else if (token.fmt == "list_begin") {
+        ul = document.createElement("ul");
+        p.appendChild(ul);
+        let li = document.createElement("li");
+        cur = li;
+        ul.appendChild(li);
+      } else if (token.fmt == "list_sep" && ul) {
+        let li = document.createElement("li");
+        cur = li;
+        ul.appendChild(li);
       } else {
         let span = document.createElement("span");
-        span.classList.add(`hl-${token.fmt}`);
+        span.classList.add(`hl-${token.fmt.replace('_', '-')}`);
         span.innerText = token.text;
-        p.appendChild(span);
+        cur.appendChild(span);
       }
     }
 
     rinkDiv.appendChild(p);
+    textEntry.value = "";
   });
 });

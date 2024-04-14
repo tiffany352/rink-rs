@@ -1,0 +1,50 @@
+:root {
+	--bg-input: #0a0b0c;
+	--fg-input: #ffffff;
+	--border-input: #2c2f32;
+	--border-input-focus: #2992d4;
+}
+
+#rink-outputs > blockquote {
+	border-left: 2px solid #fff;
+	margin-left: -2px;
+	padding-left: 1em;
+}
+
+#rink-query > input {
+	appearance: none;
+	background-color: var(--bg-input);
+	color: var(--fg-input);
+	border-radius: 3px;
+	border: 2px solid var(--border-input);
+	width: 100%;
+	font-size: inherit;
+	padding: 0.2em 0.5em;
+	margin: 0.1em 0;
+}
+
+#rink-query > input:focus {
+	outline: none;
+	border: 2px solid var(--border-input-focus);
+}
+
+.hl-unit {
+	color: #8accff;
+}
+
+.hl-quantity {
+	color: #b3ff98;
+}
+
+.hl-doc-string {
+	font-style: italic;
+}
+
+.hl-error {
+	color: #ff7474;
+	font-weight: bold;
+}
+
+.hl-user-input {
+	font-family: var(--font-code);
+}
