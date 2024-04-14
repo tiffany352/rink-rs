@@ -7,10 +7,10 @@ Name
 ----
 
 rink-dates - Rink file format for date patterns
-endif::[]
 
 Synposis
 --------
+endif::[]
 
 Rink allows specifying datetimes using **\#date#** syntax in queries. This
 file defines the patterns that are used to try to match the specified
