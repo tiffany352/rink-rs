@@ -293,3 +293,25 @@ table {
   margin: 1em auto;
   overflow-x: auto;
 }
+
+/* rink-specific */
+#rink-query > input {
+  width: 100%;
+}
+
+.hl-unit {
+  color: #8accff;
+}
+
+.hl-quantity {
+  color: #b3ff98;
+}
+
+.hl-doc_string {
+  font-style: italic;
+}
+
+.hl-error {
+  color: #ff7474;
+  font-weight: bold;
+}

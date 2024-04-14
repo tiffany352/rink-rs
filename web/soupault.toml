@@ -53,8 +53,8 @@ widget = "deuglify"
 widget = "fetch-releases"
 page = "releases.html"
 
-[widgets.wasm-pack]
-widget = "wasm-pack"
+[widgets.vite]
+widget = "vite"
 page = "index.html"
 
 [widgets.relocate-h1]
