@@ -73,15 +73,12 @@ function buildHtml(tokens: [SpanOrList], parent: HTMLElement) {
 }
 
 init().then(() => {
-	console.log('hello', rink);
-
 	let rinkDiv: HTMLElement = document.querySelector("#rink-outputs")!;
 	let form: HTMLFormElement = document.querySelector("#rink-query")!;
 	let textEntry: HTMLInputElement = document.querySelector("#query")!;
 
 	let ctx = new rink.Context();
 	ctx.setSavePreviousResult(true);
-	console.log(ctx);
 
 	let welcome = document.createElement("p");
 	welcome.innerText = `Rink ${rink.version()}`;
@@ -98,7 +95,7 @@ init().then(() => {
 		let query = new rink.Query(textEntry.value);
 		ctx.setTime(new Date());
 		let tokens = ctx.eval_tokens(query);
-		console.log(tokens);
+		console.log("formatting tokens: ", tokens);
 
 		let p = document.createElement("p");
 		buildHtml(tokens, p);
