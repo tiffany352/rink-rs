@@ -2,7 +2,6 @@
 	--bg-color: #141518;
 	--bg-highlight: #191c22;
 	--text-main: #fff;
-	--text-code: #fff;
 	--text-dimmed: #da8d6a;
 	--text-heading: #a2b9da;
 	--font-main: "Atkinson Hyperlegible", "Segoe UI", "San Francisco", "Roboto",
@@ -212,7 +211,6 @@ h6:focus a.toclink {
 
 code {
 	font-family: var(--font-code);
-	color: var(--text-code);
 }
 
 pre {

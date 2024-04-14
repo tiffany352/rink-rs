@@ -1,3 +1,4 @@
+ifndef::website[]
 = rink-dates(5)
 :manmanual: Rink Manual
 :mansource: Rink Manual
@@ -6,6 +7,7 @@ Name
 ----
 
 rink-dates - Rink file format for date patterns
+endif::[]
 
 Synposis
 --------
@@ -113,7 +115,9 @@ Rink searches the following locations:
 * `__$XDG_CONFIG_DIR__/rink/datepatterns.txt`
 * `/usr/share/rink/datepatterns.txt`
 
+ifndef::website[]
 See also
 --------
 xref:rink.1.adoc[rink(1)], xref:rink.5.adoc[rink(5)],
 xref:rink.7.adoc[rink(7)], xref:rink-defs.5.adoc[rink-defs(5)]
+endif::[]
