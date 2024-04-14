@@ -68,7 +68,7 @@ function build_description(markdown_text)
 
 	-- parse html & shrink headings
 	local body = HTML.parse(body_content)
-	local headers = HTML.select(body, "h2")
+	local headers = HTML.select_all_of(body, { "h1", "h2" })
 	local j = 1
 	while headers[j] do
 		HTML.set_tag_name(headers[j], "h3")
