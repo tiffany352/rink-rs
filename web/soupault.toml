@@ -70,3 +70,9 @@ selector = ".e-content>span.meta"
 new_parent = "h1"
 action = "insert_after"
 after = "relocate-h1"
+
+[widgets.opengraph]
+widget = "opengraph"
+
+[custom_options]
+site_title = "Rink"

@@ -86,10 +86,14 @@ init().then(() => {
 	let ctx = new rink.Context();
 	ctx.setSavePreviousResult(true);
 
-	let welcome = document.createElement("p");
-	welcome.innerText = `Rink ${rink.version()}`;
-	rinkDiv.innerHTML = '';
-	rinkDiv.appendChild(welcome);
+	let h1 = document.querySelector("h1");
+	if (h1) {
+		h1.innerText = `Rink ${rink.version()}`;
+	}
+
+	// clear the loading message
+	textEntry.placeholder = "Enter a query, like `3 feet to meters`";
+	textEntry.disabled = false;
 
 	let history = JSON.parse(window.localStorage.getItem("rink-history") || '[]');
 	let historyIndex = history.length;
@@ -99,21 +103,28 @@ init().then(() => {
 		quote.innerText = textEntry.value;
 		rinkDiv.appendChild(quote);
 
-		let query = new rink.Query(queryString);
-		ctx.setTime(new Date());
-		let tokens = ctx.eval_tokens(query);
-		console.log("formatting tokens: ", tokens);
+		try {
+			let query = new rink.Query(queryString);
+			ctx.setTime(new Date());
+			let tokens = ctx.eval_tokens(query);
+			console.log("formatting tokens: ", tokens);
 
-		let p = document.createElement("p");
-		buildHtml(tokens, p);
+			let p = document.createElement("p");
+			buildHtml(tokens, p);
 
-		rinkDiv.appendChild(p);
-		textEntry.value = "";
-		window.scrollTo(0, document.body.scrollHeight);
+			rinkDiv.appendChild(p);
+			textEntry.value = "";
+			window.scrollTo(0, document.body.scrollHeight);
 
-		history.push(queryString);
-		historyIndex = history.length;
-		window.localStorage.setItem("rink-history", JSON.stringify(history));
+			history.push(queryString);
+			historyIndex = history.length;
+			window.localStorage.setItem("rink-history", JSON.stringify(history));
+		} catch (err) {
+			let p = document.createElement("p");
+			p.classList.add("hl-error");
+			p.innerText = `Unknown error: ${err}`;
+			rinkDiv.appendChild(p);
+		}
 	}
 
 	const urlParams = new URLSearchParams(window.location.search);
