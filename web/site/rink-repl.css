@@ -5,6 +5,10 @@
 	--border-input-focus: #2992d4;
 }
 
+#rink-outputs {
+	word-wrap: break-word;
+}
+
 #rink-outputs > blockquote {
 	border-left: 2px solid #fff;
 	margin-left: -2px;
@@ -18,6 +22,7 @@
 	border-radius: 3px;
 	border: 2px solid var(--border-input);
 	width: 100%;
+	box-sizing: border-box;
 	font-size: inherit;
 	padding: 0.2em 0.5em;
 	margin: 0.1em 0;

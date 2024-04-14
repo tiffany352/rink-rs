@@ -18,7 +18,7 @@ body {
 	background-color: var(--bg-color);
 	color: var(--text-main);
 	margin: 0;
-	font-size: 20px;
+	font-size: 16px;
 	line-height: 1.4;
 	tab-size: 4;
 	width: 100%;
@@ -33,6 +33,10 @@ main {
 }
 
 @media screen and (min-width: 1024px) {
+	body {
+		font-size: 20px;
+	}
+
 	main {
 		margin: 0 auto;
 		width: 1024px;
@@ -61,6 +65,15 @@ main {
 		padding-left: 0.75em;
 		padding-right: 0.75em;
 	}
+
+	nav > a {
+		padding: 0.3em;
+	}
+
+	nav > .nav-spacer {
+		display: unset;
+		flex-grow: 1;
+	}
 }
 
 main > article {
@@ -72,8 +85,7 @@ main > article {
 
 nav {
 	display: flex;
-	flex-flow: row wrap;
-	justify-content: flex-end;
+	flex-flow: row;
 	align-items: flex-end;
 	border-bottom-style: solid;
 	border-bottom-width: 1px;
@@ -83,7 +95,7 @@ nav {
 }
 
 .nav-spacer {
-	flex-grow: 1;
+	display: none;
 }
 
 nav > a {
@@ -93,12 +105,6 @@ nav > a {
 
 	color: var(--link-normal);
 	stroke: var(--link-normal);
-}
-
-@media screen and (max-width: 40em) {
-	nav > a {
-		padding: 0.3em;
-	}
 }
 
 nav > a:hover,
@@ -287,9 +293,15 @@ span.meta {
 }
 
 table {
+	background-color: var(--bg-highlight);
 	display: block;
-	width: min-content;
+	width: fit-content;
 	max-width: 100%;
 	margin: 1em auto;
 	overflow-x: auto;
+	padding: 0.5em;
+}
+
+td {
+	padding: 0 0.5em;
 }
