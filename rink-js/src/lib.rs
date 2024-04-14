@@ -6,6 +6,7 @@ use chrono::{Local, TimeZone};
 use js_sys::Date;
 use rink_core::ast;
 use rink_core::output::fmt::{FmtToken, Span, TokenFmt};
+use rink_core::output::QueryReply;
 use rink_core::parsing::text_query;
 use serde_derive::*;
 use wasm_bindgen::prelude::*;
@@ -144,7 +145,15 @@ impl Context {
 
     #[wasm_bindgen]
     pub fn eval(&mut self, expr: &Query) -> JsValue {
-        let value = Success::from(self.context.eval_query(&expr.query));
+        let value = self.context.eval_query(&expr.query);
+        if self.context.save_previous_result {
+            if let Ok(QueryReply::Number(ref number_parts)) = value {
+                if let Some(ref raw) = number_parts.raw_value {
+                    self.context.previous_result = Some(raw.clone());
+                }
+            }
+        }
+        let value = Success::from(value);
         match serde_wasm_bindgen::to_value(&value) {
             Ok(value) => value,
             Err(err) => format!("Failed to serialize: {}\n{:#?}", err, value).into(),
@@ -154,6 +163,13 @@ impl Context {
     #[wasm_bindgen]
     pub fn eval_tokens(&mut self, expr: &Query) -> JsValue {
         let value = self.context.eval_query(&expr.query);
+        if self.context.save_previous_result {
+            if let Ok(QueryReply::Number(ref number_parts)) = value {
+                if let Some(ref raw) = number_parts.raw_value {
+                    self.context.previous_result = Some(raw.clone());
+                }
+            }
+        }
         let spans = match value {
             Ok(ref value) => value.to_spans(),
             Err(ref value) => value.to_spans(),
