@@ -215,6 +215,7 @@ code {
 
 pre {
 	background-color: var(--bg-highlight);
+	font-family: var(--font-code);
 	max-width: 100%;
 	white-space: pre-wrap;
 	word-wrap: break-word;
