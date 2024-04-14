@@ -2,7 +2,7 @@
   "name": "Rink",
   "short_name": "Rink",
   "theme_color": "#2196f3",
-  "background_color": "#2196f3",
+  "background_color": "#141518",
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
