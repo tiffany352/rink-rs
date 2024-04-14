@@ -1,0 +1,72 @@
+[settings]
+# Defaults
+soupault_version = "4.9.0"
+strict = true
+verbose = true
+debug = false
+site_dir = "site"
+build_dir = "build"
+page_file_extensions = ["htm", "html", "md", "rst", "adoc"]
+clean_urls = true
+keep_extensions = ["html", "htm"]
+default_extension = "html"
+ignore_extensions = ["draft"]
+generator_mode = true
+complete_page_selector = "html"
+default_template_file = "templates/main.html"
+default_content_selector = "article>section"
+default_content_action = "append_child"
+keep_doctype = true
+doctype = "<!DOCTYPE html>"
+pretty_print_html = true
+plugin_discovery = true
+plugin_dirs = ["plugins"]
+caching = false
+cache_dir = ".soupault-cache"
+page_character_encoding = "utf-8"
+
+[preprocessors]
+adoc = "node scripts/asciidoc.js"
+
+[widgets.page-title]
+widget = "title"
+selector = "h1"
+force = false
+
+[widgets.toc]
+widget = "toc"
+selector = "#toc"
+min_level = 2
+max_level = 4
+numbered_list = true
+heading_links = true
+heading_link_text = "#"
+heading_link_class = "toclink"
+use_heading_slug = true
+slug_replacement_string = "-"
+ignore_heading_selectors = [".linkheader"]
+
+[widgets.deuglify]
+widget = "deuglify"
+
+[widgets.fetch-releases]
+widget = "fetch-releases"
+page = "releases.html"
+
+[widgets.wasm-pack]
+widget = "wasm-pack"
+page = "index.html"
+
+[widgets.relocate-h1]
+widget = "relocate"
+selector = "h1"
+new_parent = "main>nav"
+action = "insert_after"
+after = "toc"
+
+[widgets.relocate-meta]
+widget = "relocate"
+selector = ".e-content>span.meta"
+new_parent = "h1"
+action = "insert_after"
+after = "relocate-h1"

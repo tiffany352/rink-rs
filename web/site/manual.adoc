@@ -1,0 +1,1 @@
+include::../../docs/rink.7.adoc[]
