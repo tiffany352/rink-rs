@@ -1,0 +1,8 @@
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+	<ShortName>Rink</ShortName>
+	<Description>Run unit calculations using rink</Description>
+	<InputEncoding>utf-8</InputEncoding>
+	<Image width="16" height="16" type="image/x-icon">https://rinkcalc.app/favicon.png</Image>
+	<Url type="text/html" template="https://rinkcalc.app?q={searchTerms}"/>
+	<moz:SearchForm>https://rinkcalc.app</moz:SearchForm>
+</OpenSearchDescription>
