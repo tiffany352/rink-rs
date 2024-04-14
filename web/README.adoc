@@ -1,0 +1,6 @@
+= Rink web
+
+This is the sources required to build https://rinkcalc.app.
+
+1. Run `wasm-pack build --target web ../rink-js`
+2. Enter `web/repl/` and run `npm install`

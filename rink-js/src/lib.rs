@@ -5,6 +5,7 @@
 use chrono::{Local, TimeZone};
 use js_sys::Date;
 use rink_core::ast;
+use rink_core::output::fmt::{FmtToken, Span, TokenFmt};
 use rink_core::parsing::text_query;
 use serde_derive::*;
 use wasm_bindgen::prelude::*;
@@ -68,6 +69,24 @@ pub struct Context {
     context: rink_core::Context,
 }
 
+#[derive(Serialize, Debug)]
+struct Token {
+    pub text: String,
+    pub fmt: FmtToken,
+}
+
+fn visit_tokens(spans: &[Span], out: &mut Vec<Token>) {
+    for span in spans {
+        match span {
+            Span::Content { text, token } => out.push(Token {
+                text: text.to_string(),
+                fmt: *token,
+            }),
+            Span::Child(child) => visit_tokens(&child.to_spans(), out),
+        }
+    }
+}
+
 #[wasm_bindgen]
 impl Context {
     #[wasm_bindgen(constructor)]
@@ -113,6 +132,22 @@ impl Context {
         match serde_wasm_bindgen::to_value(&value) {
             Ok(value) => value,
             Err(err) => format!("Failed to serialize: {}\n{:#?}", err, value).into(),
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn eval_tokens(&mut self, expr: &Query) -> JsValue {
+        let value = self.context.eval_query(&expr.query);
+        let spans = match value {
+            Ok(ref value) => value.to_spans(),
+            Err(ref value) => value.to_spans(),
+        };
+        let mut tokens = vec![];
+        visit_tokens(&spans, &mut tokens);
+
+        match serde_wasm_bindgen::to_value(&tokens) {
+            Ok(value) => value,
+            Err(err) => format!("Failed to serialize: {}\n{:#?}", err, tokens).into(),
         }
     }
 }
