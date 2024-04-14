@@ -1,4 +1,4 @@
-import { Def } from "util/defs";
+import type { Def } from "./defs";
 import fetch from "node-fetch";
 import { parse } from "elementtree";
 import { writeFile } from "atomically";
