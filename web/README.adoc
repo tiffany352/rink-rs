@@ -2,5 +2,11 @@
 
 This is the sources required to build https://rinkcalc.app.
 
-1. Run `wasm-pack build --target web ../rink-js`
+1. Run `wasm-pack build --target web rink-js`
 2. Enter `web/repl/` and run `npm install`
+3. Enter `web/` and run `soupault --verbose`
+4. To view, enter `web/build/` and run `python -m http.server -b localhost 3000`
+
+== Deployment
+
+Copy the contents of `web/build/` to your server.

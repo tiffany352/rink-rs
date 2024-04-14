@@ -75,16 +75,27 @@ struct Token {
     pub fmt: FmtToken,
 }
 
-fn visit_tokens(spans: &[Span], out: &mut Vec<Token>) {
-    for span in spans {
-        match span {
-            Span::Content { text, token } => out.push(Token {
+#[derive(Serialize, Debug)]
+#[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
+enum SpanOrList {
+    Span(Token),
+    List { children: Vec<SpanOrList> },
+}
+
+fn visit_tokens(spans: &[Span]) -> Vec<SpanOrList> {
+    spans
+        .iter()
+        .map(|span| match span {
+            Span::Content { text, token } => SpanOrList::Span(Token {
                 text: text.to_string(),
                 fmt: *token,
             }),
-            Span::Child(child) => visit_tokens(&child.to_spans(), out),
-        }
-    }
+            Span::Child(child) => SpanOrList::List {
+                children: visit_tokens(&child.to_spans()),
+            },
+        })
+        .collect()
 }
 
 #[wasm_bindgen]
@@ -147,8 +158,7 @@ impl Context {
             Ok(ref value) => value.to_spans(),
             Err(ref value) => value.to_spans(),
         };
-        let mut tokens = vec![];
-        visit_tokens(&spans, &mut tokens);
+        let tokens = visit_tokens(&spans);
 
         match serde_wasm_bindgen::to_value(&tokens) {
             Ok(value) => value,

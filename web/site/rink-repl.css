@@ -28,7 +28,8 @@
 	border: 2px solid var(--border-input-focus);
 }
 
-.hl-unit {
+.hl-unit,
+.hl-prop-name {
 	color: #8accff;
 }
 

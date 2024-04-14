@@ -1,5 +1,53 @@
 import init, * as rink from 'rink-js';
 
+// Taken from https://stackoverflow.com/a/3809435
+const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
+const powRegex = /\^(\-?\d+)/g;
+
+function buildInline(parent: HTMLElement, text: string) {
+  // escape any html tags
+  parent.innerText = text;
+  text = parent.innerHTML;
+  // apply the regexes
+  text = text.replace(urlRegex, (match) =>
+    `<a href="${match}" rel="nofollow">${match}</a>`
+  );
+  text = text.replace(powRegex, (_match, rest) =>
+    `<sup>${rest}</sup>`
+  );
+  parent.innerHTML = text;
+}
+
+function buildHtml(tokens, parent: HTMLElement) {
+  let ul: HTMLUListElement | null = null;
+  let cur: HTMLElement = parent;
+  for (const token of tokens) {
+    if (token.type == "list") {
+      buildHtml(token.children, cur);
+    } else if (token.fmt == "pow") {
+      let text = token.text.replace(/^\^/, '');
+      let sup = document.createElement("sup");
+      sup.innerText = text;
+      cur.appendChild(sup);
+    } else if (token.fmt == "list_begin") {
+      ul = document.createElement("ul");
+      parent.appendChild(ul);
+      let li = document.createElement("li");
+      cur = li;
+      ul.appendChild(li);
+    } else if (token.fmt == "list_sep" && ul) {
+      let li = document.createElement("li");
+      cur = li;
+      ul.appendChild(li);
+    } else {
+      let span = document.createElement("span");
+      span.classList.add(`hl-${token.fmt.replace('_', '-')}`);
+      buildInline(span, token.text);
+      cur.appendChild(span);
+    }
+  }
+}
+
 init().then(() => {
   console.log('hello', rink);
 
@@ -27,33 +75,7 @@ init().then(() => {
     console.log(tokens);
 
     let p = document.createElement("p");
-    let ul: HTMLUListElement | null = null;
-    let cur: HTMLElement = p;
-    for (const token of tokens) {
-      if (token.fmt == "plain") {
-        cur.appendChild(new Text(token.text));
-      } else if (token.fmt == "pow") {
-        let text = token.text.replace(/^\^/, '');
-        let sup = document.createElement("sup");
-        sup.innerText = text;
-        cur.appendChild(sup);
-      } else if (token.fmt == "list_begin") {
-        ul = document.createElement("ul");
-        p.appendChild(ul);
-        let li = document.createElement("li");
-        cur = li;
-        ul.appendChild(li);
-      } else if (token.fmt == "list_sep" && ul) {
-        let li = document.createElement("li");
-        cur = li;
-        ul.appendChild(li);
-      } else {
-        let span = document.createElement("span");
-        span.classList.add(`hl-${token.fmt.replace('_', '-')}`);
-        span.innerText = token.text;
-        cur.appendChild(span);
-      }
-    }
+    buildHtml(tokens, p);
 
     rinkDiv.appendChild(p);
     textEntry.value = "";
