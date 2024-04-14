@@ -91,14 +91,12 @@ init().then(() => {
 	rinkDiv.innerHTML = '';
 	rinkDiv.appendChild(welcome);
 
-	form.addEventListener("submit", (event) => {
-		event.preventDefault();
-
+	function execute(queryString: string) {
 		let quote = document.createElement("blockquote");
 		quote.innerText = textEntry.value;
 		rinkDiv.appendChild(quote);
 
-		let query = new rink.Query(textEntry.value);
+		let query = new rink.Query(queryString);
 		ctx.setTime(new Date());
 		let tokens = ctx.eval_tokens(query);
 		console.log("formatting tokens: ", tokens);
@@ -109,5 +107,16 @@ init().then(() => {
 		rinkDiv.appendChild(p);
 		textEntry.value = "";
 		window.scrollTo(0, document.body.scrollHeight);
+	}
+
+	const urlParams = new URLSearchParams(window.location.search);
+	const q = urlParams.get('q');
+	if (q) {
+		execute(q);
+	}
+
+	form.addEventListener("submit", (event) => {
+		event.preventDefault();
+		execute(textEntry.value);
 	});
 });
