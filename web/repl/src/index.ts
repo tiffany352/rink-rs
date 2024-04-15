@@ -155,3 +155,11 @@ init().then(() => {
 		}
 	});
 });
+
+// unregister any service workers left over from previous versions of the site
+navigator.serviceWorker.getRegistrations().then(registrations => {
+	for (const registration of registrations) {
+		console.log("unregistering service worker", registration);
+		registration.unregister();
+	}
+});
