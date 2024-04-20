@@ -230,8 +230,6 @@ Promise.all([wasmBlob, currency]).then(([buffer, currencyDataRes]) => {
 			p.innerHTML = "";
 			buildHtml(tokens, p);
 
-			rinkDiv.appendChild(p);
-			textEntry.value = "";
 			window.scrollTo(0, document.body.scrollHeight);
 
 			// prevent duplicates in history
@@ -271,7 +269,9 @@ Promise.all([wasmBlob, currency]).then(([buffer, currencyDataRes]) => {
 
 	form.addEventListener("submit", (event) => {
 		event.preventDefault();
-		execute(textEntry.value);
+		const text = textEntry.value;
+		textEntry.value = "";
+		execute(text);
 	});
 
 	textEntry.addEventListener("keydown", (event) => {
