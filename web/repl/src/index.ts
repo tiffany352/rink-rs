@@ -105,7 +105,6 @@ init().then(() => {
 
 	// clear the loading message
 	textEntry.placeholder = "Enter a query, like `3 feet to meters`";
-	textEntry.disabled = false;
 
 	let history = JSON.parse(
 		window.localStorage.getItem("rink-history") || "[]",
