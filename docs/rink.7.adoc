@@ -518,9 +518,9 @@ Reference
 ---------
 
 The full list of units is specified in the file `definitions.units` (see
-xref:rink-defs.5.adoc[rink-defs(5)]), but a small list of the most
-helpful ones will be listed here. It is intended that most units should
-be easy to guess the names of.
+rink-defs(5)), but a small list of the most helpful ones will be listed
+here. It is intended that most units should be easy to guess the names
+of.
 
 SI derived
 ~~~~~~~~~~
