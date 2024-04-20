@@ -1,30 +1,22 @@
-import type { Def } from "./defs";
 import fetch from "node-fetch";
 import { parse } from "elementtree";
 import { writeFile } from "atomically";
 import { mkdir } from "fs/promises";
-import ecbDefaults from "./ecb-defaults.json";
+import ecbDefaults from "./ecb-defaults.json" with { type: "json" };
 
 async function btc() {
-	interface Format {
-		timestamp: number;
-		market_price_usd: number;
-		hash_rate: number;
-		totalbc: number;
-	}
-
 	const response = await fetch("https://api.blockchain.info/stats");
 	console.log("Fetched", response.url, response.status, response.statusText);
 	if (response.status != 200) {
 		throw new Error(
-			`Received ${response.status} ${response.statusText} from blockchain.info`
+			`Received ${response.status} ${response.statusText} from blockchain.info`,
 		);
 	}
-	const json: Format = await response.json();
+	const json = await response.json();
 
 	const date = new Date(json.timestamp);
 
-	const defs: Def[] = [
+	const defs = [
 		{
 			name: "BTC",
 			doc: null,
@@ -75,12 +67,12 @@ async function btc() {
 
 async function ecb() {
 	const response = await fetch(
-		"https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
+		"https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml",
 	);
 	console.log("Fetched", response.url, response.status, response.statusText);
 	if (response.status != 200) {
 		throw new Error(
-			`Received ${response.status} ${response.statusText} from ecb.europea.eu`
+			`Received ${response.status} ${response.statusText} from ecb.europea.eu`,
 		);
 	}
 	const body = await response.text();
@@ -89,8 +81,8 @@ async function ecb() {
 
 	const desc = `Sourced from European Central Bank. Current as of ${timestamp}.`;
 
-	const defs: Def[] = [];
-	const seen: Set<string> = new Set();
+	const defs = [];
+	const seen = new Set();
 	for (const element of doc.findall(".//Cube")) {
 		const currency = element.attrib.currency;
 		const rate = element.attrib.rate;
@@ -133,7 +125,7 @@ export const currencyPath = `${DATA_DIR}/currency.json`;
 
 export async function updateCurrency() {
 	const [btcDefs, ecbDefs] = await Promise.all([btc(), ecb()]);
-	const defs: Def[] = [...btcDefs, ...ecbDefs];
+	const defs = [...btcDefs, ...ecbDefs];
 
 	await mkdir(DATA_DIR, { recursive: true });
 
@@ -143,4 +135,4 @@ export async function updateCurrency() {
 	console.log("Successfully updated file.");
 }
 
-updateCurrency()
+updateCurrency();

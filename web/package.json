@@ -1,22 +1,14 @@
 {
 	"type": "module",
 	"author": "Tiffany Bennett (https://tiffnix.com)",
-	"name": "rink-web",
+	"name": "rink-web-soupault",
 	"version": "0.6.3",
 	"repository": "https://github.com/tiffany352/rink-rs",
 	"homepage": "https://rinkcalc.app",
-	"description": "Web interface to Rink",
+	"description": "Static site generation for rinkcalc.app",
 	"license": "MPL-2.0",
 	"devDependencies": {
-		"@types/elementtree": "^0.1.0",
-		"@types/node-fetch": "^2.5.7",
-		"tslib": "^2.0.0",
-		"typescript": "^5.4.5",
 		"asciidoctor": "^3"
 	},
-	"dependencies": {
-		"elementtree": "^0.1.7",
-		"node-fetch": "^2.6.1",
-		"atomically": "1.7.0"
-	}
+	"dependencies": {}
 }
