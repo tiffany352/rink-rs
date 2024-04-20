@@ -84,7 +84,7 @@ function pushError(error: Error | string) {
 }
 
 // The only way to fetch with progress is to use the old fashioned XMLHttpRequest API.
-const wasmBlob = new Promise((resolve, reject) => {
+const wasmBlob = new Promise<ArrayBuffer>((resolve, reject) => {
 	const label = document.createElement("label");
 	label.htmlFor = "rink-dl";
 	label.innerText = "Downloading rink.wasm...";
@@ -125,7 +125,7 @@ const wasmBlob = new Promise((resolve, reject) => {
 	};
 	req.onload = (_event) => {
 		onFinish();
-		const buffer = req.response;
+		const buffer: ArrayBuffer = req.response;
 		if (buffer) {
 			resolve(buffer);
 		} else {
@@ -148,8 +148,8 @@ const wasmBlob = new Promise((resolve, reject) => {
 	req.send();
 });
 
-let wasmBuffer;
-let worker;
+let wasmBuffer: ArrayBuffer | null = null;
+let worker: Worker | null = null;
 function startWorker() {
 	worker = new Worker(new URL('./worker.ts', import.meta.url));
 	worker.postMessage({
@@ -167,25 +167,25 @@ wasmBlob.then((buffer) => {
 			const handler = (event: MessageEvent<RinkResponse>) => {
 				const msg = event.data;
 				if (msg.type == type && (!id || (msg as any).id == id)) {
-					worker.removeEventListener("message", handler);
+					worker!.removeEventListener("message", handler);
 					resolve(msg);
 				}
 			};
-			worker.addEventListener("message", handler);
+			worker!.addEventListener("message", handler);
 		})
 	}
 
 	let queryCounter = 1;
 	function requestExecute(query: string): Promise<[SpanOrList]> {
 		const id = queryCounter++;
-		worker.postMessage({
+		worker!.postMessage({
 			type: "execute",
 			id,
 			query,
 		})
 		return new Promise((resolve, reject) => {
 			const timeoutId = setTimeout(() => {
-				worker.terminate();
+				worker!.terminate();
 				startWorker();
 				reject("Terminated after 5 seconds");
 			}, 5000);
