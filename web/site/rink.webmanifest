@@ -1,6 +1,8 @@
 {
+  "id": "rink",
   "name": "Rink",
   "short_name": "Rink",
+  "lang": "en",
   "theme_color": "#2196f3",
   "background_color": "#141518",
   "display": "standalone",
