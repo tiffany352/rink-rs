@@ -3,6 +3,7 @@ export type RinkRequest = HelloReq | ExecuteReq;
 export type HelloReq = {
 	type: "hello",
 	buffer: ArrayBuffer,
+	currency?: string,
 }
 
 export type ExecuteReq = {

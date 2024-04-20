@@ -8,6 +8,9 @@ onmessage = (event: MessageEvent<RinkRequest>) => {
 	if (msg.type == "hello") {
 		init(msg.buffer).then((_rink) => {
 			ctx = new Rink.Context();
+			ctx.setSavePreviousResult(true);
+			if (msg.currency)
+				ctx.loadCurrency(msg.currency);
 			const response: HelloRes = {
 				type: "hello",
 				version: Rink.version(),
@@ -26,6 +29,7 @@ onmessage = (event: MessageEvent<RinkRequest>) => {
 			};
 		} else {
 			const query = new Rink.Query(msg.query);
+			ctx.setTime(new Date());
 			const tokens = ctx.eval_tokens(query);
 
 			response = {
