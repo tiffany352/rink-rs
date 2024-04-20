@@ -1,20 +1,33 @@
-import init, * as rink from 'rink-js';
+import init, * as rink from "rink-js";
 
 // Taken from https://stackoverflow.com/a/3809435
-const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
+const urlRegex =
+	/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
 const powRegex = /\^(\-?\d+)/g;
 
-type TokenType = "plain" | "error" | "unit" | "quantity" | "number" | "user_input" | "list_begin" | "list_sep" | "doc_string" | "pow" | "prop_name" | "date_time"
+type TokenType =
+	| "plain"
+	| "error"
+	| "unit"
+	| "quantity"
+	| "number"
+	| "user_input"
+	| "list_begin"
+	| "list_sep"
+	| "doc_string"
+	| "pow"
+	| "prop_name"
+	| "date_time";
 
 type Token = {
-	type: "span",
-	text: string,
-	fmt: TokenType,
+	type: "span";
+	text: string;
+	fmt: TokenType;
 };
 type TokenList = {
-	type: "list",
-	children: [SpanOrList],
-}
+	type: "list";
+	children: [SpanOrList];
+};
 type SpanOrList = Token | TokenList;
 
 function buildInline(parent: HTMLElement, text: string) {
@@ -22,19 +35,18 @@ function buildInline(parent: HTMLElement, text: string) {
 	parent.innerText = text;
 	text = parent.innerHTML;
 	// apply the regexes
-	text = text.replace(urlRegex, (match) =>
-		`<a href="${match}" rel="nofollow">${match}</a>`
+	text = text.replace(
+		urlRegex,
+		(match) => `<a href="${match}" rel="nofollow">${match}</a>`,
 	);
-	text = text.replace(powRegex, (_match, rest) =>
-		`<sup>${rest}</sup>`
-	);
+	text = text.replace(powRegex, (_match, rest) => `<sup>${rest}</sup>`);
 	parent.innerHTML = text;
 }
 
 const dateFmt = new Intl.DateTimeFormat(undefined, {
 	dateStyle: "long",
 	timeStyle: "long",
-})
+});
 
 function buildHtml(tokens: [SpanOrList], parent: HTMLElement) {
 	let ul: HTMLUListElement | null = null;
@@ -48,7 +60,7 @@ function buildHtml(tokens: [SpanOrList], parent: HTMLElement) {
 			span.innerText = "^";
 
 			let sup = document.createElement("sup");
-			let text = token.text.replace(/^\^/, '');
+			let text = token.text.replace(/^\^/, "");
 			sup.append(span, text);
 			sup.prepend(span);
 
@@ -71,7 +83,7 @@ function buildHtml(tokens: [SpanOrList], parent: HTMLElement) {
 			cur.appendChild(time);
 		} else {
 			let span = document.createElement("span");
-			span.classList.add(`hl-${token.fmt.replace('_', '-')}`);
+			span.classList.add(`hl-${token.fmt.replace("_", "-")}`);
 			buildInline(span, token.text);
 			cur.appendChild(span);
 		}
@@ -95,7 +107,9 @@ init().then(() => {
 	textEntry.placeholder = "Enter a query, like `3 feet to meters`";
 	textEntry.disabled = false;
 
-	let history = JSON.parse(window.localStorage.getItem("rink-history") || '[]');
+	let history = JSON.parse(
+		window.localStorage.getItem("rink-history") || "[]",
+	);
 	let historyIndex = history.length;
 
 	function execute(queryString: string) {
@@ -103,7 +117,7 @@ init().then(() => {
 		quote.innerText = queryString;
 		let permalink = document.createElement("a");
 		permalink.href = `${location.origin}/?q=${queryString}`;
-		permalink.text = '#';
+		permalink.text = "#";
 		quote.appendChild(permalink);
 		rinkDiv.appendChild(quote);
 
@@ -124,10 +138,12 @@ init().then(() => {
 			history = history.filter((query: string) => query != queryString);
 			history.push(queryString);
 			// keep history from becoming too long
-			if (history.length > 200)
-				history.shift();
+			if (history.length > 200) history.shift();
 			historyIndex = history.length;
-			window.localStorage.setItem("rink-history", JSON.stringify(history));
+			window.localStorage.setItem(
+				"rink-history",
+				JSON.stringify(history),
+			);
 		} catch (err) {
 			let p = document.createElement("p");
 			p.classList.add("hl-error");
@@ -137,7 +153,7 @@ init().then(() => {
 	}
 
 	const urlParams = new URLSearchParams(window.location.search);
-	const queries = urlParams.getAll('q');
+	const queries = urlParams.getAll("q");
 	for (const q of queries) {
 		execute(q);
 	}
@@ -157,16 +173,14 @@ init().then(() => {
 			event.preventDefault();
 			historyIndex++;
 			if (historyIndex > history.length) historyIndex = history.length;
-			if (history[historyIndex])
-				textEntry.value = history[historyIndex];
-			else
-				textEntry.value = '';
+			if (history[historyIndex]) textEntry.value = history[historyIndex];
+			else textEntry.value = "";
 		}
 	});
 });
 
 // unregister any service workers left over from previous versions of the site
-navigator.serviceWorker.getRegistrations().then(registrations => {
+navigator.serviceWorker.getRegistrations().then((registrations) => {
 	for (const registration of registrations) {
 		console.log("unregistering service worker", registration);
 		registration.unregister();

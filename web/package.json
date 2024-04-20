@@ -18,9 +18,5 @@
 		"elementtree": "^0.1.7",
 		"node-fetch": "^2.6.1",
 		"atomically": "1.7.0"
-	},
-	"browserslist": [
-		"last 3 chrome versions",
-		"last 3 firefox versions"
-	]
+	}
 }
