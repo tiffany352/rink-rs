@@ -17,7 +17,10 @@ a statically generated site.
 2. Enter `web/repl/` and run `npm install`
 3. Enter `web/` and run `npm install`
 4. Enter `web/` and run `soupault --verbose`
-5. To view, enter `web/build/` and run `python -m http.server -b localhost 3000`
+5. Enter `web/currency/` and run `npm install`
+6. Enter `web/build/` and run `node ../currency/update-currency.js`
+7. To view, enter `web/build/` and run
+   `python -m http.server -b localhost 3000 --protocol HTTP/1.1`
 
 Github releases are only fetched once. To re-fetch them, delete
 `web/build/releases.json` and re-run soupault.
@@ -25,3 +28,7 @@ Github releases are only fetched once. To re-fetch them, delete
 == Deployment
 
 Copy the contents of `web/build/` to your server.
+
+Copy `web/currency/`, including its `node_modules`, to your server.
+Setup a cron job to run the currency script to update the `data/`
+directory, about once an hour is good.
