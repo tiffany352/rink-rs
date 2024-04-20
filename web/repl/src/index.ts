@@ -83,6 +83,8 @@ function pushError(error: Error | string) {
 	rinkDiv.appendChild(element);
 }
 
+const currency = fetch("/data/currency.json").then((res) => res.text());
+
 // The only way to fetch with progress is to use the old fashioned XMLHttpRequest API.
 const wasmBlob = new Promise<ArrayBuffer>((resolve, reject) => {
 	const label = document.createElement("label");
@@ -149,17 +151,20 @@ const wasmBlob = new Promise<ArrayBuffer>((resolve, reject) => {
 });
 
 let wasmBuffer: ArrayBuffer | null = null;
+let currencyData: string | null = null;
 let worker: Worker | null = null;
 function startWorker() {
 	worker = new Worker(new URL('./worker.ts', import.meta.url));
 	worker.postMessage({
 		type: "hello",
 		buffer: wasmBuffer,
+		currency: currencyData,
 	} as HelloReq);
 }
 
-wasmBlob.then((buffer) => {
+Promise.all([wasmBlob, currency]).then(([buffer, currencyDataRes]) => {
 	wasmBuffer = buffer;
+	currencyData = currencyDataRes;
 	startWorker();
 
 	function expectMessage(type: string, id: number | null): Promise<RinkResponse> {
