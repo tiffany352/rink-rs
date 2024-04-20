@@ -116,7 +116,12 @@ init().then(() => {
 			textEntry.value = "";
 			window.scrollTo(0, document.body.scrollHeight);
 
+			// prevent duplicates in history
+			history = history.filter((query: string) => query != queryString);
 			history.push(queryString);
+			// keep history from becoming too long
+			if (history.length > 200)
+				history.shift();
 			historyIndex = history.length;
 			window.localStorage.setItem("rink-history", JSON.stringify(history));
 		} catch (err) {
