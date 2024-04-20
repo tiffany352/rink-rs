@@ -1,3 +1,5 @@
+:website:
+
 include::../../docs/rink.1.adoc[]
 
 == See Also
