@@ -100,7 +100,11 @@ init().then(() => {
 
 	function execute(queryString: string) {
 		let quote = document.createElement("blockquote");
-		quote.innerText = textEntry.value;
+		quote.innerText = queryString;
+		let permalink = document.createElement("a");
+		permalink.href = `${location.origin}/?q=${queryString}`;
+		permalink.text = '#';
+		quote.appendChild(permalink);
 		rinkDiv.appendChild(quote);
 
 		try {
@@ -133,8 +137,8 @@ init().then(() => {
 	}
 
 	const urlParams = new URLSearchParams(window.location.search);
-	const q = urlParams.get('q');
-	if (q) {
+	const queries = urlParams.getAll('q');
+	for (const q of queries) {
 		execute(q);
 	}
 

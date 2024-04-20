@@ -13,6 +13,16 @@
 	border-left: 2px solid #fff;
 	margin-left: -2px;
 	padding-left: 1em;
+	position: relative;
+}
+
+#rink-outputs > blockquote > a {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	text-align: right;
 }
 
 #rink-query > input {
