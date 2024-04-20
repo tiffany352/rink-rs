@@ -90,93 +90,185 @@ function buildHtml(tokens: [SpanOrList], parent: HTMLElement) {
 	}
 }
 
-init().then(() => {
-	let rinkDiv: HTMLElement = document.querySelector("#rink-outputs")!;
-	let form: HTMLFormElement = document.querySelector("#rink-query")!;
-	let textEntry: HTMLInputElement = document.querySelector("#query")!;
+let rinkDiv: HTMLElement = document.querySelector("#rink-outputs")!;
+let form: HTMLFormElement = document.querySelector("#rink-query")!;
+let textEntry: HTMLInputElement = document.querySelector("#query")!;
 
-	let ctx = new rink.Context();
-	ctx.setSavePreviousResult(true);
-
-	let h1 = document.querySelector("h1");
-	if (h1) {
-		h1.innerText = `Rink ${rink.version()}`;
+function pushError(error: Error | string) {
+	let message: string;
+	if (error instanceof Error) {
+		message = error.message;
+	} else {
+		message = error;
 	}
 
-	// clear the loading message
-	textEntry.placeholder = "Enter a query, like `3 feet to meters`";
+	const element = document.createElement("p");
+	element.classList.add("hl-error");
+	element.innerText = message;
+	rinkDiv.appendChild(element);
+}
 
-	let history = JSON.parse(
-		window.localStorage.getItem("rink-history") || "[]",
-	);
-	let historyIndex = history.length;
+// The only way to fetch with progress is to use the old fashioned XMLHttpRequest API.
+const wasmBlob = new Promise((resolve, reject) => {
+	const label = document.createElement("label");
+	label.htmlFor = "rink-dl";
+	label.innerText = "Downloading rink.wasm...";
+	const progress = document.createElement("progress");
+	progress.id = "rink-dl";
+	progress.value = 0;
+	const cancel = document.createElement("button");
+	cancel.innerText = "Cancel";
 
-	function execute(queryString: string) {
-		let quote = document.createElement("blockquote");
-		quote.innerText = queryString;
-		let permalink = document.createElement("a");
-		permalink.href = `${location.origin}/?q=${queryString}`;
-		permalink.text = "#";
-		quote.appendChild(permalink);
-		rinkDiv.appendChild(quote);
+	rinkDiv.appendChild(label);
+	rinkDiv.appendChild(progress);
+	rinkDiv.appendChild(cancel);
 
-		try {
-			let query = new rink.Query(queryString);
-			ctx.setTime(new Date());
-			let tokens = ctx.eval_tokens(query);
-			console.log("formatting tokens: ", tokens);
+	const req = new XMLHttpRequest();
+	req.open("GET", "/assets/rink_js_bg.wasm");
+	req.responseType = "arraybuffer";
 
-			let p = document.createElement("p");
-			buildHtml(tokens, p);
+	const onFinish = () => {
+		label.remove();
+		progress.remove();
+		cancel.remove();
+	};
 
-			rinkDiv.appendChild(p);
-			textEntry.value = "";
-			window.scrollTo(0, document.body.scrollHeight);
-
-			// prevent duplicates in history
-			history = history.filter((query: string) => query != queryString);
-			history.push(queryString);
-			// keep history from becoming too long
-			if (history.length > 200) history.shift();
-			historyIndex = history.length;
-			window.localStorage.setItem(
-				"rink-history",
-				JSON.stringify(history),
-			);
-		} catch (err) {
-			let p = document.createElement("p");
-			p.classList.add("hl-error");
-			p.innerText = `Unknown error: ${err}`;
-			rinkDiv.appendChild(p);
+	req.onprogress = (event) => {
+		let total = event.total;
+		// ugly hack because for some reason browsers don't report correct totals
+		const length = req.getResponseHeader("Content-Length");
+		if (!event.lengthComputable && length) {
+			total = parseInt(length);
 		}
-	}
-
-	const urlParams = new URLSearchParams(window.location.search);
-	const queries = urlParams.getAll("q");
-	for (const q of queries) {
-		execute(q);
-	}
-
-	form.addEventListener("submit", (event) => {
-		event.preventDefault();
-		execute(textEntry.value);
-	});
-
-	textEntry.addEventListener("keydown", (event) => {
-		if (event instanceof KeyboardEvent && event.key == "ArrowUp") {
-			event.preventDefault();
-			historyIndex--;
-			if (historyIndex < 0) historyIndex = 0;
-			textEntry.value = history[historyIndex];
-		} else if (event instanceof KeyboardEvent && event.key == "ArrowDown") {
-			event.preventDefault();
-			historyIndex++;
-			if (historyIndex > history.length) historyIndex = history.length;
-			if (history[historyIndex]) textEntry.value = history[historyIndex];
-			else textEntry.value = "";
+		progress.value = event.loaded;
+		progress.max = total;
+		const totalKb = Math.floor(total / 1000).toString();
+		const loadedKb = Math.floor(event.loaded / 1000)
+			.toString()
+			.padStart(totalKb.length, "0");
+		label.innerHTML = `Downloading rink.wasm... <code>${loadedKb} / ${totalKb}</code> kB`;
+	};
+	req.onload = (_event) => {
+		onFinish();
+		const buffer = req.response;
+		if (buffer) {
+			resolve(buffer);
+		} else {
+			reject("Unable to get binary data from request");
 		}
-	});
+	};
+	req.onerror = (_event) => {
+		onFinish();
+		reject("Download failed");
+	};
+	req.onabort = (_event) => {
+		onFinish();
+		reject("Download aborted");
+	};
+
+	cancel.onclick = () => {
+		req.abort();
+	};
+
+	req.send();
 });
+
+init(wasmBlob)
+	.then(() => {
+		let ctx = new rink.Context();
+		ctx.setSavePreviousResult(true);
+
+		let h1 = document.querySelector("h1");
+		if (h1) {
+			h1.innerText = `Rink ${rink.version()}`;
+		}
+
+		// clear the loading message
+		textEntry.placeholder = "Enter a query, like `3 feet to meters`";
+
+		let history = JSON.parse(
+			window.localStorage.getItem("rink-history") || "[]",
+		);
+		let historyIndex = history.length;
+
+		function execute(queryString: string) {
+			let quote = document.createElement("blockquote");
+			quote.innerText = queryString;
+			let permalink = document.createElement("a");
+			permalink.href = `${location.origin}/?q=${queryString}`;
+			permalink.text = "#";
+			quote.appendChild(permalink);
+			rinkDiv.appendChild(quote);
+
+			try {
+				let query = new rink.Query(queryString);
+				ctx.setTime(new Date());
+				let tokens = ctx.eval_tokens(query);
+				console.log("formatting tokens: ", tokens);
+
+				let p = document.createElement("p");
+				buildHtml(tokens, p);
+
+				rinkDiv.appendChild(p);
+				textEntry.value = "";
+				window.scrollTo(0, document.body.scrollHeight);
+
+				// prevent duplicates in history
+				history = history.filter(
+					(query: string) => query != queryString,
+				);
+				history.push(queryString);
+				// keep history from becoming too long
+				if (history.length > 200) history.shift();
+				historyIndex = history.length;
+				window.localStorage.setItem(
+					"rink-history",
+					JSON.stringify(history),
+				);
+			} catch (err) {
+				let p = document.createElement("p");
+				p.classList.add("hl-error");
+				p.innerText = `Unknown error: ${err}`;
+				rinkDiv.appendChild(p);
+			}
+		}
+
+		const urlParams = new URLSearchParams(window.location.search);
+		const queries = urlParams.getAll("q");
+		for (const q of queries) {
+			execute(q);
+		}
+
+		form.addEventListener("submit", (event) => {
+			event.preventDefault();
+			execute(textEntry.value);
+		});
+
+		textEntry.addEventListener("keydown", (event) => {
+			if (event instanceof KeyboardEvent && event.key == "ArrowUp") {
+				event.preventDefault();
+				historyIndex--;
+				if (historyIndex < 0) historyIndex = 0;
+				textEntry.value = history[historyIndex];
+			} else if (
+				event instanceof KeyboardEvent &&
+				event.key == "ArrowDown"
+			) {
+				event.preventDefault();
+				historyIndex++;
+				if (historyIndex > history.length)
+					historyIndex = history.length;
+				if (history[historyIndex])
+					textEntry.value = history[historyIndex];
+				else textEntry.value = "";
+			}
+		});
+	})
+	.catch((error) => {
+		pushError(error);
+		textEntry.placeholder = "Loading failed.";
+		textEntry.disabled = true;
+	});
 
 // unregister any service workers left over from previous versions of the site
 navigator.serviceWorker.getRegistrations().then((registrations) => {

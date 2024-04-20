@@ -25,6 +25,10 @@
 	text-align: right;
 }
 
+#rink-outputs > label[for="rink-dl"] {
+	display: block;
+}
+
 #rink-query > input {
 	appearance: none;
 	background-color: var(--bg-input);
