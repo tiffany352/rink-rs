@@ -4,7 +4,7 @@
 // This work is licensed under CC BY-SA 4.0
 // <https://creativecommons.org/licenses/by-sa/4.0/>
 //
-// Adds a `katex:[]` inline macro for math.
+// This version has katex handling removed.
 //
 // Inserts extra metadata into the page using mf2 metadata. This is much
 // more information than is included when using `asciidoctor
