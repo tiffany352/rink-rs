@@ -99,7 +99,7 @@ const wasmBlob = new Promise<ArrayBuffer>((resolve, reject) => {
 	rinkDiv.appendChild(cancel);
 
 	const req = new XMLHttpRequest();
-	req.open("GET", "/assets/rink_js_bg.wasm");
+	req.open("GET", document.currentScript!.dataset.wasm!);
 	req.responseType = "arraybuffer";
 
 	const onFinish = () => {
