@@ -1,14 +1,12 @@
 import init, * as Rink from "rink-js";
 import type { ExecuteRes, HelloRes, RinkRequest } from "./proto";
 
-let rink: Rink.InitOutput | null = null;
 let ctx: Rink.Context | null = null;
 onmessage = (event: MessageEvent<RinkRequest>) => {
 	const msg = event.data;
 	console.log("worker recv: ", msg);
 	if (msg.type == "hello") {
-		init(msg.buffer).then((res) => {
-			rink = res;
+		init(msg.buffer).then((_rink) => {
 			ctx = new Rink.Context();
 			const response: HelloRes = {
 				type: "hello",

@@ -3,7 +3,7 @@ Sys.run_program("cd repl; npm run build; cd ..")
 
 local immutable = Sys.join_path(build_dir, "immutable")
 Sys.mkdir(immutable)
-Sys.run_program("cp repl/dist/assets/*.js " .. immutable)
+Sys.run_program("cp repl/dist/immutable/*.js " .. immutable)
 
 -- use hashed filenames so that extremely aggressive caching can be set.
 -- no idea why wasm-pack doesn't do this by default.
@@ -14,7 +14,7 @@ local hash = strsub(long_hash, 1, 8)
 local wasm_out = format("immutable/rink.%s.wasm", hash)
 Sys.write_file(Sys.join_path(build_dir, wasm_out), wasm)
 
-local files = Sys.list_dir("repl/dist/assets")
+local files = Sys.list_dir("repl/dist/immutable")
 local i = 1
 while files[i] do
 	local path = files[i]
