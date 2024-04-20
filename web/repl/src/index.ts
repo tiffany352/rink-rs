@@ -1,34 +1,9 @@
-import init, * as rink from "rink-js";
+import type { ExecuteRes, HelloReq, HelloRes, RinkResponse, SpanOrList } from "./proto";
 
 // Taken from https://stackoverflow.com/a/3809435
 const urlRegex =
 	/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
 const powRegex = /\^(\-?\d+)/g;
-
-type TokenType =
-	| "plain"
-	| "error"
-	| "unit"
-	| "quantity"
-	| "number"
-	| "user_input"
-	| "list_begin"
-	| "list_sep"
-	| "doc_string"
-	| "pow"
-	| "prop_name"
-	| "date_time";
-
-type Token = {
-	type: "span";
-	text: string;
-	fmt: TokenType;
-};
-type TokenList = {
-	type: "list";
-	children: [SpanOrList];
-};
-type SpanOrList = Token | TokenList;
 
 function buildInline(parent: HTMLElement, text: string) {
 	// escape any html tags
@@ -173,102 +148,151 @@ const wasmBlob = new Promise((resolve, reject) => {
 	req.send();
 });
 
-init(wasmBlob)
-	.then(() => {
-		let ctx = new rink.Context();
-		ctx.setSavePreviousResult(true);
+let wasmBuffer;
+let worker;
+function startWorker() {
+	worker = new Worker(new URL('./worker.ts', import.meta.url));
+	worker.postMessage({
+		type: "hello",
+		buffer: wasmBuffer,
+	} as HelloReq);
+}
 
+wasmBlob.then((buffer) => {
+	wasmBuffer = buffer;
+	startWorker();
+
+	function expectMessage(type: string, id: number | null): Promise<RinkResponse> {
+		return new Promise((resolve, _reject) => {
+			const handler = (event: MessageEvent<RinkResponse>) => {
+				const msg = event.data;
+				if (msg.type == type && (!id || (msg as any).id == id)) {
+					worker.removeEventListener("message", handler);
+					resolve(msg);
+				}
+			};
+			worker.addEventListener("message", handler);
+		})
+	}
+
+	let queryCounter = 1;
+	function requestExecute(query: string): Promise<[SpanOrList]> {
+		const id = queryCounter++;
+		worker.postMessage({
+			type: "execute",
+			id,
+			query,
+		})
+		return new Promise((resolve, reject) => {
+			const timeoutId = setTimeout(() => {
+				worker.terminate();
+				startWorker();
+				reject("Terminated after 5 seconds");
+			}, 5000);
+			expectMessage("execute", id).then((msg) => {
+				clearTimeout(timeoutId);
+				msg = msg as ExecuteRes;
+				if (msg.status == "success")
+					resolve(msg.tokens);
+				else
+					reject(msg.message);
+			});
+		})
+	}
+
+	let history = JSON.parse(
+		window.localStorage.getItem("rink-history") || "[]",
+	);
+	let historyIndex = history.length;
+
+	async function execute(queryString: string) {
+		let quote = document.createElement("blockquote");
+		quote.innerText = queryString;
+		let permalink = document.createElement("a");
+		permalink.href = `${location.origin}/?q=${queryString}`;
+		permalink.text = "#";
+		quote.appendChild(permalink);
+		rinkDiv.appendChild(quote);
+
+		let p = document.createElement("p");
+		p.innerHTML = "<progress></progress>";
+		rinkDiv.appendChild(p);
+
+		try {
+			const tokens = await requestExecute(queryString);
+			console.log("formatting tokens: ", tokens);
+
+			p.innerHTML = "";
+			buildHtml(tokens, p);
+
+			rinkDiv.appendChild(p);
+			textEntry.value = "";
+			window.scrollTo(0, document.body.scrollHeight);
+
+			// prevent duplicates in history
+			history = history.filter(
+				(query: string) => query != queryString,
+			);
+			history.push(queryString);
+			// keep history from becoming too long
+			if (history.length > 200) history.shift();
+			historyIndex = history.length;
+			window.localStorage.setItem(
+				"rink-history",
+				JSON.stringify(history),
+			);
+		} catch (error) {
+			pushError(error);
+			p.remove();
+		}
+	}
+
+	async function on_hello(msg: HelloRes) {
 		let h1 = document.querySelector("h1");
 		if (h1) {
-			h1.innerText = `Rink ${rink.version()}`;
+			h1.innerText = `Rink ${msg.version}`;
 		}
-
 		// clear the loading message
 		textEntry.placeholder = "Enter a query, like `3 feet to meters`";
-
-		let history = JSON.parse(
-			window.localStorage.getItem("rink-history") || "[]",
-		);
-		let historyIndex = history.length;
-
-		function execute(queryString: string) {
-			let quote = document.createElement("blockquote");
-			quote.innerText = queryString;
-			let permalink = document.createElement("a");
-			permalink.href = `${location.origin}/?q=${queryString}`;
-			permalink.text = "#";
-			quote.appendChild(permalink);
-			rinkDiv.appendChild(quote);
-
-			try {
-				let query = new rink.Query(queryString);
-				ctx.setTime(new Date());
-				let tokens = ctx.eval_tokens(query);
-				console.log("formatting tokens: ", tokens);
-
-				let p = document.createElement("p");
-				buildHtml(tokens, p);
-
-				rinkDiv.appendChild(p);
-				textEntry.value = "";
-				window.scrollTo(0, document.body.scrollHeight);
-
-				// prevent duplicates in history
-				history = history.filter(
-					(query: string) => query != queryString,
-				);
-				history.push(queryString);
-				// keep history from becoming too long
-				if (history.length > 200) history.shift();
-				historyIndex = history.length;
-				window.localStorage.setItem(
-					"rink-history",
-					JSON.stringify(history),
-				);
-			} catch (err) {
-				let p = document.createElement("p");
-				p.classList.add("hl-error");
-				p.innerText = `Unknown error: ${err}`;
-				rinkDiv.appendChild(p);
-			}
-		}
 
 		const urlParams = new URLSearchParams(window.location.search);
 		const queries = urlParams.getAll("q");
 		for (const q of queries) {
-			execute(q);
+			await execute(q);
 		}
+	}
 
-		form.addEventListener("submit", (event) => {
-			event.preventDefault();
-			execute(textEntry.value);
-		});
+	expectMessage("hello", null).then((res) => on_hello(res as HelloRes)).catch((error) => pushError(error));
 
-		textEntry.addEventListener("keydown", (event) => {
-			if (event instanceof KeyboardEvent && event.key == "ArrowUp") {
-				event.preventDefault();
-				historyIndex--;
-				if (historyIndex < 0) historyIndex = 0;
-				textEntry.value = history[historyIndex];
-			} else if (
-				event instanceof KeyboardEvent &&
-				event.key == "ArrowDown"
-			) {
-				event.preventDefault();
-				historyIndex++;
-				if (historyIndex > history.length)
-					historyIndex = history.length;
-				if (history[historyIndex])
-					textEntry.value = history[historyIndex];
-				else textEntry.value = "";
-			}
-		});
-	})
-	.catch((error) => {
-		pushError(error);
-		textEntry.placeholder = "Loading failed.";
-		textEntry.disabled = true;
+	form.addEventListener("submit", (event) => {
+		event.preventDefault();
+		execute(textEntry.value);
 	});
+
+	textEntry.addEventListener("keydown", (event) => {
+		if (event instanceof KeyboardEvent && event.key == "ArrowUp") {
+			event.preventDefault();
+			historyIndex--;
+			if (historyIndex < 0) historyIndex = 0;
+			textEntry.value = history[historyIndex];
+		} else if (
+			event instanceof KeyboardEvent &&
+			event.key == "ArrowDown"
+		) {
+			event.preventDefault();
+			historyIndex++;
+			if (historyIndex > history.length)
+				historyIndex = history.length;
+			if (history[historyIndex])
+				textEntry.value = history[historyIndex];
+			else textEntry.value = "";
+		}
+	});
+}).catch((error) => {
+	pushError(error);
+	textEntry.placeholder = "Loading failed.";
+	textEntry.disabled = true;
+});
 
 // unregister any service workers left over from previous versions of the site
 navigator.serviceWorker.getRegistrations().then((registrations) => {
