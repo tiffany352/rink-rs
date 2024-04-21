@@ -5,6 +5,8 @@
 use chrono::{Local, TimeZone};
 use js_sys::Date;
 use rink_core::ast;
+use rink_core::output::fmt::{FmtToken, Span, TokenFmt};
+use rink_core::output::QueryReply;
 use rink_core::parsing::text_query;
 use serde_derive::*;
 use wasm_bindgen::prelude::*;
@@ -68,6 +70,35 @@ pub struct Context {
     context: rink_core::Context,
 }
 
+#[derive(Serialize, Debug)]
+struct Token {
+    pub text: String,
+    pub fmt: FmtToken,
+}
+
+#[derive(Serialize, Debug)]
+#[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
+enum SpanOrList {
+    Span(Token),
+    List { children: Vec<SpanOrList> },
+}
+
+fn visit_tokens(spans: &[Span]) -> Vec<SpanOrList> {
+    spans
+        .iter()
+        .map(|span| match span {
+            Span::Content { text, token } => SpanOrList::Span(Token {
+                text: text.to_string(),
+                fmt: *token,
+            }),
+            Span::Child(child) => SpanOrList::List {
+                children: visit_tokens(&child.to_spans()),
+            },
+        })
+        .collect()
+}
+
 #[wasm_bindgen]
 impl Context {
     #[wasm_bindgen(constructor)]
@@ -77,6 +108,11 @@ impl Context {
         // Will panic if this is set.
         context.use_humanize = false;
         Context { context }
+    }
+
+    #[wasm_bindgen(js_name = setSavePreviousResult)]
+    pub fn set_save_previous_result(&mut self, value: bool) {
+        self.context.save_previous_result = value;
     }
 
     #[wasm_bindgen(js_name = setTime)]
@@ -109,10 +145,45 @@ impl Context {
 
     #[wasm_bindgen]
     pub fn eval(&mut self, expr: &Query) -> JsValue {
-        let value = Success::from(self.context.eval_query(&expr.query));
+        let value = self.context.eval_query(&expr.query);
+        if self.context.save_previous_result {
+            if let Ok(QueryReply::Number(ref number_parts)) = value {
+                if let Some(ref raw) = number_parts.raw_value {
+                    self.context.previous_result = Some(raw.clone());
+                }
+            }
+        }
+        let value = Success::from(value);
         match serde_wasm_bindgen::to_value(&value) {
             Ok(value) => value,
             Err(err) => format!("Failed to serialize: {}\n{:#?}", err, value).into(),
         }
     }
+
+    #[wasm_bindgen]
+    pub fn eval_tokens(&mut self, expr: &Query) -> JsValue {
+        let value = self.context.eval_query(&expr.query);
+        if self.context.save_previous_result {
+            if let Ok(QueryReply::Number(ref number_parts)) = value {
+                if let Some(ref raw) = number_parts.raw_value {
+                    self.context.previous_result = Some(raw.clone());
+                }
+            }
+        }
+        let spans = match value {
+            Ok(ref value) => value.to_spans(),
+            Err(ref value) => value.to_spans(),
+        };
+        let tokens = visit_tokens(&spans);
+
+        match serde_wasm_bindgen::to_value(&tokens) {
+            Ok(value) => value,
+            Err(err) => format!("Failed to serialize: {}\n{:#?}", err, tokens).into(),
+        }
+    }
+}
+
+#[wasm_bindgen]
+pub fn version() -> String {
+    rink_core::version().to_owned()
 }

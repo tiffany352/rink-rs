@@ -1,3 +1,4 @@
+ifndef::website[]
 = rink-defs(5)
 :manmanual: Rink Manual
 :mansource: Rink Manual
@@ -6,6 +7,7 @@ Name
 ----
 
 rink-defs - Rink's `definition.units` format
+endif::[]
 
 Description
 -----------
@@ -272,7 +274,9 @@ Notable differences include:
 - Addition of documentation comments starting with `??`.
 - Addition of substances.
 
+ifndef::website[]
 See also
 --------
 xref:rink.1.adoc[rink(1)], xref:rink.5.adoc[rink(5)],
 xref:rink.7.adoc[rink(7)], xref:rink-dates.5.adoc[rink-dates(5)]
+endif::[]

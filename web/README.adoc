@@ -1,0 +1,34 @@
+= Rink web
+
+This is the sources required to build https://rinkcalc.app, which is
+a statically generated site.
+
+== Requirements
+
+* `wasm-pack` (`pacman -S wasm-pack` or cargo install)
+* `cmark-gfm` (`pacman -S cmark-gfm`)
+* https://soupault.app/install/[soupault]
+* Node.JS (21.7.1 known to work)
+
+== Instructions
+
+1. Run `wasm-pack build --target web rink-js`. This only needs to be
+   re-run after making changes to rust code.
+2. Enter `web/repl/` and run `npm install`
+3. Enter `web/` and run `npm install`
+4. Enter `web/` and run `soupault --verbose`
+5. Enter `web/currency/` and run `npm install`
+6. Enter `web/build/` and run `node ../currency/update-currency.js`
+7. To view, enter `web/build/` and run
+   `python -m http.server -b localhost 3000 --protocol HTTP/1.1`
+
+Github releases are only fetched once. To re-fetch them, delete
+`web/build/releases.json` and re-run soupault.
+
+== Deployment
+
+Copy the contents of `web/build/` to your server.
+
+Copy `web/currency/`, including its `node_modules`, to your server.
+Setup a cron job to run the currency script to update the `data/`
+directory, about once an hour is good.

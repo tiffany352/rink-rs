@@ -1,0 +1,18 @@
+= Rink Manual
+:website:
+
+Documentation for rink's query language.
+
+* link:/cli-manpage[rink(1) manpage]
+* link:/configuration[Rink `config.toml` format]
+* link:/definitions-format[Rink `definitions.units` format]
+* link:/datepatterns-format[Rink `datepatterns.txt` format]
+
+include::../../docs/rink.7.adoc[]
+
+== See Also
+
+* link:/cli-manpage[rink(1) manpage]
+* link:/configuration[Rink `config.toml` format]
+* link:/definitions-format[Rink `definitions.units` format]
+* link:/datepatterns-format[Rink `datepatterns.txt` format]

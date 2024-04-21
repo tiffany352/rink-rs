@@ -1,0 +1,11 @@
+= Rink `datepatterns.txt` format
+:website:
+
+include::../../docs/rink-dates.5.adoc[]
+
+== See Also
+
+* link:/cli-manpage[rink(1) manpage]
+* link:/configuration[Rink `config.toml` format]
+* link:/manual[Rink manual]
+* link:/definitions-format[Rink `definitions.units` format]

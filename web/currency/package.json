@@ -1,0 +1,19 @@
+{
+	"type": "module",
+	"author": "Tiffany Bennett (https://tiffnix.com)",
+	"name": "rink-currency-updater",
+	"version": "0.6.3",
+	"repository": "https://github.com/tiffany352/rink-rs",
+	"homepage": "https://rinkcalc.app",
+	"description": "Fetches currency data for rink",
+	"license": "MPL-2.0",
+	"devDependencies": {
+		"@types/elementtree": "^0.1.0",
+		"@types/node-fetch": "^2.5.7"
+	},
+	"dependencies": {
+		"elementtree": "^0.1.7",
+		"node-fetch": "^2.6.1",
+		"atomically": "1.7.0"
+	}
+}

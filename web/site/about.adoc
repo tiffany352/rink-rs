@@ -1,0 +1,82 @@
+= Rink
+
+Rink is an open source unit-aware calculator. It can be used for physics
+and engineering calculations, as well as dimensionality analysis.
+
+Rink supports most systems of measurements including SI, CGS, natural,
+international customary, US customary, UK customary, as well as
+historical measurements. In addition, Rink supports currency
+conversions.
+
+== Features
+
+* Arbitrary precision math
+* Shows SI physical quantities
+* Finds applicable SI derived units automatically
+* Detailed error messages
+* Helps with dimensionality analysis, such as by offering unit
+  factorizations and finding units for quantities.
+* Temperature conversions
+
+== Install
+
+The most common version of Rink is the command line interface `rink`.
+
+You can download it from link:/releases[Releases], or install it through
+your package manager:
+
+[cols="1,3"]
+|===
+| Source | Command
+
+| Cargo
+| `cargo install rink`
+
+| Pacman
+| `pacman -S rink`
+
+| Nix
+| `nix-env -i rink`
+
+| Scoop
+| `scoop install rink`
+|===
+
+== Examples
+
+:elec: https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_5_6_a
+
+How much does it cost to run my computer each year? Say it uses 100
+watts for 4 hours per day, and use the {elec}[US average electricity
+cost].
+
+	> 0.1545$/kWh * 100W * (4 hours / day) to $/year
+	approx. 22.57196 USD / tropicalyear
+
+If you made a solid sphere of gold the size of the moon, what would the
+surface gravity be?
+
+	> volume of moon * (19.283 g/cm^3) * G / (radius of moon)^2
+	approx. 9.365338 meter / second^2 (acceleration)
+	> ans to gravity
+	approx. 0.9549987 gravity (acceleration)
+
+:eff: https://www.bts.gov/content/average-fuel-efficiency-us-passenger-cars-and-light-trucks
+
+Ever heard someone joke about Americans measuring fuel efficiency as
+rods per hogshead? Let's try with the {eff}[average US car fuel
+efficiency].
+
+	> 9.4 km/l to mpg
+	approx. 22.11017 mpg (fuel_efficiency)
+	> 9.4 km/l to rods per hogshead
+	approx. 445741.0 rod / ushogshead (fuel_efficiency)
+
+And then you wonder, wait, what even are these units anyway?
+
+	> hogshead
+	Definition: ushogshead = 2 liquidbarrel = approx. 238480942.3 millimeter^3 (volume; m^3)
+	> liquidbarrel
+	Definition: liquidbarrel = 31.5 usgallon = approx. 119240471.1 millimeter^3 (volume; m^3)
+	> rod
+	Definition: rod = 5.5 yard = 5.0292 meter (length; m)

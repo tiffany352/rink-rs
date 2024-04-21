@@ -1,3 +1,4 @@
+ifndef::website[]
 = rink(7)
 :manmanual: Rink Manual
 :mansource: Rink Manual
@@ -8,6 +9,8 @@ rink - Query language documentation
 
 Synposis
 --------
+endif::[]
+
 Rink's query language follows a somewhat natural language style for its
 syntax. Many expressions like *3.5 meters to feet* will work without any
 modification. This manual is meant for those who want to get a deeper
@@ -515,9 +518,9 @@ Reference
 ---------
 
 The full list of units is specified in the file `definitions.units` (see
-xref:rink-defs.5.adoc[rink-defs(5)]), but a small list of the most
-helpful ones will be listed here. It is intended that most units should
-be easy to guess the names of.
+rink-defs(5)), but a small list of the most helpful ones will be listed
+here. It is intended that most units should be easy to guess the names
+of.
 
 SI derived
 ~~~~~~~~~~
@@ -708,8 +711,10 @@ rationals.
 - `acosh(x)`: Inverse hyperbolic cosine function.
 - `atanh(x)`: Inverse hyperbolic tangent function.
 
+ifndef::website[]
 See also
 --------
 xref:rink.1.adoc[rink(1)], xref:rink.5.adoc[rink(5)],
 xref:rink-defs.5.adoc[rink-defs(5)],
 xref:rink-dates.5.adoc[rink-dates(5)]
+endif::[]

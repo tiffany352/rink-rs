@@ -4,6 +4,8 @@
 
 use std::{borrow::Cow, fmt, iter::Peekable};
 
+use serde_derive::Serialize;
+
 /// Represents a node in a token tree. Each token is tagged with a hint
 /// for how it should be displayed.
 ///
@@ -125,7 +127,8 @@ impl<'a> fmt::Debug for Span<'a> {
 
 /// Provides a hint for how a string should be displayed, based on its
 /// contents.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum FmtToken {
     /// Indicator text that isn't based on user input. Generally displayed without any formatting.
     Plain,

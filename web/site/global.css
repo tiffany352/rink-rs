@@ -1,0 +1,306 @@
+:root {
+	--bg-color: #141518;
+	--bg-highlight: #191c22;
+	--text-main: #fff;
+	--text-dimmed: #da8d6a;
+	--text-heading: #a2b9da;
+	--font-main: "Atkinson Hyperlegible", "Segoe UI", "San Francisco", "Roboto",
+		sans-serif;
+	--font-code: "Fira Code", "Cascadia Mono", "Consolas", "Monaco", monospace;
+	--link-normal: #569dda;
+	--link-focus: #569dda;
+	--link-visited: #437dc3;
+	--border: #111f2b;
+}
+
+body {
+	background-color: var(--bg-color);
+	color: var(--text-main);
+	margin: 0;
+	font-size: 16px;
+	line-height: 1.4;
+	tab-size: 4;
+	width: 100%;
+}
+
+main {
+	margin: 0 auto;
+	width: 40em;
+	max-width: 100%;
+	padding: 0;
+	font-family: var(--font-main);
+}
+
+@media screen and (min-width: 1024px) {
+	body {
+		font-size: 20px;
+	}
+
+	main {
+		margin: 0 auto;
+		width: 1024px;
+	}
+
+	#page-container {
+		display: flex;
+		flex-direction: row-reverse;
+	}
+
+	aside#toc {
+		width: 200px;
+		font-size: 80%;
+	}
+
+	aside#toc ol {
+		position: sticky;
+		top: 1em;
+	}
+
+	#page-container section.e-content {
+		width: 800px;
+	}
+
+	nav {
+		padding-left: 0.75em;
+		padding-right: 0.75em;
+	}
+
+	nav > a {
+		padding: 0.3em;
+	}
+
+	nav > .nav-spacer {
+		display: unset;
+		flex-grow: 1;
+	}
+}
+
+main > article {
+	padding: 0.5em;
+	padding-top: 0;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+nav {
+	display: flex;
+	flex-flow: row;
+	align-items: flex-end;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	border-bottom-color: var(--border);
+	gap: 0.5em;
+	margin-top: 0.25em;
+}
+
+.nav-spacer {
+	display: none;
+}
+
+nav > a {
+	text-decoration: none;
+	padding: 0.5em;
+	border-bottom: 2px solid transparent;
+
+	color: var(--link-normal);
+	stroke: var(--link-normal);
+}
+
+nav > a:hover,
+nav > a:focus {
+	border-bottom: 2px solid var(--link-focus);
+	text-decoration: none;
+}
+
+nav > a > svg {
+	vertical-align: sub;
+}
+
+figcaption {
+	font-size: 80%;
+	color: var(--text-dimmed);
+}
+
+figure {
+	margin: 0.75em auto;
+}
+
+figure > pre {
+	margin-bottom: 0.25em;
+}
+
+figure img {
+	display: block;
+	margin: 0 auto;
+}
+
+picture {
+	display: content;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+	object-fit: contain;
+}
+
+p {
+	hyphens: auto;
+}
+
+iframe {
+	width: 100%;
+}
+
+h1 {
+	font-size: 1.5em;
+	margin: 0;
+	padding: 0 1rem;
+}
+
+h2 {
+	font-size: 1.25em;
+}
+
+h3 {
+	font-size: 1em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: var(--text-heading);
+	font-family: var(--font-main);
+	background-color: var(--bg-highlight);
+	clear: both;
+	position: relative;
+}
+
+h1 a.toclink,
+h2 a.toclink,
+h3 a.toclink,
+h4 a.toclink,
+h5 a.toclink,
+h6 a.toclink {
+	display: none;
+}
+
+h1:hover a.toclink,
+h1:focus a.toclink,
+h2:hover a.toclink,
+h2:focus a.toclink,
+h3:hover a.toclink,
+h3:focus a.toclink,
+h4:hover a.toclink,
+h4:focus a.toclink,
+h5:hover a.toclink,
+h5:focus a.toclink,
+h6:hover a.toclink,
+h6:focus a.toclink {
+	display: block;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	text-align: right;
+}
+
+code {
+	font-family: var(--font-code);
+}
+
+pre {
+	background-color: var(--bg-highlight);
+	font-family: var(--font-code);
+	max-width: 100%;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	font-size: 80%;
+}
+
+pre > code {
+	display: content;
+}
+
+a {
+	color: var(--link-normal);
+	text-decoration: none;
+}
+
+a:visited {
+	color: var(--link-visited);
+}
+
+a:hover,
+a:focus {
+	color: var(--link-focus);
+	text-decoration: underline;
+}
+
+a > h3 {
+	color: inherit;
+}
+
+.katex-block {
+	font-size: 85%;
+}
+
+.h-feed .h-entry > time {
+	margin: 0.5em 0;
+	font-size: 0.9em;
+	color: var(--text-dimmed);
+}
+
+.h-feed .h-entry {
+	/*border-top: 1px dashed var(--border);*/
+	clear: right;
+}
+
+.h-feed .h-entry > h3 {
+	margin-bottom: 0.25em;
+}
+
+.h-feed .h-entry > blockquote {
+	font-style: italic;
+}
+
+.h-feed .h-entry > picture > img {
+	float: right;
+	max-width: 30%;
+	height: 8em;
+	margin: 0.5em;
+}
+
+.h-card img {
+	border-radius: 50%;
+	vertical-align: -20%;
+}
+
+span.u-uid {
+	display: none;
+}
+
+span.meta {
+	font-size: 85%;
+	font-weight: 300;
+	color: var(--text-dimmed);
+	padding-left: 0.5em;
+}
+
+table {
+	background-color: var(--bg-highlight);
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+	margin: 1em auto;
+	overflow-x: auto;
+	padding: 0.5em;
+}
+
+td {
+	padding: 0 0.5em;
+}

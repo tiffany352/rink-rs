@@ -1,0 +1,15 @@
+{
+	"name": "rink-web-repl",
+	"version": "1.0.0",
+	"main": "index.ts",
+	"license": "MIT",
+	"devDependencies": {
+		"vite": "^2.6.14",
+		"vite-plugin-wasm-pack": "^0.1.9"
+	},
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build"
+	},
+	"dependencies": {}
+}

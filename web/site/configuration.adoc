@@ -1,0 +1,11 @@
+= Rink configuration
+:website:
+
+include::../../docs/rink.5.adoc[]
+
+== See Also
+
+* link:/cli-manpage[rink(1) manpage]
+* link:/manual[Rink manual]
+* link:/definitions-format[Rink `definitions.units` format]
+* link:/datepatterns-format[Rink `datepatterns.txt` format]

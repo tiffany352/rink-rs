@@ -1,0 +1,10 @@
+:website:
+
+include::../../docs/rink.1.adoc[]
+
+== See Also
+
+* link:/configuration[Rink `config.toml` format]
+* link:/manual[Rink manual]
+* link:/definitions-format[Rink `definitions.units` format]
+* link:/datepatterns-format[Rink `datepatterns.txt` format]

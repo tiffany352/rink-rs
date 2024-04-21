@@ -1,3 +1,4 @@
+ifndef::website[]
 = rink-dates(5)
 :manmanual: Rink Manual
 :mansource: Rink Manual
@@ -9,6 +10,7 @@ rink-dates - Rink file format for date patterns
 
 Synposis
 --------
+endif::[]
 
 Rink allows specifying datetimes using **\#date#** syntax in queries. This
 file defines the patterns that are used to try to match the specified
@@ -113,7 +115,9 @@ Rink searches the following locations:
 * `__$XDG_CONFIG_DIR__/rink/datepatterns.txt`
 * `/usr/share/rink/datepatterns.txt`
 
+ifndef::website[]
 See also
 --------
 xref:rink.1.adoc[rink(1)], xref:rink.5.adoc[rink(5)],
 xref:rink.7.adoc[rink(7)], xref:rink-defs.5.adoc[rink-defs(5)]
+endif::[]

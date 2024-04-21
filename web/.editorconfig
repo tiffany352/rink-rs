@@ -1,3 +1,0 @@
-[*.{svelte,js,ts,html,svg}]
-indent_size = 2
-indent_style = space

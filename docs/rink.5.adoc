@@ -1,3 +1,4 @@
+ifndef::website[]
 = rink(5)
 :manmanual: Rink Manual
 :mansource: Rink Manual
@@ -5,6 +6,7 @@
 Name
 ----
 rink - TOML configuration file format.
+endif::[]
 
 Description
 -----------
@@ -146,8 +148,10 @@ Windows::
 macOS::
 	++__$HOME__/Library/Application Support/rink/config.toml++
 
+ifndef::website[]
 See also
 --------
 xref:rink.1.adoc[rink(1)], xref:rink.7.adoc[rink(7)],
 xref:rink-defs.5.adoc[rink-defs(5)],
 xref:rink-dates.5.adoc[rink-dates(5)]
+endif::[]

@@ -49,4 +49,6 @@ mod helpers;
 
 pub use crate::loader::Context;
 pub use crate::runtime::Value;
-pub use helpers::{eval, one_line, simple_context, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+pub use helpers::{
+    eval, one_line, simple_context, version, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE,
+};
