@@ -42,7 +42,7 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
 }
 
 const HELP_TEXT: &'static str = "The rink manual can be found with `man 7 rink`, or online:
-https://github.com/tiffany352/rink-rs/blob/master/docs/rink.7.adoc
+https://rinkcalc.app/manual
 To quit, type `quit` or press Ctrl+D.";
 
 pub fn interactive(config: &Config) -> Result<()> {

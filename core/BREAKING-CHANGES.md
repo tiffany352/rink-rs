@@ -1,3 +1,24 @@
+## Rink 0.8.0
+
+`gpl` feature has been renamed to `bundle-files`.
+
+`rink_core::DATES_FILE` and `rink_core::CURRENCY_FILE` are now `Option`s
+and are only Some if `bundle-files` is set, otherwise they are None,
+just like `DEFAULT_FILE`.
+
+The intention is for distro packages to install these files to the
+filesystem (e.g. in `/usr/share/rink/`) instead of embedding them in the
+executable. See [PACKAGING.md](../PACKAGING.md) for more info.
+
+### Behavior
+
+- Unrecognized directives in definitions.units now print an error
+  instead of being silently ignored.
+- Categories for non-units are now ignored. This may be improved in the
+  future, but will require changing categories to be namespaced.
+- The output has changed slightly, as numbers can be represented as
+  recurring digits now.
+
 ## Rink 0.7.0
 
 ### Behavior

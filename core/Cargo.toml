@@ -1,8 +1,8 @@
 [package]
 name = "rink-core"
-version = "0.7.0"
+version = "0.8.0"
 description = "Unit conversion library behind rink"
-homepage = "https://github.com/tiffany352/rink-rs"
+homepage = "https://rinkcalc.app/about"
 repository = "https://github.com/tiffany352/rink-rs"
 readme = "README.md"
 license = "MPL-2.0"

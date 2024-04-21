@@ -2,7 +2,7 @@
 name = "rink-irc"
 version = "0.4.0"
 description = "IRC bot for Rink"
-homepage = "https://github.com/tiffany352/rink-rs"
+homepage = "https://rinkcalc.app/about"
 repository = "https://github.com/tiffany352/rink-rs"
 license = "MPL-2.0"
 

@@ -103,7 +103,7 @@ Definition: rod = 5.5 yard = 5.0292 meter (length; m)
 
 ```toml
 [dependencies]
-rink-core = "0.7"
+rink-core = "0.8"
 ```
 
 ## License

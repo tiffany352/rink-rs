@@ -1316,7 +1316,7 @@ checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
 
 [[package]]
 name = "rink"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "ansi_term",
  "async-std",
@@ -1340,7 +1340,7 @@ dependencies = [
 
 [[package]]
 name = "rink-core"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "assert-json-diff",
  "chrono",
@@ -1359,7 +1359,7 @@ dependencies = [
 
 [[package]]
 name = "rink-js"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "chrono",
  "console_error_panic_hook",
