@@ -4,6 +4,8 @@
 [![crates.io](https://img.shields.io/crates/v/rink)](https://crates.io/crates/rink)
 [![downloads](https://img.shields.io/crates/d/rink)](https://crates.io/crates/rink)
 
+https://rinkcalc.app/about
+
 Rink is an open source unit-aware calculator. It can be used for physics
 and engineering calculations, as well as dimensionality analysis.
 
@@ -22,13 +24,13 @@ conversions.
   factorizations and finding units for quantities.
 * Temperature conversions
 
-## [Manual](./docs/rink.7.adoc)
+## [Manual](https://rinkcalc.app/manual)
 
 Describes (hopefully) everything you need to know to use Rink's
 expression language.
 
-* [CLI man page](./docs/rink.1.adoc)
-* [CLI config.toml](./docs/rink.5.adoc)
+* [CLI man page](https://rinkcalc.app/cli-manpage)
+* [CLI config.toml](https://rinkcalc.app/configuration)
 
 ## Install
 
@@ -40,6 +42,8 @@ The most common version of Rink is the command line interface `rink`.
 | Pacman          | `pacman -S rink`     |
 | Nix             | `nix-env -i rink`    |
 | Scoop           | `scoop install rink` |
+
+Downloads are also available at <https://rinkcalc.app/releases>.
 
 ## [Web Interface: rinkcalc.app](https://rinkcalc.app)
 
@@ -121,4 +125,4 @@ documentation here: [docs/rink-defs.5.adoc](./docs/rink-defs.5.adoc)
 
 ## Changelog
 
-See here: https://github.com/tiffany352/rink-rs/releases
+See here: https://rinkcalc.app/releases
