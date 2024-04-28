@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use clap::{Arg, Command};
+use clap::{Arg, ArgAction, Command};
 use eyre::{Result, WrapErr};
 use rink_sandbox::Alloc;
 use std::fs::File;
@@ -29,38 +29,39 @@ async fn main() -> Result<()> {
         .arg(
             Arg::new("EXPR")
                 .help("Evaluate a list of expressions. If no arguments are provided, an interactive session will start.")
-                .multiple_values(true)
+                .num_args(..)
                 .required(false),
         )
         .arg(
             Arg::new("file")
                 .short('f')
                 .long("file")
-                .takes_value(true)
                 .help("Reads expressions from a file"),
         )
         .arg(
             Arg::new("config-path")
                 .long("config-path")
                 .help("Prints a path to the config file, then exits")
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("dump")
                 .long("dump")
                 .help("Generates a file containing the contents of the Context object, then exits")
-                .takes_value(true)
                 .default_missing_value("dump.txt")
+                .action(ArgAction::Set)
                 .hide(true)
         )
         .arg(
             Arg::new("service")
                 .long("service")
                 .help("Start in service mode")
+                .action(ArgAction::SetTrue)
                 .hide(true)
         )
         .get_matches();
 
-    if matches.is_present("service") {
+    if matches.get_flag("service") {
         return service::run_service();
     }
     // The panic handler can't be installed if entering service mode, so
@@ -68,7 +69,7 @@ async fn main() -> Result<()> {
     color_eyre::install()?;
     let config = config::read_config()?;
 
-    if let Some(filename) = matches.value_of("dump") {
+    if let Some(filename) = matches.get_one::<String>("dump") {
         use std::io::Write;
 
         let ctx = config::load(&config)?;
@@ -77,11 +78,11 @@ async fn main() -> Result<()> {
         return Ok(());
     }
 
-    if matches.is_present("config-path") {
+    if matches.get_flag("config-path") {
         println!("{}", config::config_path("config.toml").unwrap().display());
         Ok(())
-    } else if let Some(filename) = matches.value_of("file") {
-        match filename {
+    } else if let Some(filename) = matches.get_one::<String>("file") {
+        match &filename[..] {
             "-" => {
                 let stdin_handle = stdin();
                 repl::noninteractive(stdin_handle.lock(), &config, false)
@@ -91,7 +92,7 @@ async fn main() -> Result<()> {
                 repl::noninteractive(BufReader::new(file), &config, false)
             }
         }
-    } else if let Some(exprs) = matches.values_of("EXPR") {
+    } else if let Some(exprs) = matches.get_many::<String>("EXPR") {
         let mut ctx = config::load(&config)?;
         for expr in exprs {
             println!("> {}", expr);
