@@ -15,7 +15,7 @@ default = ["bundle-files"]
 bundle-files = ["rink-core/bundle-files"]
 
 [dependencies]
-clap = "3"
+clap = "4.5"
 dirs = "4"
 curl = "0.4.46"
 chrono = { version = "0.4.19", default-features = false }

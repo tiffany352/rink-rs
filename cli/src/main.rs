@@ -29,14 +29,13 @@ async fn main() -> Result<()> {
         .arg(
             Arg::new("EXPR")
                 .help("Evaluate a list of expressions. If no arguments are provided, an interactive session will start.")
-                .multiple_values(true)
+                .num_args(..)
                 .required(false),
         )
         .arg(
             Arg::new("file")
                 .short('f')
                 .long("file")
-                .takes_value(true)
                 .help("Reads expressions from a file"),
         )
         .arg(
@@ -49,8 +48,8 @@ async fn main() -> Result<()> {
             Arg::new("dump")
                 .long("dump")
                 .help("Generates a file containing the contents of the Context object, then exits")
-                .takes_value(true)
                 .default_missing_value("dump.txt")
+                .action(ArgAction::Set)
                 .hide(true)
         )
         .arg(
@@ -82,8 +81,8 @@ async fn main() -> Result<()> {
     if matches.get_flag("config-path") {
         println!("{}", config::config_path("config.toml").unwrap().display());
         Ok(())
-    } else if let Some(filename) = matches.get_one::<&str>("file") {
-        match *filename {
+    } else if let Some(filename) = matches.get_one::<String>("file") {
+        match &filename[..] {
             "-" => {
                 let stdin_handle = stdin();
                 repl::noninteractive(stdin_handle.lock(), &config, false)
