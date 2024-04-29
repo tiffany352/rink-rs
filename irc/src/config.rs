@@ -1,6 +1,7 @@
 use irc::client::data::Config as IrcConfig;
+use rink_core::{ast, loader::gnu_units, parsing::datetime, Context};
 use serde_derive::{Deserialize, Serialize};
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 use ubyte::ByteUnit;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -28,9 +29,59 @@ impl Default for Limits {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(default, deny_unknown_fields)]
+pub struct Currency {
+    pub enabled: bool,
+    pub path: PathBuf,
+}
+
+impl Default for Currency {
+    fn default() -> Self {
+        Currency {
+            enabled: false,
+            path: PathBuf::from("./currency.json"),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(default, deny_unknown_fields)]
 pub struct Config {
     pub limits: Limits,
+    pub currency: Currency,
     pub servers: Vec<IrcConfig>,
+}
+
+fn try_load_currency(config: &Currency, ctx: &mut Context) {
+    let base = rink_core::CURRENCY_FILE.unwrap();
+    let live = std::fs::read_to_string(&config.path).unwrap();
+
+    let mut base_defs = gnu_units::parse_str(&base);
+    let mut live_defs: ast::Defs = serde_json::from_str(&live).unwrap();
+
+    let mut defs = vec![];
+    defs.append(&mut base_defs.defs);
+    defs.append(&mut live_defs.defs);
+    ctx.load(ast::Defs { defs }).unwrap();
+}
+
+/// Creates a context by searching standard directories
+pub fn load(config: &Config) -> Context {
+    // Read definitions.units
+    let units = rink_core::DEFAULT_FILE.unwrap();
+    // Read datepatterns.txt
+    let dates = rink_core::DATES_FILE.unwrap();
+
+    let mut ctx = Context::new();
+    ctx.save_previous_result = true;
+    ctx.load(gnu_units::parse_str(&units)).unwrap();
+    ctx.load_dates(datetime::parse_datefile(&dates));
+
+    // Load currency data.
+    if config.currency.enabled {
+        try_load_currency(&config.currency, &mut ctx);
+    }
+
+    ctx
 }
