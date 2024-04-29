@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Categories=Utility; Calculator; ConsoleOnly
+Exec=/usr/bin/rink
+StartupNotify=true
+Terminal=true
+Icon=rink
+
+Name=Rink
+GenericName=Calculator
+Comment=Do calculations using the rink CLI
+
+Name[pt_BR]=Rink
+GenericName[pt_BR]=Calculadora
+Comment[pt_BR]=Fazer cálculos com o rink CLI
