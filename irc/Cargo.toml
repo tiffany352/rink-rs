@@ -1,18 +1,16 @@
 [package]
 name = "rink-irc"
-version = "0.4.0"
+version = "0.8.0"
 description = "IRC bot for Rink"
 homepage = "https://rinkcalc.app/about"
 repository = "https://github.com/tiffany352/rink-rs"
 license = "MPL-2.0"
+edition = "2018"
 
 [dependencies.rink-core]
 path = "../core"
 
 [dependencies]
-glob = "0.2.11"
-
-[dependencies.irc]
-version = "0.11.8"
-default-features = false
-features = ["ctcp", "encode"]
+irc = "1.0.0"
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"

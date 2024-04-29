@@ -2,85 +2,43 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-extern crate glob;
-extern crate irc;
-extern crate rink;
+use futures::StreamExt;
+use irc::client::prelude::*;
+//use rink_core::*;
 
-fn main() {
-    use glob::glob;
-    use irc::client::prelude::*;
-    use rink::*;
-    use std::thread;
+#[tokio::main]
+async fn main() {
+    let mut client = Client::new("config.toml").await.unwrap();
+    println!("Connecting...");
+    client.identify().unwrap();
+    println!("Connected. nickname: {}", client.current_nickname());
 
-    #[cfg(feature = "sandbox")]
-    fn eval(line: &str) -> String {
-        one_line_sandbox(line)
-    }
-
-    #[cfg(not(feature = "sandbox"))]
-    fn eval(line: &str) -> String {
-        let mut ctx = load().unwrap();
-        ctx.short_output = true;
-        match one_line(&mut ctx, line) {
-            Ok(v) => v,
-            Err(e) => e,
-        }
-    }
-
-    fn run(config: &str) {
-        let server = IrcServer::new(config).unwrap();
-        server.identify().unwrap();
-        let nick = server.config().nickname.clone().unwrap();
-        let mut prefix = nick.clone();
-        prefix.push(':');
-        for message in server.iter() {
-            if let Ok(Message {
-                command: Command::PRIVMSG(ref chan, ref message_str),
-                ..
-            }) = message
-            {
-                let prefixed = message_str.starts_with(&*prefix);
-                if prefixed || &*chan == &*nick {
-                    let reply_to = if &*chan == &*nick {
-                        message.as_ref().unwrap().source_nickname().unwrap()
-                    } else {
-                        &*chan
-                    };
-                    let line = if prefixed {
-                        message_str[prefix.len()..].trim()
-                    } else {
-                        &message_str[..]
-                    };
-                    let mut i = 0;
-                    let reply = eval(line);
-                    for line in reply.lines() {
-                        if !line.trim().is_empty() {
-                            server
-                                .send(Command::NOTICE(reply_to.to_owned(), line.to_owned()))
-                                .unwrap();
-                            i += 1;
-                        }
-                        // cut off early
-                        if i > 4 {
-                            break;
-                        }
-                    }
+    let mut stream = client.stream().unwrap();
+    while let Some(message) = stream.next().await.transpose().unwrap() {
+        let source = message.source_nickname();
+        if let Command::PRIVMSG(ref channel, ref text) = message.command {
+            let nick = client.current_nickname();
+            let prefix = format!("{}: ", nick);
+            let command = if let Some(text) = text.strip_prefix(&prefix) {
+                text
+            } else if channel == client.current_nickname() {
+                &text
+            } else {
+                continue;
+            };
+            println!("<== {command}");
+            let reply = format!("echoing back {command}");
+            println!("==> {reply}");
+            let where_to = if channel == client.current_nickname() {
+                if let Some(source) = source {
+                    source
+                } else {
+                    continue;
                 }
-            } else if let Err(e) = message {
-                println!("{}: {}", config, e);
-            }
+            } else {
+                &channel
+            };
+            client.send_notice(where_to, reply).unwrap();
         }
-        println!("Thread {} exiting", config);
-    }
-
-    let mut threads = vec![];
-    for config in glob("servers/*.json").expect("Glob failed") {
-        match config {
-            Ok(config) => threads.push(thread::spawn(move || run(config.to_str().unwrap()))),
-            Err(e) => println!("{:?}", e),
-        }
-    }
-    for thread in threads {
-        thread.join().unwrap()
     }
 }
