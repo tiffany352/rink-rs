@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Categories=Utility;Calculator;ConsoleOnly
+Exec=rink
+Terminal=true
+Icon=rink
+
+Name=Rink
+Comment=Do calculations using the rink CLI
+
+Name[pt]=Rink
+Comment[pt]=Fazer cálculos com o rink CLI
