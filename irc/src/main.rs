@@ -6,9 +6,16 @@ use futures::StreamExt;
 use irc::client::prelude::*;
 //use rink_core::*;
 
+mod config;
+
 #[tokio::main]
 async fn main() {
-    let mut client = Client::new("config.toml").await.unwrap();
+    let config_file = std::fs::read_to_string("config.toml").unwrap();
+    let config = toml::from_str::<config::Config>(&config_file).unwrap();
+
+    // todo: multiple servers
+    let server = &config.servers[0];
+    let mut client = Client::from_config(server.clone()).await.unwrap();
     println!("Connecting...");
     client.identify().unwrap();
     println!("Connected. nickname: {}", client.current_nickname());
