@@ -2,7 +2,9 @@ SHELL        = /bin/sh
 
 CARGO        := cargo
 FETCHFLAGS   := --locked
-CARGOFLAGS   := --release --locked --offline --no-default-features
+CARGOFLAGS   := --locked --offline --no-default-features
+BUILDFLAGS   := $(CARGOFLAGS) --release
+CHECKFLAGS   := $(CARGOFLAGS)
 ASCIIDOCTOR  := asciidoctor
 MANFLAGS     := -b manpage -D build
 HTMLFLAGS    := -D build -a toc=left -a toclevels=3 -a sectlinks
@@ -28,10 +30,10 @@ fetch:
 	$(CARGO) fetch $(FETCHFLAGS)
 
 bin:
-	$(CARGO) build $(CARGOFLAGS) -p rink
+	$(CARGO) build $(BUILDFLAGS) -p rink
 
 test:
-	$(CARGO) test $(CARGOFLAGS) --all
+	$(CARGO) test $(CHECKFLAGS) --all
 
 man:
 	$(ASCIIDOCTOR) $(MANFLAGS) $(srcdir)/docs/rink.1.adoc
