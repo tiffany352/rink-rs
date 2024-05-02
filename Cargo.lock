@@ -190,6 +190,7 @@ dependencies = [
  "blocking",
  "futures-lite 2.3.0",
  "once_cell",
+ "tokio",
 ]
 
 [[package]]
@@ -1776,6 +1777,7 @@ dependencies = [
 name = "rink-irc"
 version = "0.8.0"
 dependencies = [
+ "async-std",
  "dirs 1.0.5",
  "futures",
  "humantime-serde",
