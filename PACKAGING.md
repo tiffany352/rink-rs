@@ -36,7 +36,8 @@ generally be `/usr`. `DESTDIR` is where the files will be copied to upon
 running `make install`.
 
 `make man` can be used to build just the manpages if desired. They're
-placed into the `build/` directory.
+placed into the `build/` directory. Similarly, `make installman` will
+install just the manpages.
 
 The makefile doesn't automatically install the .desktop file, see below.
 

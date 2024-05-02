@@ -49,13 +49,19 @@ htmldoc:
 	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink-defs.5.adoc
 	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink-dates.5.adoc
 
-install: all
+installbin:
 	$(INSTALL) -Dm 0755 target/release/rink -t $(bindir)
-	$(INSTALL) -Dm 0644 $(srcdir)/core/definitions.units -t $(datadir)/rink
-	$(INSTALL) -Dm 0644 $(srcdir)/core/datepatterns.txt -t $(datadir)/rink
-	$(INSTALL) -Dm 0644 $(srcdir)/core/currency.units -t $(datadir)/rink
+
+installman:
 	$(INSTALL) -Dm 0644 build/rink.1 -t $(man1dir)
 	$(INSTALL) -Dm 0644 build/rink.5 -t $(man5dir)
 	$(INSTALL) -Dm 0644 build/rink.7 -t $(man7dir)
 	$(INSTALL) -Dm 0644 build/rink-defs.5 -t $(man5dir)
 	$(INSTALL) -Dm 0644 build/rink-dates.5 -t $(man5dir)
+
+installfiles:
+	$(INSTALL) -Dm 0644 $(srcdir)/core/definitions.units -t $(datadir)/rink
+	$(INSTALL) -Dm 0644 $(srcdir)/core/datepatterns.txt -t $(datadir)/rink
+	$(INSTALL) -Dm 0644 $(srcdir)/core/currency.units -t $(datadir)/rink
+
+install: installbin installman installfiles
