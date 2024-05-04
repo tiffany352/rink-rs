@@ -51,7 +51,7 @@ main {
 		font-size: 80%;
 	}
 
-	aside#toc ol {
+	aside#toc>ol {
 		position: sticky;
 		top: 1em;
 	}
