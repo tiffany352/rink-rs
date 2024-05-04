@@ -51,7 +51,7 @@ main {
 		font-size: 80%;
 	}
 
-	aside#toc ol {
+	aside#toc>ol {
 		position: sticky;
 		top: 1em;
 	}
@@ -65,13 +65,20 @@ main {
 		padding-right: 0.75em;
 	}
 
-	nav > a {
-		padding: 0.3em;
-	}
-
 	nav > .nav-spacer {
 		display: unset;
 		flex-grow: 1;
+	}
+}
+
+@media screen and (max-width: 384px) {
+	nav {
+		font-size: 14px;
+	}
+
+	nav svg {
+		width: 20px;
+		height: 20px;
 	}
 }
 
@@ -91,6 +98,7 @@ nav {
 	border-bottom-color: var(--border);
 	gap: 0.5em;
 	margin-top: 0.25em;
+	overflow-x: scroll;
 }
 
 .nav-spacer {
@@ -99,7 +107,7 @@ nav {
 
 nav > a {
 	text-decoration: none;
-	padding: 0.5em;
+	padding: 0.3em;
 	border-bottom: 2px solid transparent;
 
 	color: var(--link-normal);

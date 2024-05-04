@@ -76,3 +76,4 @@ widget = "opengraph"
 
 [custom_options]
 site_title = "Rink"
+site_url = "https://rinkcalc.app"
