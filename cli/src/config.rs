@@ -223,24 +223,34 @@ impl Config {
     }
 }
 
-fn read_from_search_path(filename: &str, paths: &[PathBuf]) -> Result<String> {
-    for path in paths {
-        let mut buf = PathBuf::from(path);
-        buf.push(filename);
-        if let Ok(result) = read_to_string(buf) {
-            return Ok(result);
-        }
-    }
+fn read_from_search_path(
+    filename: &str,
+    paths: &[PathBuf],
+    default: Option<&'static str>,
+) -> Result<Vec<String>> {
+    let result: Vec<String> = paths
+        .iter()
+        .filter_map(|path| {
+            let mut buf = PathBuf::from(path);
+            buf.push(filename);
+            read_to_string(buf).ok()
+        })
+        .chain(default.map(ToOwned::to_owned))
+        .collect();
 
-    Err(eyre!(
-        "Could not find {} in search path. Paths:{}",
-        filename,
-        paths
-            .iter()
-            .map(|path| format!("{}", path.display()))
-            .collect::<Vec<String>>()
-            .join("\n  ")
-    ))
+    if result.is_empty() {
+        Err(eyre!(
+            "Could not find {}, and rink was not built with one bundled. Search path:{}",
+            filename,
+            paths
+                .iter()
+                .map(|path| format!("\n  {}", path.display()))
+                .collect::<Vec<String>>()
+                .join("")
+        ))
+    } else {
+        Ok(result)
+    }
 }
 
 fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
@@ -255,8 +265,10 @@ fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
 }
 
 fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBuf]) -> Result<()> {
-    let base = read_from_search_path("currency.units", search_path)
-        .or_else(|err| CURRENCY_FILE.map(ToOwned::to_owned).ok_or(err)).wrap_err("Rink was not built with a bundled currency.units file, and one was not found in the search path.")?;
+    let base = read_from_search_path("currency.units", search_path, CURRENCY_FILE)?
+        .into_iter()
+        .next()
+        .unwrap();
 
     let mut base_defs = gnu_units::parse_str(&base);
     let mut live_defs = load_live_currency(config)?;
@@ -283,7 +295,8 @@ pub fn read_config() -> Result<Config> {
 /// Creates a context by searching standard directories
 pub fn load(config: &Config) -> Result<Context> {
     let mut search_path = vec![PathBuf::from("./")];
-    if let Some(config_dir) = dirs::config_dir() {
+    if let Some(mut config_dir) = dirs::config_dir() {
+        config_dir.push("rink");
         search_path.push(config_dir);
     }
     if let Some(prefix) = option_env!("RINK_PATH") {
@@ -291,17 +304,20 @@ pub fn load(config: &Config) -> Result<Context> {
     }
 
     // Read definitions.units
-    let units = read_from_search_path("definitions.units", &search_path)
-        .or_else(|err| DEFAULT_FILE.map(ToOwned::to_owned).ok_or(err).wrap_err("Rink was not built with a bundled definitions.units file, and one was not found in the search path."))?;
+    let units_files = read_from_search_path("definitions.units", &search_path, DEFAULT_FILE)?;
 
     // Read datepatterns.txt
-    let dates = read_from_search_path("datepatterns.txt", &search_path)
-        .or_else(|err| DATES_FILE.map(ToOwned::to_owned).ok_or(err).wrap_err("Rink was not built with a bundled datepatterns.txt file, and one was not found in the search path."))?;
+    let dates = read_from_search_path("datepatterns.txt", &search_path, DATES_FILE)?
+        .into_iter()
+        .next()
+        .unwrap();
 
     let mut ctx = Context::new();
     ctx.save_previous_result = true;
-    ctx.load(gnu_units::parse_str(&units))
-        .map_err(|err| eyre!(err))?;
+    for file in units_files {
+        ctx.load(gnu_units::parse_str(&file))
+            .map_err(|err| eyre!(err))?;
+    }
     ctx.load_dates(datetime::parse_datefile(&dates));
 
     // Load currency data.
