@@ -306,6 +306,12 @@ pub fn load(config: &Config) -> Result<Context> {
     // Read definitions.units
     let units_files = read_from_search_path("definitions.units", &search_path, DEFAULT_FILE)?;
 
+    let unit_defs: Vec<_> = units_files
+        .iter()
+        .map(|s| gnu_units::parse_str(s).defs)
+        .flatten()
+        .collect();
+
     // Read datepatterns.txt
     let dates = read_from_search_path("datepatterns.txt", &search_path, DATES_FILE)?
         .into_iter()
@@ -314,10 +320,8 @@ pub fn load(config: &Config) -> Result<Context> {
 
     let mut ctx = Context::new();
     ctx.save_previous_result = true;
-    for file in units_files {
-        ctx.load(gnu_units::parse_str(&file))
-            .map_err(|err| eyre!(err))?;
-    }
+    ctx.load(rink_core::ast::Defs { defs: unit_defs })
+        .map_err(|err| eyre!(err))?;
     ctx.load_dates(datetime::parse_datefile(&dates));
 
     // Load currency data.
