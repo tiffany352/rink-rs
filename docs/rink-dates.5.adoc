@@ -111,7 +111,7 @@ Files
 
 Rink searches the following locations:
 
-* `./rink/datepatterns.txt`
+* `./datepatterns.txt`
 * `__$XDG_CONFIG_DIR__/rink/datepatterns.txt`
 * `/usr/share/rink/datepatterns.txt`
 
