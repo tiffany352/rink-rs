@@ -290,12 +290,13 @@ impl Number {
             .iter()
             .cloned()
             .collect::<HashSet<&'static str>>();
-            // kg special case
-            let (val, orig) = if &**(orig.0).id == "kg" || &**(orig.0).id == "kilogram" {
-                (
-                    &self.value * &Numeric::from(1000).pow(orig.1 as i32),
-                    (BaseUnit::new("gram"), orig.1),
-                )
+            let (val, orig) = if *orig.0.id == "kg" || *orig.0.id == "kilogram" {
+                // kg special case
+                let mul = Numeric::from(1000).pow(orig.1 as i32);
+                (&self.value * &mul, (BaseUnit::new("gram"), orig.1))
+            } else if *orig.0.id == "bit" && orig.1 == 1 {
+                // byte special case
+                (&self.value / &Numeric::from(8), (BaseUnit::new("byte"), 1))
             } else {
                 (self.value.clone(), (orig.0.clone(), orig.1))
             };
