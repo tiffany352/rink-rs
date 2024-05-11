@@ -797,3 +797,12 @@ fn test_extra_operators() {
         "Arguments to `xor` must be dimensionless: <1 meter (length)> xor <1 meter (length)>",
     );
 }
+
+#[test]
+fn test_bytes() {
+    test("1 mebibyte", "1.048576 megabyte (information)");
+    test("1 GiB", "approx. 1.073741 gigabyte (information)");
+    test("128 bit", "16 byte (information)");
+    test("100 byte^2", "6400 bit^2 (bit^2)");
+    test("1/byte", "0.125 / bit (bit^-1)");
+}
