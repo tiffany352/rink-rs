@@ -248,16 +248,20 @@ decimal point.
 Files
 -----
 
-Rink searches for the definitions file in these locations:
+Rink searches for definitions files in these locations:
 
-* `./rink/definitions.units`
+* `./definitions.units`
 * `$XDG_CONFIG_DIR/rink/definitions.units`
 * `/usr/share/rink/definitions.units`
+
+It will load all of the files it finds. The files can reference
+definitions from each other. This can be used for custom definitions
+building on top of the default units database.
 
 When live currency fetching is enabled, Rink also looks for a currency
 file in these locations:
 
-* `./rink/currency.units`
+* `./currency.units`
 * `$XDG_CONFIG_DIR/rink/currency.units`
 * `/usr/share/rink/currency.units`
 
