@@ -1190,6 +1190,10 @@ lightyear               c julianyear # The 365.25 day year is specified in
 ly                      lightyear    # NIST publication 811
 lightsecond             c s
 lightminute             c min
+?? Coined in "It's About Time: Understanding Einstein's Relativity by N.
+?? David Merman to refer to a nanolightsecond, which happens to be very
+?? close to 1 foot.
+phoot                   1 nanolightsecond
 ?? A parsec was the distance at which a star will have a parallax of 1
 ?? arcsecond as seen from Earth. In 2015, IAU Resolution B2 redefined
 ?? the parsec to be exactly 648 000|pi astronomical units.
@@ -3699,6 +3703,13 @@ dvdspeed                 1385 kB/s   # This is the "1x" speed of a DVD using
                                      # as they go from the inside to the
                                      # outside of the disc.
                        # See http://www.osta.org/technology/dvdqa/dvdqa4.htm
+
+?? The common 3.5 inch floppy disk in "1.44 Meg" format. The 1.44
+?? comes from mixing decimal and binary prefixes (1000*1024 bytes).
+?? Equal to 512 B x 80 tracks x 18 sectors x 2 sides.
+?? Source: <http://www.manmrk.net/tutorials/DOS/PSBOOK/book4/floppyd.htm>
+floppydisk              1440KiB
+floppy                  floppydisk
 
 !endcategory
 !category music                                    "Musical Measures"
