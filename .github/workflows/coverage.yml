@@ -10,43 +10,22 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  coverage:
     runs-on: ubuntu-latest
-
+    env:
+      CARGO_TERM_COLOR: always
     steps:
-      # the action needs a nightly toolchain with llvm-tools
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: rustup update stable
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Generate code coverage
+        # rink-sandbox causes corrupted .profraw files for some reason,
+        # so don't test it. test everything else.
+        run: cargo llvm-cov --all-features -p rink-core -p rink -p rink-js --lcov --output-path lcov.info
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
         with:
-          profile: minimal
-          toolchain: nightly
-          components: llvm-tools-preview
-
-      - name: Install grcov
-        run:
-          cargo +nightly install grcov
-
-      - uses: actions/checkout@v2
-
-      - name: Build
-        env:
-          RUSTFLAGS: "-C instrument-coverage"
-        run:
-          cargo +nightly test --all --no-run
-
-      - name: Run tests
-        env:
-          RUSTFLAGS: "-C instrument-coverage"
-          LLVM_PROFILE_FILE: "coverage-%p-%m.profraw"
-        run:
-          cargo +nightly test --all --no-fail-fast
-
-      - name: Process coverage info
-        env:
-          RUSTUP_TOOLCHAIN: nightly
-        run:
-          grcov **/*.profraw --binary-path ./target/debug -t lcov -o lcov.info
-
-      # afterwards, upload the report to codecov
-      - uses: codecov/codecov-action@v2
-        with:
-          files: ./lcov.info
+          files: lcov.info
+          fail_ci_if_error: true
