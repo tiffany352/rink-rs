@@ -60,6 +60,9 @@ fn parse_color(input: &str) -> Option<Color> {
                 }
             } else if input.starts_with('#') {
                 let input = input.trim_start_matches('#');
+                if input.len() != 6 {
+                    return None;
+                }
                 let value = u32::from_str_radix(input, 16);
                 if let Ok(value) = value {
                     let r = (value >> 16) as u8;
@@ -168,4 +171,65 @@ where
         result.push("plain".into());
     }
     ser.serialize_str(&result.join(" "))
+}
+
+#[cfg(test)]
+mod tests {
+    use ansi_term::Color::*;
+    use ansi_term::Style;
+    use serde_derive::{Deserialize, Serialize};
+
+    use crate::style_ser::parse_color;
+
+    #[derive(Serialize, Deserialize, Debug, PartialEq)]
+    struct Wrap {
+        #[serde(with = "super")]
+        style: Style,
+    }
+
+    #[test]
+    fn roundtrip() {
+        fn check(style: Style) {
+            let style = Wrap { style };
+            let toml_str = toml::to_string(&style).unwrap();
+            let des = toml::from_str::<Wrap>(&toml_str).unwrap();
+            assert_eq!(style, des);
+        }
+
+        let tests = [
+            Black,
+            Red,
+            Green,
+            Yellow,
+            Blue,
+            Purple,
+            Cyan,
+            White,
+            Fixed(0),
+            Fixed(255),
+            RGB(0, 0, 0),
+            RGB(255, 255, 255),
+            RGB(1, 2, 3),
+            RGB(3, 2, 1),
+        ];
+        for test in tests {
+            check(Style::new().fg(test));
+            check(Style::new().on(test));
+            check(Style::new().fg(test).on(test));
+        }
+        check(Style::new().fg(Red).on(Black).dimmed().underline());
+    }
+
+    #[test]
+    fn parse_colors() {
+        assert_eq!(parse_color("black"), Some(Black));
+        assert_eq!(parse_color("red"), Some(Red));
+        assert_eq!(parse_color("#123456"), Some(RGB(0x12, 0x34, 0x56)));
+        assert_eq!(parse_color(""), None);
+        assert_eq!(parse_color("asdf"), None);
+        assert_eq!(parse_color("#123"), None);
+        assert_eq!(parse_color("#1234"), None);
+        assert_eq!(parse_color("#123456789"), None);
+        assert_eq!(parse_color("#abc"), None);
+    }
 }
