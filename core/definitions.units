@@ -3704,6 +3704,13 @@ dvdspeed                 1385 kB/s   # This is the "1x" speed of a DVD using
                                      # outside of the disc.
                        # See http://www.osta.org/technology/dvdqa/dvdqa4.htm
 
+?? The common 3.5 inch floppy disk in "1.44 Meg" format. The 1.44
+?? comes from mixing decimal and binary prefixes (1000*1024 bytes).
+?? Equal to 512 B x 80 tracks x 18 sectors x 2 sides.
+?? Source: <http://www.manmrk.net/tutorials/DOS/PSBOOK/book4/floppyd.htm>
+floppydisk              1440KiB
+floppy                  floppydisk
+
 !endcategory
 !category music                                    "Musical Measures"
 
