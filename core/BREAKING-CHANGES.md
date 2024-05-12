@@ -1,3 +1,9 @@
+## Next version
+
+Doc strings are now wrapped in a DocString type rather than being raw
+strings. The TokenFmt output is now slightly different as a result.
+Added FmtToken::Link as well.
+
 ## Rink 0.8.0
 
 `gpl` feature has been renamed to `bundle-files`.
