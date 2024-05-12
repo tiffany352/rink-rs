@@ -196,8 +196,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ansi_term::Color::*;
-    use ansi_term::Style;
+    use nu_ansi_term::Color::*;
+    use nu_ansi_term::Style;
     use serde_derive::{Deserialize, Serialize};
 
     use crate::style_ser::parse_color;
@@ -228,10 +228,10 @@ mod tests {
             White,
             Fixed(0),
             Fixed(255),
-            RGB(0, 0, 0),
-            RGB(255, 255, 255),
-            RGB(1, 2, 3),
-            RGB(3, 2, 1),
+            Rgb(0, 0, 0),
+            Rgb(255, 255, 255),
+            Rgb(1, 2, 3),
+            Rgb(3, 2, 1),
         ];
         for test in tests {
             check(Style::new().fg(test));
@@ -245,7 +245,7 @@ mod tests {
     fn parse_colors() {
         assert_eq!(parse_color("black"), Some(Black));
         assert_eq!(parse_color("red"), Some(Red));
-        assert_eq!(parse_color("#123456"), Some(RGB(0x12, 0x34, 0x56)));
+        assert_eq!(parse_color("#123456"), Some(Rgb(0x12, 0x34, 0x56)));
         assert_eq!(parse_color(""), None);
         assert_eq!(parse_color("asdf"), None);
         assert_eq!(parse_color("#123"), None);
