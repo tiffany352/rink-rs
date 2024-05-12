@@ -3,10 +3,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::style_ser;
-use nu_ansi_term::{Color, Style};
 use color_eyre::Result;
 use curl::easy::Easy;
 use eyre::{eyre, Report, WrapErr};
+use nu_ansi_term::{Color, Style};
 use rink_core::output::fmt::FmtToken;
 use rink_core::parsing::datetime;
 use rink_core::Context;

@@ -580,7 +580,12 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
 
     for (id, val) in resolver.docs {
         let name = id.name.to_string();
-        if ctx.registry.docs.insert(name, DocString::new(val)).is_some() {
+        if ctx
+            .registry
+            .docs
+            .insert(name, DocString::new(val))
+            .is_some()
+        {
             resolver.errors.push(format!("Doc conflict for {}", id));
         }
     }

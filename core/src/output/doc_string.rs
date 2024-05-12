@@ -12,9 +12,7 @@ pub struct DocString {
 
 impl DocString {
     pub fn new(text: impl Into<String>) -> DocString {
-        DocString {
-            text: text.into()
-        }
+        DocString { text: text.into() }
     }
 }
 

@@ -1,7 +1,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
-    ast::{DatePattern, Expr}, output::DocString, runtime::Substance, types::{BaseUnit, Dimensionality, Number, Numeric}
+    ast::{DatePattern, Expr},
+    output::DocString,
+    runtime::Substance,
+    types::{BaseUnit, Dimensionality, Number, Numeric},
 };
 
 #[derive(Default, Debug)]
