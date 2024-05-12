@@ -55,6 +55,13 @@ fn to_ansi_inner<'a>(
                 }
             }
 
+            Span::Content {
+                text, token: token @ FmtToken::Link
+            } => {
+                nothing_printed = false;
+                strings.push(theme.get_style(token).paint(text.clone()).hyperlink(text));
+            }
+
             Span::Content { text, token } => {
                 nothing_printed = false;
                 strings.push(theme.get_style(token).paint(text));
