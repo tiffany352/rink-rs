@@ -4,7 +4,7 @@
 
 use std::{borrow::Cow, fmt};
 
-use ansi_term::{Color, Style};
+use nu_ansi_term::{Color, Style};
 use serde::{
     de::{Error, Unexpected, Visitor},
     Deserializer, Serializer,
@@ -44,6 +44,16 @@ fn parse_color(input: &str) -> Option<Color> {
         "purple" => Some(Color::Purple),
         "cyan" => Some(Color::Cyan),
         "white" => Some(Color::White),
+        "dark_gray" => Some(Color::DarkGray),
+        "light_red" => Some(Color::LightRed),
+        "light_green" => Some(Color::LightGreen),
+        "light_yellow" => Some(Color::LightYellow),
+        "light_blue" => Some(Color::LightBlue),
+        "light_purple" => Some(Color::LightPurple),
+        "magenta" => Some(Color::Magenta),
+        "light_magenta" => Some(Color::LightMagenta),
+        "light_cyan" => Some(Color::LightCyan),
+        "light_gray" => Some(Color::LightGray),
         _ => {
             let value = input.parse::<u8>();
             if let Ok(value) = value {
@@ -55,7 +65,7 @@ fn parse_color(input: &str) -> Option<Color> {
                 let g = colors.next();
                 let b = colors.next();
                 match (r, g, b) {
-                    (Some(r), Some(g), Some(b)) => Some(Color::RGB(r, g, b)),
+                    (Some(r), Some(g), Some(b)) => Some(Color::Rgb(r, g, b)),
                     _ => None,
                 }
             } else if input.starts_with('#') {
@@ -65,7 +75,7 @@ fn parse_color(input: &str) -> Option<Color> {
                     let r = (value >> 16) as u8;
                     let g = (value >> 8) as u8;
                     let b = value as u8;
-                    Some(Color::RGB(r, g, b))
+                    Some(Color::Rgb(r, g, b))
                 } else {
                     None
                 }
@@ -123,8 +133,19 @@ fn color_to_string(color: Color) -> Cow<'static, str> {
         Color::Purple => "purple".into(),
         Color::Cyan => "cyan".into(),
         Color::White => "white".into(),
+        Color::DarkGray => "dark_gray".into(),
+        Color::LightRed => "light_red".into(),
+        Color::LightGreen => "light_green".into(),
+        Color::LightYellow => "light_yellow".into(),
+        Color::LightBlue => "light_blue".into(),
+        Color::LightPurple => "light_purple".into(),
+        Color::Magenta => "magenta".into(),
+        Color::LightMagenta => "light_magenta".into(),
+        Color::LightCyan => "light_cyan".into(),
+        Color::LightGray => "light_gray".into(),
+        Color::Default => "default".into(),
         Color::Fixed(i) => format!("{}", i).into(),
-        Color::RGB(r, g, b) => format!("rgb({},{},{})", r, g, b).into(),
+        Color::Rgb(r, g, b) => format!("rgb({},{},{})", r, g, b).into(),
     }
 }
 

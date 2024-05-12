@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::style_ser;
-use ansi_term::{Color, Style};
+use nu_ansi_term::{Color, Style};
 use color_eyre::Result;
 use curl::easy::Easy;
 use eyre::{eyre, Report, WrapErr};
