@@ -40,5 +40,8 @@ path = "../core"
 version = "0.6"
 path = "../sandbox"
 
+[dev-dependencies]
+similar-asserts = "1.1.0"
+
 [package.metadata.wasm-pack.profile.profiling]
 wasm-opt = ['-g', '-O']
