@@ -248,15 +248,18 @@ mod tests {
             ],
         );
 
-        test("volume of moon * (19.283 g/cm^3) * G / (radius of moon)^2 to gravity", &[
-Style::new().paint("approx. "),
-            Style::new().paint("0.9549987"),
-            Style::new().paint(" "),
-            Style::new().fg(Cyan).paint("gravity"),
-            Style::new().paint(" "),
-            Style::new().paint("("),
-            Style::new().fg(Cyan).dimmed().paint("acceleration"),
-            Style::new().paint(")"),
-        ]);
+        test(
+            "volume of moon * (19.283 g/cm^3) * G / (radius of moon)^2 to gravity",
+            &[
+                Style::new().paint("approx. "),
+                Style::new().paint("0.9549987"),
+                Style::new().paint(" "),
+                Style::new().fg(Cyan).paint("gravity"),
+                Style::new().paint(" "),
+                Style::new().paint("("),
+                Style::new().fg(Cyan).dimmed().paint("acceleration"),
+                Style::new().paint(")"),
+            ],
+        );
     }
 }
