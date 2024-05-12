@@ -120,6 +120,8 @@ pub struct Theme {
     prop_name: Style,
     #[serde(with = "style_ser")]
     date_time: Style,
+    #[serde(with = "style_ser")]
+    link: Style,
 }
 
 impl Theme {
@@ -135,6 +137,7 @@ impl Theme {
             FmtToken::Pow => self.pow,
             FmtToken::PropName => self.prop_name,
             FmtToken::DateTime => self.date_time,
+            FmtToken::Link => self.link,
 
             // Default styling since these are handled specially.
             FmtToken::ListBegin => self.plain,
@@ -162,6 +165,7 @@ impl Default for Config {
                 pow: Style::default(),
                 prop_name: Style::new().fg(Color::Cyan),
                 date_time: Style::default(),
+                link: Style::new().fg(Color::Cyan),
             },
             disabled_theme: Theme::default(),
         }

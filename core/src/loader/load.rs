@@ -4,6 +4,7 @@
 
 use super::Context;
 use crate::ast::{BinOpExpr, BinOpType, Def, DefEntry, Defs, Expr, UnaryOpExpr, UnaryOpType};
+use crate::output::DocString;
 use crate::runtime::{Properties, Property, Substance, Value};
 use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 use std::collections::{BTreeMap, BTreeSet};
@@ -537,7 +538,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
                                 input_name: prop.input_name.clone(),
                                 output,
                                 output_name: prop.output_name.clone(),
-                                doc: prop.doc.clone(),
+                                doc: prop.doc.as_ref().map(DocString::new),
                             },
                         ))
                     })
@@ -579,7 +580,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
 
     for (id, val) in resolver.docs {
         let name = id.name.to_string();
-        if ctx.registry.docs.insert(name, val).is_some() {
+        if ctx.registry.docs.insert(name, DocString::new(val)).is_some() {
             resolver.errors.push(format!("Doc conflict for {}", id));
         }
     }

@@ -111,6 +111,11 @@ impl<'a> Span<'a> {
     pub fn child(obj: &'a dyn TokenFmt<'a>) -> Span<'a> {
         Span::Child(obj)
     }
+
+    /// Creates a new span with FmtToken::Link
+    pub fn link(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::Link)
+    }
 }
 
 impl<'a> fmt::Debug for Span<'a> {
@@ -160,6 +165,8 @@ pub enum FmtToken {
     PropName,
     /// A date time, either being printed, or from user input.
     DateTime,
+    /// A URL, typically found inside of a doc string.
+    Link,
 }
 
 /// Allows an object to be converted into a token tree.

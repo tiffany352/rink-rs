@@ -120,7 +120,9 @@ fn test_substance() {
                     s(")", Plain),
                 ]),
                 s(". ", Plain),
-                s("Speed that light travels in a vacuum. Defined as exactly 299 792 458 m/s. 26th CGPM (2018, Resolution 1; CR, 210).", DocString),
+                child(vec![
+                    s("Speed that light travels in a vacuum. Defined as exactly 299 792 458 m/s. 26th CGPM (2018, Resolution 1; CR, 210).", DocString),
+                ]),
             ]),
         ],
     );
@@ -163,10 +165,10 @@ fn test_definition() {
             s("m", Unit),
             s(")", Plain),
             s(". ", Plain),
-            s(
+            child(vec![s(
                 "International yard and pound, since July 1, 1959.",
                 DocString,
-            ),
+            )]),
         ],
     );
     test(
@@ -177,7 +179,7 @@ fn test_definition() {
             s(" = ", Plain),
             s("base unit of length", Plain),
             s(". ", Plain),
-            s(METER_DOC, DocString),
+            child(vec![s(METER_DOC, DocString)]),
         ],
     );
 }

@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use super::fmt::{flat_join, join, Span, TokenFmt};
-use super::NumberParts;
+use super::{DocString, NumberParts};
 use crate::ast::{Expr, Precedence, UnaryOpType};
 use crate::output::Digits;
 use chrono::{DateTime, TimeZone};
@@ -45,7 +45,7 @@ pub struct DefReply {
     pub def: Option<String>,
     pub def_expr: Option<ExprReply>,
     pub value: Option<NumberParts>,
-    pub doc: Option<String>,
+    pub doc: Option<DocString>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -104,13 +104,13 @@ pub struct SearchReply {
 pub struct PropertyReply {
     pub name: String,
     pub value: NumberParts,
-    pub doc: Option<String>,
+    pub doc: Option<DocString>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct SubstanceReply {
     pub name: String,
-    pub doc: Option<String>,
+    pub doc: Option<DocString>,
     pub amount: NumberParts,
     pub properties: Vec<PropertyReply>,
 }
@@ -559,7 +559,7 @@ impl<'a> TokenFmt<'a> for SubstanceReply {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
         let mut tokens = vec![Span::unit(&self.name), Span::plain(": ")];
         if let Some(ref doc) = self.doc {
-            tokens.push(Span::doc_string(doc));
+            tokens.push(Span::child(doc));
             tokens.push(Span::plain(" "));
         }
         tokens.push(Span::list_begin(""));
@@ -580,7 +580,7 @@ impl<'a> TokenFmt<'a> for PropertyReply {
         ];
         if let Some(ref doc) = self.doc {
             tokens.push(Span::plain(". "));
-            tokens.push(Span::doc_string(doc));
+            tokens.push(Span::child(doc));
         }
         tokens
     }
@@ -631,7 +631,7 @@ impl<'a> TokenFmt<'a> for DefReply {
         }
         if let Some(ref doc) = self.doc {
             tokens.push(Span::plain(". "));
-            tokens.push(Span::doc_string(doc));
+            tokens.push(Span::child(doc));
         }
         tokens
     }

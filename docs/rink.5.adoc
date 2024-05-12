@@ -137,6 +137,10 @@ created as `[themes.my_theme]`. These options are specific to each.
 	`now`.
 	Default: `"default"`
 
+*link* = <__color__>::
+	A hyperlink, typically found inside of doc strings.
+	Default: `"cyan"`
+
 Files
 -----
 Linux::
