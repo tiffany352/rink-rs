@@ -342,3 +342,28 @@ fn test_search() {
         ],
     );
 }
+
+#[test]
+fn test_doclinks() {
+    test("floppy", &[
+        s("Definition: ", Plain),
+        s("floppydisk", Unit),
+        s(" = ", Plain),
+        s("1440 KiB", Plain),
+        s(" = ", Plain),
+        s("1.47456", Number),
+        s(" ", Plain),
+        s("megabyte", Unit),
+        s(" ", Plain),
+        s("(", Plain),
+        s("information", Quantity),
+        s("; ", Plain),
+        s("bit", Unit),
+        s(")", Plain),
+        s(". ", Plain),
+        child(vec![
+        s("The common 3.5 inch floppy disk in \"1.44 Meg\" format. The 1.44 comes from mixing decimal and binary prefixes (1000*1024 bytes). Equal to 512 B x 80 tracks x 18 sectors x 2 sides. Source: ", DocString),
+        s("http://www.manmrk.net/tutorials/DOS/PSBOOK/book4/floppyd.htm", Link),
+        ])
+    ]);
+}
