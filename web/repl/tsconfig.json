@@ -1,5 +1,7 @@
 {
 	"compilerOptions": {
-		"lib": "es2017"
+		"lib": ["es2017"],
+		"target": "es2017",
+		"module": "ES2020"
 	}
 }
