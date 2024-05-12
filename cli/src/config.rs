@@ -165,7 +165,7 @@ impl Default for Config {
                 pow: Style::default(),
                 prop_name: Style::new().fg(Color::Cyan),
                 date_time: Style::default(),
-                link: Style::new().fg(Color::Cyan),
+                link: Style::new().fg(Color::Blue),
             },
             disabled_theme: Theme::default(),
         }
