@@ -1,7 +1,9 @@
 {
 	"compilerOptions": {
-		"lib": ["es2017"],
-		"target": "es2017",
-		"module": "ES2020"
+		"target": "es2020",
+		"module": "es2020",
+		"moduleResolution": "nodeNext",
+		"forceConsistentCasingInFileNames": true,
+		"strict": true
 	}
 }

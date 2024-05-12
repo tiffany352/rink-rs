@@ -245,7 +245,7 @@ Promise.all([wasmBlob, currency]).then(([buffer, currencyDataRes]) => {
 				JSON.stringify(history),
 			);
 		} catch (error) {
-			pushError(error);
+			pushError(error as any);
 			p.remove();
 		}
 	}
