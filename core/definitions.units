@@ -4927,7 +4927,7 @@ se                   30 tsubo
 tan_area             10 se
 chou_area            10 tan_area
 
-# <http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement>>>>
+# <http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement>
 ping                 tsubo     # <http://zh.wikipedia.org/wiki/坪>
 jia                  2934 ping # <http://zh.wikipedia.org/wiki/甲_(单位)>
 #fen                  1|10 jia  # <http://zh.wikipedia.org/wiki/分>
