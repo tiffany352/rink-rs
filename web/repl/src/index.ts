@@ -2,7 +2,7 @@ import type { ExecuteRes, HelloReq, HelloRes, RinkResponse, SpanOrList } from ".
 
 // Taken from https://stackoverflow.com/a/3809435
 const urlRegex =
-	/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
+	/(?:<|&lt;)([^<>]*)(?:>|&gt;)|(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))/g;
 const powRegex = /\^(\-?\d+)/g;
 
 function buildInline(parent: HTMLElement, text: string) {
@@ -12,7 +12,7 @@ function buildInline(parent: HTMLElement, text: string) {
 	// apply the regexes
 	text = text.replace(
 		urlRegex,
-		(match) => `<a href="${match}" rel="nofollow">${match}</a>`,
+		(_match, g1, g2) => `<a href="${g1 || g2}" rel="nofollow">${g1 || g2}</a>`,
 	);
 	text = text.replace(powRegex, (_match, rest) => `<sup>${rest}</sup>`);
 	parent.innerHTML = text;
@@ -245,7 +245,7 @@ Promise.all([wasmBlob, currency]).then(([buffer, currencyDataRes]) => {
 				JSON.stringify(history),
 			);
 		} catch (error) {
-			pushError(error);
+			pushError(error as any);
 			p.remove();
 		}
 	}
