@@ -165,10 +165,11 @@ fn test_definition() {
             s("m", Unit),
             s(")", Plain),
             s(". ", Plain),
-            child(vec![s(
-                "International yard and pound, since July 1, 1959.",
-                DocString,
-            )]),
+            child(vec![
+                s("International yard and pound, since ", DocString),
+                s("1959-07-01", DateTime),
+                s(".", DocString),
+            ]),
         ],
     );
     test(
