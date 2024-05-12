@@ -1977,18 +1977,18 @@ surveymi                surveymile
 
 # International measures
 
-?? International yard and pound, since July 1, 1959.
+?? International yard and pound, since #1959-07-01#.
 inch                    2.54 cm
 inches                  inch
 in                      inch
-?? International yard and pound, since July 1, 1959.
+?? International yard and pound, since #1959-07-01#.
 foot                    12 inch
 feet                    foot
 ft                      foot
-?? International yard and pound, since July 1, 1959.
+?? International yard and pound, since #1959-07-01#.
 yard                    3 ft
 yd                      yard
-?? International yard and pound, since July 1, 1959.
+?? International yard and pound, since #1959-07-01#.
 mile                    5280 ft          # The mile was enlarged from 5000 ft
 mi                      mile             # to this number in order to make
                                          # it an even number of furlongs.

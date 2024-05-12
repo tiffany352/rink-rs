@@ -39,6 +39,22 @@ fn to_ansi_inner<'a>(
                 strings.push(format!("\n{:width$}• ", "", width = indent * 2 - 2).into());
             }
 
+            Span::Content {
+                text,
+                token: token @ FmtToken::DateTime,
+            } => {
+                let datetime = chrono::naive::NaiveDateTime::parse_from_str(&text, "%Y-%m-%d %H:%M:%S");
+                let date = chrono::naive::NaiveDate::parse_from_str(&text, "%Y-%m-%d");
+                nothing_printed = false;
+                if let Ok(date) = datetime {
+                    strings.push(theme.get_style(token).paint(date.format("%B %-d, %Y %H:%M:%S").to_string()));
+                } else if let Ok(date) = date {
+                    strings.push(theme.get_style(token).paint(date.format("%B %-d, %Y").to_string()));
+                } else {
+                    strings.push(theme.get_style(token).paint(text));
+                }
+            }
+
             Span::Content { text, token } => {
                 nothing_printed = false;
                 strings.push(theme.get_style(token).paint(text));
