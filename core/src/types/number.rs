@@ -277,9 +277,18 @@ impl Number {
         }
     }
 
+    pub fn with_pretty_unit(&self, context: &Context) -> Number {
+        let unit = self.pretty_unit(context);
+        Number {
+            value: self.value.clone(),
+            unit,
+        }
+    }
+
     /// Convert the units of the number from base units to display
     /// units, and possibly apply SI prefixes.
     pub fn prettify(&self, context: &Context) -> Number {
+        println!("{:?}", self);
         let unit = self.pretty_unit(context);
         if let Some(orig) = unit.as_single() {
             use std::collections::HashSet;
@@ -316,12 +325,15 @@ impl Number {
                         format!("{}{}", p, orig.0)
                     };
                     let unit = Dimensionality::new_dim(BaseUnit::new(&unit), orig.1);
+                    println!("using prefix {p}: {res:?} {unit:?}");
                     return Number { value: res, unit };
                 }
             }
             let unit = Dimensionality::new_dim(orig.0.clone(), orig.1);
+            println!("no prefix: {val:?} {unit:?}");
             Number { value: val, unit }
         } else {
+            println!("else case: {:?} {unit:?}", self.value);
             Number {
                 value: self.value.clone(),
                 unit,
@@ -330,8 +342,16 @@ impl Number {
     }
 
     pub fn to_parts(&self, context: &Context) -> NumberParts {
-        let value = self.prettify(context);
-        let (exact, approx) = value.numeric_value(10, Digits::Default);
+        self.to_parts_digits(context, 10, Digits::Default)
+    }
+
+    pub fn to_parts_digits(&self, context: &Context, base: u8, digits: Digits) -> NumberParts {
+        let value = if digits == Digits::Default {
+            self.prettify(context)
+        } else {
+            self.with_pretty_unit(context)
+        };
+        let (exact, approx) = value.numeric_value(base, digits);
 
         let quantity = context
             .registry

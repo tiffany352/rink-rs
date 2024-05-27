@@ -861,7 +861,9 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             })))
         }
         Query::Convert(ref top, Conversion::None, base, digits @ Digits::Digits(_))
-        | Query::Convert(ref top, Conversion::None, base, digits @ Digits::FullInt) => {
+        | Query::Convert(ref top, Conversion::None, base, digits @ Digits::FullInt)
+        | Query::Convert(ref top, Conversion::None, base, digits @ Digits::Fraction)
+        | Query::Convert(ref top, Conversion::None, base, digits @ Digits::Scientific) => {
             let top = eval_expr(ctx, top)?;
             let top = match top {
                 Value::Number(top) => top,
@@ -873,17 +875,13 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                             Digits::Default => unreachable!(),
                             Digits::FullInt => "digits".to_owned(),
                             Digits::Digits(n) => format!("{} digits", n),
+                            Digits::Fraction => "fraction".to_owned(),
+                            Digits::Scientific => "scientific".to_owned(),
                         }
                     )))
                 }
             };
-            let (exact, approx) = top.numeric_value(base.unwrap_or(10), digits);
-            let parts = NumberParts {
-                raw_value: Some(top.clone()),
-                exact_value: exact,
-                approx_value: approx,
-                ..top.to_parts(ctx)
-            };
+            let parts = top.to_parts_digits(ctx, base.unwrap_or(10), digits);
             Ok(QueryReply::Conversion(Box::new(ConversionReply {
                 value: parts,
             })))
@@ -1056,9 +1054,15 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 which, digits
             )))
         }
-        Query::Convert(ref _expr, ref which, _base, Digits::FullInt) => Err(QueryError::generic(
-            format!("Conversion to digits of {} is not defined", which),
-        )),
+        Query::Convert(
+            ref _expr,
+            ref which,
+            _base,
+            Digits::FullInt | Digits::Fraction | Digits::Scientific,
+        ) => Err(QueryError::generic(format!(
+            "Conversion to digits of {} is not defined",
+            which
+        ))),
         Query::Factorize(ref expr) => {
             let mut val = None;
             if let Expr::Unit { ref name } = *expr {

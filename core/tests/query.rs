@@ -806,3 +806,16 @@ fn test_bytes() {
     test("100 byte^2", "6400 bit^2 (bit^2)");
     test("1/byte", "0.125 / bit (bit^-1)");
 }
+
+#[test]
+fn test_output_formats() {
+    test("surveyfoot to digits", "0.[304800609601219202438404876809753619507239014478028956057912115824231648463296926593853187706375412750825501651003302006604013208026416052832105664211328422656845313690627381254762509525019050038100076200152400, period 210]... meter (length)");
+    test("surveyfoot to frac", "1200/3937 meter (length)");
+    test("surveyfoot to sci", "approx. 3.048006e-1 meter (length)");
+    test("foot to frac", "381/1250 meter (length)");
+    test("foot to sci", "3.048e-1 meter (length)");
+    test("1 to frac", "1 (dimensionless)");
+    test("1 to sci", "1.0e0 (dimensionless)");
+    test("1/7 to frac", "1/7 (dimensionless)");
+    test("1/7 to sci", "1.[428571]...e-1");
+}

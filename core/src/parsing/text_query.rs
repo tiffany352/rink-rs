@@ -836,6 +836,14 @@ pub fn parse_query(iter: &mut Iter<'_>) -> Query {
                         _ => Digits::FullInt,
                     }
                 }
+                Token::Ident(ref s) if s == "frac" || s == "fraction" => {
+                    iter.next();
+                    Digits::Fraction
+                }
+                Token::Ident(ref s) if s == "sci" || s == "scientific" => {
+                    iter.next();
+                    Digits::Scientific
+                }
                 _ => Digits::Default,
             };
             let base = match iter.peek().cloned().unwrap() {
