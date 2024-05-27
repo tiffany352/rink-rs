@@ -372,8 +372,8 @@ recognized:
 `bin`, `binary`, `base2`::
 	Base 2.
 
-Digits modifier
-^^^^^^^^^^^^^^^
+Number representation modifiers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 	> 2^128 -> digits
 	340282366920938463463374607431768211456 (dimensionless)
@@ -381,6 +381,10 @@ Digits modifier
 	0.[000254000508001016002032004064008128016256032512065024130048260096520193040386080772161544323088646177292354584709169418338836677673355346710693421386842773685547371094742189484378968757937515875031750063500127, period 210]...  (dimensionless)
 	> googol -> digits
 	10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 (dimensionless)
+	> mass of electron -> eng
+	approx. 910.9383e-33 kilogram (mass)
+	> 3 foot -> frac
+	1143/1250 meter (length)
 
 Digits modifiers are specified with `digits` optionally followed by a
 number, before the base modifier and before the rest of the
@@ -402,6 +406,16 @@ Trigonometric and logarithmic functions are currently implemented
 using a machine-float fallback, because their results cannot be
 precisely represented as finite rationals. Because of this, asking for
 many digits of such numbers will also produce unsatisfying results.
+
+`frac`, `fraction`, `ratio` are all equivalent. They will print
+the rational fraction that Rink internally represents the number using.
+
+`sci`, `scientific` will force the use of scientific notation, even for
+small numbers.
+
+`eng`, `engineering` are similar to the default format, where it uses
+scientific notation only for large numbers. However, when it does use
+scientific notation, it rounds down to every third power.
 
 Units for
 ^^^^^^^^^

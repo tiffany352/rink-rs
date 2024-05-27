@@ -123,8 +123,8 @@ impl BigRat {
             let exact = cursor == zero;
             let placed_ints = n >= intdigits;
             let ndigits = match digits {
-                Digits::Default => 6,
-                Digits::FullInt => 1000,
+                Digits::Default | Digits::Scientific | Digits::Engineering => 6,
+                Digits::FullInt | Digits::Fraction => 1000,
                 Digits::Digits(n) => intdigits as i32 + n as i32,
             };
             // Conditions for exiting:
@@ -221,11 +221,22 @@ impl BigRat {
             self * &BigRat::ratio(&absexp, &BigInt::one())
         };
         let ten = BigRat::small_ratio(base as i64, 1);
-        let (rational, intdigits) = if rational.abs() == ten {
+        let (mut rational, mut intdigits) = if rational.abs() == ten {
             (&rational / &ten, intdigits + 1)
         } else {
             (rational, intdigits)
         };
+
+        if digits == Digits::Engineering {
+            let adjust = (intdigits % 3 + 3) % 3;
+            rational = &rational
+                * &BigRat::ratio(
+                    &BigInt::from(base as i64).pow(adjust as u32),
+                    &BigInt::one(),
+                );
+            intdigits -= adjust;
+        }
+
         let (is_exact, mut result) = rational.to_digits_impl(base, digits);
         if !result.contains('.') {
             result.push('.');
@@ -241,15 +252,19 @@ impl BigRat {
             return (true, "0".to_owned());
         }
 
+        if digits == Digits::Fraction {
+            return (true, format!("{}", self));
+        }
+
         let abs = self.abs();
         let is_computer_base = base == 2 || base == 8 || base == 16 || base == 32;
         let is_computer_integer = is_computer_base && self.denom() == BigInt::one();
-        let can_use_sci = digits == Digits::Default && !is_computer_integer;
+        let can_use_sci =
+            (digits == Digits::Default || digits == Digits::Engineering) && !is_computer_integer;
+        let in_range_for_sci = &abs >= &BigRat::small_ratio(1_000_000_000, 1)
+            || &abs <= &BigRat::small_ratio(1, 1_000_000_000);
 
-        if can_use_sci
-            && (&abs >= &BigRat::small_ratio(1_000_000_000, 1)
-                || &abs <= &BigRat::small_ratio(1, 1_000_000_000))
-        {
+        if digits == Digits::Scientific || can_use_sci && in_range_for_sci {
             self.to_scientific(base, digits)
         } else {
             self.to_digits_impl(base, digits)
