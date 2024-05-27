@@ -1,8 +1,5 @@
 import type { ExecuteRes, HelloReq, HelloRes, RinkResponse, SpanOrList } from "./proto";
 
-// Taken from https://stackoverflow.com/a/3809435
-const urlRegex =
-	/(?:<|&lt;)([^<>]*)(?:>|&gt;)|(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))/g;
 const powRegex = /\^(\-?\d+)/g;
 
 function buildInline(parent: HTMLElement, text: string) {
@@ -10,17 +7,17 @@ function buildInline(parent: HTMLElement, text: string) {
 	parent.innerText = text;
 	text = parent.innerHTML;
 	// apply the regexes
-	text = text.replace(
-		urlRegex,
-		(_match, g1, g2) => `<a href="${g1 || g2}" rel="nofollow">${g1 || g2}</a>`,
-	);
 	text = text.replace(powRegex, (_match, rest) => `<sup>${rest}</sup>`);
 	parent.innerHTML = text;
 }
 
-const dateFmt = new Intl.DateTimeFormat(undefined, {
+const dateTimeFmt = new Intl.DateTimeFormat(undefined, {
 	dateStyle: "long",
 	timeStyle: "long",
+});
+
+const dateFmt = new Intl.DateTimeFormat(undefined, {
+	dateStyle: "long",
 });
 
 function buildHtml(tokens: [SpanOrList], parent: HTMLElement) {
@@ -52,10 +49,26 @@ function buildHtml(tokens: [SpanOrList], parent: HTMLElement) {
 			ul.appendChild(li);
 		} else if (token.fmt == "date_time") {
 			let time = document.createElement("time");
-			let date = new Date(token.text);
-			time.setAttribute("datetime", date.toISOString());
-			time.innerText = dateFmt.format(date);
+			if (/^\d{4}-\d{2}-\d{2}$/.test(token.text)) {
+				// date only
+				let date = new Date(token.text);
+				date = new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
+				let iso = date.toISOString();
+				iso = iso.replace(/T.*/, '');
+				time.setAttribute("datetime", iso);
+				time.innerText = dateFmt.format(date);
+			} else {
+				// datetime
+				let date = new Date(token.text);
+				time.setAttribute("datetime", date.toISOString());
+				time.innerText = dateTimeFmt.format(date);
+			}
 			cur.appendChild(time);
+		} else if (token.fmt == "link") {
+			let a = document.createElement("a");
+			a.setAttribute("href", token.text);
+			a.innerText = token.text;
+			cur.appendChild(a);
 		} else {
 			let span = document.createElement("span");
 			span.classList.add(`hl-${token.fmt.replace("_", "-")}`);

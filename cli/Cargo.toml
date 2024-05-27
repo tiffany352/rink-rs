@@ -28,7 +28,7 @@ eyre = "0.6"
 color-eyre = { version = "0.6", default-features = false }
 humantime-serde = "1.0.1"
 rustyline = { version = "9", default-features = false }
-ansi_term = "0.12"
+nu-ansi-term = "0.50"
 async-std = { version = "1.9", features = ["attributes"], default-features = false }
 ubyte = { version = "0.10.3", features = ["serde"] }
 
@@ -39,6 +39,9 @@ path = "../core"
 [dependencies.rink-sandbox]
 version = "0.6"
 path = "../sandbox"
+
+[dev-dependencies]
+similar-asserts = "1.1.0"
 
 [package.metadata.wasm-pack.profile.profiling]
 wasm-opt = ['-g', '-O']

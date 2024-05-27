@@ -111,6 +111,11 @@ impl<'a> Span<'a> {
     pub fn child(obj: &'a dyn TokenFmt<'a>) -> Span<'a> {
         Span::Child(obj)
     }
+
+    /// Creates a new span with FmtToken::Link
+    pub fn link(text: impl Into<Cow<'a, str>>) -> Span<'a> {
+        Span::new(text, FmtToken::Link)
+    }
 }
 
 impl<'a> fmt::Debug for Span<'a> {
@@ -130,9 +135,11 @@ impl<'a> fmt::Debug for Span<'a> {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FmtToken {
-    /// Indicator text that isn't based on user input. Generally displayed without any formatting.
+    /// Indicator text that isn't based on user input.
+    /// Generally displayed without any formatting.
     Plain,
-    /// Similar to plain, but indicates text that is used in an error context. Generally displayed in red.
+    /// Similar to plain, but indicates text that is used in an error context.
+    /// Generally displayed in red.
     Error,
     /// The name of a unit, like `kilogram`.
     Unit,
@@ -153,13 +160,22 @@ pub enum FmtToken {
     ListSep,
     /// A documentation string.
     DocString,
-    /// A number raised to a power, could be substituted with
-    /// superscript.
+    /// A number raised to a power, like `^32`.
+    /// When possible, replace with superscript.
     Pow,
     /// The name of a property in a substance.
     PropName,
     /// A date time, either being printed, or from user input.
+    /// Sometimes found inside doc strings.
+    /// Suggested parsing:
+    /// 1. ISO 8601 timestamp (yyyy-mm-ddThh:mm:ss +oo:oo)
+    /// 2. ISO 8601 date (yyyy-mm-dd)
+    /// 3. Fallback to displaying original text
     DateTime,
+    /// A URL, typically found inside of a doc string.
+    /// Intended to be made clickable.
+    /// Generally formatted like `http://example.com`.
+    Link,
 }
 
 /// Allows an object to be converted into a token tree.

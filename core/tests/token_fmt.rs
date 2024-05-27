@@ -120,7 +120,9 @@ fn test_substance() {
                     s(")", Plain),
                 ]),
                 s(". ", Plain),
-                s("Speed that light travels in a vacuum. Defined as exactly 299 792 458 m/s. 26th CGPM (2018, Resolution 1; CR, 210).", DocString),
+                child(vec![
+                    s("Speed that light travels in a vacuum. Defined as exactly 299 792 458 m/s. 26th CGPM (2018, Resolution 1; CR, 210).", DocString),
+                ]),
             ]),
         ],
     );
@@ -163,10 +165,11 @@ fn test_definition() {
             s("m", Unit),
             s(")", Plain),
             s(". ", Plain),
-            s(
-                "International yard and pound, since July 1, 1959.",
-                DocString,
-            ),
+            child(vec![
+                s("International yard and pound, since ", DocString),
+                s("1959-07-01", DateTime),
+                s(".", DocString),
+            ]),
         ],
     );
     test(
@@ -177,7 +180,7 @@ fn test_definition() {
             s(" = ", Plain),
             s("base unit of length", Plain),
             s(". ", Plain),
-            s(METER_DOC, DocString),
+            child(vec![s(METER_DOC, DocString)]),
         ],
     );
 }
@@ -338,4 +341,29 @@ fn test_search() {
             s(")", Plain),
         ],
     );
+}
+
+#[test]
+fn test_doclinks() {
+    test("floppy", &[
+        s("Definition: ", Plain),
+        s("floppydisk", Unit),
+        s(" = ", Plain),
+        s("1440 KiB", Plain),
+        s(" = ", Plain),
+        s("1.47456", Number),
+        s(" ", Plain),
+        s("megabyte", Unit),
+        s(" ", Plain),
+        s("(", Plain),
+        s("information", Quantity),
+        s("; ", Plain),
+        s("bit", Unit),
+        s(")", Plain),
+        s(". ", Plain),
+        child(vec![
+        s("The common 3.5 inch floppy disk in \"1.44 Meg\" format. The 1.44 comes from mixing decimal and binary prefixes (1000*1024 bytes). Equal to 512 B x 80 tracks x 18 sectors x 2 sides. Source: ", DocString),
+        s("http://www.manmrk.net/tutorials/DOS/PSBOOK/book4/floppyd.htm", Link),
+        ])
+    ]);
 }

@@ -31,7 +31,8 @@ export type TokenType =
 	| "doc_string"
 	| "pow"
 	| "prop_name"
-	| "date_time";
+	| "date_time"
+	| "link";
 
 export type Token = {
 	type: "span";

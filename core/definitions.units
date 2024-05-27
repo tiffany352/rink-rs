@@ -68,12 +68,12 @@
 #           15. Sizes by John Lord
 #           16. Sizesaurus by Stephen Strauss
 #           17. CODATA Recommended Values of Physical Constants available at
-#                   http://physics.nist.gov/cuu/Constants/index.html
+#                   <http://physics.nist.gov/cuu/Constants/index.html>
 #           18. How Many?  A Dictionary of Units of Measurement.  Available at
-#                   http://www.unc.edu/~rowlett/units/index.html
-#           19. Numericana.  http://www.numericana.com
+#                   <http://www.unc.edu/~rowlett/units/index.html>
+#           19. Numericana.  <http://www.numericana.com>
 #           20. UK history of measurement
-#                   http://www.ukmetrication.com/history.htm
+#                   <http://www.ukmetrication.com/history.htm>>>>
 #           21. NIST Handbook 44, Specifications, Tolerances, and
 #                 Other Technical Requirements for Weighing and Measuring
 #                 Devices. 2011
@@ -1365,7 +1365,7 @@ siemensunit             0.9534 ohm    # Resistance of a meter long column of
 #
 # Printed circuit board units.
 #
-# http://www.ndt-ed.org/GeneralResources/IACS/IACS.htm.
+# <http://www.ndt-ed.org/GeneralResources/IACS/IACS.htm>.
 #
 # Conductivity is often expressed as a percentage of IACS.  A copper wire a
 # meter long with a 1 mm^2 cross section has a resistance of 1|58 ohm at
@@ -1838,7 +1838,7 @@ islamicmonth            1|12 islamicyear # They have 29 day and 30 day months.
 # specified by an equatorial radius and a flattening value which defines the
 # polar radius.  These values are the 1996 values given by the International
 # Earth Rotation Service (IERS) whose reference documents can be found at
-# http://maia.usno.navy.mil/
+# <http://maia.usno.navy.mil/>
 
 earthflattening         1|298.25642
 earthradius_equatorial  6378136.49 m
@@ -1872,7 +1872,7 @@ sunradius               6.96e8 m
 # lot of previous work, so instead the astronomical unit has been kept equal
 # to this original value.  This is accomplished by using a standard value for
 # the Gaussian gravitational constant.  This constant is called k.
-# Many values below are from http://ssd.jpl.nasa.gov/?constants
+# Many values below are from <http://ssd.jpl.nasa.gov/?constants>
 
 gauss_k                 0.01720209895   # This beast has dimensions of
                                         # au^(3|2) / day and is exact.
@@ -1977,18 +1977,18 @@ surveymi                surveymile
 
 # International measures
 
-?? International yard and pound, since July 1, 1959.
+?? International yard and pound, since #1959-07-01#.
 inch                    2.54 cm
 inches                  inch
 in                      inch
-?? International yard and pound, since July 1, 1959.
+?? International yard and pound, since #1959-07-01#.
 foot                    12 inch
 feet                    foot
 ft                      foot
-?? International yard and pound, since July 1, 1959.
+?? International yard and pound, since #1959-07-01#.
 yard                    3 ft
 yd                      yard
-?? International yard and pound, since July 1, 1959.
+?? International yard and pound, since #1959-07-01#.
 mile                    5280 ft          # The mile was enlarged from 5000 ft
 mi                      mile             # to this number in order to make
                                          # it an even number of furlongs.
@@ -2121,7 +2121,7 @@ klick                   click
 
 # Avoirdupois weight
 
-?? International yard and pound, since July 1, 1959. Avoirdupois.
+?? International yard and pound, since #1959-07-01#. Avoirdupois.
 pound                   0.45359237 kg   # The one normally used
 lb                      pound           # From the latin libra
 grain                   1|7000 pound    # The grain is the same in all three
@@ -2360,7 +2360,7 @@ shoe_girls0             (3+7|12) inch
 #                                (shoesize_girls+(-shoe_girls0))/shoesize_delta
 
 # European shoe size.  According to
-#      http://www.shoeline.com/footnotes/shoeterm.shtml
+#      <http://www.shoeline.com/footnotes/shoeterm.shtml>
 # shoe sizes in Europe are measured with Paris points which simply measure
 # the length of the shoe.
 
@@ -3673,7 +3673,7 @@ gig                     gigabyte             # to be defined according to
                                              # get the binary values: KiB, MiB,
                                              # and GiB.
 jiffy                   0.01 sec     # This is defined in the Jargon File
-jiffies                 jiffy        # (http://www.jargon.org) as being the
+jiffies                 jiffy        # (<http://www.jargon.org>) as being the
                                      # duration of a clock tick for measuring
                                      # wall-clock time.  Supposedly the value
                                      # used to be 1|60 sec or 1|50 sec
@@ -3702,7 +3702,7 @@ dvdspeed                 1385 kB/s   # This is the "1x" speed of a DVD using
                                      # Modern DVDs may vary the linear velocity
                                      # as they go from the inside to the
                                      # outside of the disc.
-                       # See http://www.osta.org/technology/dvdqa/dvdqa4.htm
+                       # See <http://www.osta.org/technology/dvdqa/dvdqa4.htm>
 
 ?? The common 3.5 inch floppy disk in "1.44 Meg" format. The 1.44
 ?? comes from mixing decimal and binary prefixes (1000*1024 bytes).
@@ -3953,7 +3953,7 @@ pru                     mmHg / (ml/min)  # peripheral resistance unit, used in
 # volume of water was sometimes measured in the "24 hour inch".  Values for the
 # miner's inch were fixed by state statues.  (This information is from a web
 # site operated by the Nevada Division of Water Planning:  The Water Words
-# Dictionary at http://www.state.nv.us/cnr/ndwp/dict-1/waterwds.htm.)
+# Dictionary at <http://www.state.nv.us/cnr/ndwp/dict-1/waterwds.htm>.)
 
 minersinchAZ            1.5 ft^3/min
 minersinchCA            1.5 ft^3/min
@@ -4003,7 +4003,7 @@ lusec                   liter micron Hg / s  # Used in vacuum science
 # A polytropic process is one for which PV^k = const, where P is the
 # pressure, V is the volume, and k is the polytropic exponent.  The
 # polytropic index is n = 1 / (k - 1).  As noted in the Wikipedia article
-# https://en.wikipedia.org/wiki/Polytropic_process, some authors reverse
+# <https://en.wikipedia.org/wiki/Polytropic_process>, some authors reverse
 # the definitions of "exponent" and "index."  The functions below assume
 # the following parameters:
 
@@ -4300,7 +4300,7 @@ g0000000                 (-6)
 # UAMA has a web page with plots showing abrasive particle ranges for
 # various different grits and comparisons between standards.
 #
-# http://www.uama.org/Abrasives101/101Standards.html
+# <http://www.uama.org/Abrasives101/101Standards.html>
 #
 # Abrasives are grouped into "bonded" abrasives for use with grinding
 # wheels and "coated" abrasives for sandpapers and abrasive films.
@@ -4316,7 +4316,7 @@ g0000000                 (-6)
 # for grits up through 600 but then diverges significantly.
 #
 # European grit sizes are determined by the Federation of European
-# Producers of Abrasives.  http://www.fepa-abrasives.org
+# Producers of Abrasives.  <http://www.fepa-abrasives.org>
 #
 # They give two standards, the "F" grit for bonded abrasives and the
 # "P" grit for coated abrasives.  This data is taken directly from
@@ -4531,7 +4531,7 @@ g0000000                 (-6)
 
 # The "Finishing Scale" marked with an A (e.g. A75).  This information
 # is from the web page of the sand paper manufacturer Klingspor
-# http://www.klingspor.com/gritgradingsystems.htm
+# <http://www.klingspor.com/gritgradingsystems.htm>
 #
 # I have no information about what this scale is used for.
 
@@ -4551,7 +4551,7 @@ g0000000                 (-6)
 #      200 156
 #
 # Grits for DMT brand diamond sharpening stones from
-# http://dmtsharp.com/products/colorcode.htm
+# <http://dmtsharp.com/products/colorcode.htm>
 #
 
 dmtxxcoarse  120 micron    # 120 mesh
@@ -4578,7 +4578,7 @@ dmtee        dmteefine
 
 #
 # The following values come from a page in the Norton Stones catalog,
-# available at their web page, http://www.nortonstones.com.
+# available at their web page, <http://www.nortonstones.com>.
 #
 
 hardtranslucentarkansas  6 micron     # Natural novaculite (silicon quartz)
@@ -4793,7 +4793,7 @@ percapita               /capita
 !category dozenal                                     "Dozenal Units"
 
 # TGM dozen based unit system listed on the "dozenal" forum
-# http://www.dozenalsociety.org.uk/apps/tgm.htm.  These units are
+# <http://www.dozenalsociety.org.uk/apps/tgm.htm>.  These units are
 # proposed as an allegedly more rational alternative to the SI system.
 
 Tim                     12^-4 hour         # Time
@@ -4860,7 +4860,7 @@ Zennili-                12^-12
 # systems would render "mou", "jou", and "chou" as "mo", "jo" and "cho".
 #
 #
-# http://hiramatu-hifuka.com/onyak/onyindx.html
+# <http://hiramatu-hifuka.com/onyak/onyindx.html>
 
 # Japanese Proportions.  These are still in everyday use.  They also
 # get used as units to represent the proportion of the standard unit.
@@ -4893,14 +4893,14 @@ kanejakusun        ja_sun      # Alias to emphasize architectural name
 kanejaku           shaku
 kanejakujou        jou
 
-# http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement
-taichi             shaku   # http://zh.wikipedia.org/wiki/台尺
-taicun             ja_sun  # http://zh.wikipedia.org/wiki/台制
+# <http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement>
+taichi             shaku   # <http://zh.wikipedia.org/wiki/台尺>
+taicun             ja_sun  # <http://zh.wikipedia.org/wiki/台制>
 台尺               taichi  # via Hanyu Pinyin romanizations
 台寸               taicun
 
 # In context of clothing, shaku is different from architecture
-# http://www.scinet.co.jp/sci/sanwa/kakizaki-essay54.html
+# <http://www.scinet.co.jp/sci/sanwa/kakizaki-essay54.html>
 
 kujirajaku         10|8 shaku
 kujirajakusun      1|10 kujirajaku
@@ -4909,7 +4909,7 @@ kujirajakujou      10 kujirajaku
 tan_distance       3 kujirajakujou
 
 ken                6 shaku  # Also sometimes 6.3, 6.5, or 6.6
-                            # http://www.homarewood.co.jp/syakusun.htm
+                            # <http://www.homarewood.co.jp/syakusun.htm>
 
 # mostly unused
 chou_distance      60 ken
@@ -4927,10 +4927,10 @@ se                   30 tsubo
 tan_area             10 se
 chou_area            10 tan_area
 
-# http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement
-ping                 tsubo     # http://zh.wikipedia.org/wiki/坪
-jia                  2934 ping # http://zh.wikipedia.org/wiki/甲_(单位)
-#fen                  1|10 jia  # http://zh.wikipedia.org/wiki/分
+# <http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement>
+ping                 tsubo     # <http://zh.wikipedia.org/wiki/坪>
+jia                  2934 ping # <http://zh.wikipedia.org/wiki/甲_(单位)>
+#fen                  1|10 jia  # <http://zh.wikipedia.org/wiki/分>
 fen_area             1|10 jia  # Protection against future collisions
 坪                   ping      # via Hanyu Pinyin romanizations
 甲                   jia
@@ -4947,7 +4947,7 @@ fen_area             1|10 jia  # Protection against future collisions
 # Note that the tatami all have the aspect ratio 2:1 so that the mats
 # can tile the room with some of them turned 90 degrees.
 #
-# http://www.moon2.net/tatami/infotatami/structure.html
+# <http://www.moon2.net/tatami/infotatami/structure.html>
 
 edoma                (5.8*2.9) shaku^2
 kyouma               (6.3*3.15) shaku^2
@@ -4975,7 +4975,7 @@ koku                 10 to  # No longer used; historically a measure of rice
 
 # Japanese Weight Measures
 #
-# http://wyoming.hp.infoseek.co.jp/zatugaku/zamoney.html
+# <http://wyoming.hp.infoseek.co.jp/zatugaku/zamoney.html>
 
 # Not really used anymore.
 
@@ -4993,12 +4993,12 @@ kwan                 kan         # This was the old pronounciation of the unit.
 !endcategory
 !category taiwan                                    "Taiwanese Units"
 
-# http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement
+# <http://en.wikipedia.org/wiki/Taiwanese_units_of_measurement>
 # says: "Volume measure in Taiwan is largely metric".
 
-taijin               kin      # http://zh.wikipedia.org/wiki/台斤
-tailiang             10 monme # http://zh.wikipedia.org/wiki/台斤
-taiqian              monme    # http://zh.wikipedia.org/wiki/台制
+taijin               kin      # <http://zh.wikipedia.org/wiki/台斤>
+tailiang             10 monme # <http://zh.wikipedia.org/wiki/台斤>
+taiqian              monme    # <http://zh.wikipedia.org/wiki/台制>
 台斤                 taijin # via Hanyu Pinyin romanizations
 台兩                 tailiang
 台錢                 taiqian
@@ -6082,7 +6082,7 @@ light {
 # Celestial bodies
 #
 
-# Sidereal years from http://ssd.jpl.nasa.gov/phys_props_planets.html.  Data
+# Sidereal years from <http://ssd.jpl.nasa.gov/phys_props_planets.html>. Data
 # was updated in May 2001 based on the 1992 Explanatory Supplement to the
 # Astronomical Almanac and the mean longitude rates.  Apparently the table of
 # years in that reference is incorrect.
@@ -6093,9 +6093,9 @@ light {
 # The conversion to SI is uncertain because of uncertainty in G, the
 # gravitational constant.
 #
-# Values are from http://ssd.jpl.nasa.gov/astro_constants.html
+# Values are from <http://ssd.jpl.nasa.gov/astro_constants.html>
 
-# Mean radius from http://ssd.jpl.nsaa.gov/phys_props_planets.html which in
+# Mean radius from <http://ssd.jpl.nsaa.gov/phys_props_planets.html> which in
 # turn cites Global Earth Physics by CF Yoder, 1995.
 
 sun {
@@ -6108,7 +6108,7 @@ sun {
     distance_far        const sun_distance_far  1.521e11 m
     radius_equatorial   const sun_radius        695700 km
     volume              const sun_volume        1.41e18 km^3
-    ?? Source: http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
+    ?? Source: <http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html>
     luminosity          const solar_luminosity  384.6e24 W
 
     # Some luminance data from the IES Lighting Handbook, 8th ed, 1993
@@ -6244,9 +6244,9 @@ pluto {
 # Most of these fuels have varying compositions or qualities and hence their
 # actual energy densities vary.  These numbers are hence only approximate.
 #
-# E1. http://bioenergy.ornl.gov/papers/misc/energy_conv.html
-# E2. http://www.aps.org/policy/reports/popa-reports/energy/units.cfm
-# E3. http://www.ior.com.au/ecflist.html
+# E1. <http://bioenergy.ornl.gov/papers/misc/energy_conv.html>
+# E2. <http://www.aps.org/policy/reports/popa-reports/energy/units.cfm>
+# E3. <http://www.ior.com.au/ecflist.html>
 
 oil {
     ?? Ton oil equivalent.  A conventional
@@ -7289,7 +7289,7 @@ zirconium {
 
 # The atmospheric composition listed is from NASA Earth Fact Sheet (accessed
 # 28 August 2015)
-# http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+# <http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html>
 # Numbers do not add up to exactly 100% due to roundoff and uncertainty Water
 # is highly variable, typically makes up about 1%
 
