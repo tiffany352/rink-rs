@@ -8,6 +8,9 @@ pub enum Digits {
     Default,
     FullInt,
     Digits(u64),
+    Fraction,
+    Scientific,
+    Engineering,
 }
 
 #[derive(Debug, Clone, Serialize)]
