@@ -860,10 +860,16 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 value: parts,
             })))
         }
-        Query::Convert(ref top, Conversion::None, base, digits @ Digits::Digits(_))
-        | Query::Convert(ref top, Conversion::None, base, digits @ Digits::FullInt)
-        | Query::Convert(ref top, Conversion::None, base, digits @ Digits::Fraction)
-        | Query::Convert(ref top, Conversion::None, base, digits @ Digits::Scientific) => {
+        Query::Convert(
+            ref top,
+            Conversion::None,
+            base,
+            digits @ Digits::Digits(_)
+            | digits @ Digits::FullInt
+            | digits @ Digits::Fraction
+            | digits @ Digits::Scientific
+            | digits @ Digits::Engineering,
+        ) => {
             let top = eval_expr(ctx, top)?;
             let top = match top {
                 Value::Number(top) => top,
@@ -877,6 +883,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                             Digits::Digits(n) => format!("{} digits", n),
                             Digits::Fraction => "fraction".to_owned(),
                             Digits::Scientific => "scientific".to_owned(),
+                            Digits::Engineering => "engineering".to_owned(),
                         }
                     )))
                 }
@@ -1058,7 +1065,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             ref _expr,
             ref which,
             _base,
-            Digits::FullInt | Digits::Fraction | Digits::Scientific,
+            Digits::FullInt | Digits::Fraction | Digits::Scientific | Digits::Engineering,
         ) => Err(QueryError::generic(format!(
             "Conversion to digits of {} is not defined",
             which

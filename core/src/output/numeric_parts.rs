@@ -10,6 +10,7 @@ pub enum Digits {
     Digits(u64),
     Fraction,
     Scientific,
+    Engineering,
 }
 
 #[derive(Debug, Clone, Serialize)]

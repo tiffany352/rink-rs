@@ -817,5 +817,24 @@ fn test_output_formats() {
     test("1 to frac", "1 (dimensionless)");
     test("1 to sci", "1.0e0 (dimensionless)");
     test("1/7 to frac", "1/7 (dimensionless)");
-    test("1/7 to sci", "1.[428571]...e-1");
+    test("1/7 to sci", "1.[428571]...e-1 (dimensionless)");
+
+    // engineering
+    test("1e9 to eng", "1.0e9 (dimensionless)");
+    test("1e10 to eng", "10.0e9 (dimensionless)");
+    test("1e11 to eng", "100.0e9 (dimensionless)");
+    test("1e12 to eng", "1.0e12 (dimensionless)");
+    test("1e13 to eng", "10.0e12 (dimensionless)");
+    test("1e14 to eng", "100.0e12 (dimensionless)");
+    test("1e15 to eng", "1.0e15 (dimensionless)");
+    test("1e16 to eng", "10.0e15 (dimensionless)");
+    test("1e17 to eng", "100.0e15 (dimensionless)");
+
+    test("1e-9 to eng", "1.0e-9 (dimensionless)");
+    test("1e-10 to eng", "100.0e-12 (dimensionless)");
+    test("1e-11 to eng", "10.0e-12 (dimensionless)");
+    test("1e-12 to eng", "1.0e-12 (dimensionless)");
+    test("1e-13 to eng", "100.0e-15 (dimensionless)");
+    test("1e-14 to eng", "10.0e-15 (dimensionless)");
+    test("1e-15 to eng", "1.0e-15 (dimensionless)");
 }
