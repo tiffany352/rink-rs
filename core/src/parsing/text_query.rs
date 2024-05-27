@@ -836,7 +836,7 @@ pub fn parse_query(iter: &mut Iter<'_>) -> Query {
                         _ => Digits::FullInt,
                     }
                 }
-                Token::Ident(ref s) if s == "frac" || s == "fraction" => {
+                Token::Ident(ref s) if s == "frac" || s == "fraction" || s == "ratio" => {
                     iter.next();
                     Digits::Fraction
                 }

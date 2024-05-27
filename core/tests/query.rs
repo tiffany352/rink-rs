@@ -817,7 +817,12 @@ fn test_output_formats() {
     test("1 to frac", "1 (dimensionless)");
     test("1 to sci", "1.0e0 (dimensionless)");
     test("1/7 to frac", "1/7 (dimensionless)");
+    test("1/7 to fraction", "1/7 (dimensionless)");
+    test("1/7 to ratio", "1/7 (dimensionless)");
     test("1/7 to sci", "1.[428571]...e-1 (dimensionless)");
+    test("1/7 to scientific", "1.[428571]...e-1 (dimensionless)");
+    test("0.5 to eng", "0.5 (dimensionless)");
+    test("0.5 to engineering", "0.5 (dimensionless)");
 
     // engineering
     test("1e9 to eng", "1.0e9 (dimensionless)");
@@ -841,10 +846,28 @@ fn test_output_formats() {
 
 #[test]
 fn conversion_to_digit_errors() {
-    test("egg to digits", "<1 (dimensionless) egg> to digits is not defined");
-    test("egg to digits 50", "<1 (dimensionless) egg> to 50 digits is not defined");
-    test("egg to frac", "<1 (dimensionless) egg> to fraction is not defined");
-    test("egg to sci", "<1 (dimensionless) egg> to scientific is not defined");
-    test("egg to eng", "<1 (dimensionless) egg> to engineering is not defined");
-    test("now to digits \"US/Pacific\"", "Conversion to digits of US/Pacific is not defined");
+    test(
+        "egg to digits",
+        "<1 (dimensionless) egg> to digits is not defined",
+    );
+    test(
+        "egg to digits 50",
+        "<1 (dimensionless) egg> to 50 digits is not defined",
+    );
+    test(
+        "egg to frac",
+        "<1 (dimensionless) egg> to fraction is not defined",
+    );
+    test(
+        "egg to sci",
+        "<1 (dimensionless) egg> to scientific is not defined",
+    );
+    test(
+        "egg to eng",
+        "<1 (dimensionless) egg> to engineering is not defined",
+    );
+    test(
+        "now to digits \"US/Pacific\"",
+        "Conversion to digits of US/Pacific is not defined",
+    );
 }
