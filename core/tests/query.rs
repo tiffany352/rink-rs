@@ -838,3 +838,13 @@ fn test_output_formats() {
     test("1e-14 to eng", "10.0e-15 (dimensionless)");
     test("1e-15 to eng", "1.0e-15 (dimensionless)");
 }
+
+#[test]
+fn conversion_to_digit_errors() {
+    test("egg to digits", "<1 (dimensionless) egg> to digits is not defined");
+    test("egg to digits 50", "<1 (dimensionless) egg> to 50 digits is not defined");
+    test("egg to frac", "<1 (dimensionless) egg> to fraction is not defined");
+    test("egg to sci", "<1 (dimensionless) egg> to scientific is not defined");
+    test("egg to eng", "<1 (dimensionless) egg> to engineering is not defined");
+    test("now to digits \"US/Pacific\"", "Conversion to digits of US/Pacific is not defined");
+}
