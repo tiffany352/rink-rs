@@ -2563,6 +2563,11 @@ strike                  70.5 l    # 16th century unit, sometimes
                                   #   70.5 liters.
 amber                   4 brbushel# Used for dry and liquid capacity [18]
 
+?? Used in Southwest England for the capacity of a heavy cart.
+?? 1796, William Marshall, “Provincialisms of West Devonshire”,
+?? in The Rural Economy of the West of England, volume 1, page 324
+buttload                6 seam
+
 # British volume measures with "imperial"
 
 imperialminim           brminim
@@ -5579,7 +5584,7 @@ attictalent             60 atticmina     # Supposedly the mass of a cubic foot
                                          # of water (whichever foot was in use)
 
 !endcategory
-!category northern_cubic                    "Northern Cubic and Foot"
+!category northern_cubit                    "Northern Cubit and Foot"
 
 # "Northern" cubit and foot.  This was used by the pre-Aryan civilization in
 # the Indus valley.  It was used in Mesopotamia, Egypt, North Africa, China,
