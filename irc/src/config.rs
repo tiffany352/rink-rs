@@ -49,11 +49,26 @@ impl Default for Currency {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(default, deny_unknown_fields)]
+pub struct Behavior {
+    pub follow_invites: bool,
+}
+
+impl Default for Behavior {
+    fn default() -> Self {
+        Behavior {
+            follow_invites: true,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(default, deny_unknown_fields)]
 pub struct Config {
     pub limits: Limits,
     pub currency: Currency,
+    pub behavior: Behavior,
     pub servers: Vec<IrcConfig>,
 }
 

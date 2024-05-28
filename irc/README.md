@@ -11,12 +11,18 @@ that a user would be able to pwn your system though.
 In an IRC channel, prefix a message with `rink: ` and then put your
 query after. Direct messages are always interpreted as queries.
 
+To add rink to a new channel, you can invite it and it will follow. It
+won't remember this if the bot is restarted though.
+
 ## How to operate it
 
 You'll need to create a `config.toml` for the bot. It uses the following
 format (the values show the defaults):
 
 ```toml
+[behavior]
+follow_invites = true
+
 [limits]
 # Not yet implemented
 enabled = true

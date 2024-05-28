@@ -58,6 +58,10 @@ async fn server_task(config: config::Config, index: usize) {
                 &channel
             };
             client.send_notice(where_to, result).unwrap();
+        } else if let Command::INVITE(_nickname, channel) = message.command {
+            if config.behavior.follow_invites {
+                client.send_join(channel).unwrap();
+            }
         }
     }
 }

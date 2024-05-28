@@ -23,7 +23,7 @@ fn write_irc_string(out: &mut String, config: &Config, spans: &[Span]) {
     }
 }
 
-fn write_irc_token(out: &mut String, config: &Config, text: &str, token: FmtToken) {
+fn write_irc_token(out: &mut String, _config: &Config, text: &str, token: FmtToken) {
     let (prefix, postfix) = match token {
         FmtToken::Plain => ("", ""),
         FmtToken::Error => ("\x0304", "\x03"),
