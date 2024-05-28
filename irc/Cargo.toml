@@ -8,6 +8,7 @@ license = "MPL-2.0"
 edition = "2018"
 
 [dependencies.rink-core]
+version = "0.8"
 path = "../core"
 features = [ "bundle-files" ]
 

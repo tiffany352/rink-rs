@@ -4,10 +4,11 @@
 
 use futures::StreamExt;
 use irc::client::prelude::*;
+use rink_core::output::fmt::TokenFmt;
 use rink_sandbox::Alloc;
 
 mod config;
-mod service;
+mod fmt;
 
 #[global_allocator]
 pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
@@ -31,7 +32,7 @@ async fn server_task(config: config::Config, index: usize) {
         let source = message.source_nickname();
         if let Command::PRIVMSG(ref channel, ref text) = message.command {
             let nick = client.current_nickname();
-            let prefix = format!("{}: ", nick);
+            let prefix = format!("{}:", nick);
             let command = if let Some(text) = text.strip_prefix(&prefix) {
                 text
             } else if channel == client.current_nickname() {
@@ -41,10 +42,11 @@ async fn server_task(config: config::Config, index: usize) {
             };
             println!("[{servername}] <== {command}");
             let result = rink_core::eval(&mut ctx, command);
-            let result = match result {
-                Ok(res) => format!("{}", res),
-                Err(err) => format!("{}", err),
+            let result = match &result {
+                Ok(res) => res.to_spans(),
+                Err(err) => err.to_spans(),
             };
+            let result = fmt::to_irc_string(&config, &result);
             println!("[{servername}] ==> {result}");
             let where_to = if channel == client.current_nickname() {
                 if let Some(source) = source {
