@@ -84,6 +84,11 @@ async fn main() {
         }
     }
 
+    if config.servers.is_empty() {
+        println!("config.toml doesn't contain any servers");
+        std::process::exit(1);
+    }
+
     let handles = (0..config.servers.len())
         .map(|i| server_task(config.clone(), i))
         .collect::<Vec<_>>();
