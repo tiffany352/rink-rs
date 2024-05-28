@@ -12,6 +12,54 @@ mod service;
 #[global_allocator]
 pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
 
+async fn server_task(config: config::Config, index: usize) {
+    let server = &config.servers[index];
+    let mut ctx = config::load(&config);
+
+    let servername = server.server.as_ref().map(|s| &s[..]).unwrap_or("");
+
+    let mut client = Client::from_config(server.clone()).await.unwrap();
+    println!("[{servername}] Connecting...");
+    client.identify().unwrap();
+    println!(
+        "[{servername}] Connected. nickname: {}",
+        client.current_nickname()
+    );
+
+    let mut stream = client.stream().unwrap();
+    while let Some(message) = stream.next().await.transpose().unwrap() {
+        let source = message.source_nickname();
+        if let Command::PRIVMSG(ref channel, ref text) = message.command {
+            let nick = client.current_nickname();
+            let prefix = format!("{}: ", nick);
+            let command = if let Some(text) = text.strip_prefix(&prefix) {
+                text
+            } else if channel == client.current_nickname() {
+                &text
+            } else {
+                continue;
+            };
+            println!("[{servername}] <== {command}");
+            let result = rink_core::eval(&mut ctx, command);
+            let result = match result {
+                Ok(res) => format!("{}", res),
+                Err(err) => format!("{}", err),
+            };
+            println!("[{servername}] ==> {result}");
+            let where_to = if channel == client.current_nickname() {
+                if let Some(source) = source {
+                    source
+                } else {
+                    continue;
+                }
+            } else {
+                &channel
+            };
+            client.send_notice(where_to, result).unwrap();
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     let config_file = std::fs::read_to_string("config.toml").unwrap();
@@ -30,43 +78,11 @@ async fn main() {
         }
     }
 
-    // todo: multiple servers
-    let server = &config.servers[0];
-    let mut client = Client::from_config(server.clone()).await.unwrap();
-    println!("Connecting...");
-    client.identify().unwrap();
-    println!("Connected. nickname: {}", client.current_nickname());
+    let handles = (0..config.servers.len())
+        .map(|i| server_task(config.clone(), i))
+        .collect::<Vec<_>>();
 
-    let mut stream = client.stream().unwrap();
-    while let Some(message) = stream.next().await.transpose().unwrap() {
-        let source = message.source_nickname();
-        if let Command::PRIVMSG(ref channel, ref text) = message.command {
-            let nick = client.current_nickname();
-            let prefix = format!("{}: ", nick);
-            let command = if let Some(text) = text.strip_prefix(&prefix) {
-                text
-            } else if channel == client.current_nickname() {
-                &text
-            } else {
-                continue;
-            };
-            println!("<== {command}");
-            let result = rink_core::eval(&mut ctx, command);
-            let result = match result {
-                Ok(res) => format!("{}", res),
-                Err(err) => format!("{}", err),
-            };
-            println!("==> {result}");
-            let where_to = if channel == client.current_nickname() {
-                if let Some(source) = source {
-                    source
-                } else {
-                    continue;
-                }
-            } else {
-                &channel
-            };
-            client.send_notice(where_to, result).unwrap();
-        }
+    for handle in handles {
+        handle.await;
     }
 }
