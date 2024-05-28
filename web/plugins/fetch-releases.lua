@@ -95,6 +95,11 @@ function build_description(markdown_text)
 		j = j + 1
 	end
 
+	local first_p = HTML.select_one(body, "p")
+	if first_p then
+		HTML.add_class(first_p, "p-summary")
+	end
+
 	return body
 end
 

@@ -19,6 +19,7 @@ Color strings are a set of keywords separated by spaces. The following
 keywords are understood:
 
 *black*, *red*, *green*, *yellow*, *blue*, *purple*, *cyan*, *white*::
+*dark_gray*, *light_red*, *light_green*, *light_yellow*, *light_blue*, *light_purple*, *magenta*, *light_magenta*, *light_cyan*, *light_gray*::
     Sets the color to that ANSI color.
 *dim*/*dimmed*::
 	Uses a dimmed variant of the color instead of the bright variant.
@@ -136,6 +137,10 @@ created as `[themes.my_theme]`. These options are specific to each.
 	Date time objects, that can be obtained with the hash notation or
 	`now`.
 	Default: `"default"`
+
+*link* = <__color__>::
+	A hyperlink, typically found inside of doc strings.
+	Default: `"cyan"`
 
 Files
 -----

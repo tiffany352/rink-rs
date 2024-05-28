@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
     ast::{DatePattern, Expr},
+    output::DocString,
     runtime::Substance,
     types::{BaseUnit, Dimensionality, Number, Numeric},
 };
@@ -24,7 +25,7 @@ pub struct Registry {
     /// Contains the original expressions defining a unit.
     pub definitions: BTreeMap<String, Expr>,
     /// Contains documentation strings.
-    pub docs: BTreeMap<String, String>,
+    pub docs: BTreeMap<String, DocString>,
     /// Maps unit names to category IDs.
     pub categories: BTreeMap<String, String>,
     /// Maps category IDs to display names.

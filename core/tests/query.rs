@@ -797,3 +797,77 @@ fn test_extra_operators() {
         "Arguments to `xor` must be dimensionless: <1 meter (length)> xor <1 meter (length)>",
     );
 }
+
+#[test]
+fn test_bytes() {
+    test("1 mebibyte", "1.048576 megabyte (information)");
+    test("1 GiB", "approx. 1.073741 gigabyte (information)");
+    test("128 bit", "16 byte (information)");
+    test("100 byte^2", "6400 bit^2 (bit^2)");
+    test("1/byte", "0.125 / bit (bit^-1)");
+}
+
+#[test]
+fn test_output_formats() {
+    test("surveyfoot to digits", "0.[304800609601219202438404876809753619507239014478028956057912115824231648463296926593853187706375412750825501651003302006604013208026416052832105664211328422656845313690627381254762509525019050038100076200152400, period 210]... meter (length)");
+    test("surveyfoot to frac", "1200/3937 meter (length)");
+    test("surveyfoot to sci", "approx. 3.048006e-1 meter (length)");
+    test("foot to frac", "381/1250 meter (length)");
+    test("foot to sci", "3.048e-1 meter (length)");
+    test("1 to frac", "1 (dimensionless)");
+    test("1 to sci", "1.0e0 (dimensionless)");
+    test("1/7 to frac", "1/7 (dimensionless)");
+    test("1/7 to fraction", "1/7 (dimensionless)");
+    test("1/7 to ratio", "1/7 (dimensionless)");
+    test("1/7 to sci", "1.[428571]...e-1 (dimensionless)");
+    test("1/7 to scientific", "1.[428571]...e-1 (dimensionless)");
+    test("0.5 to eng", "0.5 (dimensionless)");
+    test("0.5 to engineering", "0.5 (dimensionless)");
+
+    // engineering
+    test("1e9 to eng", "1.0e9 (dimensionless)");
+    test("1e10 to eng", "10.0e9 (dimensionless)");
+    test("1e11 to eng", "100.0e9 (dimensionless)");
+    test("1e12 to eng", "1.0e12 (dimensionless)");
+    test("1e13 to eng", "10.0e12 (dimensionless)");
+    test("1e14 to eng", "100.0e12 (dimensionless)");
+    test("1e15 to eng", "1.0e15 (dimensionless)");
+    test("1e16 to eng", "10.0e15 (dimensionless)");
+    test("1e17 to eng", "100.0e15 (dimensionless)");
+
+    test("1e-9 to eng", "1.0e-9 (dimensionless)");
+    test("1e-10 to eng", "100.0e-12 (dimensionless)");
+    test("1e-11 to eng", "10.0e-12 (dimensionless)");
+    test("1e-12 to eng", "1.0e-12 (dimensionless)");
+    test("1e-13 to eng", "100.0e-15 (dimensionless)");
+    test("1e-14 to eng", "10.0e-15 (dimensionless)");
+    test("1e-15 to eng", "1.0e-15 (dimensionless)");
+}
+
+#[test]
+fn conversion_to_digit_errors() {
+    test(
+        "egg to digits",
+        "<1 (dimensionless) egg> to digits is not defined",
+    );
+    test(
+        "egg to digits 50",
+        "<1 (dimensionless) egg> to 50 digits is not defined",
+    );
+    test(
+        "egg to frac",
+        "<1 (dimensionless) egg> to fraction is not defined",
+    );
+    test(
+        "egg to sci",
+        "<1 (dimensionless) egg> to scientific is not defined",
+    );
+    test(
+        "egg to eng",
+        "<1 (dimensionless) egg> to engineering is not defined",
+    );
+    test(
+        "now to digits \"US/Pacific\"",
+        "Conversion to digits of US/Pacific is not defined",
+    );
+}

@@ -4,7 +4,7 @@
 
 use super::Show;
 use crate::loader::Context;
-use crate::output::{Digits, PropertyReply, SubstanceReply};
+use crate::output::{Digits, DocString, PropertyReply, SubstanceReply};
 use crate::types::{BaseUnit, Number, Numeric};
 use std::collections::BTreeMap;
 use std::iter::once;
@@ -29,7 +29,7 @@ pub struct Property {
     pub input_name: String,
     pub output: Number,
     pub output_name: String,
-    pub doc: Option<String>,
+    pub doc: Option<DocString>,
 }
 
 #[derive(Debug, Clone)]

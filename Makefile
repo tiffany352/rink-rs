@@ -2,7 +2,9 @@ SHELL        = /bin/sh
 
 CARGO        := cargo
 FETCHFLAGS   := --locked
-CARGOFLAGS   := --release --locked --offline --no-default-features
+CARGOFLAGS   := --locked --offline --no-default-features
+BUILDFLAGS   := $(CARGOFLAGS) --release
+CHECKFLAGS   := $(CARGOFLAGS)
 ASCIIDOCTOR  := asciidoctor
 MANFLAGS     := -b manpage -D build
 HTMLFLAGS    := -D build -a toc=left -a toclevels=3 -a sectlinks
@@ -28,10 +30,10 @@ fetch:
 	$(CARGO) fetch $(FETCHFLAGS)
 
 bin:
-	$(CARGO) build $(CARGOFLAGS) -p rink
+	$(CARGO) build $(BUILDFLAGS) -p rink
 
 test:
-	$(CARGO) test $(CARGOFLAGS) --all
+	$(CARGO) test $(CHECKFLAGS) --all
 
 man:
 	$(ASCIIDOCTOR) $(MANFLAGS) $(srcdir)/docs/rink.1.adoc
@@ -47,13 +49,19 @@ htmldoc:
 	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink-defs.5.adoc
 	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink-dates.5.adoc
 
-install: all
-	$(INSTALL) -Dm 0755 target/release/rink -t $(bindir)
-	$(INSTALL) -Dm 0644 $(srcdir)/core/definitions.units -t $(datadir)/rink
-	$(INSTALL) -Dm 0644 $(srcdir)/core/datepatterns.txt -t $(datadir)/rink
-	$(INSTALL) -Dm 0644 $(srcdir)/core/currency.units -t $(datadir)/rink
-	$(INSTALL) -Dm 0644 build/rink.1 -t $(man1dir)
-	$(INSTALL) -Dm 0644 build/rink.5 -t $(man5dir)
-	$(INSTALL) -Dm 0644 build/rink.7 -t $(man7dir)
-	$(INSTALL) -Dm 0644 build/rink-defs.5 -t $(man5dir)
-	$(INSTALL) -Dm 0644 build/rink-dates.5 -t $(man5dir)
+installbin:
+	$(INSTALL) -Dm 0755 target/release/rink $(bindir)
+
+installman:
+	$(INSTALL) -Dm 0644 build/rink.1 $(man1dir)
+	$(INSTALL) -Dm 0644 build/rink.5 $(man5dir)
+	$(INSTALL) -Dm 0644 build/rink.7 $(man7dir)
+	$(INSTALL) -Dm 0644 build/rink-defs.5 $(man5dir)
+	$(INSTALL) -Dm 0644 build/rink-dates.5 $(man5dir)
+
+installfiles:
+	$(INSTALL) -Dm 0644 $(srcdir)/core/definitions.units $(datadir)/rink
+	$(INSTALL) -Dm 0644 $(srcdir)/core/datepatterns.txt $(datadir)/rink
+	$(INSTALL) -Dm 0644 $(srcdir)/core/currency.units $(datadir)/rink
+
+install: installbin installman installfiles
