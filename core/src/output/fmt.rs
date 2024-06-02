@@ -186,7 +186,7 @@ pub enum FmtToken {
     Link,
 }
 
-fn write_spans_string(out: &mut String, spans: &[Span]) {
+pub(crate) fn write_spans_string(out: &mut String, spans: &[Span]) {
     for span in spans {
         match span {
             Span::Content { text, .. } => out.push_str(text),
