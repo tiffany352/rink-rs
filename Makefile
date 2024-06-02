@@ -8,7 +8,7 @@ CHECKFLAGS   := $(CARGOFLAGS)
 ASCIIDOCTOR  := asciidoctor
 MANFLAGS     := -b manpage -D build
 HTMLFLAGS    := -D build -a toc=left -a toclevels=3 -a sectlinks
-INSTALL      := install
+INSTALL      := install -D
 
 prefix       := /usr/local
 DESTDIR      := $(prefix)
@@ -50,18 +50,18 @@ htmldoc:
 	$(ASCIIDOCTOR) $(HTMLFLAGS) $(srcdir)/docs/rink-dates.5.adoc
 
 installbin:
-	$(INSTALL) -Dm 0755 target/release/rink $(bindir)
+	$(INSTALL) -m 0755 target/release/rink $(bindir)/rink
 
 installman:
-	$(INSTALL) -Dm 0644 build/rink.1 $(man1dir)
-	$(INSTALL) -Dm 0644 build/rink.5 $(man5dir)
-	$(INSTALL) -Dm 0644 build/rink.7 $(man7dir)
-	$(INSTALL) -Dm 0644 build/rink-defs.5 $(man5dir)
-	$(INSTALL) -Dm 0644 build/rink-dates.5 $(man5dir)
+	$(INSTALL) -m 0644 build/rink.1 $(man1dir)/rink.1
+	$(INSTALL) -m 0644 build/rink.5 $(man5dir)/rink.5
+	$(INSTALL) -m 0644 build/rink.7 $(man7dir)/rink.7
+	$(INSTALL) -m 0644 build/rink-defs.5 $(man5dir)/rink-defs.5
+	$(INSTALL) -m 0644 build/rink-dates.5 $(man5dir)/rink-dates.5
 
 installfiles:
-	$(INSTALL) -Dm 0644 $(srcdir)/core/definitions.units $(datadir)/rink
-	$(INSTALL) -Dm 0644 $(srcdir)/core/datepatterns.txt $(datadir)/rink
-	$(INSTALL) -Dm 0644 $(srcdir)/core/currency.units $(datadir)/rink
+	$(INSTALL) -m 0644 $(srcdir)/core/definitions.units $(datadir)/rink/definitions.units
+	$(INSTALL) -m 0644 $(srcdir)/core/datepatterns.txt $(datadir)/rink/datepatterns.txt
+	$(INSTALL) -m 0644 $(srcdir)/core/currency.units $(datadir)/rink/currency.units
 
 install: installbin installman installfiles
