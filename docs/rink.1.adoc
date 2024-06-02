@@ -63,6 +63,9 @@ Rink looks for a configuration file in
 Rink relies on some data files, which are found using a search path.
 See rink-defs(5) and rink-dates(5).
 
+Downloaded currency data is saved in
+`$XDG_CACHE_DIR/rink/currency.json`.
+
 Bugs
 ----
 
