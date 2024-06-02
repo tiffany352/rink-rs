@@ -320,7 +320,6 @@ impl<'a> NumberPartsFmt<'a> {
 
         let parts = self.number;
 
-        let mut last_was_ws = true;
         for tok in parse_pattern(self.pattern) {
             match tok {
                 PatternToken::Exact => {
@@ -361,7 +360,6 @@ impl<'a> NumberPartsFmt<'a> {
                             tokens.push(Span::plain("* "));
                             tokens.push(Span::number(f));
                             tokens.push(Span::plain(" "));
-                            last_was_ws = true;
                         }
                         let mut first = true;
                         for (dim, &exp) in unit.iter() {
@@ -377,14 +375,13 @@ impl<'a> NumberPartsFmt<'a> {
                                 if exp != 1 {
                                     tokens.push(Span::pow(format!("^{}", exp)));
                                 }
-                                last_was_ws = false;
                             }
                         }
                         if !frac.is_empty() || parts.divfactor.is_some() {
-                            if last_was_ws {
-                                tokens.push(Span::plain("/"));
-                            } else {
+                            if tokens.last().map(|s| s.is_ws()) != Some(true) {
                                 tokens.push(Span::plain(" /"));
+                            } else {
+                                tokens.push(Span::plain("/"));
                             }
                             if let Some(ref d) = parts.divfactor {
                                 tokens.push(Span::plain(" "));
@@ -483,15 +480,14 @@ impl<'a> NumberPartsFmt<'a> {
                     (None, None) => (),
                 },
                 PatternToken::Whitespace => {
-                    tokens.push(Span::plain(" "));
-                    last_was_ws = true;
-                    continue;
+                    if tokens.last().map(|s| s.is_ws()) != Some(true) {
+                        tokens.push(Span::plain(" "));
+                    }
                 }
                 PatternToken::Passthrough(text) => {
                     tokens.push(Span::plain(text));
                 }
             }
-            last_was_ws = false;
         }
         // Remove trailing whitespace
         loop {

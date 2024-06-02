@@ -116,6 +116,14 @@ impl<'a> Span<'a> {
     pub fn link(text: impl Into<Cow<'a, str>>) -> Span<'a> {
         Span::new(text, FmtToken::Link)
     }
+
+    pub fn is_ws(&self) -> bool {
+        if let Span::Content { text, .. } = self {
+            text.ends_with(" ")
+        } else {
+            false
+        }
+    }
 }
 
 impl<'a> fmt::Debug for Span<'a> {
