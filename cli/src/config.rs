@@ -266,7 +266,8 @@ pub(crate) fn force_refresh_currency(config: &Currency) -> Result<String> {
     let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
     path.push("rink");
     path.push("currency.json");
-    let file = download_to_file(&path, &config.endpoint, config.timeout).wrap_err("Fetching currency data failed")?;
+    let file = download_to_file(&path, &config.endpoint, config.timeout)
+        .wrap_err("Fetching currency data failed")?;
     let delta = std::time::Instant::now() - start;
     let metadata = file
         .metadata()

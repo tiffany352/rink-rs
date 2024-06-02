@@ -91,7 +91,7 @@ async fn main() -> Result<()> {
                 println!("{msg}");
                 return Ok(());
             }
-            Err(err) => return Err(err)
+            Err(err) => return Err(err),
         }
     }
 
