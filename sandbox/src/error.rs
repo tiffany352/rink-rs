@@ -3,13 +3,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_std::channel::RecvError;
-use displaydoc::Display;
+use core::fmt;
 use serde_derive::{Deserialize, Serialize};
 use std::{io::Error as IoError, time::Duration};
 use thiserror::Error;
 
 /// All of the errors that can result while managing the child process.
-#[derive(Error, Display, Debug)]
+#[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum Error {
     /// IO error
@@ -36,6 +36,25 @@ pub enum Error {
     Crashed,
     /// Interrupted
     Interrupted,
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::Io(_) => write!(f, "IO error"),
+            Error::Recv(err) => write!(f, "{}", err),
+            Error::Send(err) => write!(f, "Failed to send {err}"),
+            Error::Timeout(err) => write!(f, "Timed out after {err:?}"),
+            Error::Bincode(_) => write!(f, "Bincode"),
+            Error::Panic(err) => write!(f, "Panic: {err}"),
+            Error::InitFailure(_) => write!(f, "Failed to start child process"),
+            Error::ReadFailed(_) => write!(f, "Failed to read from child"),
+            Error::WriteFailed(_) => write!(f, "Failed to write to child"),
+            Error::HandshakeFailure(err) => write!(f, "Failed to start child process: {err}"),
+            Error::Crashed => write!(f, "Child process crashed"),
+            Error::Interrupted => write!(f, "Interrupted"),
+        }
+    }
 }
 
 impl From<IoError> for Error {
