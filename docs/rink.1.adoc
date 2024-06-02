@@ -25,6 +25,11 @@ Options
 **--config-path**::
 	Prints a path to the config file, then exits.
 
+**--fetch-currency**:
+	Fetches the latest version of the currency data, then exits. Can be
+	used as part of a cron job, possibly together with setting
+	`currency.fetch_on_startup` to false.
+
 **-f**::
 **--file** <__file__>::
 	Reads expressions from a file, one per line, printing them to stdout
@@ -57,6 +62,9 @@ Rink looks for a configuration file in
 
 Rink relies on some data files, which are found using a search path.
 See rink-defs(5) and rink-dates(5).
+
+Downloaded currency data is saved in
+`$XDG_CACHE_DIR/rink/currency.json`.
 
 Bugs
 ----

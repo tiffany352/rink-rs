@@ -63,6 +63,14 @@ The `[currency]` section.
 	Currency fetching can be disabled for those that don't want it.
 	Default: `true`
 
+*fetch_on_startup* = <__bool__>::
+	Setting this to `false` causes rink to behave as if
+	`cache_duration` was infinite. If the currency file doesn't
+	exist, it will fetch it, otherwise it will use it indefinitely.
+	Rink can be invoked with `--fetch-currency` to download the
+	latest version.
+	Default: `true`
+
 *endpoint* = <__url__>::
 	Allows pointing to alternate Rink-Web instances, or to any other API
 	that offers a compatible format.

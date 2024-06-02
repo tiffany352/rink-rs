@@ -62,8 +62,10 @@ pub struct Rink {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Currency {
-    /// Set to false to disable currency fetching entirely.
+    /// Set to false to disable currency loading entirely.
     pub enabled: bool,
+    /// Set to false to only reuse the existing cached currency data.
+    pub fetch_on_startup: bool,
     /// Which web endpoint should be used to download currency data?
     pub endpoint: String,
     /// How long to cache for.
@@ -176,6 +178,7 @@ impl Default for Currency {
     fn default() -> Self {
         Currency {
             enabled: true,
+            fetch_on_startup: true,
             endpoint: "https://rinkcalc.app/data/currency.json".to_owned(),
             cache_duration: Duration::from_secs(60 * 60), // 1 hour
             timeout: Duration::from_secs(2),
@@ -257,13 +260,32 @@ fn read_from_search_path(
     }
 }
 
+pub(crate) fn force_refresh_currency(config: &Currency) -> Result<String> {
+    println!("Fetching...");
+    let start = std::time::Instant::now();
+    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
+    path.push("rink");
+    path.push("currency.json");
+    let file = download_to_file(&path, &config.endpoint, config.timeout)
+        .wrap_err("Fetching currency data failed")?;
+    let delta = std::time::Instant::now() - start;
+    let metadata = file
+        .metadata()
+        .wrap_err("Fetched currency file, but failed to read file metadata")?;
+    let len = metadata.len();
+    Ok(format!(
+        "Fetched {len} byte currency file after {}ms",
+        delta.as_millis()
+    ))
+}
+
 fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
-    let file = cached(
-        "currency.json",
-        &config.endpoint,
-        config.cache_duration,
-        config.timeout,
-    )?;
+    let duration = if config.fetch_on_startup {
+        Some(config.cache_duration)
+    } else {
+        None
+    };
+    let file = cached("currency.json", &config.endpoint, duration, config.timeout)?;
     let contents = file_to_string(file)?;
     serde_json::from_str(&contents).wrap_err("Invalid JSON")
 }
@@ -341,18 +363,19 @@ pub fn load(config: &Config) -> Result<Context> {
     Ok(ctx)
 }
 
-fn read_if_current(file: File, expiration: Duration) -> Result<File> {
+fn read_if_current(file: File, expiration: Option<Duration>) -> Result<File> {
     use std::time::SystemTime;
 
     let stats = file.metadata()?;
     let mtime = stats.modified()?;
     let now = SystemTime::now();
     let elapsed = now.duration_since(mtime)?;
-    if elapsed > expiration {
-        Err(eyre!("File is out of date"))
-    } else {
-        Ok(file)
+    if let Some(expiration) = expiration {
+        if elapsed > expiration {
+            return Err(eyre!("File is out of date"));
+        }
     }
+    Ok(file)
 }
 
 fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
@@ -409,7 +432,12 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
         .wrap_err("Failed to write to cache dir")
 }
 
-fn cached(filename: &str, url: &str, expiration: Duration, timeout: Duration) -> Result<File> {
+fn cached(
+    filename: &str,
+    url: &str,
+    expiration: Option<Duration>,
+    timeout: Duration,
+) -> Result<File> {
     let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
     path.push("rink");
     path.push(filename);
@@ -441,5 +469,156 @@ fn cached(filename: &str, url: &str, expiration: Duration, timeout: Duration) ->
         Ok(file)
     } else {
         Err(err).wrap_err_with(|| format!("Failed to fetch {}", url))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        io::Read,
+        path::PathBuf,
+        sync::{Arc, Mutex},
+        time::Duration,
+    };
+
+    use once_cell::sync::Lazy;
+    use tiny_http::{Response, Server, StatusCode};
+
+    static SERVER: Lazy<Mutex<Arc<Server>>> = Lazy::new(|| {
+        Mutex::new(Arc::new(
+            Server::http("127.0.0.1:3090").expect("port 3090 is needed to do http tests"),
+        ))
+    });
+
+    #[test]
+    fn test_download_timeout() {
+        let server = SERVER.lock().unwrap();
+        let server2 = server.clone();
+
+        let thread_handle = std::thread::spawn(move || {
+            let request = server2.recv().expect("the request should not fail");
+            assert_eq!(request.url(), "/data/currency.json");
+            std::thread::sleep(Duration::from_millis(100));
+        });
+        let result = super::download_to_file(
+            &PathBuf::from("currency.json"),
+            "http://127.0.0.1:3090/data/currency.json",
+            Duration::from_millis(5),
+        );
+        let result = result.expect_err("this should always fail");
+        assert_eq!(result.to_string(), "[28] Timeout was reached (Operation timed out after 5 milliseconds with 0 bytes received)");
+        thread_handle.join().unwrap();
+        drop(server);
+    }
+
+    #[test]
+    fn test_download_404() {
+        let server = SERVER.lock().unwrap();
+        let server2 = server.clone();
+
+        let thread_handle = std::thread::spawn(move || {
+            let request = server2.recv().expect("the request should not fail");
+            assert_eq!(request.url(), "/data/currency.json");
+            let mut data = b"404 not found".to_owned();
+            let cursor = std::io::Cursor::new(&mut data);
+            request
+                .respond(Response::new(StatusCode(404), vec![], cursor, None, None))
+                .expect("the response should go through");
+        });
+        let result = super::download_to_file(
+            &PathBuf::from("currency.json"),
+            "http://127.0.0.1:3090/data/currency.json",
+            Duration::from_millis(2000),
+        );
+        let result = result.expect_err("this should always fail");
+        assert_eq!(
+            result.to_string(),
+            "Received status 404 while downloading http://127.0.0.1:3090/data/currency.json"
+        );
+        thread_handle.join().unwrap();
+        drop(server);
+    }
+
+    #[test]
+    fn test_download_success() {
+        let server = SERVER.lock().unwrap();
+        let server2 = server.clone();
+
+        let thread_handle = std::thread::spawn(move || {
+            let request = server2.recv().expect("the request should not fail");
+            assert_eq!(request.url(), "/data/currency.json");
+            let mut data = b"{}".to_owned();
+            let cursor = std::io::Cursor::new(&mut data);
+            request
+                .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
+                .expect("the response should go through");
+        });
+        let result = super::download_to_file(
+            &PathBuf::from("currency.json"),
+            "http://127.0.0.1:3090/data/currency.json",
+            Duration::from_millis(2000),
+        );
+        let mut result = result.expect("this should succeed");
+        let mut string = String::new();
+        result
+            .read_to_string(&mut string)
+            .expect("the file should exist");
+        assert_eq!(string, "{}");
+        thread_handle.join().unwrap();
+        drop(server);
+    }
+
+    #[test]
+    fn test_force_refresh_success() {
+        let config = super::Currency {
+            enabled: true,
+            fetch_on_startup: false,
+            endpoint: "http://127.0.0.1:3090/data/currency.json".to_owned(),
+            cache_duration: Duration::ZERO,
+            timeout: Duration::from_millis(2000),
+        };
+
+        let server = SERVER.lock().unwrap();
+        let server2 = server.clone();
+
+        let thread_handle = std::thread::spawn(move || {
+            let request = server2.recv().expect("the request should not fail");
+            assert_eq!(request.url(), "/data/currency.json");
+            let mut data = b"{}".to_owned();
+            let cursor = std::io::Cursor::new(&mut data);
+            request
+                .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
+                .expect("the response should go through");
+        });
+        let result = super::force_refresh_currency(&config);
+        let result = result.expect("this should succeed");
+        assert!(result.starts_with("Fetched 2 byte currency file after "));
+        thread_handle.join().unwrap();
+        drop(server);
+    }
+
+    #[test]
+    fn test_force_refresh_timeout() {
+        let config = super::Currency {
+            enabled: true,
+            fetch_on_startup: false,
+            endpoint: "http://127.0.0.1:3090/data/currency.json".to_owned(),
+            cache_duration: Duration::ZERO,
+            timeout: Duration::from_millis(5),
+        };
+
+        let server = SERVER.lock().unwrap();
+        let server2 = server.clone();
+
+        let thread_handle = std::thread::spawn(move || {
+            let request = server2.recv().expect("the request should not fail");
+            assert_eq!(request.url(), "/data/currency.json");
+            std::thread::sleep(Duration::from_millis(100));
+        });
+        let result = super::force_refresh_currency(&config);
+        let result = result.expect_err("this should timeout");
+        assert_eq!(result.to_string(), "Fetching currency data failed");
+        thread_handle.join().unwrap();
+        drop(server);
     }
 }
