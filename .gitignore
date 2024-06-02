@@ -8,3 +8,5 @@
 **/.rpt2_cache
 **/build
 /web/data
+# created by unit tests
+/cli/currency.json
