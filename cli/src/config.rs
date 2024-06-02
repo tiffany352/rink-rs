@@ -481,19 +481,22 @@ mod tests {
         time::Duration,
     };
 
+    use once_cell::sync::Lazy;
     use tiny_http::{Response, Server, StatusCode};
 
-    static MUTEX: Mutex<()> = Mutex::new(());
+    static SERVER: Lazy<Mutex<Arc<Server>>> = Lazy::new(|| {
+        Mutex::new(Arc::new(
+            Server::http("127.0.0.1:3090").expect("port 3090 is needed to do http tests"),
+        ))
+    });
 
     #[test]
     fn test_download_timeout() {
-        let lock = MUTEX.lock().unwrap();
-        let server =
-            Arc::new(Server::http("127.0.0.1:3090").expect("port 3090 is needed to do http tests"));
+        let server = SERVER.lock().unwrap();
         let server2 = server.clone();
 
         let thread_handle = std::thread::spawn(move || {
-            let request = server.recv().expect("the request should not fail");
+            let request = server2.recv().expect("the request should not fail");
             assert_eq!(request.url(), "/data/currency.json");
             std::thread::sleep(Duration::from_millis(100));
         });
@@ -504,21 +507,17 @@ mod tests {
         );
         let result = result.expect_err("this should always fail");
         assert_eq!(result.to_string(), "[28] Timeout was reached (Operation timed out after 5 milliseconds with 0 bytes received)");
-        server2.unblock();
         thread_handle.join().unwrap();
-        drop(server2);
-        drop(lock);
+        drop(server);
     }
 
     #[test]
     fn test_download_404() {
-        let lock = MUTEX.lock().unwrap();
-        let server =
-            Arc::new(Server::http("127.0.0.1:3090").expect("port 3090 is needed to do http tests"));
+        let server = SERVER.lock().unwrap();
         let server2 = server.clone();
 
         let thread_handle = std::thread::spawn(move || {
-            let request = server.recv().expect("the request should not fail");
+            let request = server2.recv().expect("the request should not fail");
             assert_eq!(request.url(), "/data/currency.json");
             let mut data = b"404 not found".to_owned();
             let cursor = std::io::Cursor::new(&mut data);
@@ -536,21 +535,17 @@ mod tests {
             result.to_string(),
             "Received status 404 while downloading http://127.0.0.1:3090/data/currency.json"
         );
-        server2.unblock();
         thread_handle.join().unwrap();
-        drop(server2);
-        drop(lock);
+        drop(server);
     }
 
     #[test]
     fn test_download_success() {
-        let lock = MUTEX.lock().unwrap();
-        let server =
-            Arc::new(Server::http("127.0.0.1:3090").expect("port 3090 is needed to do http tests"));
+        let server = SERVER.lock().unwrap();
         let server2 = server.clone();
 
         let thread_handle = std::thread::spawn(move || {
-            let request = server.recv().expect("the request should not fail");
+            let request = server2.recv().expect("the request should not fail");
             assert_eq!(request.url(), "/data/currency.json");
             let mut data = b"{}".to_owned();
             let cursor = std::io::Cursor::new(&mut data);
@@ -569,9 +564,36 @@ mod tests {
             .read_to_string(&mut string)
             .expect("the file should exist");
         assert_eq!(string, "{}");
-        server2.unblock();
         thread_handle.join().unwrap();
-        drop(server2);
-        drop(lock);
+        drop(server);
+    }
+
+    #[test]
+    fn test_force_refresh() {
+        let config = super::Currency {
+            enabled: true,
+            fetch_on_startup: false,
+            endpoint: "http://127.0.0.1:3090/data/currency.json".to_owned(),
+            cache_duration: Duration::ZERO,
+            timeout: Duration::from_millis(2000),
+        };
+
+        let server = SERVER.lock().unwrap();
+        let server2 = server.clone();
+
+        let thread_handle = std::thread::spawn(move || {
+            let request = server2.recv().expect("the request should not fail");
+            assert_eq!(request.url(), "/data/currency.json");
+            let mut data = b"{}".to_owned();
+            let cursor = std::io::Cursor::new(&mut data);
+            request
+                .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
+                .expect("the response should go through");
+        });
+        let result = super::force_refresh_currency(&config);
+        let result = result.expect("this should succeed");
+        assert!(result.starts_with("Fetched 2 byte currency file after "));
+        thread_handle.join().unwrap();
+        drop(server);
     }
 }

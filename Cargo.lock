@@ -1761,6 +1761,7 @@ dependencies = [
  "eyre",
  "humantime-serde",
  "nu-ansi-term",
+ "once_cell",
  "rink-core",
  "rink-sandbox",
  "rustyline",

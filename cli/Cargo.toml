@@ -43,6 +43,7 @@ path = "../sandbox"
 [dev-dependencies]
 similar-asserts = "1.1.0"
 tiny_http = "0.12"
+once_cell = "1"
 
 [package.metadata.wasm-pack.profile.profiling]
 wasm-opt = ['-g', '-O']
