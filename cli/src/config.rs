@@ -569,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    fn test_force_refresh() {
+    fn test_force_refresh_success() {
         let config = super::Currency {
             enabled: true,
             fetch_on_startup: false,
@@ -593,6 +593,31 @@ mod tests {
         let result = super::force_refresh_currency(&config);
         let result = result.expect("this should succeed");
         assert!(result.starts_with("Fetched 2 byte currency file after "));
+        thread_handle.join().unwrap();
+        drop(server);
+    }
+
+    #[test]
+    fn test_force_refresh_timeout() {
+        let config = super::Currency {
+            enabled: true,
+            fetch_on_startup: false,
+            endpoint: "http://127.0.0.1:3090/data/currency.json".to_owned(),
+            cache_duration: Duration::ZERO,
+            timeout: Duration::from_millis(5),
+        };
+
+        let server = SERVER.lock().unwrap();
+        let server2 = server.clone();
+
+        let thread_handle = std::thread::spawn(move || {
+            let request = server2.recv().expect("the request should not fail");
+            assert_eq!(request.url(), "/data/currency.json");
+            std::thread::sleep(Duration::from_millis(100));
+        });
+        let result = super::force_refresh_currency(&config);
+        let result = result.expect_err("this should timeout");
+        assert_eq!(result.to_string(), "Fetching currency data failed");
         thread_handle.join().unwrap();
         drop(server);
     }
