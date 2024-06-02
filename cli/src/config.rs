@@ -62,8 +62,10 @@ pub struct Rink {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Currency {
-    /// Set to false to disable currency fetching entirely.
+    /// Set to false to disable currency loading entirely.
     pub enabled: bool,
+    /// Set to false to only reuse the existing cached currency data.
+    pub fetch_on_startup: bool,
     /// Which web endpoint should be used to download currency data?
     pub endpoint: String,
     /// How long to cache for.
@@ -176,6 +178,7 @@ impl Default for Currency {
     fn default() -> Self {
         Currency {
             enabled: true,
+            fetch_on_startup: true,
             endpoint: "https://rinkcalc.app/data/currency.json".to_owned(),
             cache_duration: Duration::from_secs(60 * 60), // 1 hour
             timeout: Duration::from_secs(2),
@@ -257,13 +260,31 @@ fn read_from_search_path(
     }
 }
 
+pub(crate) fn force_refresh_currency(config: &Currency) -> Result<String> {
+    println!("Fetching...");
+    let start = std::time::Instant::now();
+    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
+    path.push("rink");
+    path.push("currency.json");
+    let file = download_to_file(&path, &config.endpoint, config.timeout).wrap_err("Fetching currency data failed")?;
+    let delta = std::time::Instant::now() - start;
+    let metadata = file
+        .metadata()
+        .wrap_err("Fetched currency file, but failed to read file metadata")?;
+    let len = metadata.len();
+    Ok(format!(
+        "Fetched {len} byte currency file after {}ms",
+        delta.as_millis()
+    ))
+}
+
 fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
-    let file = cached(
-        "currency.json",
-        &config.endpoint,
-        config.cache_duration,
-        config.timeout,
-    )?;
+    let duration = if config.fetch_on_startup {
+        Some(config.cache_duration)
+    } else {
+        None
+    };
+    let file = cached("currency.json", &config.endpoint, duration, config.timeout)?;
     let contents = file_to_string(file)?;
     serde_json::from_str(&contents).wrap_err("Invalid JSON")
 }
@@ -341,18 +362,19 @@ pub fn load(config: &Config) -> Result<Context> {
     Ok(ctx)
 }
 
-fn read_if_current(file: File, expiration: Duration) -> Result<File> {
+fn read_if_current(file: File, expiration: Option<Duration>) -> Result<File> {
     use std::time::SystemTime;
 
     let stats = file.metadata()?;
     let mtime = stats.modified()?;
     let now = SystemTime::now();
     let elapsed = now.duration_since(mtime)?;
-    if elapsed > expiration {
-        Err(eyre!("File is out of date"))
-    } else {
-        Ok(file)
+    if let Some(expiration) = expiration {
+        if elapsed > expiration {
+            return Err(eyre!("File is out of date"));
+        }
     }
+    Ok(file)
 }
 
 fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
@@ -409,7 +431,12 @@ fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
         .wrap_err("Failed to write to cache dir")
 }
 
-fn cached(filename: &str, url: &str, expiration: Duration, timeout: Duration) -> Result<File> {
+fn cached(
+    filename: &str,
+    url: &str,
+    expiration: Option<Duration>,
+    timeout: Duration,
+) -> Result<File> {
     let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
     path.push("rink");
     path.push(filename);

@@ -45,6 +45,12 @@ async fn main() -> Result<()> {
                 .action(ArgAction::SetTrue)
         )
         .arg(
+            Arg::new("fetch-currency")
+                .long("fetch-currency")
+                .help("Fetches latest version of currency data, then exits")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
             Arg::new("dump")
                 .long("dump")
                 .help("Generates a file containing the contents of the Context object, then exits")
@@ -76,6 +82,17 @@ async fn main() -> Result<()> {
         let mut file = std::fs::File::create(filename)?;
         writeln!(&mut file, "{:#?}", ctx)?;
         return Ok(());
+    }
+
+    if matches.get_flag("fetch-currency") {
+        let result = config::force_refresh_currency(&config.currency);
+        match result {
+            Ok(msg) => {
+                println!("{msg}");
+                return Ok(());
+            }
+            Err(err) => return Err(err)
+        }
     }
 
     if matches.get_flag("config-path") {
