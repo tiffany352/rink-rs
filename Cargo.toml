@@ -3,6 +3,6 @@ members = ["core", "rink-js", "sandbox", "cli", "irc"]
 default-members = ["cli"]
 
 [profile.release]
-strip = true
+strip = "debuginfo"
 opt-level = "z"
 lto = true

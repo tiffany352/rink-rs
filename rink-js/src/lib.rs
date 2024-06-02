@@ -170,10 +170,7 @@ impl Context {
                 }
             }
         }
-        let spans = match value {
-            Ok(ref value) => value.to_spans(),
-            Err(ref value) => value.to_spans(),
-        };
+        let spans = value.to_spans();
         let tokens = visit_tokens(&spans);
 
         match serde_wasm_bindgen::to_value(&tokens) {

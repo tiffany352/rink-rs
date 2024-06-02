@@ -63,10 +63,7 @@ fn test(input: &str, output: &[FlatSpan<'static>]) {
     let expr = text_query::parse_query(&mut iter);
     CONTEXT.with(|ctx| {
         let res = ctx.eval_query(&expr);
-        let res = match res {
-            Ok(ref v) => v.to_spans(),
-            Err(ref v) => v.to_spans(),
-        };
+        let res = res.to_spans();
         let res = res.into_iter().map(FlatSpan::from).collect::<Vec<_>>();
         similar_asserts::assert_eq!(res, output);
     });
