@@ -65,6 +65,11 @@ impl Context {
         self.registry.datepatterns.append(&mut dates)
     }
 
+    pub fn load_date_file(&mut self, file: &str) {
+        let dates = crate::parsing::datetime::parse_datefile(file);
+        self.load_dates(dates)
+    }
+
     /// Given a unit name, returns its value if it exists. Supports SI
     /// prefixes, plurals, bare dimensions like length, and quantities.
     pub fn lookup(&self, name: &str) -> Option<Number> {

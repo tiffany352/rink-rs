@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::{
-    loader::gnu_units,
     output::{QueryError, QueryReply},
     parsing::text_query,
     Context,
@@ -78,15 +77,11 @@ pub fn simple_context() -> Result<Context, String> {
     let message = "bundle-files feature not enabled, cannot create simple context.";
 
     let units = DEFAULT_FILE.ok_or(message.to_owned())?;
-    let mut iter = gnu_units::TokenIterator::new(&*units).peekable();
-    let units = gnu_units::parse(&mut iter);
-
     let dates = DATES_FILE.ok_or(message.to_owned())?;
-    let dates = crate::parsing::datetime::parse_datefile(dates);
 
     let mut ctx = Context::new();
-    ctx.load(units)?;
-    ctx.load_dates(dates);
+    ctx.load_definitions(units)?;
+    ctx.load_date_file(dates);
 
     Ok(ctx)
 }
