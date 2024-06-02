@@ -116,6 +116,14 @@ impl<'a> Span<'a> {
     pub fn link(text: impl Into<Cow<'a, str>>) -> Span<'a> {
         Span::new(text, FmtToken::Link)
     }
+
+    pub fn is_ws(&self) -> bool {
+        if let Span::Content { text, .. } = self {
+            text.ends_with(" ")
+        } else {
+            false
+        }
+    }
 }
 
 impl<'a> fmt::Debug for Span<'a> {
@@ -178,9 +186,34 @@ pub enum FmtToken {
     Link,
 }
 
+pub(crate) fn write_spans_string(out: &mut String, spans: &[Span]) {
+    for span in spans {
+        match span {
+            Span::Content { text, .. } => out.push_str(text),
+            Span::Child(child) => write_spans_string(out, &child.to_spans()),
+        }
+    }
+}
+
 /// Allows an object to be converted into a token tree.
 pub trait TokenFmt<'a> {
     fn to_spans(&'a self) -> Vec<Span<'a>>;
+
+    fn spans_to_string(&'a self) -> String {
+        let mut string = String::new();
+        write_spans_string(&mut string, &self.to_spans());
+        string
+    }
+
+    fn display(&'a self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for span in self.to_spans() {
+            match span {
+                Span::Content { text, .. } => write!(fmt, "{}", text)?,
+                Span::Child(child) => child.display(fmt)?,
+            }
+        }
+        Ok(())
+    }
 }
 
 pub(crate) struct JoinIter<'a, I>

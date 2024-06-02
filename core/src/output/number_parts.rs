@@ -58,156 +58,10 @@ impl NumberParts {
     ///
     /// Whitespace is compacted. Any unrecognized characters are passed through.
     pub fn format(&self, pat: &str) -> String {
-        use std::io::Write;
-
-        let mut out = vec![];
-
-        let mut in_ws = true;
-        for c in pat.chars() {
-            match c {
-                'e' => {
-                    if let Some(ex) = self.exact_value.as_ref() {
-                        write!(out, "{}", ex).unwrap();
-                    } else {
-                        continue;
-                    }
-                }
-                'a' => {
-                    if let Some(ap) = self.approx_value.as_ref() {
-                        write!(out, "{}", ap).unwrap();
-                    } else {
-                        continue;
-                    }
-                }
-                'n' => match (self.exact_value.as_ref(), self.approx_value.as_ref()) {
-                    (Some(ex), Some(ap)) => write!(out, "{}, approx. {}", ex, ap).unwrap(),
-                    (Some(ex), None) => write!(out, "{}", ex).unwrap(),
-                    (None, Some(ap)) => write!(out, "approx. {}", ap).unwrap(),
-                    (None, None) => continue,
-                },
-                'u' => {
-                    if let Some(unit) = self.raw_unit.as_ref() {
-                        if unit.is_dimensionless() {
-                            continue;
-                        }
-                        let mut frac = vec![];
-                        let mut toks = vec![];
-
-                        if let Some(f) = self.factor.as_ref() {
-                            toks.push("*".to_string());
-                            toks.push(f.to_string());
-                        }
-                        for (dim, &exp) in unit.iter() {
-                            if exp < 0 {
-                                frac.push((dim, exp));
-                            } else if exp == 1 {
-                                toks.push(dim.to_string())
-                            } else {
-                                toks.push(format!("{}^{}", dim, exp))
-                            }
-                        }
-                        if !frac.is_empty() {
-                            toks.push("/".to_string());
-                            if let Some(d) = self.divfactor.as_ref() {
-                                toks.push(d.to_string());
-                            }
-                            for (dim, exp) in frac {
-                                let exp = -exp;
-                                if exp == 1 {
-                                    toks.push(dim.to_string())
-                                } else {
-                                    toks.push(format!("{}^{}", dim, exp))
-                                }
-                            }
-                        }
-                        write!(out, "{}", toks.join(" ")).unwrap();
-                    } else if let Some(unit) = self.unit.as_ref() {
-                        if unit.is_empty() {
-                            continue;
-                        }
-                        if let Some(f) = self.factor.as_ref() {
-                            write!(out, "* {} ", f).unwrap();
-                        }
-                        if let Some(d) = self.divfactor.as_ref() {
-                            write!(out, "| {} ", d).unwrap();
-                        }
-                        write!(out, "{}", unit).unwrap();
-                    } else if let Some(dim) = self.dimensions.as_ref() {
-                        if dim.is_empty() {
-                            continue;
-                        }
-                        if let Some(f) = self.factor.as_ref() {
-                            write!(out, "* {} ", f).unwrap();
-                        }
-                        if let Some(d) = self.divfactor.as_ref() {
-                            write!(out, "| {} ", d).unwrap();
-                        }
-                        write!(out, "{}", dim).unwrap();
-                    } else {
-                        continue;
-                    }
-                }
-                'q' => {
-                    if let Some(q) = self.quantity.as_ref() {
-                        write!(out, "{}", q).unwrap();
-                    } else {
-                        continue;
-                    }
-                }
-                'w' => {
-                    if let Some(q) = self.quantity.as_ref() {
-                        write!(out, "({})", q).unwrap();
-                    } else {
-                        continue;
-                    }
-                }
-                'd' => {
-                    if let Some(dim) = self.dimensions.as_ref() {
-                        if self.unit.is_none() || dim.is_empty() {
-                            continue;
-                        }
-                        write!(out, "{}", dim).unwrap();
-                    } else {
-                        continue;
-                    }
-                }
-                'D' => {
-                    if let Some(dim) = self.dimensions.as_ref() {
-                        if dim.is_empty() {
-                            continue;
-                        }
-                        write!(out, "{}", dim).unwrap();
-                    } else {
-                        continue;
-                    }
-                }
-                'p' => match (
-                    self.quantity.as_ref(),
-                    self.dimensions.as_ref().and_then(|x| {
-                        if self.unit.is_some() && !x.is_empty() {
-                            Some(x)
-                        } else {
-                            None
-                        }
-                    }),
-                ) {
-                    (Some(q), Some(d)) => write!(out, "({}; {})", q, d).unwrap(),
-                    (Some(q), None) => write!(out, "({})", q).unwrap(),
-                    (None, Some(d)) => write!(out, "({})", d).unwrap(),
-                    (None, None) => continue,
-                },
-                ' ' if in_ws => continue,
-                ' ' if !in_ws => {
-                    in_ws = true;
-                    write!(out, " ").unwrap();
-                    continue;
-                }
-                x => write!(out, "{}", x).unwrap(),
-            }
-            in_ws = false;
-        }
-
-        ::std::str::from_utf8(&out[..]).unwrap().trim().to_owned()
+        let spans = self.token_format(pat).to_spans();
+        let mut out = String::new();
+        crate::output::fmt::write_spans_string(&mut out, &spans);
+        out
     }
 
     /// A DSL for formatting numbers.
@@ -233,85 +87,6 @@ impl NumberParts {
     }
 }
 
-enum PatternToken<'a> {
-    Exact,                // e
-    Approx,               // a
-    Numeric,              // n
-    Unit,                 // u
-    Quantity,             // q
-    QuantityParen,        // w
-    Dimensions,           // d
-    DimensionsNonEmpty,   // D
-    QuantityAndDimension, // p
-    Whitespace,
-    Passthrough(&'a str),
-}
-
-struct FnIter<F>(F);
-
-impl<F, R> Iterator for FnIter<F>
-where
-    F: FnMut() -> Option<R>,
-{
-    type Item = R;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        (self.0)()
-    }
-}
-
-fn is_whitespace(ch: u8) -> bool {
-    match ch {
-        b' ' | b'\n' | b'\t' => true,
-        _ => false,
-    }
-}
-
-fn is_pattern_char(ch: u8) -> bool {
-    match ch {
-        b'e' | b'a' | b'n' | b'u' | b'q' | b'w' | b'd' | b'D' | b'p' => true,
-        ch if is_whitespace(ch) => true,
-        _ => false,
-    }
-}
-
-fn parse_pattern<'a>(input: &'a str) -> impl Iterator<Item = PatternToken<'a>> {
-    let mut i = 0;
-    let orig = input;
-    let input = input.as_bytes();
-    FnIter(move || {
-        if i >= input.len() {
-            return None;
-        }
-        let tok = match input[i] {
-            b'e' => PatternToken::Exact,
-            b'a' => PatternToken::Approx,
-            b'n' => PatternToken::Numeric,
-            b'u' => PatternToken::Unit,
-            b'q' => PatternToken::Quantity,
-            b'w' => PatternToken::QuantityParen,
-            b'd' => PatternToken::Dimensions,
-            b'D' => PatternToken::DimensionsNonEmpty,
-            b'p' => PatternToken::QuantityAndDimension,
-            ch if is_whitespace(ch) => {
-                while i <= input.len() && is_whitespace(input[i]) {
-                    i += 1;
-                }
-                return Some(PatternToken::Whitespace);
-            }
-            _ => {
-                let start = i;
-                while i <= input.len() && is_pattern_char(input[i]) {
-                    i += 1;
-                }
-                return Some(PatternToken::Passthrough(&orig[start..i]));
-            }
-        };
-        i += 1;
-        Some(tok)
-    })
-}
-
 impl<'a> NumberPartsFmt<'a> {
     /// Converts the fmt to a span tree. Note that this is not an impl
     /// of TokenFmt, as it usually won't live long enough.
@@ -320,37 +95,34 @@ impl<'a> NumberPartsFmt<'a> {
 
         let parts = self.number;
 
-        let mut last_was_ws = true;
-        for tok in parse_pattern(self.pattern) {
-            match tok {
-                PatternToken::Exact => {
+        for ch in self.pattern.chars() {
+            match ch {
+                'e' => {
                     if let Some(ref value) = parts.exact_value {
                         tokens.push(Span::number(value));
                     }
                 }
-                PatternToken::Approx => {
+                'a' => {
                     if let Some(ref value) = parts.approx_value {
                         tokens.push(Span::number(value));
                     }
                 }
-                PatternToken::Numeric => {
-                    match (parts.exact_value.as_ref(), parts.approx_value.as_ref()) {
-                        (Some(ex), Some(ap)) => {
-                            tokens.push(Span::number(ex));
-                            tokens.push(Span::plain(", approx. "));
-                            tokens.push(Span::number(ap));
-                        }
-                        (Some(ex), None) => {
-                            tokens.push(Span::number(ex));
-                        }
-                        (None, Some(ap)) => {
-                            tokens.push(Span::plain("approx. "));
-                            tokens.push(Span::number(ap));
-                        }
-                        (None, None) => (),
+                'n' => match (parts.exact_value.as_ref(), parts.approx_value.as_ref()) {
+                    (Some(ex), Some(ap)) => {
+                        tokens.push(Span::number(ex));
+                        tokens.push(Span::plain(", approx. "));
+                        tokens.push(Span::number(ap));
                     }
-                }
-                PatternToken::Unit => {
+                    (Some(ex), None) => {
+                        tokens.push(Span::number(ex));
+                    }
+                    (None, Some(ap)) => {
+                        tokens.push(Span::plain("approx. "));
+                        tokens.push(Span::number(ap));
+                    }
+                    (None, None) => (),
+                },
+                'u' => {
                     if let Some(ref unit) = parts.raw_unit {
                         if unit.is_dimensionless() {
                             continue;
@@ -361,7 +133,6 @@ impl<'a> NumberPartsFmt<'a> {
                             tokens.push(Span::plain("* "));
                             tokens.push(Span::number(f));
                             tokens.push(Span::plain(" "));
-                            last_was_ws = true;
                         }
                         let mut first = true;
                         for (dim, &exp) in unit.iter() {
@@ -377,14 +148,13 @@ impl<'a> NumberPartsFmt<'a> {
                                 if exp != 1 {
                                     tokens.push(Span::pow(format!("^{}", exp)));
                                 }
-                                last_was_ws = false;
                             }
                         }
                         if !frac.is_empty() || parts.divfactor.is_some() {
-                            if last_was_ws {
-                                tokens.push(Span::plain("/"));
-                            } else {
+                            if tokens.last().map(|s| s.is_ws()) != Some(true) {
                                 tokens.push(Span::plain(" /"));
+                            } else {
+                                tokens.push(Span::plain("/"));
                             }
                             if let Some(ref d) = parts.divfactor {
                                 tokens.push(Span::plain(" "));
@@ -427,33 +197,33 @@ impl<'a> NumberPartsFmt<'a> {
                         tokens.push(Span::unit(dim));
                     }
                 }
-                PatternToken::Quantity => {
+                'q' => {
                     if let Some(ref quantity) = parts.quantity {
                         tokens.push(Span::quantity(quantity));
                     }
                 }
-                PatternToken::QuantityParen => {
+                'w' => {
                     if let Some(ref quantity) = parts.quantity {
                         tokens.push(Span::plain("("));
                         tokens.push(Span::quantity(quantity));
                         tokens.push(Span::plain(")"));
                     }
                 }
-                PatternToken::Dimensions => {
+                'd' => {
                     if let Some(ref dim) = parts.dimensions {
                         if parts.unit.is_some() || !dim.is_empty() {
                             tokens.push(Span::unit(dim));
                         }
                     }
                 }
-                PatternToken::DimensionsNonEmpty => {
+                'D' => {
                     if let Some(ref dim) = parts.dimensions {
                         if !dim.is_empty() {
                             tokens.push(Span::unit(dim));
                         }
                     }
                 }
-                PatternToken::QuantityAndDimension => match (
+                'p' => match (
                     parts.quantity.as_ref(),
                     parts.dimensions.as_ref().and_then(|dim| {
                         if parts.unit.is_some() && !dim.is_empty() {
@@ -482,16 +252,16 @@ impl<'a> NumberPartsFmt<'a> {
                     }
                     (None, None) => (),
                 },
-                PatternToken::Whitespace => {
-                    tokens.push(Span::plain(" "));
-                    last_was_ws = true;
-                    continue;
+                ' ' => {
+                    if tokens.last().map(|s| s.is_ws()) != Some(true) {
+                        tokens.push(Span::plain(" "));
+                    }
                 }
-                PatternToken::Passthrough(text) => {
-                    tokens.push(Span::plain(text));
+                _ => {
+                    // Very inefficient, but this functionality is not used anywhere in rink_core.
+                    tokens.push(Span::plain(String::from(ch)))
                 }
             }
-            last_was_ws = false;
         }
         // Remove trailing whitespace
         loop {

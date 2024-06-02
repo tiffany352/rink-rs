@@ -296,44 +296,25 @@ impl From<String> for QueryError {
 
 impl Display for QueryReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        match *self {
-            QueryReply::Number(ref v) => write!(fmt, "{}", v),
-            QueryReply::Date(ref v) => write!(fmt, "{}", v),
-            QueryReply::Substance(ref v) => write!(fmt, "{}", v),
-            QueryReply::Duration(ref v) => write!(fmt, "{}", v),
-            QueryReply::Def(ref v) => write!(fmt, "{}", v),
-            QueryReply::Conversion(ref v) => write!(fmt, "{}", v),
-            QueryReply::Factorize(ref v) => write!(fmt, "{}", v),
-            QueryReply::UnitsFor(ref v) => write!(fmt, "{}", v),
-            QueryReply::UnitList(ref v) => write!(fmt, "{}", v),
-            QueryReply::Search(ref v) => write!(fmt, "{}", v),
-        }
+        self.display(fmt)
     }
 }
 
 impl Display for QueryError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        match *self {
-            QueryError::Generic { ref message } => write!(fmt, "{}", message),
-            QueryError::Conformance(ref v) => write!(fmt, "{}", v),
-            QueryError::NotFound(ref v) => write!(fmt, "{}", v),
-        }
+        self.display(fmt)
     }
 }
 
 impl Display for NotFoundError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        match self.suggestion.as_ref() {
-            Some(ref s) => write!(fmt, "No such unit {}, did you mean {}?", self.got, s),
-            None => write!(fmt, "No such unit {}", self.got),
-        }
+        self.display(fmt)
     }
 }
 
 impl Display for ConformanceError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        writeln!(fmt, "Conformance error: {} != {}", self.left, self.right)?;
-        write!(fmt, "Suggestions: {}", self.suggestions.join(", "))
+        self.display(fmt)
     }
 }
 
@@ -361,165 +342,55 @@ impl DateReply {
 
 impl Display for DateReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        write!(fmt, "{}", self.string)?;
-        if let Some(ref human) = self.human {
-            write!(fmt, " ({})", human)?;
-        }
-        Ok(())
+        self.display(fmt)
     }
 }
 
 impl Display for SubstanceReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        write!(
-            fmt,
-            "{}: {}{}",
-            self.name,
-            self.doc
-                .as_ref()
-                .map(|x| format!("{} ", x))
-                .unwrap_or_default(),
-            self.properties
-                .iter()
-                .map(|prop| format!(
-                    "{} = {}{}",
-                    prop.name,
-                    prop.value.format("n u"),
-                    prop.doc
-                        .as_ref()
-                        .map(|x| format!(" ({})", x))
-                        .unwrap_or_else(|| "".to_owned())
-                ))
-                .collect::<Vec<_>>()
-                .join("; ")
-        )
+        self.display(fmt)
     }
 }
 
 impl Display for DefReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        write!(fmt, "Definition: {}", self.canon_name)?;
-        if let Some(ref def) = self.def {
-            write!(fmt, " = {}", def)?;
-        }
-        if let Some(ref value) = self.value {
-            write!(fmt, " = {}", value.format("n u p"))?;
-        }
-        if let Some(ref doc) = self.doc {
-            write!(fmt, ". {}", doc)?;
-        }
-        Ok(())
+        self.display(fmt)
     }
 }
 
 impl Display for ConversionReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        write!(fmt, "{}", self.value)
+        self.display(fmt)
     }
 }
 
 impl Display for FactorizeReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        write!(
-            fmt,
-            "Factorizations: {}",
-            self.factorizations
-                .iter()
-                .map(|x| {
-                    x.units
-                        .iter()
-                        .map(|(u, p)| {
-                            if *p == 1 {
-                                u.to_string()
-                            } else {
-                                format!("{}^{}", u, p)
-                            }
-                        })
-                        .collect::<Vec<_>>()
-                        .join(" ")
-                })
-                .collect::<Vec<_>>()
-                .join(";  ")
-        )
+        self.display(fmt)
     }
 }
 
 impl Display for UnitsForReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        write!(
-            fmt,
-            "Units for {}: {}",
-            self.of.format("D w"),
-            self.units
-                .iter()
-                .map(|cat| {
-                    if let Some(ref category) = cat.category {
-                        format!("{}: {}", category, cat.units.join(", "))
-                    } else {
-                        cat.units.join(", ")
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("; ")
-        )
+        self.display(fmt)
     }
 }
 
 impl Display for DurationReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        let res = [
-            &self.years,
-            &self.months,
-            &self.weeks,
-            &self.days,
-            &self.hours,
-            &self.minutes,
-        ]
-        .iter()
-        .filter(|x| x.exact_value.as_ref().map(|x| &**x) != Some("0"))
-        .chain(once(&&self.seconds))
-        .map(|x| x.to_string())
-        .collect::<Vec<_>>()
-        .join(", ");
-        write!(fmt, "{}", res)?;
-        if let Some(q) = self.raw.quantity.as_ref() {
-            write!(fmt, " ({})", q)
-        } else {
-            Ok(())
-        }
+        self.display(fmt)
     }
 }
 
 impl Display for UnitListReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        write!(
-            fmt,
-            "{}",
-            self.list
-                .iter()
-                .map(|x| x.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-        )?;
-        if let Some(q) = self.rest.quantity.as_ref() {
-            write!(fmt, " ({})", q)
-        } else {
-            Ok(())
-        }
+        self.display(fmt)
     }
 }
 
 impl Display for SearchReply {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        write!(
-            fmt,
-            "Search results: {}",
-            self.results
-                .iter()
-                .map(|x| x.format("u p"))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )
+        self.display(fmt)
     }
 }
 

@@ -73,6 +73,20 @@ fn test(input: &str, output: &[FlatSpan<'static>]) {
 }
 
 #[test]
+fn test_dimensionless() {
+    test(
+        "42",
+        &[
+            s("42", Number),
+            s(" ", Plain),
+            s("(", Plain),
+            s("dimensionless", Quantity),
+            s(")", Plain),
+        ],
+    );
+}
+
+#[test]
 fn test_number() {
     test(
         "1 meter",

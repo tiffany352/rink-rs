@@ -137,9 +137,9 @@ fn test_units_for() {
 fn test_factorize() {
     test(
         "factorize velocity",
-        "Factorizations: velocity;  acceleration time;  \
-         flow_rate fuel_efficiency;  \
-         frequency length;  jerk time^2",
+        "Factorizations: velocity; acceleration time; \
+         flow_rate fuel_efficiency; \
+         frequency length; jerk time^2",
     );
 }
 
@@ -249,12 +249,12 @@ fn test_convert_from_substances() {
     test("volume of g water", "1000 millimeter^3 (volume)");
     test(
         "ml water -> g",
-        "water: volume = 1000 millimeter^3; mass = 1 gram",
+        "water: volume = 1000 millimeter^3 (volume); mass = 1 gram (mass)",
     );
     test(
         "g water -> ml",
-        "water: mass = 1 gram; \
-         volume = 1 milliliter",
+        "water: mass = 1 gram (mass); \
+         volume = 1 milliliter (volume)",
     );
 }
 
@@ -263,10 +263,10 @@ fn test_convert_to_substances() {
     test(
         "kg -> egg",
         "egg: USA large egg. \
-         mass = 1 kilogram; \
-         egg_shelled = 20 egg; \
-         egg_white = 33.[3]... egg; \
-         egg_yolk = 5000/93, approx. 53.76344 egg",
+         mass = 1 kilogram (mass); \
+         egg_shelled = 20 egg (dimensionless); \
+         egg_white = 33.[3]... egg (dimensionless); \
+         egg_yolk = 5000/93, approx. 53.76344 egg (dimensionless)",
     );
 }
 
@@ -275,7 +275,7 @@ fn test_substance_add() {
     test(
         "air",
         "air: Average molecular weight of air. \
-         molar_mass = approx. 28.96790 gram / mole",
+         molar_mass = approx. 28.96790 gram / mole (molar_mass)",
     );
 }
 
@@ -664,17 +664,20 @@ fn test_try_decode_fail() {
 fn test_formula() {
     test(
         "methane=CH4",
-        "CH4: molar_mass = 0.01604276 kilogram / mole",
+        "CH4: molar_mass = 0.01604276 kilogram / mole (molar_mass)",
     );
     test(
         "NaCl",
-        "NaCl: molar_mass = approx. 0.05844246 kilogram / mole",
+        "NaCl: molar_mass = approx. 0.05844246 kilogram / mole (molar_mass)",
     );
     test(
         "C8H10N4O2",
-        "C8H10N4O2: molar_mass = approx. 0.1941931 kilogram / mole",
+        "C8H10N4O2: molar_mass = approx. 0.1941931 kilogram / mole (molar_mass)",
     );
-    test("C60", "C60: molar_mass = 0.72066 kilogram / mole");
+    test(
+        "C60",
+        "C60: molar_mass = 0.72066 kilogram / mole (molar_mass)",
+    );
 }
 
 #[test]
@@ -718,7 +721,7 @@ fn test_large_floats() {
 fn test_atom_symbol() {
     test(
         "Og",
-        "oganesson: atomic_number = 118; molar_mass = approx. 294.2139 gram / mole",
+        "oganesson: atomic_number = 118 (dimensionless); molar_mass = approx. 294.2139 gram / mole (molar_mass)",
     );
 }
 
