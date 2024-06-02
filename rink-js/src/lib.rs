@@ -123,22 +123,8 @@ impl Context {
 
     #[wasm_bindgen(js_name = loadCurrency)]
     pub fn load_currency(&mut self, live_defs: String) -> Result<(), JsValue> {
-        let mut live_defs: Vec<ast::DefEntry> =
-            serde_json::from_str(&live_defs).map_err(|e| e.to_string())?;
-
-        let mut base_defs = {
-            use rink_core::loader::gnu_units;
-            let defs = rink_core::CURRENCY_FILE.unwrap();
-            let mut iter = gnu_units::TokenIterator::new(defs).peekable();
-            gnu_units::parse(&mut iter)
-        };
-        let currency = {
-            let mut defs = vec![];
-            defs.append(&mut live_defs);
-            defs.append(&mut base_defs.defs);
-            ast::Defs { defs }
-        };
-        self.context.load(currency)?;
+        let base_defs = rink_core::CURRENCY_FILE.unwrap();
+        self.context.load_currency(&live_defs, base_defs)?;
 
         Ok(())
     }
@@ -170,10 +156,7 @@ impl Context {
                 }
             }
         }
-        let spans = match value {
-            Ok(ref value) => value.to_spans(),
-            Err(ref value) => value.to_spans(),
-        };
+        let spans = value.to_spans();
         let tokens = visit_tokens(&spans);
 
         match serde_wasm_bindgen::to_value(&tokens) {

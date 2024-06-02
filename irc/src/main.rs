@@ -42,10 +42,7 @@ async fn server_task(config: config::Config, index: usize) {
             };
             println!("[{servername}] <== {command}");
             let result = rink_core::eval(&mut ctx, command);
-            let result = match &result {
-                Ok(res) => res.to_spans(),
-                Err(err) => err.to_spans(),
-            };
+            let result = result.to_spans();
             let result = fmt::to_irc_string(&config, &result);
             println!("[{servername}] ==> {result}");
             let where_to = if channel == client.current_nickname() {

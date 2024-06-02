@@ -640,3 +640,12 @@ impl<'a> TokenFmt<'a> for NotFoundError {
         tokens
     }
 }
+
+impl<'a> TokenFmt<'a> for Result<QueryReply, QueryError> {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        match self {
+            Ok(res) => res.to_spans(),
+            Err(err) => err.to_spans(),
+        }
+    }
+}

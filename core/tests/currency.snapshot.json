@@ -1,0 +1,269 @@
+[
+	{
+		"name": "BTC",
+		"doc": null,
+		"category": "currencies",
+		"type": "unit",
+		"expr": "price of bitcoin"
+	},
+	{
+		"name": "bitcoin",
+		"doc": "Properties of the global Bitcoin network. Sourced from <https://blockchain.info>. Current as of Sun, 02 Jun 2024 21:38:26 GMT",
+		"category": "currencies",
+		"type": "substance",
+		"symbol": null,
+		"properties": [
+			{
+				"name": "price",
+				"doc": "Current market price of 1 BTC.",
+				"category": "currencies",
+				"inputName": "bitcoin",
+				"input": "1",
+				"outputName": "bitcoin",
+				"output": "67710.94 USD"
+			},
+			{
+				"name": "hashrate",
+				"doc": "Current hash rate of the global network",
+				"category": null,
+				"inputName": "hashrate",
+				"input": "1",
+				"outputName": "rate",
+				"output": "562079779113.5204 1e9 'hash'/sec"
+			},
+			{
+				"name": "total",
+				"doc": "Total number of BTC in circulation.",
+				"category": null,
+				"inputName": "total",
+				"input": "1",
+				"outputName": "bitcoin",
+				"output": "1970701250000000 / 1e8"
+			}
+		]
+	},
+	{
+		"name": "USD",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 1.0852) EUR"
+	},
+	{
+		"name": "JPY",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 170.52) EUR"
+	},
+	{
+		"name": "BGN",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 1.9558) EUR"
+	},
+	{
+		"name": "CZK",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 24.709) EUR"
+	},
+	{
+		"name": "DKK",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 7.4588) EUR"
+	},
+	{
+		"name": "GBP",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 0.85365) EUR"
+	},
+	{
+		"name": "HUF",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 388.83) EUR"
+	},
+	{
+		"name": "PLN",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 4.2645) EUR"
+	},
+	{
+		"name": "RON",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 4.9767) EUR"
+	},
+	{
+		"name": "SEK",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 11.4210) EUR"
+	},
+	{
+		"name": "CHF",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 0.9818) EUR"
+	},
+	{
+		"name": "ISK",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 149.10) EUR"
+	},
+	{
+		"name": "NOK",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 11.3830) EUR"
+	},
+	{
+		"name": "TRY",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 34.9691) EUR"
+	},
+	{
+		"name": "AUD",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 1.6315) EUR"
+	},
+	{
+		"name": "BRL",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 5.6418) EUR"
+	},
+	{
+		"name": "CAD",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 1.4804) EUR"
+	},
+	{
+		"name": "CNY",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 7.8577) EUR"
+	},
+	{
+		"name": "HKD",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 8.4838) EUR"
+	},
+	{
+		"name": "IDR",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 17641.72) EUR"
+	},
+	{
+		"name": "ILS",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 4.0342) EUR"
+	},
+	{
+		"name": "INR",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 90.5255) EUR"
+	},
+	{
+		"name": "KRW",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 1501.11) EUR"
+	},
+	{
+		"name": "MXN",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 18.4387) EUR"
+	},
+	{
+		"name": "MYR",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 5.1080) EUR"
+	},
+	{
+		"name": "NZD",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 1.7696) EUR"
+	},
+	{
+		"name": "PHP",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 63.604) EUR"
+	},
+	{
+		"name": "SGD",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 1.4663) EUR"
+	},
+	{
+		"name": "THB",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 39.925) EUR"
+	},
+	{
+		"name": "ZAR",
+		"doc": "Sourced from European Central Bank. Current as of 2024-05-31.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 20.2927) EUR"
+	},
+	{
+		"name": "HRK",
+		"doc": "Croatian Kuna. Pinned to Euro at a fixed rate since 2023-01-01.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 7.5345) EUR"
+	},
+	{
+		"name": "RUB",
+		"doc": "Fetching live data failed. Fallback value provided from xe.com on 2024-01-06.",
+		"category": "currencies",
+		"type": "unit",
+		"expr": "(1 / 99.477867) EUR"
+	}
+]

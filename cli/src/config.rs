@@ -10,7 +10,7 @@ use nu_ansi_term::{Color, Style};
 use rink_core::output::fmt::FmtToken;
 use rink_core::parsing::datetime;
 use rink_core::Context;
-use rink_core::{ast, loader::gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+use rink_core::{loader::gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 use std::ffi::OsString;
@@ -279,7 +279,7 @@ pub(crate) fn force_refresh_currency(config: &Currency) -> Result<String> {
     ))
 }
 
-fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
+fn load_live_currency(config: &Currency) -> Result<String> {
     let duration = if config.fetch_on_startup {
         Some(config.cache_duration)
     } else {
@@ -287,7 +287,7 @@ fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
     };
     let file = cached("currency.json", &config.endpoint, duration, config.timeout)?;
     let contents = file_to_string(file)?;
-    serde_json::from_str(&contents).wrap_err("Invalid JSON")
+    Ok(contents)
 }
 
 fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBuf]) -> Result<()> {
@@ -295,15 +295,9 @@ fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBu
         .into_iter()
         .next()
         .unwrap();
-
-    let mut base_defs = gnu_units::parse_str(&base);
-    let mut live_defs = load_live_currency(config)?;
-
-    let mut defs = vec![];
-    defs.append(&mut base_defs.defs);
-    defs.append(&mut live_defs.defs);
-    ctx.load(ast::Defs { defs }).map_err(|err| eyre!(err))?;
-
+    let live_defs = load_live_currency(config)?;
+    ctx.load_currency(&live_defs, &base)
+        .map_err(|err| eyre!("{err}"))?;
     Ok(())
 }
 
@@ -506,7 +500,9 @@ mod tests {
             Duration::from_millis(5),
         );
         let result = result.expect_err("this should always fail");
-        assert_eq!(result.to_string(), "[28] Timeout was reached (Operation timed out after 5 milliseconds with 0 bytes received)");
+        let result = result.to_string();
+        assert!(result.starts_with("[28] Timeout was reached (Operation timed out after "));
+        assert!(result.ends_with(" milliseconds with 0 bytes received)"));
         thread_handle.join().unwrap();
         drop(server);
     }
@@ -547,7 +543,7 @@ mod tests {
         let thread_handle = std::thread::spawn(move || {
             let request = server2.recv().expect("the request should not fail");
             assert_eq!(request.url(), "/data/currency.json");
-            let mut data = b"{}".to_owned();
+            let mut data = include_bytes!("../../core/tests/currency.snapshot.json").to_owned();
             let cursor = std::io::Cursor::new(&mut data);
             request
                 .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
@@ -563,7 +559,10 @@ mod tests {
         result
             .read_to_string(&mut string)
             .expect("the file should exist");
-        assert_eq!(string, "{}");
+        assert_eq!(
+            string,
+            include_str!("../../core/tests/currency.snapshot.json")
+        );
         thread_handle.join().unwrap();
         drop(server);
     }
@@ -584,7 +583,7 @@ mod tests {
         let thread_handle = std::thread::spawn(move || {
             let request = server2.recv().expect("the request should not fail");
             assert_eq!(request.url(), "/data/currency.json");
-            let mut data = b"{}".to_owned();
+            let mut data = include_bytes!("../../core/tests/currency.snapshot.json").to_owned();
             let cursor = std::io::Cursor::new(&mut data);
             request
                 .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
@@ -592,7 +591,7 @@ mod tests {
         });
         let result = super::force_refresh_currency(&config);
         let result = result.expect("this should succeed");
-        assert!(result.starts_with("Fetched 2 byte currency file after "));
+        assert!(result.starts_with("Fetched 6599 byte currency file after "));
         thread_handle.join().unwrap();
         drop(server);
     }

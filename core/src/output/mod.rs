@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+//! Return types from evaluating a query, starting from [QueryReply] and [QueryError]
+
 mod doc_string;
 pub mod fmt;
 mod number_parts;
