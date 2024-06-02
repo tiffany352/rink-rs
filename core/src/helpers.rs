@@ -9,21 +9,45 @@ use crate::{
     Context,
 };
 
+/// The default `definitions.units` file that contains all of the base
+/// units, units, prefixes, quantities, and substances.
+///
+/// This will be Some if the `bundle-files` feature is enabled,
+/// otherwise it will be None.
 #[cfg(feature = "bundle-files")]
 pub static DEFAULT_FILE: Option<&'static str> = Some(include_str!("../definitions.units"));
 #[cfg(not(feature = "bundle-files"))]
 pub static DEFAULT_FILE: Option<&'static str> = None;
 
+/// The default `datepatterns.txt` file that contains patterns that rink
+/// uses for parsing datetimes.
+///
+/// This will be Some if the `bundle-files` feature is enabled,
+/// otherwise it will be None.
 #[cfg(feature = "bundle-files")]
 pub static DATES_FILE: Option<&'static str> = Some(include_str!("../datepatterns.txt"));
 #[cfg(not(feature = "bundle-files"))]
 pub static DATES_FILE: Option<&'static str> = None;
 
+/// The default `currenty.units` file that contains currency information
+/// that changes rarely. It's used together with live currency data
+/// to add currency support to rink.
+///
+/// This will be Some if the `bundle-files` feature is enabled,
+/// otherwise it will be None.
 #[cfg(feature = "bundle-files")]
 pub static CURRENCY_FILE: Option<&'static str> = Some(include_str!("../currency.units"));
 #[cfg(not(feature = "bundle-files"))]
 pub static CURRENCY_FILE: Option<&'static str> = None;
 
+/// Helper function that updates the `now` to the current time, parses
+/// the query, evaluates it, and updates the `previous_result` field
+/// that's used to return the previous query when using `ans`.
+///
+/// ## Panics
+///
+/// Panics on platforms where fetching the current time is not possible,
+/// such as WASM.
 pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
     ctx.update_time();
     let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
@@ -39,7 +63,7 @@ pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
     Ok(res)
 }
 
-/// A version of eval() that converts results and errors into strings.
+/// A version of eval() that converts results and errors into plain-text strings.
 pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
     eval(ctx, line)
         .as_ref()
@@ -67,7 +91,7 @@ pub fn simple_context() -> Result<Context, String> {
     Ok(ctx)
 }
 
-// Returns `env!("CARGO_PKG_VERSION")`, a string in `x.y.z` format.
+/// Returns `env!("CARGO_PKG_VERSION")`, a string in `x.y.z` format.
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }

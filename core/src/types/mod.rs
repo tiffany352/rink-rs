@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+//! Basic types that rink uses, such as [arbitrary-precision rationals][BigRat]
+
 mod base_unit;
 mod bigint;
 mod bigrat;

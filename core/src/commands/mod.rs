@@ -2,6 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+//! Provides direct access to commands that can be run in rink, like
+//! [search()] and [factorize()].
+
 mod factorize;
 mod search;
 
