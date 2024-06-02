@@ -286,3 +286,25 @@ impl fmt::Display for NumberParts {
         write!(fmt, "{}", self.format("n u w"))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::types::{BaseUnit, Number, Numeric};
+
+    #[test]
+    fn test_fmt() {
+        let number = Number::new_unit(Numeric::from(42), BaseUnit::new("m"));
+        let ctx = crate::simple_context().unwrap();
+        let parts = number.to_parts(&ctx);
+
+        assert_eq!(parts.format("e"), "42");
+        assert_eq!(parts.format("a"), "");
+        assert_eq!(parts.format("u"), "meter");
+        assert_eq!(parts.format("q"), "length");
+        assert_eq!(parts.format("w"), "(length)");
+        assert_eq!(parts.format("d"), "m");
+        assert_eq!(parts.format("D"), "m");
+        assert_eq!(parts.format("p"), "(length; m)");
+        assert_eq!(parts.format("VALUE: e"), "VALUE: 42");
+    }
+}

@@ -874,3 +874,8 @@ fn conversion_to_digit_errors() {
         "Conversion to digits of US/Pacific is not defined",
     );
 }
+
+#[test]
+fn test_conversion_multiples() {
+    test("floppydisk to 512B", "2880 * 512 byte (information)");
+}
