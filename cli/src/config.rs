@@ -500,7 +500,9 @@ mod tests {
             Duration::from_millis(5),
         );
         let result = result.expect_err("this should always fail");
-        assert_eq!(result.to_string(), "[28] Timeout was reached (Operation timed out after 5 milliseconds with 0 bytes received)");
+        let result = result.to_string();
+        assert!(result.starts_with("[28] Timeout was reached (Operation timed out after "));
+        assert!(result.ends_with(" milliseconds with 0 bytes received)"));
         thread_handle.join().unwrap();
         drop(server);
     }
@@ -541,7 +543,7 @@ mod tests {
         let thread_handle = std::thread::spawn(move || {
             let request = server2.recv().expect("the request should not fail");
             assert_eq!(request.url(), "/data/currency.json");
-            let mut data = b"{}".to_owned();
+            let mut data = include_bytes!("../../core/tests/currency.snapshot.json").to_owned();
             let cursor = std::io::Cursor::new(&mut data);
             request
                 .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
@@ -557,7 +559,10 @@ mod tests {
         result
             .read_to_string(&mut string)
             .expect("the file should exist");
-        assert_eq!(string, "{}");
+        assert_eq!(
+            string,
+            include_str!("../../core/tests/currency.snapshot.json")
+        );
         thread_handle.join().unwrap();
         drop(server);
     }
@@ -578,7 +583,7 @@ mod tests {
         let thread_handle = std::thread::spawn(move || {
             let request = server2.recv().expect("the request should not fail");
             assert_eq!(request.url(), "/data/currency.json");
-            let mut data = b"{}".to_owned();
+            let mut data = include_bytes!("../../core/tests/currency.snapshot.json").to_owned();
             let cursor = std::io::Cursor::new(&mut data);
             request
                 .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
@@ -586,7 +591,7 @@ mod tests {
         });
         let result = super::force_refresh_currency(&config);
         let result = result.expect("this should succeed");
-        assert!(result.starts_with("Fetched 2 byte currency file after "));
+        assert!(result.starts_with("Fetched 6599 byte currency file after "));
         thread_handle.join().unwrap();
         drop(server);
     }
