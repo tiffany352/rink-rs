@@ -22,7 +22,6 @@ man7dir      := $(mandir)/man7
 srcdir       := .
 
 RINK_PATH    := $(prefix)/share/rink
-export RINK_PATH
 
 all: bin man
 
@@ -30,7 +29,7 @@ fetch:
 	$(CARGO) fetch $(FETCHFLAGS)
 
 bin:
-	$(CARGO) build $(BUILDFLAGS) -p rink
+	RINK_PATH=$(RINK_PATH) $(CARGO) build $(BUILDFLAGS) -p rink
 
 test:
 	$(CARGO) test $(CHECKFLAGS) --all
