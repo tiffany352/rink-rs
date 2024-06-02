@@ -10,7 +10,7 @@ edition = "2018"
 [dependencies.rink-core]
 version = "0.8"
 path = "../core"
-features = [ "bundle-files" ]
+features = [ "bundle-files", "serde_json" ]
 
 [dependencies.rink-sandbox]
 path = "../sandbox"
@@ -22,7 +22,6 @@ humantime-serde = "1.0.1"
 irc = "1.0.0"
 serde = { version = "1", default-features = false }
 serde_derive = "1"
-serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 toml = "0.8"
 ubyte = { version = "0.10.3", features = ["serde"] }

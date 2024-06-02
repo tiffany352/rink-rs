@@ -12,6 +12,7 @@ edition = "2018"
 [features]
 default = ["chrono-humanize"]
 bundle-files = []
+serde_json = ["dep:serde_json"]
 
 [dependencies]
 num-bigint = { version = "0.4", features = ["serde"] }
@@ -22,6 +23,7 @@ strsim = "0.10.0"
 chrono-tz = { version = "0.5.2", default-features = false }
 chrono-humanize = { version = "0.1.2", optional = true }
 serde = { version = "1", features = ["rc"], default-features = false }
+serde_json = { version = "1", optional = true }
 serde_derive = "1"
 indexmap = "2"
 

@@ -196,6 +196,33 @@ impl Context {
         }
     }
 
+    // Takes the string definition.units file, parses it, and loads it.
+    pub fn load_definitions(&mut self, content: &str) -> Result<(), String> {
+        let defs = crate::loader::gnu_units::parse_str(&content);
+        self.load(defs)
+    }
+
+    // Takes the currency JSON and the currency.units file, parses both,
+    // and loads them.
+    //
+    // The latest live_data string can be obtained by making a web
+    // request to: https://rinkcalc.app/data/currency.json
+    //
+    // The currency.unit file exists at rink_core::CURRENCY_FILE when
+    // the `bundle-files` feature is enabled. Otherwise, it needs to be
+    // installed on the system somewhere and loaded.
+    #[cfg(feature = "serde_json")]
+    pub fn load_currency(&mut self, live_data: &str, currency_units: &str) -> Result<(), String> {
+        let mut base_defs = crate::loader::gnu_units::parse_str(currency_units);
+        let mut live_defs: Vec<crate::ast::DefEntry> =
+            serde_json::from_str(&live_data).map_err(|err| format!("{}", err))?;
+
+        let mut defs = vec![];
+        defs.append(&mut base_defs.defs);
+        defs.append(&mut live_defs);
+        self.load(crate::ast::Defs { defs })
+    }
+
     /// Evaluates an expression to compute its value, *excluding* `->`
     /// conversions.
     pub fn eval(&self, expr: &Expr) -> Result<Value, QueryError> {

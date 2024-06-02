@@ -10,7 +10,7 @@ use nu_ansi_term::{Color, Style};
 use rink_core::output::fmt::FmtToken;
 use rink_core::parsing::datetime;
 use rink_core::Context;
-use rink_core::{ast, loader::gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+use rink_core::{loader::gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 use std::ffi::OsString;
@@ -279,7 +279,7 @@ pub(crate) fn force_refresh_currency(config: &Currency) -> Result<String> {
     ))
 }
 
-fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
+fn load_live_currency(config: &Currency) -> Result<String> {
     let duration = if config.fetch_on_startup {
         Some(config.cache_duration)
     } else {
@@ -287,7 +287,7 @@ fn load_live_currency(config: &Currency) -> Result<ast::Defs> {
     };
     let file = cached("currency.json", &config.endpoint, duration, config.timeout)?;
     let contents = file_to_string(file)?;
-    serde_json::from_str(&contents).wrap_err("Invalid JSON")
+    Ok(contents)
 }
 
 fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBuf]) -> Result<()> {
@@ -295,15 +295,9 @@ fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBu
         .into_iter()
         .next()
         .unwrap();
-
-    let mut base_defs = gnu_units::parse_str(&base);
-    let mut live_defs = load_live_currency(config)?;
-
-    let mut defs = vec![];
-    defs.append(&mut base_defs.defs);
-    defs.append(&mut live_defs.defs);
-    ctx.load(ast::Defs { defs }).map_err(|err| eyre!(err))?;
-
+    let live_defs = load_live_currency(config)?;
+    ctx.load_currency(&live_defs, &base)
+        .map_err(|err| eyre!("{err}"))?;
     Ok(())
 }
 
