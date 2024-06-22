@@ -94,6 +94,26 @@ The valid keywords are:
 	Makes English weekday names, case insensitive. Recognizes 3-letter
 	names (like mon, tue, wed) and full names.
 
+**today**::
+	Specifies a relative date. Resets the date to the current date in the
+	local timezone, with time at 00:00.
+
+**adddays**::
+	Matches a number of days. Can be any number of digits. Adds that amount
+	of days to the date relative to **today**.
+
+**subdays**::
+	Matches a number of days. Can be any number of digits. Subtracts that
+	amount of days to the date relative to **today**.
+
+**addweeks**::
+	Matches a number of weeks. Can be any number of digits. Adds that
+	amount of weeks to the date relative to **today**.
+
+**subweeks**::
+	Matches a number of weeks. Can be any number of digits. Subtracts that
+	amount of weeks to the date relative to **today**.
+
 **`-`**::
 	Matches a literal `-` character.
 
