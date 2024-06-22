@@ -104,7 +104,7 @@ The valid keywords are:
 
 **subdays**::
 	Matches a number of days. Can be any number of digits. Subtracts that
-	amount of days to the date relative to **today**.
+	amount of days from the date relative to **today**.
 
 **addweeks**::
 	Matches a number of weeks. Can be any number of digits. Adds that
@@ -112,7 +112,7 @@ The valid keywords are:
 
 **subweeks**::
 	Matches a number of weeks. Can be any number of digits. Subtracts that
-	amount of weeks to the date relative to **today**.
+	amount of weeks from the date relative to **today**.
 
 **`-`**::
 	Matches a literal `-` character.
