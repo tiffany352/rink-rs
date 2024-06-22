@@ -21,6 +21,7 @@ year monthname day[ hour12:min[:sec] meridiem[ offset]][ adbc]
 year monthname day[ hour24:min[:sec][ offset]][ adbc]
 
 # Relative dates
+today
 today:adddays
 today:-subdays
 [today[:[adddays][-subdays]]] hour12:min[:sec] meridiem[ offset]
