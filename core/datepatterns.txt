@@ -24,10 +24,14 @@ year monthname day[ hour24:min[:sec][ offset]][ adbc]
 today
 today:adddays
 today:-subdays
-[today[:[adddays][-subdays]]] hour12:min[:sec] meridiem[ offset]
-[today[:[adddays][-subdays]]] hour24:min[:sec][ offset]
+today[:[adddays][-subdays]] hour12:min[:sec] meridiem[ offset]
+today[:[adddays][-subdays]] hour24:min[:sec][ offset]
+hour12:min[:sec] meridiem[ offset]
+hour24:min[:sec][ offset]
 
 today:'W'addweeks
 today:'W'subweeks
-[today[:'W'[addweeks][-subweeks]]] hour12:min[:sec] meridiem[ offset]
-[today[:'W'[addweeks][-subweeks]]] hour24:min[:sec][ offset]
+today[:'W'[addweeks][-subweeks]] hour12:min[:sec] meridiem[ offset]
+today[:'W'[addweeks][-subweeks]] hour24:min[:sec][ offset]
+hour12:min[:sec] meridiem[ offset]
+hour24:min[:sec][ offset]
