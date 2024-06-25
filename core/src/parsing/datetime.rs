@@ -6,7 +6,7 @@ use crate::ast::{DatePattern, DateToken};
 use crate::loader::Context;
 use crate::types::{BaseUnit, BigInt, BigRat, Dimensionality, GenericDateTime, Number, Numeric};
 use chrono::format::Parsed;
-use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
+use chrono::{DateTime, Datelike, Days, Duration, FixedOffset, Local, TimeZone, Weekday};
 use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::FromStr;
@@ -303,6 +303,81 @@ where
                 }
                 x => Err(format!("Expected weekday, got {}", ts(x))),
             },
+            "today" => match tok {
+                Some(DateToken::Literal(ref s)) if s == "today" => {
+                    let date = Local::now().date_naive();
+                    *out = Parsed::new();
+                    out.year = Some(date.year());
+                    out.month = Some(date.month());
+                    out.day = Some(date.day());
+                    Ok(())
+                },
+                x => Err(format!("Expected `today`, got {}", ts(x))),
+            },
+            "adddays" => numeric_match(tok.as_ref(), "adddays", 0, 0..=i32::MAX).and_then(|days| {
+                let date = out.to_naive_date().expect("The parser should parse only correct dates and handle invalid cases by itself, chrono should not error here");
+                let add = Days::new(days as u64);
+                match date.checked_add_days(add) {
+                    Some(date) => {
+                        *out = Parsed::new();
+                        out.year = Some(date.year());
+                        out.month = Some(date.month());
+                        out.day = Some(date.day());
+                        Ok(())
+                    },
+                    None => {
+                        Err(format!("Expected valid date, out of bounds"))
+                    }
+                }
+            }),
+            "subdays" => numeric_match(tok.as_ref(), "subdays", 0, 0..=i32::MAX).and_then(|days| {
+                let date = out.to_naive_date().expect("The parser should parse only correct dates and handle invalid cases by itself, chrono should not error here");
+                let sub = Days::new(days as u64);
+                match date.checked_sub_days(sub) {
+                    Some(date) => {
+                        *out = Parsed::new();
+                        out.year = Some(date.year());
+                        out.month = Some(date.month());
+                        out.day = Some(date.day());
+                        Ok(())
+                    },
+                    None => {
+                        Err(format!("Expected valid date, out of bounds"))
+                    }
+                }
+            }),
+            "addweeks" => numeric_match(tok.as_ref(), "addweeks", 0, 0..=(i32::MAX / 7)).and_then(|weeks| {
+                let date = out.to_naive_date().expect("The parser should parse only correct dates and handle invalid cases by itself, chrono should not error here");
+                let add = Days::new(7 * weeks as u64);
+                match date.checked_add_days(add) {
+                    Some(date) => {
+                        *out = Parsed::new();
+                        out.year = Some(date.year());
+                        out.month = Some(date.month());
+                        out.day = Some(date.day());
+                        Ok(())
+                    },
+                    None => {
+                        Err(format!("Expected valid date, out of bounds"))
+                    }
+                }
+            }),
+            "subweeks" => numeric_match(tok.as_ref(), "subweeks", 0, 0..=(i32::MAX / 7)).and_then(|weeks| {
+                let date = out.to_naive_date().expect("The parser should parse only correct dates and handle invalid cases by itself, chrono should not error here");
+                let sub = Days::new(7 * weeks as u64);
+                match date.checked_sub_days(sub) {
+                    Some(date) => {
+                        *out = Parsed::new();
+                        out.year = Some(date.year());
+                        out.month = Some(date.month());
+                        out.day = Some(date.day());
+                        Ok(())
+                    },
+                    None => {
+                        Err(format!("Expected valid date, out of bounds"))
+                    }
+                }
+            }),
             x => Err(format!("Unknown match pattern `{}`", x)),
         },
         Some(&DatePattern::Optional(ref pats)) => {
