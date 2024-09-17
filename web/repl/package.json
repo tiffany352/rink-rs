@@ -4,7 +4,7 @@
 	"main": "index.ts",
 	"license": "MIT",
 	"devDependencies": {
-		"vite": "^2.6.14",
+		"vite": "^3.2.11",
 		"vite-plugin-wasm-pack": "^0.1.9"
 	},
 	"scripts": {
