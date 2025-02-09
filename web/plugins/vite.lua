@@ -23,7 +23,7 @@ while files[i] do
 		local script = HTML.create_element("script")
 		HTML.set_attribute(script, "src", "/immutable/" .. file)
 		HTML.set_attribute(script, "data-wasm", "/" .. wasm_out)
-		HTML.set_attribute(script, "async", "")
+		HTML.set_attribute(script, "defer", "")
 		local head = HTML.select_one(page, "head")
 		HTML.append_child(head, script)
 	end
