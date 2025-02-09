@@ -26,11 +26,11 @@ jobs:
             artifact-name: Rink CLI - Windows
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build
         run: cargo build --release --verbose
       - name: Upload Binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.config.artifact-name }}
           path: target/release/${{ matrix.config.input-name }}
