@@ -687,7 +687,7 @@ rink(5).)
 - Israel shekel `ILS`, `₪`
 - India rupee `INR`, `₹`
 - South Korea won `₩`
-- Mexico dollar `MXN`, `mex$`
+- Mexico peso `MXN`, `mex$`
 - Malaysia ringgit `MYR`
 - New Zealand dollar `NZD`, `NZ$`
 - Phillipines piso `PHP`, `₱`
