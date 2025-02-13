@@ -39,6 +39,7 @@ The most common version of Rink is the command line interface `rink`.
 | Package Manager | Command              |
 | --------------- | -------------------- |
 | Cargo           | `cargo install rink` |
+| Homebrew        | `brew install rink`  |
 | Pacman          | `pacman -S rink`     |
 | Nix             | `nix-env -i rink`    |
 | Scoop           | `scoop install rink` |

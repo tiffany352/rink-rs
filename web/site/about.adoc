@@ -32,6 +32,9 @@ your package manager:
 | Cargo
 | `cargo install rink`
 
+| Homebrew
+| `brew install rink`
+
 | Pacman
 | `pacman -S rink`
 
