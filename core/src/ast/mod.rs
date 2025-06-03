@@ -121,6 +121,7 @@ pub enum Function {
     Log,
     Hypot,
     Atan2,
+    Fac,
 }
 
 impl Function {
@@ -146,6 +147,7 @@ impl Function {
             Function::Log => "log",
             Function::Hypot => "hypot",
             Function::Atan2 => "atan2",
+            Function::Fac => "fac",
         }
     }
 
@@ -171,6 +173,7 @@ impl Function {
             "log" => Function::Log,
             "hypot" => Function::Hypot,
             "atan2" => Function::Atan2,
+            "fac" => Function::Fac,
             _ => return None,
         };
         Some(func)

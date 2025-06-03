@@ -427,6 +427,29 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                         }))
                     }
                 ),
+                Function::Fac => {
+                    func!(
+                        fn fac(num: Number) {
+                            let val = num.value.to_int();
+
+                            if let Some(val) = val {
+                                Ok(Value::Number(Number {
+                                    value: {
+                                        let mut n = val;
+                                        for i in (1..val).rev() {
+                                            n *= i;
+                                        }
+                                        n.into()
+                                    },
+                                    unit: num.unit.clone(),
+                                }))
+                            } else {
+                                Err("fac() requires a number that can be parsed to an integer"
+                                    .to_owned())
+                            }
+                        }
+                    )
+                }
             }
         }
         Expr::Error { ref message } => Err(QueryError::generic(message.clone())),
