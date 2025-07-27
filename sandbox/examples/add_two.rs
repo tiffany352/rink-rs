@@ -52,67 +52,65 @@ impl Service for AddTwoService {
 }
 
 fn main() -> Result<(), IoError> {
-    smol::block_on(async {
-        let args = env::args().collect::<Vec<_>>();
-        if args.len() > 1 && args[1] == "--child" {
-            rink_sandbox::become_child::<AddTwoService, _>(&GLOBAL);
+    let args = env::args().collect::<Vec<_>>();
+    if args.len() > 1 && args[1] == "--child" {
+        rink_sandbox::become_child::<AddTwoService, _>(&GLOBAL);
+    }
+
+    // The Sandbox object is how the parent process starts up and manipulates the child process.
+    let sandbox = smol::block_on(Sandbox::<AddTwoService>::new(()))?;
+
+    loop {
+        // This code is a manually written out prompter. You should
+        // generally use a crate for this, like rustyline.
+        print!("> ");
+        stdout().flush()?;
+
+        let mut line = String::new();
+        stdin().read_line(&mut line)?;
+
+        if line.trim() == "q" || line.trim() == "quit" {
+            break;
         }
 
-        // The Sandbox object is how the parent process starts up and manipulates the child process.
-        let sandbox = Sandbox::<AddTwoService>::new(()).await?;
+        let numbers = line
+            .split('+')
+            .map(|string| i64::from_str_radix(string.trim(), 10))
+            .collect::<Result<Vec<_>, _>>();
 
-        loop {
-            // This code is a manually written out prompter. You should
-            // generally use a crate for this, like rustyline.
-            print!("> ");
-            stdout().flush()?;
-
-            let mut line = String::new();
-            stdin().read_line(&mut line)?;
-
-            if line == "q" || line == "quit" {
-                break;
+        let pair = match numbers {
+            Ok(list) if list.len() == 2 => (list[0], list[1]),
+            Ok(_) => {
+                println!("Usage: 1 + 1");
+                continue;
             }
-
-            let numbers = line
-                .split('+')
-                .map(|string| i64::from_str_radix(string.trim(), 10))
-                .collect::<Result<Vec<_>, _>>();
-
-            let pair = match numbers {
-                Ok(list) if list.len() == 2 => (list[0], list[1]),
-                Ok(_) => {
-                    println!("Usage: 1 + 1");
-                    continue;
-                }
-                Err(err) => {
-                    println!("{}", err);
-                    continue;
-                }
-            };
-
-            // Here's the actually important part. This sends the request
-            // off to the child for execution, and then returns the response
-            // when it's done. The response contains the time and memory
-            // usage on a per-query basis.
-            //
-            // If something goes wrong, you can match on the Error object to
-            // find out why. It has values for interrupts (ctrl+C),
-            // timeouts, panics, and more.
-            let result = sandbox.execute(pair).await;
-            match result {
-                Ok(res) => println!(
-                    "Success! Calculated {} + {} = {} in {:?} with {}K of memory",
-                    pair.0,
-                    pair.1,
-                    res.result,
-                    res.time_taken,
-                    res.memory_used / 1000,
-                ),
-                Err(err) => println!("{}", err),
+            Err(err) => {
+                println!("{}", err);
+                continue;
             }
+        };
+
+        // Here's the actually important part. This sends the request
+        // off to the child for execution, and then returns the response
+        // when it's done. The response contains the time and memory
+        // usage on a per-query basis.
+        //
+        // If something goes wrong, you can match on the Error object to
+        // find out why. It has values for interrupts (ctrl+C),
+        // timeouts, panics, and more.
+        let result = smol::block_on(sandbox.execute(pair));
+        match result {
+            Ok(res) => println!(
+                "Success! Calculated {} + {} = {} in {:?} with {}K of memory",
+                pair.0,
+                pair.1,
+                res.result,
+                res.time_taken,
+                res.memory_used / 1000,
+            ),
+            Err(err) => println!("{}", err),
         }
+    }
 
-        Ok(())
-    })
+    Ok(())
 }
