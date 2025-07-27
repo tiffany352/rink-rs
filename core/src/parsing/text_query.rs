@@ -90,6 +90,19 @@ impl<'a> TokenIterator<'a> {
     }
 }
 
+/// List of currency signs like `$` etc.
+/// Based on the unicode "Currrency Symbol" (Sc) general category.
+fn is_currency(ch: char) -> bool {
+    match ch {
+        '$' | '¢' | '£' | '¤' | '¥' | '֏' | '؋' | '߾' | '߿' | '৲' | '৳' | '৻' | '૱' | '௹' | '฿'
+        | '៛' | '₠' | '₡' | '₢' | '₣' | '₤' | '₥' | '₦' | '₧' | '₨' | '₩' | '₪' | '₫' | '€'
+        | '₭' | '₮' | '₯' | '₰' | '₱' | '₲' | '₳' | '₴' | '₵' | '₶' | '₷' | '₸' | '₹' | '₺'
+        | '₻' | '₼' | '₽' | '₾' | '₿' | '⃀' | '꠸' | '﷼' | '﹩' | '＄' | '￠' | '￡' | '￥'
+        | '￦' | '𑿝' | '𑿞' | '𑿟' | '𑿠' | '𞋿' | '𞲰' => true,
+        _ => false,
+    }
+}
+
 impl<'a> Iterator for TokenIterator<'a> {
     type Item = Token;
 
@@ -433,10 +446,14 @@ impl<'a> Iterator for TokenIterator<'a> {
             }
             x => {
                 let mut buf = String::new();
+                let mut prev = x;
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
-                    if c.is_alphanumeric() || c == '_' || c == '$' {
-                        buf.push(self.0.next().unwrap());
+                    if c.is_digit(10) && is_currency(prev) {
+                        break;
+                    } else if c.is_alphanumeric() || c == '_' || c == '$' {
+                        prev = self.0.next().unwrap();
+                        buf.push(prev);
                     } else {
                         break;
                     }
@@ -989,5 +1006,14 @@ mod test {
     #[test]
     fn test_of() {
         assert_eq!(parse("foo of 1 abc def / 12"), "(foo of 1 abc def) / 12");
+    }
+
+    #[test]
+    fn test_prefixed_currency() {
+        assert_eq!(parse("$2.5"), "$ 2.5");
+        assert_eq!(parse("£3"), "£ 3");
+        assert_eq!(parse("$.01"), "$ 0.01");
+        assert_eq!(parse("$asdf"), "$asdf");
+        assert_eq!(parse("C$"), "C$");
     }
 }
