@@ -293,10 +293,10 @@ fn load_live_currency(config: &Currency) -> Result<String> {
 fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBuf]) -> Result<()> {
     let base = read_from_search_path("currency.units", search_path, CURRENCY_FILE)?
         .into_iter()
-        .next()
-        .unwrap();
+        .collect::<Vec<_>>()
+        .join("\n");
     let live_defs = load_live_currency(config)?;
-    ctx.load_currency(&live_defs, &base)
+    ctx.load_currency(&live_defs, &base.as_str())
         .map_err(|err| eyre!("{err}"))?;
     Ok(())
 }
