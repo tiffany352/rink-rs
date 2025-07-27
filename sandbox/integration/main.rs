@@ -58,23 +58,22 @@ impl Service for AddTwoService {
     }
 }
 
-#[async_std::main]
-async fn main() -> Result<(), IoError> {
+fn main() -> Result<(), IoError> {
     let args = env::args().collect::<Vec<_>>();
     if args.len() > 1 && args[1] == "--child" {
         GLOBAL.set_limit(1_000_000);
         rink_sandbox::become_child::<AddTwoService, _>(&GLOBAL);
     }
 
-    let sandbox = Sandbox::<AddTwoService>::new(()).await?;
+    let sandbox = smol::block_on(Sandbox::<AddTwoService>::new(()))?;
 
-    let response = sandbox.execute(Request::AddTwo(1, 2)).await.unwrap();
+    let response = smol::block_on(sandbox.execute(Request::AddTwo(1, 2))).unwrap();
     assert_eq!(response.result, 3);
 
-    let response = sandbox.execute(Request::AddTwo(17, 9)).await.unwrap();
+    let response = smol::block_on(sandbox.execute(Request::AddTwo(17, 9))).unwrap();
     assert_eq!(response.result, 26);
 
-    let response = sandbox.execute(Request::ThrowPanic).await.unwrap_err();
+    let response = smol::block_on(sandbox.execute(Request::ThrowPanic)).unwrap_err();
     assert!(response.to_string().contains("test panic"));
 
     println!("OK");
