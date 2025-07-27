@@ -204,10 +204,10 @@ mod tests {
         ]);
 
         test(
-            "asdf",
+            "aaaaaaaaaa",
             &[
                 Style::new().fg(Red).paint("No such unit "),
-                Style::new().bold().paint("asdf"),
+                Style::new().bold().paint("aaaaaaaaaa"),
             ],
         );
 
