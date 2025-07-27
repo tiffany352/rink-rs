@@ -238,6 +238,12 @@ mod test {
     }
 
     #[test]
+    fn test_fmt() {
+        assert_eq!(format!("{}", BigInt::one()), "1");
+        assert_eq!(format!("{:?}", BigInt::one()), "1");
+    }
+
+    #[test]
     fn test_factorial() {
         assert_eq!(BigInt::factorial(0), 1.into());
         assert_eq!(BigInt::factorial(1), 1.into());

@@ -248,6 +248,7 @@ mod tests {
         Function::Log,
         Function::Hypot,
         Function::Atan2,
+        Function::Fac,
     ];
 
     #[test]

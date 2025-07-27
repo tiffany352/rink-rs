@@ -890,4 +890,16 @@ fn test_factorial() {
     test("fac(5)", "120 (dimensionless)");
     test("fac(6)", "720 (dimensionless)");
     test("fac(7)", "5040 (dimensionless)");
+    test(
+        "fac(1m)",
+        "fac() accepts only dimensionless integers: fac(1 meter (length))",
+    );
+    test(
+        "fac(-1)",
+        "fac() passed a value that is out of range: fac(-1 (dimensionless))",
+    );
+    test(
+        "fac(0.5)",
+        "fac() passed a value that is out of range: fac(0.5 (dimensionless))",
+    );
 }

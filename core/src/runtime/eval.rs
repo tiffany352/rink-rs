@@ -433,7 +433,8 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                         if !num.unit.is_dimensionless() {
                             Err("fac() accepts only dimensionless integers".to_owned())
                         } else {
-                            let n = num.value.to_int();
+                            let n = num.value.as_bigint();
+                            let n = n.and_then(|n| n.as_int());
                             let n = n.and_then(|x| u32::try_from(x).ok());
                             if let Some(n) = n {
                                 let value = BigInt::factorial(n).into();
