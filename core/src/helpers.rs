@@ -5,6 +5,7 @@
 use crate::{
     output::{QueryError, QueryReply},
     parsing::text_query,
+    types::DateTime,
     Context,
 };
 
@@ -48,7 +49,7 @@ pub static CURRENCY_FILE: Option<&'static str> = None;
 /// Panics on platforms where fetching the current time is not possible,
 /// such as WASM.
 pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
-    ctx.update_time();
+    ctx.set_time(DateTime::now());
     let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
     let res = ctx.eval_query(&expr)?;

@@ -7,7 +7,7 @@
 mod base_unit;
 mod bigint;
 mod bigrat;
-mod date;
+mod datetime;
 mod dimensionality;
 mod number;
 mod numeric;
@@ -15,7 +15,7 @@ mod numeric;
 pub use base_unit::BaseUnit;
 pub use bigint::{BigInt, BigIntError};
 pub use bigrat::BigRat;
-pub use date::GenericDateTime;
+pub use datetime::DateTime;
 pub use dimensionality::Dimensionality;
 pub use number::Number;
 pub use numeric::Numeric;

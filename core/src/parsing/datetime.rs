@@ -4,9 +4,9 @@
 
 use crate::ast::{DatePattern, DateToken};
 use crate::loader::Context;
-use crate::types::{BaseUnit, BigInt, BigRat, Dimensionality, GenericDateTime, Number, Numeric};
+use crate::types::{BaseUnit, BigInt, BigRat, DateTime, Dimensionality, Number, Numeric};
 use chrono::format::Parsed;
-use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
+use chrono::{Duration, FixedOffset, TimeZone, Weekday};
 use chrono_tz::Tz;
 use std::iter::Peekable;
 use std::str::FromStr;
@@ -333,10 +333,10 @@ where
 }
 
 fn attempt(
-    now: DateTime<Local>,
+    now: DateTime,
     date: &[DateToken],
     pat: &[DatePattern],
-) -> Result<GenericDateTime, (String, usize)> {
+) -> Result<DateTime, (String, usize)> {
     let mut parsed = Parsed::new();
     let mut tz = None;
     let mut iter = date.iter().cloned().peekable();
@@ -368,9 +368,9 @@ fn attempt(
                         count,
                     )
                 })
-                .map(GenericDateTime::Timezone),
+                .map(Into::into),
             (Ok(time), Err(_)) => {
-                Ok(now.with_timezone(&tz).with_time(time).unwrap()).map(GenericDateTime::Timezone)
+                Ok(now.to_chrono().with_timezone(&tz).with_time(time).unwrap()).map(Into::into)
             }
             (Err(_), Ok(date)) => tz
                 .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
@@ -381,7 +381,7 @@ fn attempt(
                         count,
                     )
                 })
-                .map(GenericDateTime::Timezone),
+                .map(Into::into),
             _ => Err(("Failed to construct a useful datetime".to_string(), count)),
         }
     } else {
@@ -398,10 +398,13 @@ fn attempt(
                         count,
                     )
                 })
-                .map(GenericDateTime::Fixed),
-            (Ok(time), Err(_)) => Ok(GenericDateTime::Fixed(
-                now.with_timezone(&offset).with_time(time).unwrap(),
-            )),
+                .map(Into::into),
+            (Ok(time), Err(_)) => Ok(now
+                .to_chrono()
+                .with_timezone(&offset)
+                .with_time(time)
+                .unwrap()
+                .into()),
             (Err(_), Ok(date)) => offset
                 .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
                 .earliest()
@@ -411,13 +414,13 @@ fn attempt(
                         count,
                     )
                 })
-                .map(GenericDateTime::Fixed),
+                .map(Into::into),
             _ => Err(("Failed to construct a useful datetime".to_string(), count)),
         }
     }
 }
 
-pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTime, String> {
+pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime, String> {
     let mut best = None;
     for pat in &context.registry.datepatterns {
         match attempt(context.now, date, pat) {
@@ -553,17 +556,6 @@ pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
         }
     }
     defs
-}
-
-pub fn humanize<Tz: TimeZone>(now: DateTime<Local>, date: DateTime<Tz>) -> Option<String> {
-    if cfg!(feature = "chrono-humanize") {
-        use chrono_humanize::HumanTime;
-        let now = now.with_timezone(&date.timezone());
-        let duration = date - now;
-        Some(HumanTime::from(duration).to_string())
-    } else {
-        None
-    }
 }
 
 #[cfg(test)]
@@ -801,7 +793,7 @@ mod tests {
             Number(x.into(), None)
         }
 
-        let now = Local::now();
+        let now = DateTime::default();
 
         macro_rules! check_attempt {
             ($date:expr, $pat:expr) => {{

@@ -12,8 +12,7 @@ use crate::output::{
     UnitsForReply, UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::types::{BaseUnit, BigInt, Dimensionality, GenericDateTime, Number, Numeric};
-use chrono::FixedOffset;
+use crate::types::{BaseUnit, BigInt, Dimensionality, Number, Numeric};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::rc::Rc;
@@ -24,9 +23,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
     use std::ops::*;
 
     match *expr {
-        Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(GenericDateTime::Fixed(
-            ctx.now.fixed_offset(),
-        ))),
+        Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(ctx.now)),
         Expr::Unit { ref name } => ctx
             .lookup(name)
             .map(Value::Number)
@@ -1015,7 +1012,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            let top = top.with_timezone(&FixedOffset::east_opt(off as i32).unwrap());
+            let top = top.convert_to_offset(off);
             Ok(QueryReply::Date(DateReply::new(ctx, top)))
         }
         Query::Convert(ref top, Conversion::Timezone(tz), None, Digits::Default) => {
@@ -1030,7 +1027,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            let top = top.with_timezone(&tz);
+            let top = top.convert_to_timezone(tz);
             Ok(QueryReply::Date(DateReply::new(ctx, top)))
         }
         Query::Convert(ref top, Conversion::Degree(ref deg), None, digits) => {
@@ -1253,10 +1250,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     })))
                 }
                 Value::Number(n) => Ok(QueryReply::Number(n.to_parts(ctx))),
-                Value::DateTime(d) => match d {
-                    GenericDateTime::Fixed(d) => Ok(QueryReply::Date(DateReply::new(ctx, d))),
-                    GenericDateTime::Timezone(d) => Ok(QueryReply::Date(DateReply::new(ctx, d))),
-                },
+                Value::DateTime(d) => Ok(QueryReply::Date(DateReply::new(ctx, d))),
                 Value::Substance(s) => Ok(QueryReply::Substance(
                     s.to_reply(ctx).map_err(QueryError::generic)?,
                 )),
