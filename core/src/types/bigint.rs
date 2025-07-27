@@ -6,9 +6,9 @@ use num_bigint::BigInt as NumInt;
 use num_traits::{Num, One, Signed, ToPrimitive, Zero};
 use std::cmp::Ord;
 use std::fmt;
-use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Rem, Sub};
+use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, MulAssign, Rem, Sub};
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub struct BigInt {
     inner: NumInt,
 }
@@ -78,10 +78,27 @@ impl BigInt {
             inner: self.inner.abs(),
         }
     }
+
+    pub fn factorial(n: u32) -> BigInt {
+        if n == 0 {
+            return BigInt::one();
+        }
+        let mut value: BigInt = (n as u64).into();
+        for i in (1..n as i64).rev() {
+            value *= i;
+        }
+        value
+    }
 }
 
 impl fmt::Display for BigInt {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        self.inner.fmt(fmt)
+    }
+}
+
+impl fmt::Debug for BigInt {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.inner.fmt(fmt)
     }
 }
@@ -141,6 +158,12 @@ impl<'a> Mul for &'a BigInt {
         BigInt {
             inner: &self.inner * &rhs.inner,
         }
+    }
+}
+
+impl MulAssign<i64> for BigInt {
+    fn mul_assign(&mut self, rhs: i64) {
+        self.inner *= rhs;
     }
 }
 
@@ -212,5 +235,19 @@ mod test {
             result.push(num.size_in_base(10));
         }
         assert_eq!(&result[..], &num_digits[..]);
+    }
+
+    #[test]
+    fn test_factorial() {
+        assert_eq!(BigInt::factorial(0), 1.into());
+        assert_eq!(BigInt::factorial(1), 1.into());
+        assert_eq!(BigInt::factorial(2), 2.into());
+        assert_eq!(BigInt::factorial(3), 6.into());
+        assert_eq!(BigInt::factorial(4), 24.into());
+        assert_eq!(BigInt::factorial(5), 120.into());
+        assert_eq!(
+            BigInt::factorial(16),
+            BigInt::from_str_radix("20_922_789_888_000", 10).unwrap()
+        );
     }
 }

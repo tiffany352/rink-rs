@@ -12,9 +12,10 @@ use crate::output::{
     UnitsForReply, UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::types::{BaseUnit, Dimensionality, GenericDateTime, Number, Numeric};
+use crate::types::{BaseUnit, BigInt, Dimensionality, GenericDateTime, Number, Numeric};
 use chrono::FixedOffset;
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 use std::rc::Rc;
 
 /// Evaluates an expression to compute its value, *excluding* `->`
@@ -427,29 +428,25 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                         }))
                     }
                 ),
-                Function::Fac => {
-                    func!(
-                        fn fac(num: Number) {
-                            let val = num.value.to_int();
-
-                            if let Some(val) = val {
+                Function::Fac => func!(
+                    fn fac(num: Number) {
+                        if !num.unit.is_dimensionless() {
+                            Err("fac() accepts only dimensionless integers".to_owned())
+                        } else {
+                            let n = num.value.to_int();
+                            let n = n.and_then(|x| u32::try_from(x).ok());
+                            if let Some(n) = n {
+                                let value = BigInt::factorial(n).into();
                                 Ok(Value::Number(Number {
-                                    value: {
-                                        let mut n = val;
-                                        for i in (1..val).rev() {
-                                            n *= i;
-                                        }
-                                        n.into()
-                                    },
+                                    value,
                                     unit: num.unit.clone(),
                                 }))
                             } else {
-                                Err("fac() requires a number that can be parsed to an integer"
-                                    .to_owned())
+                                Err("fac() passed a value that is out of range".to_owned())
                             }
                         }
-                    )
-                }
+                    }
+                ),
             }
         }
         Expr::Error { ref message } => Err(QueryError::generic(message.clone())),
