@@ -80,12 +80,12 @@ impl<Data> Response<Data> {
 /// of this trait for it.
 pub trait Service: Sized + RefUnwindSafe + 'static {
     /// The request, sent from the parent to the child.
-    type Req: serde::Serialize + DeserializeOwned;
+    type Req: serde::Serialize + DeserializeOwned + Send + Sync;
     /// The response, sent from the child to the parent after the
     /// request has been processed.
-    type Res: serde::Serialize + DeserializeOwned;
+    type Res: serde::Serialize + DeserializeOwned + Send + Sync;
     /// The config is passed to the child on startup.
-    type Config: serde::Serialize + DeserializeOwned + Clone + 'static;
+    type Config: serde::Serialize + DeserializeOwned + Clone + 'static + Send + Sync;
 
     /// Returns the path to the executable, or None if the current
     /// executable should be used.

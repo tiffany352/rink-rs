@@ -11,7 +11,7 @@ keywords = ["cli", "sandbox"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-async-std = { version = "1.9", features = ["std", "unstable", "default"], default-features = false }
+smol = "2.0.2"
 bincode = "1.3.3"
 thiserror = "1"
 serde_derive = "1"

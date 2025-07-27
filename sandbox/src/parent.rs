@@ -3,22 +3,20 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_ctrlc::CtrlC;
-use async_std::channel::bounded;
-use async_std::channel::Receiver;
-use async_std::channel::Sender;
-use async_std::task::spawn_local;
-use async_std::task::JoinHandle;
-use async_std::{
-    future::timeout,
-    prelude::{FutureExt, StreamExt},
-    process::{Command, Stdio},
-};
+use smol::channel::bounded;
+use smol::channel::Receiver;
+use smol::channel::Sender;
+use smol::future::FutureExt;
+use smol::process::Command;
+use smol::stream::StreamExt;
+use smol::Timer;
 use std::cell::Cell;
 use std::env;
 use std::fmt;
 use std::io::ErrorKind;
 use std::marker::PhantomData;
 use std::pin::Pin;
+use std::process::Stdio;
 
 use crate::frame::Frame;
 use crate::HandshakeResponse;
@@ -34,7 +32,7 @@ where
 {
     send_request: Sender<S::Req>,
     recv_response: Receiver<Result<Response<S::Res>, Error>>,
-    join_handle: Cell<Option<JoinHandle<Result<(), Error>>>>,
+    join_handle: Cell<Option<smol::Task<Result<(), Error>>>>,
     terminated: bool,
     _phantom: PhantomData<S>,
 }
@@ -94,37 +92,41 @@ where
                 };
 
                 let exec_time = S::timeout(&config);
-                let pending = timeout(exec_time, interrupt.race(next_frame));
+                let timeout = async {
+                    Timer::after(exec_time).await;
+                    Err(Error::Timeout(exec_time))
+                };
+                let pending = interrupt.race(next_frame).race(timeout);
 
                 let mut break_out = false;
                 let response = match pending.await {
-                    Ok(Ok(Response {
+                    Ok(Response {
                         result: Ok(result),
                         memory_used,
                         time_taken,
                         stdout,
-                    })) => Ok(Response {
+                    }) => Ok(Response {
                         result,
                         memory_used,
                         time_taken,
                         stdout,
                     }),
-                    Ok(Ok(Response {
+                    Ok(Response {
                         result: Err(err), ..
-                    })) => Err(err.into()),
-                    Ok(Err(Error::ReadFailed(err))) if err.kind() == ErrorKind::UnexpectedEof => {
+                    }) => Err(err.into()),
+                    Err(Error::ReadFailed(err)) if err.kind() == ErrorKind::UnexpectedEof => {
                         break_out = true;
                         Err(Error::Crashed)
                     }
-                    Ok(Err(Error::Interrupted)) => {
+                    Err(Error::Interrupted) => {
                         break_out = true;
                         Err(Error::Interrupted)
                     }
-                    Ok(Err(err)) => Err(err),
-                    Err(_timeout) => {
+                    Err(Error::Timeout(timeout)) => {
                         break_out = true;
-                        Err(Error::Timeout(exec_time))
+                        Err(Error::Timeout(timeout))
                     }
+                    Err(err) => Err(err),
                 };
 
                 send_response
@@ -152,7 +154,7 @@ where
     pub async fn new(config: S::Config) -> Result<Sandbox<S>, Error> {
         let (send_request, recv_request) = bounded(1);
         let (send_response, recv_response) = bounded(1);
-        let join_handle = spawn_local(Self::run_task(config, recv_request, send_response));
+        let join_handle = smol::spawn(Self::run_task(config, recv_request, send_response));
 
         Ok(Sandbox {
             send_request,

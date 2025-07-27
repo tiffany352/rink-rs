@@ -21,8 +21,7 @@ pub(crate) mod style_ser;
 #[global_allocator]
 pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
 
-#[async_std::main]
-async fn main() -> Result<ExitCode> {
+fn main() -> Result<ExitCode> {
     let matches = Command::new("Rink")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Rink Contributors")
@@ -126,9 +125,7 @@ async fn main() -> Result<ExitCode> {
         }
         Ok(exit_code)
     } else if config.limits.enabled {
-        repl::interactive_sandboxed(config)
-            .await
-            .map(|_| ExitCode::SUCCESS)
+        repl::interactive_sandboxed(config).map(|_| ExitCode::SUCCESS)
     } else {
         repl::interactive(&config).map(|_| ExitCode::SUCCESS)
     }

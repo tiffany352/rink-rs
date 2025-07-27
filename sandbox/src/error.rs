@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use async_std::channel::RecvError;
 use core::fmt;
 use serde_derive::{Deserialize, Serialize};
+use smol::channel::RecvError;
 use std::{io::Error as IoError, time::Duration};
 use thiserror::Error;
 
