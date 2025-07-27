@@ -4699,6 +4699,8 @@ kpm                     kp meter
 Wh                      W hour
 hph                     hp hour
 plf                     lb / foot    # pounds per linear foot
+As                      amp second # equal to 1 coulomb
+Ah                      amp hour
 
 !endcategory
 !category compat                      "Compatibility with unix units"
