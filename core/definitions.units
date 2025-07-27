@@ -215,11 +215,6 @@ K         !kelvin
 ?? length to the radius of the circle
 radian    !
 
-?? Solid angle which cuts off an area of the surface of the sphere
-?? equal to that of a square with sides of length equal to the radius
-?? of the sphere
-sr        !steradian
-
 #
 # Some primitive non-SI units
 #
@@ -577,7 +572,7 @@ sievert                 J/kg         # equivalent dose
 katal                   mol/sec      # catalytic activity
 
 #rad                    radian
-#sr                     steradian
+sr                      steradian
 Hz                      hertz
 N                       newton
 Pa                      pascal
@@ -631,7 +626,7 @@ luminance               ? luminous_intensity / area
 
 # Derived quantities
 angle                   ? radian          # plane angle
-solid_angle             ? sr
+solid_angle             ? radian^2
 frequency               ? time^-1
 force                   ? acceleration mass
 pressure                ? force / area
@@ -892,6 +887,7 @@ seclongitude            circle (seconds/day) # Astronomers measure longitude
 # Solid angle measure
 #
 
+steradian               radian^2
 sphere                  4 pi sr
 squaredegree            1|180^2 pi^2 sr
 squareminute            1|60^2 squaredegree
