@@ -3,8 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::Error;
-use async_std::io::{prelude::WriteExt, ReadExt};
 use serde::{de::DeserializeOwned, Serialize};
+use smol::io::{AsyncReadExt, AsyncWriteExt};
 use std::{
     io::{Read, Write},
     pin::Pin,
@@ -22,7 +22,7 @@ impl Frame {
     pub(crate) async fn read_async<V, R>(&mut self, mut reader: Pin<&mut R>) -> Result<V, Error>
     where
         V: DeserializeOwned,
-        R: ReadExt,
+        R: AsyncReadExt,
     {
         let mut len = [0, 0, 0, 0];
         reader
@@ -65,7 +65,7 @@ impl Frame {
         value: &V,
     ) -> Result<(), Error>
     where
-        W: WriteExt,
+        W: AsyncWriteExt,
         V: Serialize,
     {
         let bytes = bincode::serialize(value)?;

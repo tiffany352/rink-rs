@@ -6,7 +6,6 @@ use crate::config::Config;
 use crate::fmt::print_fmt;
 use crate::service::RinkService;
 use crate::RinkHelper;
-use async_std::task;
 use eyre::Result;
 use rink_core::one_line;
 use rink_sandbox::Sandbox;
@@ -115,18 +114,15 @@ pub fn interactive(config: &Config) -> Result<()> {
     Ok(())
 }
 
-pub async fn interactive_sandboxed(config: Config) -> Result<()> {
+pub fn interactive_sandboxed(config: Config) -> Result<()> {
     let ctx = crate::config::load(&config)?;
     let ctx = Arc::new(Mutex::new(ctx));
-    let rl = Arc::new(Mutex::new({
-        let mut rl = Editor::<RinkHelper>::new();
-        let helper = RinkHelper::new(ctx.clone(), config.clone());
-        rl.set_helper(Some(helper));
-        rl.set_completion_type(CompletionType::List);
-        rl
-    }));
+    let mut rl = Editor::<RinkHelper>::new();
+    let helper = RinkHelper::new(ctx.clone(), config.clone());
+    rl.set_helper(Some(helper));
+    rl.set_completion_type(CompletionType::List);
 
-    let sandbox = Sandbox::<RinkService>::new(config.clone()).await?;
+    let sandbox = smol::block_on(Sandbox::<RinkService>::new(config.clone()))?;
     let sandbox = Arc::new(sandbox);
 
     let mut hpath = dirs::data_local_dir().map(|mut path| {
@@ -135,7 +131,7 @@ pub async fn interactive_sandboxed(config: Config) -> Result<()> {
         path
     });
     if let Some(ref mut path) = hpath {
-        match rl.lock().unwrap().load_history(path) {
+        match rl.load_history(path) {
             // Ignore file not found errors.
             Err(ReadlineError::Io(ref err)) if err.kind() == ErrorKind::NotFound => (),
             Err(err) => eprintln!("Loading history failed: {}", err),
@@ -154,24 +150,20 @@ pub async fn interactive_sandboxed(config: Config) -> Result<()> {
     };
 
     loop {
-        let readline = {
-            let rl = rl.clone();
-            let config = config.clone();
-            task::spawn_blocking(move || rl.lock().unwrap().readline(&config.rink.prompt)).await
-        };
+        let readline = rl.readline(&config.rink.prompt);
         match readline {
             Ok(ref line) if line == "help" => {
                 println!("{}", HELP_TEXT);
             }
             Ok(ref line) if line == "quit" || line == ":q" || line == "exit" => {
-                save_history(&mut rl.lock().unwrap());
+                save_history(&mut rl);
                 break;
             }
             Ok(line) => {
-                rl.lock().unwrap().add_history_entry(&line);
+                rl.add_history_entry(&line);
                 let config = config.clone();
 
-                let result = sandbox.execute(line).await;
+                let result = smol::block_on(sandbox.execute(line));
                 match result {
                     Ok(res) => {
                         match res.result {
@@ -191,7 +183,7 @@ pub async fn interactive_sandboxed(config: Config) -> Result<()> {
             }
             Err(ReadlineError::Interrupted) => {}
             Err(ReadlineError::Eof) => {
-                save_history(&mut rl.lock().unwrap());
+                save_history(&mut rl);
                 break;
             }
             Err(err) => {
@@ -201,7 +193,7 @@ pub async fn interactive_sandboxed(config: Config) -> Result<()> {
         }
     }
 
-    sandbox.terminate().await?;
+    smol::block_on(sandbox.terminate())?;
 
     Ok(())
 }
