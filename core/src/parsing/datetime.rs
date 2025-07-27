@@ -4,12 +4,10 @@
 
 use crate::ast::{DatePattern, DateToken};
 use crate::loader::Context;
-use crate::types::{BaseUnit, BigInt, BigRat, DateTime, Dimensionality, Number, Numeric};
+use crate::types::{BaseUnit, BigInt, BigRat, DateTime, Dimensionality, Number, Numeric, TimeZone};
 use chrono::format::Parsed;
-use chrono::{Duration, FixedOffset, TimeZone, Weekday};
-use chrono_tz::Tz;
+use chrono::{Duration, FixedOffset, TimeZone as ChronoTimeZone, Weekday};
 use std::iter::Peekable;
-use std::str::FromStr;
 
 fn parse_fixed(value: &str, digits: usize) -> Option<i32> {
     if digits != 0 && value.len() != digits {
@@ -40,7 +38,7 @@ fn numeric_match(
 
 pub fn parse_date<I>(
     out: &mut Parsed,
-    out_tz: &mut Option<Tz>,
+    out_tz: &mut Option<TimeZone>,
     date: &mut Peekable<I>,
     pat: &[DatePattern],
 ) -> Result<(), String>
@@ -232,7 +230,7 @@ where
                 advance = false;
                 if let Some(DateToken::Literal(ref s)) = date.peek().cloned() {
                     date.next();
-                    if let Ok(tz) = Tz::from_str(s) {
+                    if let Some(tz) = TimeZone::lookup(s) {
                         *out_tz = Some(tz);
                         Ok(())
                     } else {
@@ -359,9 +357,7 @@ fn attempt(
     let date = parsed.to_naive_date();
     if let Some(tz) = tz {
         match (time, date) {
-            (Ok(time), Ok(date)) => tz
-                .from_local_datetime(&date.and_time(time))
-                .earliest()
+            (Ok(time), Ok(date)) => DateTime::from_tz(tz, date, time)
                 .ok_or_else(|| {
                     (
                         "Datetime does not represent a valid moment in time".to_string(),
@@ -369,12 +365,8 @@ fn attempt(
                     )
                 })
                 .map(Into::into),
-            (Ok(time), Err(_)) => {
-                Ok(now.to_chrono().with_timezone(&tz).with_time(time).unwrap()).map(Into::into)
-            }
-            (Err(_), Ok(date)) => tz
-                .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
-                .earliest()
+            (Ok(time), Err(_)) => Ok(now.convert_to_timezone(tz).with_time(time)).map(Into::into),
+            (Err(_), Ok(date)) => DateTime::from_tz(tz, date, chrono::NaiveTime::default())
                 .ok_or_else(|| {
                     (
                         "Datetime does not represent a valid moment in time".to_string(),
@@ -566,7 +558,10 @@ mod tests {
         parse_datepattern(&mut s.chars().peekable()).unwrap()
     }
 
-    fn parse_with_tz(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Parsed, Option<Tz>) {
+    fn parse_with_tz(
+        date: Vec<DateToken>,
+        pat: &str,
+    ) -> (Result<(), String>, Parsed, Option<TimeZone>) {
         let mut parsed = Parsed::new();
         let mut tz = None;
         let pat = pattern(pat);
@@ -731,7 +726,7 @@ mod tests {
         let date = vec![DateToken::Literal("Europe/London".into())];
         let (res, parsed, tz) = parse_with_tz(date, "offset");
         assert!(res.is_ok(), "{}", res.unwrap_err());
-        assert_eq!(tz.unwrap(), Tz::Europe__London);
+        assert_eq!(tz, TimeZone::lookup("Europe/London"));
         assert_eq!(parsed.offset, None);
     }
 

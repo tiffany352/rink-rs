@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::types::TimeZone;
+
 use super::*;
 use serde_derive::Serialize;
 
@@ -13,7 +15,7 @@ pub enum Conversion {
     List(Vec<String>),
     Offset(i64),
     #[serde(skip)]
-    Timezone(Tz),
+    Timezone(TimeZone),
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -43,7 +45,7 @@ impl fmt::Display for Conversion {
                 write!(fmt, "{}", list)
             }
             Conversion::Offset(off) => write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
-            Conversion::Timezone(ref tz) => write!(fmt, "{:?}", tz),
+            Conversion::Timezone(ref tz) => write!(fmt, "{}", tz),
         }
     }
 }
@@ -51,8 +53,10 @@ impl fmt::Display for Conversion {
 #[cfg(test)]
 mod tests {
     use super::Conversion;
-    use crate::ast::{Degree, Expr};
-    use chrono_tz::Tz;
+    use crate::{
+        ast::{Degree, Expr},
+        types::TimeZone,
+    };
 
     #[test]
     fn conversion_display() {
@@ -68,7 +72,7 @@ mod tests {
         );
         assert_eq!(Conversion::Offset(3600 * 7).to_string(), "07:00");
         assert_eq!(
-            Conversion::Timezone(Tz::US__Pacific).to_string(),
+            Conversion::Timezone(TimeZone::lookup("US/Pacific").unwrap()).to_string(),
             "US/Pacific"
         );
     }

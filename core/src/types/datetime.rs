@@ -1,5 +1,5 @@
 use chrono::{Datelike, Timelike};
-use std::{fmt, ops};
+use std::{fmt, ops, str::FromStr};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum GenericTimeZone {
@@ -127,6 +127,18 @@ pub struct DateTime {
 }
 
 impl DateTime {
+    pub(crate) fn from_tz(
+        tz: TimeZone,
+        date: chrono::NaiveDate,
+        time: chrono::NaiveTime,
+    ) -> Option<DateTime> {
+        use chrono::TimeZone as ChronoTimeZone;
+        tz.tz
+            .from_local_datetime(&date.and_time(time))
+            .earliest()
+            .map(Into::into)
+    }
+
     pub(crate) fn to_chrono(&self) -> chrono::DateTime<GenericTimeZone> {
         self.dt
     }
@@ -195,7 +207,9 @@ impl DateTime {
 
     pub fn convert_to_timezone(&self, timezone: TimeZone) -> DateTime {
         DateTime {
-            dt: self.dt.with_timezone(&GenericTimeZone::TimeZone(timezone)),
+            dt: self
+                .dt
+                .with_timezone(&GenericTimeZone::TimeZone(timezone.tz)),
         }
     }
 
@@ -203,6 +217,17 @@ impl DateTime {
         DateTime {
             dt: chrono::Local::now().with_timezone(&GenericTimeZone::Local(chrono::Local)),
         }
+    }
+
+    pub(crate) fn with_time(&self, time: chrono::NaiveTime) -> DateTime {
+        DateTime {
+            dt: self.dt.with_time(time).unwrap(),
+        }
+    }
+
+    pub fn from_millis_local(millis: i64) -> DateTime {
+        use chrono::TimeZone as ChronoTimeZone;
+        chrono::Local.timestamp_millis_opt(millis).unwrap().into()
     }
 }
 
@@ -252,6 +277,22 @@ impl From<chrono::DateTime<chrono_tz::Tz>> for DateTime {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TimeZone {
+    tz: chrono_tz::Tz,
+}
+
+impl TimeZone {
+    pub fn lookup(name: &str) -> Option<TimeZone> {
+        chrono_tz::Tz::from_str(name).ok().map(|tz| TimeZone { tz })
+    }
+}
+
+impl fmt::Display for TimeZone {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.tz.fmt(f)
+    }
+}
+
 // TODO: replace with custom types
-pub type TimeZone = chrono_tz::Tz;
 pub type Duration = chrono::Duration;

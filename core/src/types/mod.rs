@@ -15,7 +15,7 @@ mod numeric;
 pub use base_unit::BaseUnit;
 pub use bigint::{BigInt, BigIntError};
 pub use bigrat::BigRat;
-pub use datetime::DateTime;
+pub use datetime::{DateTime, TimeZone};
 pub use dimensionality::Dimensionality;
 pub use number::Number;
 pub use numeric::Numeric;

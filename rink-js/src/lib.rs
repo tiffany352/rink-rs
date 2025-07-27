@@ -2,12 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use chrono::{Local, TimeZone};
 use js_sys::Date;
 use rink_core::ast;
 use rink_core::output::fmt::{FmtToken, Span, TokenFmt};
 use rink_core::output::QueryReply;
 use rink_core::parsing::text_query;
+use rink_core::types::DateTime;
 use serde_derive::*;
 use wasm_bindgen::prelude::*;
 
@@ -118,7 +118,7 @@ impl Context {
     #[wasm_bindgen(js_name = setTime)]
     pub fn set_time(&mut self, date: Date) {
         self.context
-            .set_time(Local.timestamp_millis_opt(date.value_of() as i64).unwrap());
+            .set_time(DateTime::from_millis_local(date.value_of() as i64));
     }
 
     #[wasm_bindgen(js_name = loadCurrency)]
