@@ -724,6 +724,7 @@ rationals.
 - `asinh(x)`: Inverse hyperbolic sine function.
 - `acosh(x)`: Inverse hyperbolic cosine function.
 - `atanh(x)`: Inverse hyperbolic tangent function.
+- `fac(x)`: Factorial,  x!. Will coerce any input number to an integer.
 
 ifndef::website[]
 See also

@@ -12,9 +12,10 @@ use crate::output::{
     UnitsForReply, UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::types::{BaseUnit, Dimensionality, GenericDateTime, Number, Numeric};
+use crate::types::{BaseUnit, BigInt, Dimensionality, GenericDateTime, Number, Numeric};
 use chrono::FixedOffset;
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 use std::rc::Rc;
 
 /// Evaluates an expression to compute its value, *excluding* `->`
@@ -425,6 +426,26 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                             value: Numeric::Float(num.value.to_f64().atanh()),
                             unit: num.unit.clone(),
                         }))
+                    }
+                ),
+                Function::Fac => func!(
+                    fn fac(num: Number) {
+                        if !num.unit.is_dimensionless() {
+                            Err("fac() accepts only dimensionless integers".to_owned())
+                        } else {
+                            let n = num.value.as_bigint();
+                            let n = n.and_then(|n| n.as_int());
+                            let n = n.and_then(|x| u32::try_from(x).ok());
+                            if let Some(n) = n {
+                                let value = BigInt::factorial(n).into();
+                                Ok(Value::Number(Number {
+                                    value,
+                                    unit: num.unit.clone(),
+                                }))
+                            } else {
+                                Err("fac() passed a value that is out of range".to_owned())
+                            }
+                        }
                     }
                 ),
             }
