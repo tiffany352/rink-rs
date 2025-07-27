@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use jiff::tz::{Offset, TimeZone};
+
 use super::{Show, SubstanceGetError, Value};
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::commands;
@@ -23,7 +25,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
     use std::ops::*;
 
     match *expr {
-        Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(ctx.now)),
+        Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(ctx.now.clone())),
         Expr::Unit { ref name } => ctx
             .lookup(name)
             .map(Value::Number)
@@ -1012,10 +1014,11 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            let top = top.convert_to_offset(off);
+            let offset = TimeZone::fixed(Offset::from_seconds(off as i32).unwrap());
+            let top = top.convert_to_timezone(offset);
             Ok(QueryReply::Date(DateReply::new(ctx, top)))
         }
-        Query::Convert(ref top, Conversion::Timezone(tz), None, Digits::Default) => {
+        Query::Convert(ref top, Conversion::Timezone(ref tz), None, Digits::Default) => {
             let top = eval_expr(ctx, top)?;
             let top = match top {
                 Value::DateTime(date) => date,
@@ -1027,7 +1030,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            let top = top.convert_to_timezone(tz);
+            let top = top.convert_to_timezone(tz.clone());
             Ok(QueryReply::Date(DateReply::new(ctx, top)))
         }
         Query::Convert(ref top, Conversion::Degree(ref deg), None, digits) => {

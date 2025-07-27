@@ -918,7 +918,7 @@ pub fn parse_query(iter: &mut Iter<'_>) -> Query {
                     }
                 }
                 Token::Ident(ref s) if is_valid_timezone(s) => Conversion::Timezone(
-                    TimeZone::lookup(s).expect("Running TimeZone::lookup a second time failed"),
+                    TimeZone::get(s).expect("Running TimeZone::lookup a second time failed"),
                 ),
                 _ => Conversion::Expr(parse_eq(iter)),
             };
@@ -929,7 +929,7 @@ pub fn parse_query(iter: &mut Iter<'_>) -> Query {
 }
 
 fn is_valid_timezone(s: &String) -> bool {
-    s != "GB" && TimeZone::lookup(s).is_some()
+    s != "GB" && TimeZone::get(s).is_ok()
 }
 
 #[cfg(test)]

@@ -172,9 +172,9 @@ impl Context {
         }
     }
 
-    pub fn humanize(&self, date: DateTime) -> Option<String> {
+    pub fn humanize(&self, date: &DateTime) -> Option<String> {
         if self.use_humanize {
-            date.humanize(self.now)
+            date.humanize(&self.now)
         } else {
             None
         }

@@ -18,7 +18,7 @@ serde_json = ["dep:serde_json"]
 num-bigint = { version = "0.4", features = ["serde"] }
 num-rational = { version = "0.4", features = ["serde"] }
 num-traits = "0.2"
-chrono = { version = "0.4.19", default-features = false }
+jiff = "0.2.15"
 strsim = "0.10.0"
 chrono-tz = { version = "0.5.2", default-features = false }
 chrono-humanize = { version = "0.1.2", optional = true }

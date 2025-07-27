@@ -330,7 +330,7 @@ impl DateReply {
             minute: date.minute() as i32,
             second: date.second() as i32,
             nanosecond: date.nanosecond() as i32,
-            human: ctx.humanize(date),
+            human: ctx.humanize(&date),
         }
     }
 }

@@ -22,7 +22,7 @@ pub trait Show {
 
 impl Show for DateTime {
     fn show(&self, context: &Context) -> String {
-        if let Some(h) = context.humanize(*self) {
+        if let Some(h) = context.humanize(self) {
             format!("{} ({})", self, h)
         } else {
             self.to_string()
@@ -63,7 +63,7 @@ impl<'a, 'b> Add<&'b Value> for &'a Value {
                 .map(Value::Number),
             (&Value::DateTime(ref left), &Value::Number(ref right))
             | (&Value::Number(ref right), &Value::DateTime(ref left)) => left
-                .checked_add_signed(datetime::to_duration(right)?)
+                .checked_add(datetime::to_duration(right)?)
                 .ok_or_else(|| {
                     "Implementation error: value is out of range representable by datetime"
                         .to_string()
@@ -89,14 +89,14 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
                 .map(Value::Number),
             (&Value::DateTime(ref left), &Value::Number(ref right))
             | (&Value::Number(ref right), &Value::DateTime(ref left)) => left
-                .checked_sub_signed(datetime::to_duration(right)?)
+                .checked_sub(datetime::to_duration(right)?)
                 .ok_or_else(|| {
                     "Implementation error: value is out of range representable by datetime"
                         .to_string()
                 })
                 .map(Value::DateTime),
             (&Value::DateTime(ref left), &Value::DateTime(ref right)) => {
-                datetime::from_duration(&(*left - *right)).map(Value::Number)
+                datetime::from_duration(&(left - right)).map(Value::Number)
             }
             (_, _) => Err("Operation is not defined".to_string()),
         }

@@ -1,150 +1,15 @@
-use chrono::{Datelike, Timelike};
-use std::{fmt, ops, str::FromStr};
+use std::{fmt, ops};
 
-#[derive(Debug, Clone, Copy)]
-pub(crate) enum GenericTimeZone {
-    Local(chrono::Local),
-    Fixed(chrono::FixedOffset),
-    TimeZone(chrono_tz::Tz),
-}
+use jiff::{SignedDuration, Timestamp, Zoned};
 
-#[derive(Debug, Clone, Copy)]
-pub(crate) enum GenericOffset {
-    Local(<chrono::Local as chrono::TimeZone>::Offset),
-    Fixed(<chrono::FixedOffset as chrono::TimeZone>::Offset),
-    TimeZone(<chrono_tz::Tz as chrono::TimeZone>::Offset),
-}
-
-impl chrono::Offset for GenericOffset {
-    fn fix(&self) -> chrono::FixedOffset {
-        match self {
-            GenericOffset::Local(offset) => offset.fix(),
-            GenericOffset::Fixed(offset) => offset.fix(),
-            GenericOffset::TimeZone(offset) => offset.fix(),
-        }
-    }
-}
-
-impl chrono::TimeZone for GenericTimeZone {
-    type Offset = GenericOffset;
-
-    fn from_offset(offset: &Self::Offset) -> Self {
-        match offset {
-            GenericOffset::Local(offset) => {
-                GenericTimeZone::Local(chrono::Local::from_offset(offset))
-            }
-            GenericOffset::Fixed(offset) => {
-                GenericTimeZone::Fixed(chrono::FixedOffset::from_offset(offset))
-            }
-            GenericOffset::TimeZone(offset) => {
-                GenericTimeZone::TimeZone(chrono::TimeZone::from_offset(offset))
-            }
-        }
-    }
-
-    fn offset_from_local_date(
-        &self,
-        naive: &chrono::NaiveDate,
-    ) -> chrono::MappedLocalTime<Self::Offset> {
-        match self {
-            GenericTimeZone::Local(local) => local
-                .offset_from_local_date(naive)
-                .map(GenericOffset::Local),
-            GenericTimeZone::Fixed(fixed_offset) => fixed_offset
-                .offset_from_local_date(naive)
-                .map(GenericOffset::Fixed),
-            GenericTimeZone::TimeZone(tz) => tz
-                .offset_from_local_date(naive)
-                .map(GenericOffset::TimeZone),
-        }
-    }
-
-    fn offset_from_local_datetime(
-        &self,
-        naive: &chrono::NaiveDateTime,
-    ) -> chrono::MappedLocalTime<Self::Offset> {
-        match self {
-            GenericTimeZone::Local(local) => local
-                .offset_from_local_datetime(naive)
-                .map(GenericOffset::Local),
-            GenericTimeZone::Fixed(fixed_offset) => fixed_offset
-                .offset_from_local_datetime(naive)
-                .map(GenericOffset::Fixed),
-            GenericTimeZone::TimeZone(tz) => tz
-                .offset_from_local_datetime(naive)
-                .map(GenericOffset::TimeZone),
-        }
-    }
-
-    fn offset_from_utc_date(&self, utc: &chrono::NaiveDate) -> Self::Offset {
-        match self {
-            GenericTimeZone::Local(local) => GenericOffset::Local(local.offset_from_utc_date(utc)),
-            GenericTimeZone::Fixed(fixed_offset) => {
-                GenericOffset::Fixed(fixed_offset.offset_from_utc_date(utc))
-            }
-            GenericTimeZone::TimeZone(tz) => GenericOffset::TimeZone(tz.offset_from_utc_date(utc)),
-        }
-    }
-
-    fn offset_from_utc_datetime(&self, utc: &chrono::NaiveDateTime) -> Self::Offset {
-        match self {
-            GenericTimeZone::Local(local) => {
-                GenericOffset::Local(local.offset_from_utc_datetime(utc))
-            }
-            GenericTimeZone::Fixed(fixed_offset) => {
-                GenericOffset::Fixed(fixed_offset.offset_from_utc_datetime(utc))
-            }
-            GenericTimeZone::TimeZone(tz) => {
-                GenericOffset::TimeZone(tz.offset_from_utc_datetime(utc))
-            }
-        }
-    }
-}
-
-impl fmt::Display for GenericTimeZone {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            GenericTimeZone::Local(_local) => write!(f, "Local"),
-            GenericTimeZone::Fixed(fixed_offset) => fixed_offset.fmt(f),
-            GenericTimeZone::TimeZone(tz) => tz.fmt(f),
-        }
-    }
-}
-
-impl fmt::Display for GenericOffset {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            GenericOffset::Local(local) => local.fmt(f),
-            GenericOffset::Fixed(fixed_offset) => fixed_offset.fmt(f),
-            GenericOffset::TimeZone(tz) => tz.fmt(f),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DateTime {
-    dt: chrono::DateTime<GenericTimeZone>,
+    pub(crate) dt: Zoned,
 }
 
 impl DateTime {
-    pub(crate) fn from_tz(
-        tz: TimeZone,
-        date: chrono::NaiveDate,
-        time: chrono::NaiveTime,
-    ) -> Option<DateTime> {
-        use chrono::TimeZone as ChronoTimeZone;
-        tz.tz
-            .from_local_datetime(&date.and_time(time))
-            .earliest()
-            .map(Into::into)
-    }
-
-    pub(crate) fn to_chrono(&self) -> chrono::DateTime<GenericTimeZone> {
-        self.dt
-    }
-
     pub fn year(&self) -> i32 {
-        self.dt.year()
+        self.dt.year() as i32
     }
 
     pub fn month(&self) -> i32 {
@@ -171,71 +36,46 @@ impl DateTime {
         self.dt.nanosecond() as i32
     }
 
-    pub fn checked_add_signed(&self, right: chrono::TimeDelta) -> Option<DateTime> {
-        Some(DateTime {
-            dt: self.dt.checked_add_signed(right)?,
-        })
-    }
-
-    pub fn checked_sub_signed(&self, right: chrono::TimeDelta) -> Option<DateTime> {
-        Some(DateTime {
-            dt: self.dt.checked_sub_signed(right)?,
-        })
-    }
-
-    pub fn humanize(&self, now: DateTime) -> Option<String> {
-        if cfg!(feature = "chrono-humanize") {
-            use chrono_humanize::HumanTime;
-            let duration = *self - now;
-            Some(HumanTime::from(duration).to_string())
-        } else {
-            None
-        }
+    pub fn humanize(&self, _now: &DateTime) -> Option<String> {
+        None
     }
 
     pub fn to_rfc3339(&self) -> String {
-        self.dt.to_rfc3339()
-    }
-
-    pub fn convert_to_offset(&self, offset: i64) -> DateTime {
-        DateTime {
-            dt: self.dt.with_timezone(&GenericTimeZone::Fixed(
-                chrono::FixedOffset::east_opt(offset as i32).unwrap(),
-            )),
-        }
+        jiff::fmt::strtime::format("%F %T", &self.dt).unwrap()
     }
 
     pub fn convert_to_timezone(&self, timezone: TimeZone) -> DateTime {
         DateTime {
-            dt: self
-                .dt
-                .with_timezone(&GenericTimeZone::TimeZone(timezone.tz)),
+            dt: self.dt.with_time_zone(timezone),
         }
     }
 
     pub fn now() -> DateTime {
-        DateTime {
-            dt: chrono::Local::now().with_timezone(&GenericTimeZone::Local(chrono::Local)),
-        }
-    }
-
-    pub(crate) fn with_time(&self, time: chrono::NaiveTime) -> DateTime {
-        DateTime {
-            dt: self.dt.with_time(time).unwrap(),
-        }
+        DateTime { dt: Zoned::now() }
     }
 
     pub fn from_millis_local(millis: i64) -> DateTime {
-        use chrono::TimeZone as ChronoTimeZone;
-        chrono::Local.timestamp_millis_opt(millis).unwrap().into()
+        DateTime {
+            dt: Timestamp::new(millis / 1000, ((millis % 1000) * 1000_000) as i32)
+                .unwrap()
+                .to_zoned(TimeZone::system()),
+        }
+    }
+
+    pub fn checked_sub(&self, right: SignedDuration) -> Option<DateTime> {
+        self.dt.checked_sub(right).map(Into::into).ok()
+    }
+
+    pub fn checked_add(&self, right: SignedDuration) -> Option<DateTime> {
+        self.dt.checked_add(right).map(Into::into).ok()
     }
 }
 
 impl Default for DateTime {
     fn default() -> Self {
-        <chrono::Local as chrono::TimeZone>::timestamp_opt(&chrono::Local, 0, 0)
-            .unwrap()
-            .into()
+        DateTime {
+            dt: Timestamp::UNIX_EPOCH.to_zoned(TimeZone::system()),
+        }
     }
 }
 
@@ -245,54 +85,18 @@ impl fmt::Display for DateTime {
     }
 }
 
-impl ops::Sub for DateTime {
-    type Output = Duration;
+impl<'a> ops::Sub for &'a DateTime {
+    type Output = SignedDuration;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        self.dt - rhs.dt
+        self.dt.duration_until(&rhs.dt)
     }
 }
 
-impl From<chrono::DateTime<chrono::Local>> for DateTime {
-    fn from(value: chrono::DateTime<chrono::Local>) -> DateTime {
-        DateTime {
-            dt: value.with_timezone(&GenericTimeZone::Local(value.timezone())),
-        }
+impl From<Zoned> for DateTime {
+    fn from(value: Zoned) -> Self {
+        DateTime { dt: value }
     }
 }
 
-impl From<chrono::DateTime<chrono::FixedOffset>> for DateTime {
-    fn from(value: chrono::DateTime<chrono::FixedOffset>) -> DateTime {
-        DateTime {
-            dt: value.with_timezone(&GenericTimeZone::Fixed(value.timezone())),
-        }
-    }
-}
-
-impl From<chrono::DateTime<chrono_tz::Tz>> for DateTime {
-    fn from(value: chrono::DateTime<chrono_tz::Tz>) -> DateTime {
-        DateTime {
-            dt: value.with_timezone(&GenericTimeZone::TimeZone(value.timezone())),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TimeZone {
-    tz: chrono_tz::Tz,
-}
-
-impl TimeZone {
-    pub fn lookup(name: &str) -> Option<TimeZone> {
-        chrono_tz::Tz::from_str(name).ok().map(|tz| TimeZone { tz })
-    }
-}
-
-impl fmt::Display for TimeZone {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.tz.fmt(f)
-    }
-}
-
-// TODO: replace with custom types
-pub type Duration = chrono::Duration;
+pub use jiff::tz::TimeZone;

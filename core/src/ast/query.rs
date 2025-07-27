@@ -45,7 +45,15 @@ impl fmt::Display for Conversion {
                 write!(fmt, "{}", list)
             }
             Conversion::Offset(off) => write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
-            Conversion::Timezone(ref tz) => write!(fmt, "{}", tz),
+            Conversion::Timezone(ref tz) => {
+                if let Some(name) = tz.iana_name() {
+                    write!(fmt, "{}", name)
+                } else if let Ok(offset) = tz.to_fixed_offset() {
+                    write!(fmt, "{}", offset)
+                } else {
+                    write!(fmt, "unknown")
+                }
+            }
         }
     }
 }
@@ -72,7 +80,7 @@ mod tests {
         );
         assert_eq!(Conversion::Offset(3600 * 7).to_string(), "07:00");
         assert_eq!(
-            Conversion::Timezone(TimeZone::lookup("US/Pacific").unwrap()).to_string(),
+            Conversion::Timezone(TimeZone::get("US/Pacific").unwrap()).to_string(),
             "US/Pacific"
         );
     }

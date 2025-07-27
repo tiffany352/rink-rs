@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use chrono::{FixedOffset, TimeZone};
+use jiff::Zoned;
 use rink_core::parsing::text_query;
 use rink_core::Context;
 
@@ -12,7 +12,7 @@ thread_local! {
         // Use a fixed time, this one is the timestamp of the first
         // commit to Rink (in -04:00 originally, but use local time here
         // for determinism.)
-        let date = FixedOffset::east_opt(-4*60*60).unwrap().with_ymd_and_hms(2016, 8, 2, 15, 33, 19).unwrap();
+        let date: Zoned = "2016-08-02 15:33:19[America/New_York]".parse().unwrap();
         ctx.set_time(date.into());
         ctx.use_humanize = true;
         ctx
