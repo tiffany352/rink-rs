@@ -305,6 +305,9 @@ impl Number {
             } else if *orig.0.id == "bit" && orig.1 == 1 {
                 // byte special case
                 (&self.value / &Numeric::from(8), (BaseUnit::new("byte"), 1))
+            } else if *orig.0.id == "radian" && orig.1 == 2 {
+                // steradians
+                (self.value.clone(), (BaseUnit::new("steradian"), 1))
             } else {
                 (self.value.clone(), (orig.0.clone(), orig.1))
             };
