@@ -7,6 +7,7 @@ use eyre::{Result, WrapErr};
 use rink_sandbox::Alloc;
 use std::fs::File;
 use std::io::{stdin, BufReader};
+use std::process::ExitCode;
 
 pub use helper::RinkHelper;
 
@@ -21,7 +22,7 @@ pub(crate) mod style_ser;
 pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
 
 #[async_std::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<ExitCode> {
     let matches = Command::new("Rink")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Rink Contributors")
@@ -68,7 +69,7 @@ async fn main() -> Result<()> {
         .get_matches();
 
     if matches.get_flag("service") {
-        return service::run_service();
+        return service::run_service().map(|_| ExitCode::SUCCESS);
     }
     // The panic handler can't be installed if entering service mode, so
     // it's placed after that check.
@@ -81,7 +82,7 @@ async fn main() -> Result<()> {
         let ctx = config::load(&config)?;
         let mut file = std::fs::File::create(filename)?;
         writeln!(&mut file, "{:#?}", ctx)?;
-        return Ok(());
+        return Ok(ExitCode::SUCCESS);
     }
 
     if matches.get_flag("fetch-currency") {
@@ -89,7 +90,7 @@ async fn main() -> Result<()> {
         match result {
             Ok(msg) => {
                 println!("{msg}");
-                return Ok(());
+                return Ok(ExitCode::SUCCESS);
             }
             Err(err) => return Err(err),
         }
@@ -97,31 +98,38 @@ async fn main() -> Result<()> {
 
     if matches.get_flag("config-path") {
         println!("{}", config::config_path("config.toml").unwrap().display());
-        Ok(())
+        Ok(ExitCode::SUCCESS)
     } else if let Some(filename) = matches.get_one::<String>("file") {
         match &filename[..] {
             "-" => {
                 let stdin_handle = stdin();
-                repl::noninteractive(stdin_handle.lock(), &config, false)
+                repl::noninteractive(stdin_handle.lock(), &config, false).map(|_| ExitCode::SUCCESS)
             }
             _ => {
                 let file = File::open(&filename).wrap_err("Failed to open input file")?;
                 repl::noninteractive(BufReader::new(file), &config, false)
+                    .map(|_| ExitCode::SUCCESS)
             }
         }
     } else if let Some(exprs) = matches.get_many::<String>("EXPR") {
         let mut ctx = config::load(&config)?;
+        let mut exit_code = ExitCode::SUCCESS;
         for expr in exprs {
             println!("> {}", expr);
             match rink_core::one_line(&mut ctx, expr) {
                 Ok(v) => println!("{}", v),
-                Err(e) => println!("{}", e),
+                Err(e) => {
+                    println!("{}", e);
+                    exit_code = ExitCode::FAILURE;
+                }
             }
         }
-        Ok(())
+        Ok(exit_code)
     } else if config.limits.enabled {
-        repl::interactive_sandboxed(config).await
+        repl::interactive_sandboxed(config)
+            .await
+            .map(|_| ExitCode::SUCCESS)
     } else {
-        repl::interactive(&config)
+        repl::interactive(&config).map(|_| ExitCode::SUCCESS)
     }
 }
