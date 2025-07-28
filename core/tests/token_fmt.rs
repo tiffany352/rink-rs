@@ -4,6 +4,7 @@
 
 use std::borrow::Cow;
 
+use jiff::Zoned;
 use rink_core::output::fmt::{
     FmtToken::{self, *},
     Span, TokenFmt,
@@ -54,6 +55,8 @@ thread_local! {
     static CONTEXT: Context = {
         let mut ctx = simple_context().unwrap();
         ctx.use_humanize = false;
+        let date: Zoned = "2016-08-02 15:33:19[America/New_York]".parse().unwrap();
+        ctx.set_time(date.into());
         ctx
     };
 }
@@ -103,7 +106,7 @@ fn test_number() {
 fn test_date() {
     test(
         "#jan 01, 2000#",
-        &[s("2000-01-01 00:00:00 +00:00", DateTime)],
+        &[s("2000-01-01 00:00:00 [America/New_York]", DateTime)],
     );
 }
 

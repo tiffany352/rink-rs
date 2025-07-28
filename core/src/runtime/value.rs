@@ -5,15 +5,13 @@
 use super::Substance;
 use crate::loader::Context;
 use crate::parsing::datetime;
-use crate::types::{GenericDateTime, Number};
-use chrono::{DateTime, FixedOffset};
-use chrono_tz::Tz;
+use crate::types::{DateTime, Number};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Clone, Debug)]
 pub enum Value {
     Number(Number),
-    DateTime(GenericDateTime),
+    DateTime(DateTime),
     Substance(Substance),
 }
 
@@ -22,31 +20,12 @@ pub trait Show {
     fn show(&self, context: &Context) -> String;
 }
 
-impl Show for DateTime<FixedOffset> {
+impl Show for DateTime {
     fn show(&self, context: &Context) -> String {
-        if let Some(h) = context.humanize(*self) {
+        if let Some(h) = context.humanize(self) {
             format!("{} ({})", self, h)
         } else {
             self.to_string()
-        }
-    }
-}
-
-impl Show for DateTime<Tz> {
-    fn show(&self, context: &Context) -> String {
-        if let Some(h) = context.humanize(*self) {
-            format!("{} ({})", self, h)
-        } else {
-            self.to_string()
-        }
-    }
-}
-
-impl Show for GenericDateTime {
-    fn show(&self, context: &Context) -> String {
-        match *self {
-            GenericDateTime::Fixed(ref date) => date.show(context),
-            GenericDateTime::Timezone(ref date) => date.show(context),
         }
     }
 }
@@ -83,18 +62,13 @@ impl<'a, 'b> Add<&'b Value> for &'a Value {
                 })
                 .map(Value::Number),
             (&Value::DateTime(ref left), &Value::Number(ref right))
-            | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
-                GenericDateTime::Fixed(left) => left
-                    .checked_add_signed(datetime::to_duration(right)?)
-                    .map(GenericDateTime::Fixed),
-                GenericDateTime::Timezone(left) => left
-                    .checked_add_signed(datetime::to_duration(right)?)
-                    .map(GenericDateTime::Timezone),
-            }
-            .ok_or_else(|| {
-                "Implementation error: value is out of range representable by datetime".to_string()
-            })
-            .map(Value::DateTime),
+            | (&Value::Number(ref right), &Value::DateTime(ref left)) => left
+                .checked_add(datetime::to_duration(right)?)
+                .ok_or_else(|| {
+                    "Implementation error: value is out of range representable by datetime"
+                        .to_string()
+                })
+                .map(Value::DateTime),
             (&Value::Substance(ref left), &Value::Substance(ref right)) => {
                 left.add(right).map(Value::Substance)
             }
@@ -114,35 +88,15 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
                 })
                 .map(Value::Number),
             (&Value::DateTime(ref left), &Value::Number(ref right))
-            | (&Value::Number(ref right), &Value::DateTime(ref left)) => match *left {
-                GenericDateTime::Fixed(left) => left
-                    .checked_sub_signed(datetime::to_duration(right)?)
-                    .map(GenericDateTime::Fixed),
-                GenericDateTime::Timezone(left) => left
-                    .checked_sub_signed(datetime::to_duration(right)?)
-                    .map(GenericDateTime::Timezone),
-            }
-            .ok_or_else(|| {
-                "Implementation error: value is out of range representable by datetime".to_string()
-            })
-            .map(Value::DateTime),
-            (&Value::DateTime(ref left), &Value::DateTime(ref right)) => {
-                datetime::from_duration(&match (left, right) {
-                    (&GenericDateTime::Fixed(ref left), &GenericDateTime::Fixed(ref right)) => {
-                        *left - *right
-                    }
-                    (&GenericDateTime::Fixed(ref left), &GenericDateTime::Timezone(ref right)) => {
-                        *left - right.with_timezone(left.offset())
-                    }
-                    (
-                        &GenericDateTime::Timezone(ref left),
-                        &GenericDateTime::Timezone(ref right),
-                    ) => *left - *right,
-                    (&GenericDateTime::Timezone(ref left), &GenericDateTime::Fixed(ref right)) => {
-                        left.with_timezone(right.offset()) - *right
-                    }
+            | (&Value::Number(ref right), &Value::DateTime(ref left)) => left
+                .checked_sub(datetime::to_duration(right)?)
+                .ok_or_else(|| {
+                    "Implementation error: value is out of range representable by datetime"
+                        .to_string()
                 })
-                .map(Value::Number)
+                .map(Value::DateTime),
+            (&Value::DateTime(ref left), &Value::DateTime(ref right)) => {
+                datetime::from_duration(&(left - right)).map(Value::Number)
             }
             (_, _) => Err("Operation is not defined".to_string()),
         }

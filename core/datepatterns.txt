@@ -3,22 +3,26 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # ISO 8601 formats
-year-monthnum-fullday['T'hour24:min[:sec][ offset]]
-year-monthnum-fullday[ hour24:min[:sec][ offset]]
-year-'W'isoweek[ hour24:min[:sec][ offset]]
-year-ordinal[ hour24:min[:sec][ offset]]
+isoyear-monthnum-fullday['T'hour24:min[:sec][ offset]]
+isoyear-monthnum-fullday[ hour24:min[:sec][ offset]]
+isoyear-'W'isoweek[ hour24:min[:sec][ offset]]
+isoyear-ordinal[ hour24:min[:sec][ offset]]
 --monthnum-day[ hour24:min[:sec][ offset]]
 
 # Dates like "Janaury 1, 1970"
-monthname day[[','] year][ hour12:min[:sec] meridiem[ offset]][ adbc]
-monthname day[[','] year][ hour24:min[:sec][ offset]][ adbc]
+monthname day[[','] year][ hour12:min[:sec] meridiem[ offset]] adbc
+monthname day[[','] year][ hour24:min[:sec][ offset]] adbc
+monthname day[[','] isoyear][ hour12:min[:sec] meridiem[ offset]]
+monthname day[[','] isoyear][ hour24:min[:sec][ offset]]
 
 # ctime dates
 weekday monthname day[ hour24:min[:sec]] fullyear
 
 # Astronomical dates like "1970 January 1"
-year monthname day[ hour12:min[:sec] meridiem[ offset]][ adbc]
-year monthname day[ hour24:min[:sec][ offset]][ adbc]
+year monthname day[ hour12:min[:sec] meridiem[ offset]] adbc
+year monthname day[ hour24:min[:sec][ offset]] adbc
+isoyear monthname day[ hour12:min[:sec] meridiem[ offset]]
+isoyear monthname day[ hour24:min[:sec][ offset]]
 
 # Today dates
 hour12:min[:sec] meridiem[ offset]

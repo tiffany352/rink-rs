@@ -6,7 +6,6 @@
 
 use crate::output::Digits;
 use crate::types::Numeric;
-use chrono_tz::Tz;
 use serde_derive::Serialize;
 use std::fmt;
 

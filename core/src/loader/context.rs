@@ -5,9 +5,8 @@
 use super::Registry;
 use crate::ast::{DatePattern, Expr, Query};
 use crate::output::{ConversionReply, Digits, NotFoundError, NumberParts, QueryError, QueryReply};
-use crate::types::{BaseUnit, BigInt, Dimensionality, Number, Numeric};
+use crate::types::{BaseUnit, BigInt, DateTime, Dimensionality, Number, Numeric};
 use crate::{commands, Value};
-use chrono::{DateTime, Local, TimeZone};
 use std::collections::BTreeMap;
 
 /// The evaluation context that contains unit definitions.
@@ -22,7 +21,7 @@ pub struct Context {
     /// This is used instead of directly asking the OS for the time
     /// since it allows determinism in unit tests, and prevents edge
     /// cases like `now - now` being non-zero.
-    pub now: DateTime<Local>,
+    pub now: DateTime,
     /// Enables the use of chrono-humanize. It can be disabled for unit
     /// tests, as well as in wasm builds where the time API panics.
     pub use_humanize: bool,
@@ -46,19 +45,15 @@ impl Context {
         Context {
             registry: Registry::default(),
             temporaries: BTreeMap::new(),
-            now: Local.timestamp_opt(0, 0).unwrap(),
+            now: DateTime::default(),
             use_humanize: true,
             save_previous_result: false,
             previous_result: None,
         }
     }
 
-    pub fn set_time(&mut self, time: DateTime<Local>) {
+    pub fn set_time(&mut self, time: DateTime) {
         self.now = time;
-    }
-
-    pub fn update_time(&mut self) {
-        self.now = Local::now();
     }
 
     pub fn load_dates(&mut self, mut dates: Vec<Vec<DatePattern>>) {
@@ -177,9 +172,9 @@ impl Context {
         }
     }
 
-    pub fn humanize<Tz: chrono::TimeZone>(&self, date: chrono::DateTime<Tz>) -> Option<String> {
+    pub fn humanize(&self, date: &DateTime) -> Option<String> {
         if self.use_humanize {
-            crate::parsing::datetime::humanize(self.now, date)
+            Some(date.humanize(&self.now))
         } else {
             None
         }
