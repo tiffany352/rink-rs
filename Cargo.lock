@@ -1735,13 +1735,13 @@ checksum = "6c230d73fb8d8c1b9c0b3135c5142a8acee3a0558fb8db5cf1cb65f8d7862132"
 name = "rink"
 version = "0.8.0"
 dependencies = [
- "chrono",
  "clap",
  "color-eyre 0.6.3",
  "curl",
  "dirs 4.0.0",
  "eyre",
  "humantime-serde",
+ "jiff",
  "nu-ansi-term",
  "once_cell",
  "rink-core",

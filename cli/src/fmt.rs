@@ -43,26 +43,24 @@ fn to_ansi_inner<'a>(
                 text,
                 token: token @ FmtToken::DateTime,
             } => {
-                /*let datetime =
-                    chrono::naive::NaiveDateTime::parse_from_str(&text, "%Y-%m-%d %H:%M:%S");
-                let date = chrono::naive::NaiveDate::parse_from_str(&text, "%Y-%m-%d");
+                let datetime = jiff::civil::DateTime::strptime("%Y-%m-%d %H:%M:%S", &*text);
+                let date = jiff::civil::Date::strptime("%Y-%m-%d", &*text);
                 nothing_printed = false;
                 if let Ok(date) = datetime {
                     strings.push(
                         theme
                             .get_style(token)
-                            .paint(date.format("%B %-d, %Y %H:%M:%S").to_string()),
+                            .paint(date.strftime("%B %-d, %Y %H:%M:%S").to_string()),
                     );
                 } else if let Ok(date) = date {
                     strings.push(
                         theme
                             .get_style(token)
-                            .paint(date.format("%B %-d, %Y").to_string()),
+                            .paint(date.strftime("%B %-d, %Y").to_string()),
                     );
                 } else {
                     strings.push(theme.get_style(token).paint(text));
-                }*/
-                strings.push(theme.get_style(token).paint(text));
+                }
             }
 
             Span::Content {
