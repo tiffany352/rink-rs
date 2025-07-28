@@ -8,6 +8,7 @@ use jiff::{RoundMode, Span, SpanRound, Unit};
 
 use crate::types::DateTime;
 
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Hash)]
 pub(crate) struct ApproxDuration {
     unit: Unit,
     value: i32,
@@ -148,9 +149,9 @@ impl fmt::Display for ApproxDuration {
 
 #[cfg(test)]
 mod tests {
-    use jiff::Unit;
+    use jiff::{Span, Unit};
 
-    use crate::types::humanize::ApproxDuration;
+    use crate::types::{humanize::ApproxDuration, DateTime};
 
     #[test]
     fn test_format() {
@@ -338,6 +339,51 @@ mod tests {
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Year, -2)),
             "2 years ago"
+        );
+    }
+
+    #[test]
+    fn test_spans() {
+        let now = DateTime::default();
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().years(1), &now),
+            ApproxDuration::new(Unit::Year, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().months(1), &now),
+            ApproxDuration::new(Unit::Month, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().weeks(1), &now),
+            ApproxDuration::new(Unit::Week, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().days(1), &now),
+            ApproxDuration::new(Unit::Day, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().hours(1), &now),
+            ApproxDuration::new(Unit::Hour, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().minutes(1), &now),
+            ApproxDuration::new(Unit::Minute, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().seconds(1), &now),
+            ApproxDuration::new(Unit::Second, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().milliseconds(1), &now),
+            ApproxDuration::new(Unit::Millisecond, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().microseconds(1), &now),
+            ApproxDuration::new(Unit::Microsecond, 1)
+        );
+        assert_eq!(
+            ApproxDuration::from_span(&Span::new().nanoseconds(1), &now),
+            ApproxDuration::new(Unit::Nanosecond, 1)
         );
     }
 }
