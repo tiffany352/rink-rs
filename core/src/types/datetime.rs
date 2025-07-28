@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::{fmt, ops};
 
 use jiff::{SignedDuration, Timestamp, Zoned};
@@ -36,8 +40,10 @@ impl DateTime {
         self.dt.nanosecond() as i32
     }
 
-    pub fn humanize(&self, _now: &DateTime) -> Option<String> {
-        None
+    pub fn humanize(&self, now: &DateTime) -> String {
+        let span = &self.dt - &now.dt;
+        let duration = ApproxDuration::from_span(&span, now);
+        format!("{}", duration)
     }
 
     pub fn to_rfc3339(&self) -> String {
@@ -81,7 +87,7 @@ impl Default for DateTime {
 
 impl fmt::Display for DateTime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.dt.fmt(f)
+        write!(f, "{}", self.dt.strftime("%F %T [%:Q]"))
     }
 }
 
@@ -89,7 +95,7 @@ impl<'a> ops::Sub for &'a DateTime {
     type Output = SignedDuration;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        self.dt.duration_until(&rhs.dt)
+        self.dt.duration_since(&rhs.dt)
     }
 }
 
@@ -100,3 +106,5 @@ impl From<Zoned> for DateTime {
 }
 
 pub use jiff::tz::TimeZone;
+
+use crate::types::humanize::ApproxDuration;

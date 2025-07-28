@@ -9,6 +9,7 @@ mod bigint;
 mod bigrat;
 mod datetime;
 mod dimensionality;
+mod humanize;
 mod number;
 mod numeric;
 

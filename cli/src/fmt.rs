@@ -43,7 +43,7 @@ fn to_ansi_inner<'a>(
                 text,
                 token: token @ FmtToken::DateTime,
             } => {
-                let datetime =
+                /*let datetime =
                     chrono::naive::NaiveDateTime::parse_from_str(&text, "%Y-%m-%d %H:%M:%S");
                 let date = chrono::naive::NaiveDate::parse_from_str(&text, "%Y-%m-%d");
                 nothing_printed = false;
@@ -61,7 +61,8 @@ fn to_ansi_inner<'a>(
                     );
                 } else {
                     strings.push(theme.get_style(token).paint(text));
-                }
+                }*/
+                strings.push(theme.get_style(token).paint(text));
             }
 
             Span::Content {
