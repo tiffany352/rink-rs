@@ -7,7 +7,7 @@ use jiff::fmt::strtime::Meridiem;
 use jiff::tz::Offset;
 use jiff::SignedDuration;
 
-use crate::ast::{DatePattern, DateToken};
+use crate::ast::{DateMatch, DatePattern, DateToken};
 use crate::loader::Context;
 use crate::types::{BaseUnit, BigInt, BigRat, DateTime, Dimensionality, Number, Numeric, TimeZone};
 use std::iter::Peekable;
@@ -195,44 +195,50 @@ where
             Some(DateToken::Literal(ref s)) if s == l => Ok(()),
             x => Err(format!("Expected `{}`, got {}", l, ts(x))),
         },
-        Some(&DatePattern::Match(ref what)) => match &**what {
-            "fullyear" => numeric_match(tok.as_ref(), "fullyear", 4, 0..=9999).and_then(|v| {
-                out.year = Some(v);
-                Ok(())
-            }),
-            "monthnum" => numeric_match(tok.as_ref(), "monthnum", 2, 1..=12).and_then(|v| {
-                out.month = Some(v);
-                Ok(())
-            }),
-            "day" => numeric_match(tok.as_ref(), "day", 0, 1..=31).and_then(|v| {
+        Some(&DatePattern::Match(what)) => match what {
+            DateMatch::FullYear => {
+                numeric_match(tok.as_ref(), "fullyear", 4, 0..=9999).and_then(|v| {
+                    out.year = Some(v);
+                    Ok(())
+                })
+            }
+            DateMatch::MonthNum => {
+                numeric_match(tok.as_ref(), "monthnum", 2, 1..=12).and_then(|v| {
+                    out.month = Some(v);
+                    Ok(())
+                })
+            }
+            DateMatch::Day => numeric_match(tok.as_ref(), "day", 0, 1..=31).and_then(|v| {
                 out.day = Some(v);
                 Ok(())
             }),
-            "fullday" => numeric_match(tok.as_ref(), "fullday", 2, 1..=31).and_then(|v| {
+            DateMatch::FullDay => numeric_match(tok.as_ref(), "fullday", 2, 1..=31).and_then(|v| {
                 out.day = Some(v);
                 Ok(())
             }),
-            "min" => numeric_match(tok.as_ref(), "min", 2, 0..=60).and_then(|v| {
+            DateMatch::Min => numeric_match(tok.as_ref(), "min", 2, 0..=60).and_then(|v| {
                 out.minute = Some(v);
                 Ok(())
             }),
-            "ordinal" => numeric_match(tok.as_ref(), "ordinal", 3, 1..=366).and_then(|v| {
-                out.ordinal = Some(v);
-                Ok(())
-            }),
-            "year" => numeric_match(tok.as_ref(), "year", 0, 0..=9999).and_then(|v| {
+            DateMatch::Ordinal => {
+                numeric_match(tok.as_ref(), "ordinal", 3, 1..=366).and_then(|v| {
+                    out.ordinal = Some(v);
+                    Ok(())
+                })
+            }
+            DateMatch::Year => numeric_match(tok.as_ref(), "year", 0, 0..=9999).and_then(|v| {
                 out.year = Some(v);
                 Ok(())
             }),
-            "isoweek" => numeric_match(tok.as_ref(), "isoweek", 2, 1..=53).and_then(|v| {
+            DateMatch::IsoWeek => numeric_match(tok.as_ref(), "isoweek", 2, 1..=53).and_then(|v| {
                 out.week = Some(v);
                 Ok(())
             }),
-            "unix" => numeric_match(tok.as_ref(), "unix", 0, 0..=i32::MAX).and_then(|v| {
+            DateMatch::Unix => numeric_match(tok.as_ref(), "unix", 0, 0..=i32::MAX).and_then(|v| {
                 out.unix_timestamp = Some(v as i64);
                 Ok(())
             }),
-            "isoyear" => {
+            DateMatch::IsoYear => {
                 advance = false;
                 let x = take!(DateToken::Dash | DateToken::Plus | DateToken::Number(_, None));
                 let (sign, num) = match x {
@@ -253,7 +259,7 @@ where
                     Err(format!("Expected isoyear, got out of range value"))
                 }
             }
-            "adbc" => match tok {
+            DateMatch::Era => match tok {
                 Some(DateToken::Literal(ref s))
                     if { s.to_lowercase() == "ad" || s.to_lowercase() == "ce" } =>
                 {
@@ -268,7 +274,7 @@ where
                 }
                 x => Err(format!("Expected AD/BC or CE/BCE, got {}", ts(x))),
             },
-            "hour12" => match tok {
+            DateMatch::Hour12 => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 0, 1..=12) {
                         out.hour12 = Some(value);
@@ -279,7 +285,7 @@ where
                 }
                 x => Err(format!("Expected hour12, got {}", ts(x))),
             },
-            "hour24" => match tok {
+            DateMatch::Hour24 => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 0, 0..=23) {
                         out.hour = Some(value);
@@ -290,7 +296,7 @@ where
                 }
                 x => Err(format!("Expected hour24, got {}", ts(x))),
             },
-            "fullhour12" => match tok {
+            DateMatch::FullHour12 => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 2, 1..=12) {
                         out.hour12 = Some(value);
@@ -304,7 +310,7 @@ where
                 }
                 x => Err(format!("Expected 2-digit hour12, got {}", ts(x))),
             },
-            "fullhour24" => match tok {
+            DateMatch::FullHour24 => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 2, 0..=23) {
                         out.hour = Some(value);
@@ -318,7 +324,7 @@ where
                 }
                 x => Err(format!("Expected 2-digit hour24, got {}", ts(x))),
             },
-            "meridiem" => match tok {
+            DateMatch::Meridiem => match tok {
                 Some(DateToken::Literal(ref s)) if s.to_lowercase() == "am" => {
                     out.meridiem = Some(Meridiem::AM);
                     Ok(())
@@ -329,7 +335,7 @@ where
                 }
                 x => Err(format!("Expected AM/PM, got {}", ts(x))),
             },
-            "sec" => match tok {
+            DateMatch::Sec => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 2, 0..=60) {
                         out.second = Some(value);
@@ -352,7 +358,7 @@ where
                 }
                 x => Err(format!("Expected 2-digit sec, got {}", ts(x))),
             },
-            "offset" => {
+            DateMatch::Offset => {
                 advance = false;
                 if let Some(DateToken::Literal(ref s)) = date.peek().cloned() {
                     date.next();
@@ -394,7 +400,7 @@ where
                     }
                 }
             }
-            "monthname" => match tok {
+            DateMatch::MonthName => match tok {
                 Some(DateToken::Literal(ref s)) => {
                     let res = match &*s.to_lowercase() {
                         "jan" | "january" => 1,
@@ -416,7 +422,7 @@ where
                 }
                 x => Err(format!("Expected month name, got {}", ts(x))),
             },
-            "weekday" => match tok {
+            DateMatch::WeekDay => match tok {
                 Some(DateToken::Literal(ref s)) => {
                     let res = match &*s.to_lowercase() {
                         "mon" | "monday" => Weekday::Monday,
@@ -433,7 +439,6 @@ where
                 }
                 x => Err(format!("Expected weekday, got {}", ts(x))),
             },
-            x => Err(format!("Unknown match pattern `{}`", x)),
         },
         Some(&DatePattern::Optional(ref pats)) => {
             advance = false;
@@ -611,7 +616,10 @@ where
                         break;
                     }
                 }
-                out.push(DatePattern::Match(buf));
+                match DateMatch::from_str(&buf) {
+                    Some(dm) => out.push(DatePattern::Match(dm)),
+                    None => return Err(format!("Unknown date pattern `{}`", buf)),
+                }
                 continue;
             }
             x => return Err(format!("Unrecognized character {}", x)),

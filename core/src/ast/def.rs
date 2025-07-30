@@ -9,11 +9,94 @@ use std::convert::TryFrom;
 use std::ops::Deref;
 use std::rc::Rc;
 
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Hash)]
+pub enum DateMatch {
+    Day,
+    Era,
+    FullDay,
+    FullHour12,
+    FullHour24,
+    FullYear,
+    Hour12,
+    Hour24,
+    IsoWeek,
+    IsoYear,
+    Meridiem,
+    Min,
+    MonthName,
+    MonthNum,
+    Offset,
+    Ordinal,
+    Sec,
+    Unix,
+    WeekDay,
+    Year,
+}
+
+impl DateMatch {
+    pub(crate) fn from_str(input: &str) -> Option<DateMatch> {
+        match input {
+            "day" => Some(DateMatch::Day),
+            "adbc" => Some(DateMatch::Era),
+            "fullday" => Some(DateMatch::FullDay),
+            "fullhour12" => Some(DateMatch::FullHour12),
+            "fullhour24" => Some(DateMatch::FullHour24),
+            "fullyear" => Some(DateMatch::FullYear),
+            "hour12" => Some(DateMatch::Hour12),
+            "hour24" => Some(DateMatch::Hour24),
+            "isoweek" => Some(DateMatch::IsoWeek),
+            "isoyear" => Some(DateMatch::IsoYear),
+            "meridiem" => Some(DateMatch::Meridiem),
+            "min" => Some(DateMatch::Min),
+            "monthname" => Some(DateMatch::MonthName),
+            "monthnum" => Some(DateMatch::MonthNum),
+            "offset" => Some(DateMatch::Offset),
+            "ordinal" => Some(DateMatch::Ordinal),
+            "sec" => Some(DateMatch::Sec),
+            "unix" => Some(DateMatch::Unix),
+            "weekday" => Some(DateMatch::WeekDay),
+            "year" => Some(DateMatch::Year),
+            _ => None,
+        }
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            DateMatch::Day => "day",
+            DateMatch::Era => "adbc",
+            DateMatch::FullDay => "fullday",
+            DateMatch::FullHour12 => "fullhour12",
+            DateMatch::FullHour24 => "fullhour24",
+            DateMatch::FullYear => "fullyear",
+            DateMatch::Hour12 => "hour12",
+            DateMatch::Hour24 => "hour24",
+            DateMatch::IsoWeek => "isoweek",
+            DateMatch::IsoYear => "isoyear",
+            DateMatch::Meridiem => "meridiem",
+            DateMatch::Min => "min",
+            DateMatch::MonthName => "monthname",
+            DateMatch::MonthNum => "monthnum",
+            DateMatch::Offset => "offset",
+            DateMatch::Ordinal => "ordinal",
+            DateMatch::Sec => "sec",
+            DateMatch::Unix => "unix",
+            DateMatch::WeekDay => "weekday",
+            DateMatch::Year => "year",
+        }
+    }
+}
+
+impl fmt::Display for DateMatch {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}", self.name())
+    }
+}
+
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum DatePattern {
     Literal(String),
-    Match(String),
+    Match(DateMatch),
     Optional(Vec<DatePattern>),
     Dash,
     Colon,
@@ -166,7 +249,7 @@ impl DatePattern {
 #[cfg(test)]
 mod tests {
     use super::{DatePattern, ExprString};
-    use crate::ast::Expr;
+    use crate::ast::{def::DateMatch, Expr};
     use std::convert::TryFrom;
 
     #[test]
@@ -193,7 +276,10 @@ mod tests {
         assert_eq!(format!("{}", DatePattern::Colon), ":");
         assert_eq!(format!("{}", DatePattern::Space), " ");
         assert_eq!(format!("{}", DatePattern::Literal("a".to_owned())), "'a'");
-        assert_eq!(format!("{}", DatePattern::Match("a".to_owned())), "a");
+        assert_eq!(
+            format!("{}", DatePattern::Match(DateMatch::IsoYear)),
+            "isoyear"
+        );
 
         assert_eq!(
             format!(
