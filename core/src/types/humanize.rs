@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-use jiff::{RoundMode, Span, SpanRound, Unit};
+use jiff::{RoundMode, Span, Unit, ZonedDifference};
 
 use crate::types::DateTime;
 
@@ -19,7 +19,18 @@ impl ApproxDuration {
         ApproxDuration { unit, value }
     }
 
-    pub(crate) fn from_span(span: &Span, now: &DateTime) -> ApproxDuration {
+    pub(crate) fn between(date: &DateTime, now: &DateTime) -> ApproxDuration {
+        let difference = ZonedDifference::new(&now.dt)
+            .smallest(Unit::Nanosecond)
+            .largest(Unit::Year)
+            .mode(RoundMode::Trunc);
+
+        let date = date.dt.with_time_zone(now.dt.time_zone().clone());
+        let span = date.since(difference).unwrap();
+        ApproxDuration::from_span(&span, now)
+    }
+
+    fn from_span(span: &Span, now: &DateTime) -> ApproxDuration {
         let years = get_unit(span, now, Unit::Year);
         if years != 0 {
             return ApproxDuration::new(Unit::Year, years as i32);
@@ -37,6 +48,9 @@ impl ApproxDuration {
 
         let days = get_unit(span, now, Unit::Day);
         if days != 0 {
+            if days % 7 == 0 {
+                return ApproxDuration::new(Unit::Week, days as i32 / 7);
+            }
             return ApproxDuration::new(Unit::Day, days as i32);
         }
 
@@ -70,12 +84,7 @@ impl ApproxDuration {
     }
 }
 
-fn get_unit(span: &Span, now: &DateTime, unit: Unit) -> i32 {
-    let rounding = SpanRound::from(unit)
-        .relative(&now.dt)
-        .mode(RoundMode::Trunc);
-    let span = span.round(rounding);
-    let span = if let Ok(span) = span { span } else { return 0 };
+fn get_unit(span: &Span, _now: &DateTime, unit: Unit) -> i32 {
     match unit {
         Unit::Year => span.get_years() as i32,
         Unit::Month => span.get_months(),
@@ -90,33 +99,18 @@ fn get_unit(span: &Span, now: &DateTime, unit: Unit) -> i32 {
     }
 }
 
-fn one_ago(unit: Unit) -> &'static str {
+fn singular(unit: Unit) -> &'static str {
     match unit {
-        Unit::Year => "last year",
-        Unit::Month => "last month",
-        Unit::Week => "last week",
-        Unit::Day => "yesterday",
-        Unit::Hour => "1 hour ago",
-        Unit::Minute => "1 minute ago",
-        Unit::Second => "1 second ago",
-        Unit::Millisecond => "1 millisecond ago",
-        Unit::Microsecond => "1 microsecond ago",
-        Unit::Nanosecond => "1 nanosecond ago",
-    }
-}
-
-fn one_from_now(unit: Unit) -> &'static str {
-    match unit {
-        Unit::Year => "next year",
-        Unit::Month => "next month",
-        Unit::Week => "next week",
-        Unit::Day => "tomorrow",
-        Unit::Hour => "in 1 hour",
-        Unit::Minute => "in 1 minute",
-        Unit::Second => "in 1 second",
-        Unit::Millisecond => "in 1 millisecond",
-        Unit::Microsecond => "in 1 microsecond",
-        Unit::Nanosecond => "in 1 nanosecond",
+        Unit::Year => "year",
+        Unit::Month => "month",
+        Unit::Week => "week",
+        Unit::Day => "day",
+        Unit::Hour => "hour",
+        Unit::Minute => "minute",
+        Unit::Second => "second",
+        Unit::Millisecond => "millisecond",
+        Unit::Microsecond => "microsecond",
+        Unit::Nanosecond => "nanosecond",
     }
 }
 
@@ -139,8 +133,8 @@ impl fmt::Display for ApproxDuration {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.value {
             0 => write!(f, "now"),
-            1 => write!(f, "{}", one_from_now(self.unit)),
-            -1 => write!(f, "{}", one_ago(self.unit)),
+            1 => write!(f, "in 1 {}", singular(self.unit)),
+            -1 => write!(f, "1 {} ago", singular(self.unit)),
             x if x > 0 => write!(f, "in {} {}", self.value, plural(self.unit)),
             _ => write!(f, "{} {} ago", -self.value, plural(self.unit)),
         }
@@ -149,9 +143,93 @@ impl fmt::Display for ApproxDuration {
 
 #[cfg(test)]
 mod tests {
-    use jiff::{Span, Unit};
+    use jiff::{Span, Unit, Zoned};
 
     use crate::types::{humanize::ApproxDuration, DateTime};
+
+    fn dt(input: &str) -> DateTime {
+        input.parse::<Zoned>().unwrap().into()
+    }
+
+    #[test]
+    fn test_with_dates() {
+        let now = dt("2025-07-29 19:41:54[US/Pacific]");
+
+        fn s() -> Span {
+            Span::new()
+        }
+
+        fn expected(unit: Unit, value: i32) -> ApproxDuration {
+            ApproxDuration::new(unit, value)
+        }
+
+        let actual = |span: Span| -> ApproxDuration {
+            let date = (&now.dt + span).into();
+            ApproxDuration::between(&date, &now)
+        };
+
+        assert_eq!(actual(s().nanoseconds(1)), expected(Unit::Nanosecond, 1));
+        assert_eq!(
+            actual(s().nanoseconds(999)),
+            expected(Unit::Nanosecond, 999)
+        );
+        assert_eq!(actual(s().microseconds(1)), expected(Unit::Microsecond, 1));
+        assert_eq!(
+            actual(s().microseconds(999)),
+            expected(Unit::Microsecond, 999)
+        );
+        assert_eq!(actual(s().milliseconds(1)), expected(Unit::Millisecond, 1));
+        assert_eq!(
+            actual(s().milliseconds(999)),
+            expected(Unit::Millisecond, 999)
+        );
+        assert_eq!(actual(s().seconds(1)), expected(Unit::Second, 1));
+        assert_eq!(actual(s().seconds(59)), expected(Unit::Second, 59));
+        assert_eq!(actual(s().minutes(1)), expected(Unit::Minute, 1));
+        assert_eq!(actual(s().minutes(59)), expected(Unit::Minute, 59));
+        assert_eq!(actual(s().hours(1)), expected(Unit::Hour, 1));
+        assert_eq!(actual(s().hours(23)), expected(Unit::Hour, 23));
+        assert_eq!(actual(s().days(1)), expected(Unit::Day, 1));
+        assert_eq!(actual(s().days(6)), expected(Unit::Day, 6));
+        assert_eq!(actual(s().days(8)), expected(Unit::Day, 8));
+        assert_eq!(actual(s().weeks(1)), expected(Unit::Week, 1));
+        assert_eq!(actual(s().months(1)), expected(Unit::Month, 1));
+        assert_eq!(actual(s().years(1)), expected(Unit::Year, 1));
+
+        // subtract instead of add
+        let actual = |span: Span| -> ApproxDuration {
+            let date = (&now.dt - span).into();
+            ApproxDuration::between(&date, &now)
+        };
+
+        assert_eq!(actual(s().nanoseconds(1)), expected(Unit::Nanosecond, -1));
+        assert_eq!(
+            actual(s().nanoseconds(999)),
+            expected(Unit::Nanosecond, -999)
+        );
+        assert_eq!(actual(s().microseconds(1)), expected(Unit::Microsecond, -1));
+        assert_eq!(
+            actual(s().microseconds(999)),
+            expected(Unit::Microsecond, -999)
+        );
+        assert_eq!(actual(s().milliseconds(1)), expected(Unit::Millisecond, -1));
+        assert_eq!(
+            actual(s().milliseconds(999)),
+            expected(Unit::Millisecond, -999)
+        );
+        assert_eq!(actual(s().seconds(1)), expected(Unit::Second, -1));
+        assert_eq!(actual(s().seconds(59)), expected(Unit::Second, -59));
+        assert_eq!(actual(s().minutes(1)), expected(Unit::Minute, -1));
+        assert_eq!(actual(s().minutes(59)), expected(Unit::Minute, -59));
+        assert_eq!(actual(s().hours(1)), expected(Unit::Hour, -1));
+        assert_eq!(actual(s().hours(23)), expected(Unit::Hour, -23));
+        assert_eq!(actual(s().days(1)), expected(Unit::Day, -1));
+        assert_eq!(actual(s().days(6)), expected(Unit::Day, -6));
+        assert_eq!(actual(s().days(8)), expected(Unit::Day, -8));
+        assert_eq!(actual(s().weeks(1)), expected(Unit::Week, -1));
+        assert_eq!(actual(s().months(1)), expected(Unit::Month, -1));
+        assert_eq!(actual(s().years(1)), expected(Unit::Year, -1));
+    }
 
     #[test]
     fn test_format() {
@@ -273,14 +351,14 @@ mod tests {
         );
 
         assert_eq!(format!("{}", ApproxDuration::new(Unit::Day, 0)), "now");
-        assert_eq!(format!("{}", ApproxDuration::new(Unit::Day, 1)), "tomorrow");
+        assert_eq!(format!("{}", ApproxDuration::new(Unit::Day, 1)), "in 1 day");
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Day, 2)),
             "in 2 days"
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Day, -1)),
-            "yesterday"
+            "1 day ago"
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Day, -2)),
@@ -290,7 +368,7 @@ mod tests {
         assert_eq!(format!("{}", ApproxDuration::new(Unit::Week, 0)), "now");
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Week, 1)),
-            "next week"
+            "in 1 week"
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Week, 2)),
@@ -298,7 +376,7 @@ mod tests {
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Week, -1)),
-            "last week"
+            "1 week ago"
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Week, -2)),
@@ -308,7 +386,7 @@ mod tests {
         assert_eq!(format!("{}", ApproxDuration::new(Unit::Month, 0)), "now");
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Month, 1)),
-            "next month"
+            "in 1 month"
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Month, 2)),
@@ -316,7 +394,7 @@ mod tests {
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Month, -1)),
-            "last month"
+            "1 month ago"
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Month, -2)),
@@ -326,7 +404,7 @@ mod tests {
         assert_eq!(format!("{}", ApproxDuration::new(Unit::Year, 0)), "now");
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Year, 1)),
-            "next year"
+            "in 1 year"
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Year, 2)),
@@ -334,7 +412,7 @@ mod tests {
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Year, -1)),
-            "last year"
+            "1 year ago"
         );
         assert_eq!(
             format!("{}", ApproxDuration::new(Unit::Year, -2)),

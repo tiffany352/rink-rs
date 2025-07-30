@@ -41,8 +41,7 @@ impl DateTime {
     }
 
     pub fn humanize(&self, now: &DateTime) -> String {
-        let span = &self.dt - &now.dt;
-        let duration = ApproxDuration::from_span(&span, now);
+        let duration = ApproxDuration::between(self, now);
         format!("{}", duration)
     }
 
