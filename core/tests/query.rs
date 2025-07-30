@@ -19,6 +19,18 @@ thread_local! {
     };
 }
 
+fn exec(input: &str) -> String {
+    let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
+    let expr = text_query::parse_query(&mut iter);
+    CONTEXT.with(|ctx| {
+        let res = ctx.eval_query(&expr);
+        match res {
+            Ok(v) => v.to_string(),
+            Err(v) => v.to_string(),
+        }
+    })
+}
+
 fn test(input: &str, output: &str) {
     let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
     let expr = text_query::parse_query(&mut iter);
@@ -673,8 +685,8 @@ fn test_definition_with_doc() {
 fn test_try_decode_fail() {
     test(
         "#abc#",
-        "Most likely pattern `--monthnum-day[ hour24:min[:sec][ offset]]` failed: \
-         Expected `-`, got `abc`",
+        "Most likely pattern `year adbc monthname day[ hour12:min[:sec] meridiem[ offset]]` failed: \
+         Expected 0-digit year, got abc",
     )
 }
 
@@ -919,5 +931,92 @@ fn test_factorial() {
     test(
         "fac(0.5)",
         "fac() passed a value that is out of range: fac(0.5 (dimensionless))",
+    );
+}
+
+#[test]
+fn date_roundtrip() {
+    assert_eq!(exec("now"), "2016-08-02 15:33:19 [America/New_York] (now)");
+    assert_eq!(
+        exec("#2016-08-02 15:33:19 [America/New_York]#"),
+        "2016-08-02 15:33:19 [America/New_York] (now)"
+    );
+}
+
+#[test]
+fn date_formats() {
+    // isoyear-monthnum-fullday['T'hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025-07-29T20:16:14 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // isoyear-monthnum-fullday[ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025-07-29 20:16:14 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // isoyear-ordinal[ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025-210 20:16:14 UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+
+    // monthname day[[','] year adbc][ hour12:min[:sec] meridiem[ offset]]
+    assert_eq!(
+        exec("#jul 29, 2025 CE 8:16:14 PM UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // monthname day[[','] year adbc][ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#jul 29, 2025 CE 20:16:14 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // monthname day[[','] isoyear][ hour12:min[:sec] meridiem[ offset]]
+    assert_eq!(
+        exec("#jul 29, 2025 8:16:14 PM UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // monthname day[[','] isoyear][ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#jul 29, 2025 20:16:14 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+
+    // weekday monthname day[ hour24:min[:sec]] fullyear[ offset]
+    assert_eq!(
+        exec("#tuesday jul 29 20:16:14 2025 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+
+    // year adbc monthname day[ hour12:min[:sec] meridiem[ offset]]
+    assert_eq!(
+        exec("#2025 CE jul 29 8:16:14 PM UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // year adbc monthname day[ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025 CE jul 29 20:16:14 UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // isoyear monthname day[ hour12:min[:sec] meridiem[ offset]]
+    assert_eq!(
+        exec("#2025 jul 29 8:16:14 PM UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // isoyear monthname day[ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025 jul 29 20:16:14 UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+
+    // hour12:min[:sec] meridiem[ offset]
+    assert_eq!(
+        exec("#08:16:14 PM UTC#"),
+        "2016-08-02 20:16:14 [UTC] (in 42 minutes)"
+    );
+    // hour24:min[:sec][ offset]
+    assert_eq!(
+        exec("#20:16:14 UTC#"),
+        "2016-08-02 20:16:14 [UTC] (in 42 minutes)"
     );
 }

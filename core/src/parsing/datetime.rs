@@ -270,6 +270,28 @@ where
             },
             "hour12" => match tok {
                 Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 0, 1..=12) {
+                        out.hour12 = Some(value);
+                        Ok(())
+                    } else {
+                        Err(format!("Expected hour12, got out of range value {}", s))
+                    }
+                }
+                x => Err(format!("Expected hour12, got {}", ts(x))),
+            },
+            "hour24" => match tok {
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 0, 0..=23) {
+                        out.hour = Some(value);
+                        Ok(())
+                    } else {
+                        Err(format!("Expected hour24, got out of range value {}", s))
+                    }
+                }
+                x => Err(format!("Expected hour24, got {}", ts(x))),
+            },
+            "fullhour12" => match tok {
+                Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 2, 1..=12) {
                         out.hour12 = Some(value);
                         Ok(())
@@ -282,7 +304,7 @@ where
                 }
                 x => Err(format!("Expected 2-digit hour12, got {}", ts(x))),
             },
-            "hour24" => match tok {
+            "fullhour24" => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 2, 0..=23) {
                         out.hour = Some(value);
@@ -334,6 +356,10 @@ where
                 advance = false;
                 if let Some(DateToken::Literal(ref s)) = date.peek().cloned() {
                     date.next();
+                    let s = s
+                        .strip_prefix('[')
+                        .and_then(|s| s.strip_suffix(']'))
+                        .unwrap_or(s);
                     if let Ok(tz) = TimeZone::get(s) {
                         out.time_zone = Some(tz);
                         Ok(())
@@ -719,9 +745,16 @@ mod tests {
     }
 
     #[test]
-    fn wrong_length_24h() {
+    fn short_hour() {
         let date = vec![DateToken::Number("7".into(), None)];
         let (res, _) = parse(date, "hour24");
+        assert_eq!(res, Ok(()));
+    }
+
+    #[test]
+    fn wrong_length_24h() {
+        let date = vec![DateToken::Number("7".into(), None)];
+        let (res, _) = parse(date, "fullhour24");
         assert_eq!(
             res,
             Err(format!("Expected 2-digit hour24, got out of range value 7"))
