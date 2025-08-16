@@ -350,6 +350,13 @@ fn test_unary_operators() {
 }
 
 #[test]
+fn test_unary_prec() {
+    test("-5^2", "-25 (dimensionless)");
+    test("-5**2", "-25 (dimensionless)");
+    test("-4^0.5", "approx. -2 (dimensionless)");
+}
+
+#[test]
 fn test_equals() {
     test("a = kg N / W^2", "1 second^4 / meter^3");
     test(
