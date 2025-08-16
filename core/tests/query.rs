@@ -304,6 +304,12 @@ fn test_duration_add() {
 }
 
 #[test]
+fn test_duration_errors() {
+    test("#jan 01, 1970# + 1m", "Expected seconds: <1970-01-01 00:00:00 [America/New_York] (46 years ago)> + <1 meter (length)>");
+    test("#jan 01, 1970# + 2^65s", "Implementation error: Duration is too large, max is 2^63 seconds: <1970-01-01 00:00:00 [America/New_York] (46 years ago)> + <approx. 36.89348 exasecond (time)>");
+}
+
+#[test]
 fn test_0_seconds() {
     test("0 s", "0 second (time)");
 }

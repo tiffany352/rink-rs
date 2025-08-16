@@ -2,9 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::types::humanize::ApproxDuration;
+use jiff::{SignedDuration, Timestamp, Zoned};
 use std::{fmt, ops};
 
-use jiff::{SignedDuration, Timestamp, Zoned};
+pub use jiff::tz::TimeZone;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DateTime {
@@ -103,7 +105,3 @@ impl From<Zoned> for DateTime {
         DateTime { dt: value }
     }
 }
-
-pub use jiff::tz::TimeZone;
-
-use crate::types::humanize::ApproxDuration;

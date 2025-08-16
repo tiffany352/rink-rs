@@ -540,11 +540,10 @@ pub fn to_duration(num: &Number) -> Result<SignedDuration, String> {
     if num.unit != Dimensionality::base_unit(BaseUnit::new("s")) {
         return Err("Expected seconds".to_string());
     }
-    let max = Numeric::from(i64::max_value() / 1000);
+    let max = Numeric::from(i64::max_value());
     if num.value.abs() > max {
         return Err(format!(
-            "Implementation error: Number is out of range ({:?})",
-            max
+            "Implementation error: Duration is too large, max is 2^63 seconds",
         ));
     }
     let (seconds, rem) = num.value.div_rem(&Numeric::from(1));
@@ -907,5 +906,219 @@ mod tests {
         let date = &[n("2018"), Space, n("01"), Space, n("01"), Space, tz.clone()];
         let res = check_attempt!(date, "year monthnum day offset");
         assert!(res.is_ok(), "{:?}", res);
+    }
+
+    #[test]
+    fn test_ordinal() {
+        let date = vec![DateToken::Number("227".into(), None)];
+        let (res, parsed) = parse(date, "ordinal");
+        assert!(res.is_ok());
+        assert_eq!(
+            parsed.to_ordinal_date(2025),
+            Some(Date::new(2025, 8, 15).unwrap())
+        );
+    }
+
+    #[test]
+    fn test_week_date() {
+        let date = vec![
+            DateToken::Literal("fri".into()),
+            DateToken::Space,
+            DateToken::Number("33".into(), None),
+        ];
+        let (res, parsed) = parse(date, "weekday isoweek");
+        assert!(res.is_ok());
+        assert_eq!(
+            parsed.to_week_date(2025),
+            Some(Date::new(2025, 8, 15).unwrap())
+        );
+    }
+
+    #[test]
+    fn test_meridiem() {
+        let date = vec![
+            DateToken::Number("8".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, parsed) = parse(date, "hour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(8, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("8".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("pm".into()),
+        ];
+        let (res, parsed) = parse(date, "hour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(20, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, parsed) = parse(date, "hour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(0, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("pm".into()),
+        ];
+        let (res, parsed) = parse(date, "hour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(12, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("asdf".into()),
+        ];
+        let (res, _parsed) = parse(date, "hour12:min meridiem");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Number("13".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, _parsed) = parse(date, "hour12:min meridiem");
+        assert!(!res.is_ok());
+    }
+
+    #[test]
+    fn test_full_hour12() {
+        let date = vec![
+            DateToken::Number("08".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(8, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("8".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, _parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Literal("b".into()),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, _parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Number("08".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("pm".into()),
+        ];
+        let (res, parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(20, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(0, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("pm".into()),
+        ];
+        let (res, parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(12, 0, 0, 0).unwrap()));
+    }
+
+    #[test]
+    fn test_full_hour24() {
+        let date = vec![
+            DateToken::Number("23".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+        ];
+        let (res, parsed) = parse(date, "fullhour24");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(23, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("9".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+        ];
+        let (res, _parsed) = parse(date, "fullhour24");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Number("25".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+        ];
+        let (res, _parsed) = parse(date, "fullhour24");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Literal("b".into()),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+        ];
+        let (res, _parsed) = parse(date, "fullhour24");
+        assert!(!res.is_ok());
+    }
+
+    #[test]
+    fn test_isoyear() {
+        let date = vec![DateToken::Dash, DateToken::Number("7".into(), None)];
+        let (res, parsed) = parse(date, "isoyear");
+        assert!(res.is_ok());
+        assert_eq!(parsed.iso_year, Some(-7));
+
+        let date = vec![DateToken::Number("0".into(), None)];
+        let (res, parsed) = parse(date, "isoyear");
+        assert!(res.is_ok());
+        assert_eq!(parsed.iso_year, Some(0));
+
+        let date = vec![DateToken::Plus, DateToken::Number("2025".into(), None)];
+        let (res, parsed) = parse(date, "isoyear");
+        assert!(res.is_ok());
+        assert_eq!(parsed.iso_year, Some(2025));
     }
 }
