@@ -56,7 +56,6 @@ pub(crate) struct Fields {
     second: Option<i32>,
     nanosecond: Option<i32>,
 
-    unix_timestamp: Option<i64>,
     time_zone: Option<TimeZone>,
 }
 
@@ -143,7 +142,6 @@ impl Default for Fields {
             minute: None,
             second: None,
             nanosecond: None,
-            unix_timestamp: None,
             time_zone: None,
         }
     }
@@ -232,10 +230,6 @@ where
             }),
             DateMatch::IsoWeek => numeric_match(tok.as_ref(), "isoweek", 2, 1..=53).and_then(|v| {
                 out.week = Some(v);
-                Ok(())
-            }),
-            DateMatch::Unix => numeric_match(tok.as_ref(), "unix", 0, 0..=i32::MAX).and_then(|v| {
-                out.unix_timestamp = Some(v as i64);
                 Ok(())
             }),
             DateMatch::IsoYear => {

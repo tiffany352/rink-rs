@@ -28,7 +28,6 @@ pub enum DateMatch {
     Offset,
     Ordinal,
     Sec,
-    Unix,
     WeekDay,
     Year,
 }
@@ -53,7 +52,6 @@ impl DateMatch {
             "offset" => Some(DateMatch::Offset),
             "ordinal" => Some(DateMatch::Ordinal),
             "sec" => Some(DateMatch::Sec),
-            "unix" => Some(DateMatch::Unix),
             "weekday" => Some(DateMatch::WeekDay),
             "year" => Some(DateMatch::Year),
             _ => None,
@@ -79,7 +77,6 @@ impl DateMatch {
             DateMatch::Offset => "offset",
             DateMatch::Ordinal => "ordinal",
             DateMatch::Sec => "sec",
-            DateMatch::Unix => "unix",
             DateMatch::WeekDay => "weekday",
             DateMatch::Year => "year",
         }
