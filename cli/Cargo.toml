@@ -28,7 +28,6 @@ color-eyre = { version = "0.6", default-features = false }
 humantime-serde = "1.0.1"
 rustyline = { version = "9", default-features = false }
 nu-ansi-term = "0.50"
-smol = "2.0.2"
 ubyte = { version = "0.10.3", features = ["serde"] }
 
 [dependencies.rink-core]

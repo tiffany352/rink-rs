@@ -3,18 +3,18 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use color_eyre::config::HookBuilder;
-use std::{
-    alloc::GlobalAlloc,
-    io::{stdin, stdout},
-    panic,
-    process::exit,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::alloc::GlobalAlloc;
+use std::io::{stdin, stdout};
+use std::process::exit;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 use crate::{
-    frame::Frame, Alloc, ErrorResponse, HandshakeRequest, HandshakeResponse, MessageRequest,
-    MessageResponse, Response, Service,
+    error::ErrorResponse,
+    frame::Frame,
+    response::Response,
+    service::{HandshakeRequest, HandshakeResponse, MessageRequest, MessageResponse, Service},
+    Alloc,
 };
 
 /// When your app is passed the arguments returned by [`Service::args`],
@@ -32,7 +32,7 @@ where
     let (panic_hook, _) = HookBuilder::default().into_hooks();
 
     let panic_message = Arc::new(Mutex::new(String::new()));
-    panic::set_hook({
+    std::panic::set_hook({
         let panic_message = panic_message.clone();
         Box::new(move |info| {
             let mut panic_message = panic_message.lock().unwrap();
@@ -64,7 +64,6 @@ where
             result,
             time_taken: Instant::now() - start,
             memory_used: alloc.get_max(),
-            stdout: String::new(),
         };
 
         frame
@@ -81,7 +80,7 @@ where
         alloc.reset_max();
 
         let start = Arc::new(Mutex::new(Instant::now()));
-        let result = panic::catch_unwind(|| {
+        let result = std::panic::catch_unwind(|| {
             let stdin = stdin();
             let mut stdin = stdin.lock();
 
@@ -103,7 +102,6 @@ where
             result,
             memory_used,
             time_taken,
-            stdout: String::new(),
         };
 
         frame

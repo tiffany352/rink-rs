@@ -1,6 +1,8 @@
 use rink_sandbox::{Alloc, Sandbox, Service};
 use serde_derive::{Deserialize, Serialize};
-use std::{env, ffi::OsString, io::Error as IoError, time::Duration};
+use std::ffi::OsString;
+use std::io::Error as IoError;
+use std::time::Duration;
 
 struct AddTwoService;
 
@@ -59,21 +61,21 @@ impl Service for AddTwoService {
 }
 
 fn main() -> Result<(), IoError> {
-    let args = env::args().collect::<Vec<_>>();
+    let args = std::env::args().collect::<Vec<_>>();
     if args.len() > 1 && args[1] == "--child" {
         GLOBAL.set_limit(1_000_000);
         rink_sandbox::become_child::<AddTwoService, _>(&GLOBAL);
     }
 
-    let sandbox = smol::block_on(Sandbox::<AddTwoService>::new(()))?;
+    let mut sandbox = Sandbox::<AddTwoService>::new(())?;
 
-    let response = smol::block_on(sandbox.execute(Request::AddTwo(1, 2))).unwrap();
+    let response = sandbox.execute(Request::AddTwo(1, 2)).unwrap();
     assert_eq!(response.result, 3);
 
-    let response = smol::block_on(sandbox.execute(Request::AddTwo(17, 9))).unwrap();
+    let response = sandbox.execute(Request::AddTwo(17, 9)).unwrap();
     assert_eq!(response.result, 26);
 
-    let response = smol::block_on(sandbox.execute(Request::ThrowPanic)).unwrap_err();
+    let response = sandbox.execute(Request::ThrowPanic).unwrap_err();
     assert!(response.to_string().contains("test panic"));
 
     println!("OK");

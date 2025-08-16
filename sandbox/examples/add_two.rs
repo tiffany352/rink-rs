@@ -1,10 +1,7 @@
 use rink_sandbox::{Alloc, Sandbox, Service};
-use std::{
-    env,
-    ffi::OsString,
-    io::{stdin, stdout, Error as IoError, Write},
-    time::Duration,
-};
+use std::ffi::OsString;
+use std::io::{stdin, stdout, Error as IoError, Write};
+use std::time::Duration;
 
 struct AddTwoService;
 
@@ -52,13 +49,13 @@ impl Service for AddTwoService {
 }
 
 fn main() -> Result<(), IoError> {
-    let args = env::args().collect::<Vec<_>>();
+    let args = std::env::args().collect::<Vec<_>>();
     if args.len() > 1 && args[1] == "--child" {
         rink_sandbox::become_child::<AddTwoService, _>(&GLOBAL);
     }
 
     // The Sandbox object is how the parent process starts up and manipulates the child process.
-    let sandbox = smol::block_on(Sandbox::<AddTwoService>::new(()))?;
+    let mut sandbox = Sandbox::<AddTwoService>::new(())?;
 
     loop {
         // This code is a manually written out prompter. You should
@@ -98,7 +95,7 @@ fn main() -> Result<(), IoError> {
         // If something goes wrong, you can match on the Error object to
         // find out why. It has values for interrupts (ctrl+C),
         // timeouts, panics, and more.
-        let result = smol::block_on(sandbox.execute(pair));
+        let result = sandbox.execute(pair);
         match result {
             Ok(res) => println!(
                 "Success! Calculated {} + {} = {} in {:?} with {}K of memory",
