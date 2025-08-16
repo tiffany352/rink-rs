@@ -60,6 +60,8 @@ impl fmt::Display for Conversion {
 
 #[cfg(test)]
 mod tests {
+    use jiff::tz::Offset;
+
     use super::Conversion;
     use crate::{
         ast::{Degree, Expr},
@@ -82,6 +84,11 @@ mod tests {
         assert_eq!(
             Conversion::Timezone(TimeZone::get("US/Pacific").unwrap()).to_string(),
             "US/Pacific"
+        );
+        assert_eq!(
+            Conversion::Timezone(TimeZone::fixed(Offset::from_seconds(3600 * 7).unwrap()))
+                .to_string(),
+            "+07"
         );
     }
 }
