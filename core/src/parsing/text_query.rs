@@ -529,7 +529,7 @@ fn parse_function(iter: &mut Iter<'_>, func: Function) -> Expr {
             }
             args
         }
-        _ => vec![parse_pow(iter)],
+        _ => vec![parse_unary(iter)],
     };
     Expr::new_call(func, args)
 }
@@ -579,8 +579,6 @@ fn parse_term(iter: &mut Iter<'_>) -> Expr {
         Token::Hex(num) => parse_radix(&*num, 16, "hex"),
         Token::Oct(num) => parse_radix(&*num, 8, "octal"),
         Token::Bin(num) => parse_radix(&*num, 2, "binary"),
-        Token::Plus => Expr::new_plus(parse_term(iter)),
-        Token::Minus => Expr::new_negate(parse_term(iter)),
         Token::LPar => {
             let res = parse_expr(iter);
             match iter.next().unwrap() {
@@ -622,12 +620,26 @@ fn parse_pow(iter: &mut Iter<'_>) -> Expr {
     }
 }
 
+fn parse_unary(iter: &mut Iter<'_>) -> Expr {
+    match *iter.peek().unwrap() {
+        Token::Plus => {
+            iter.next();
+            Expr::new_plus(parse_unary(iter))
+        }
+        Token::Minus => {
+            iter.next();
+            Expr::new_negate(parse_unary(iter))
+        }
+        _ => parse_pow(iter),
+    }
+}
+
 fn parse_frac(iter: &mut Iter<'_>) -> Expr {
-    let left = parse_pow(iter);
+    let left = parse_unary(iter);
     match *iter.peek().unwrap() {
         Token::Pipe => {
             iter.next();
-            let right = parse_pow(iter);
+            let right = parse_unary(iter);
             Expr::new_frac(left, right)
         }
         _ => left,
@@ -1012,5 +1024,10 @@ mod test {
         assert_eq!(parse("$.01"), "$ 0.01");
         assert_eq!(parse("$asdf"), "$asdf");
         assert_eq!(parse("C$"), "C$");
+    }
+
+    #[test]
+    fn test_pow_prec() {
+        assert_eq!(parse("-2^5"), "-(2^5)");
     }
 }
