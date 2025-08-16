@@ -2,14 +2,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ast::{DatePattern, DateToken};
+use jiff::civil::{Date, Era, ISOWeekDate, Time, Weekday};
+use jiff::fmt::strtime::Meridiem;
+use jiff::tz::Offset;
+use jiff::SignedDuration;
+
+use crate::ast::{DateMatch, DatePattern, DateToken};
 use crate::loader::Context;
-use crate::types::{BaseUnit, BigInt, BigRat, Dimensionality, GenericDateTime, Number, Numeric};
-use chrono::format::Parsed;
-use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone, Weekday};
-use chrono_tz::Tz;
+use crate::types::{BaseUnit, BigInt, BigRat, DateTime, Dimensionality, Number, Numeric, TimeZone};
 use std::iter::Peekable;
-use std::str::FromStr;
 
 fn parse_fixed(value: &str, digits: usize) -> Option<i32> {
     if digits != 0 && value.len() != digits {
@@ -38,9 +39,116 @@ fn numeric_match(
     }
 }
 
-pub fn parse_date<I>(
-    out: &mut Parsed,
-    out_tz: &mut Option<Tz>,
+pub(crate) struct Fields {
+    era: Option<Era>,
+    year: Option<i32>,
+    iso_year: Option<i32>,
+    month: Option<i32>,
+    week: Option<i32>,
+    weekday: Option<Weekday>,
+    day: Option<i32>,
+    ordinal: Option<i32>,
+
+    hour: Option<i32>,
+    hour12: Option<i32>,
+    meridiem: Option<Meridiem>,
+    minute: Option<i32>,
+    second: Option<i32>,
+    nanosecond: Option<i32>,
+
+    time_zone: Option<TimeZone>,
+}
+
+impl Fields {
+    fn get_year(&self) -> Option<i32> {
+        if let Some(iso_year) = self.iso_year {
+            return Some(iso_year);
+        }
+        let era = self.era.unwrap_or(Era::CE);
+        if let Some(year) = self.year {
+            match era {
+                Era::CE => return Some(year),
+                Era::BCE => return Some(-year - 1),
+            }
+        }
+        None
+    }
+
+    fn to_ymd_date(&self, year: i32) -> Option<Date> {
+        let month = self.month?;
+        let day = self.day?;
+        Date::new(year as i16, month as i8, day as i8).ok()
+    }
+
+    fn to_week_date(&self, year: i32) -> Option<Date> {
+        let week = self.week?;
+        let weekday = self.weekday?;
+        ISOWeekDate::new(year as i16, week as i8, weekday)
+            .ok()
+            .map(Into::into)
+    }
+
+    fn to_ordinal_date(&self, year: i32) -> Option<Date> {
+        let ordinal = self.ordinal?;
+        let date = Date::new(year as i16, 1, 1).ok()?;
+        date.with().day_of_year(ordinal as i16).build().ok()
+    }
+
+    fn to_date(&self, current_year: i32) -> Option<Date> {
+        let year = self.get_year().unwrap_or(current_year);
+        self.to_ymd_date(year)
+            .or_else(|| self.to_week_date(year))
+            .or_else(|| self.to_ordinal_date(year))
+    }
+
+    fn get_hour12(&self) -> Option<i32> {
+        let hour12 = self.hour12?;
+        let meridiem = self.meridiem?;
+        Some(match (hour12, meridiem) {
+            (12, Meridiem::AM) => 0,
+            (12, Meridiem::PM) => 12,
+            (x, Meridiem::AM) => x,
+            (x, Meridiem::PM) => 12 + x,
+        })
+    }
+
+    fn get_hour(&self) -> Option<i32> {
+        self.hour.or_else(|| self.get_hour12())
+    }
+
+    fn to_time(&self) -> Option<Time> {
+        let hour = self.get_hour()?;
+        let minute = self.minute.unwrap_or(0);
+        let second = self.second.unwrap_or(0);
+        let nanos = self.nanosecond.unwrap_or(0);
+        Time::new(hour as i8, minute as i8, second as i8, nanos).ok()
+    }
+}
+
+impl Default for Fields {
+    fn default() -> Fields {
+        Fields {
+            era: None,
+            year: None,
+            iso_year: None,
+            month: None,
+            week: None,
+            weekday: None,
+            day: None,
+            ordinal: None,
+            hour: None,
+            hour12: None,
+            meridiem: None,
+            minute: None,
+            second: None,
+            nanosecond: None,
+            time_zone: None,
+        }
+    }
+}
+
+pub(crate) fn parse_date<I>(
+    out: &mut Fields,
     date: &mut Peekable<I>,
     pat: &[DatePattern],
 ) -> Result<(), String>
@@ -85,52 +193,46 @@ where
             Some(DateToken::Literal(ref s)) if s == l => Ok(()),
             x => Err(format!("Expected `{}`, got {}", l, ts(x))),
         },
-        Some(&DatePattern::Match(ref what)) => match &**what {
-            "fullyear" => numeric_match(tok.as_ref(), "fullyear", 4, 0..=9999).and_then(|v| {
+        Some(&DatePattern::Match(what)) => match what {
+            DateMatch::FullYear => {
+                numeric_match(tok.as_ref(), "fullyear", 4, 0..=9999).and_then(|v| {
+                    out.year = Some(v);
+                    Ok(())
+                })
+            }
+            DateMatch::MonthNum => {
+                numeric_match(tok.as_ref(), "monthnum", 2, 1..=12).and_then(|v| {
+                    out.month = Some(v);
+                    Ok(())
+                })
+            }
+            DateMatch::Day => numeric_match(tok.as_ref(), "day", 0, 1..=31).and_then(|v| {
+                out.day = Some(v);
+                Ok(())
+            }),
+            DateMatch::FullDay => numeric_match(tok.as_ref(), "fullday", 2, 1..=31).and_then(|v| {
+                out.day = Some(v);
+                Ok(())
+            }),
+            DateMatch::Min => numeric_match(tok.as_ref(), "min", 2, 0..=60).and_then(|v| {
+                out.minute = Some(v);
+                Ok(())
+            }),
+            DateMatch::Ordinal => {
+                numeric_match(tok.as_ref(), "ordinal", 3, 1..=366).and_then(|v| {
+                    out.ordinal = Some(v);
+                    Ok(())
+                })
+            }
+            DateMatch::Year => numeric_match(tok.as_ref(), "year", 0, 0..=9999).and_then(|v| {
                 out.year = Some(v);
                 Ok(())
             }),
-            "shortyear" => numeric_match(tok.as_ref(), "shortyear", 2, 0..=99).and_then(|v| {
-                out.year_mod_100 = Some(v);
+            DateMatch::IsoWeek => numeric_match(tok.as_ref(), "isoweek", 2, 1..=53).and_then(|v| {
+                out.week = Some(v);
                 Ok(())
             }),
-            "century" => numeric_match(tok.as_ref(), "century", 2, 0..=99).and_then(|v| {
-                out.year_div_100 = Some(v);
-                Ok(())
-            }),
-            "monthnum" => numeric_match(tok.as_ref(), "monthnum", 2, 1..=12).and_then(|v| {
-                out.month = Some(v as u32);
-                Ok(())
-            }),
-            "day" => numeric_match(tok.as_ref(), "day", 0, 1..=31).and_then(|v| {
-                out.day = Some(v as u32);
-                Ok(())
-            }),
-            "fullday" => numeric_match(tok.as_ref(), "fullday", 2, 1..=31).and_then(|v| {
-                out.day = Some(v as u32);
-                Ok(())
-            }),
-            "min" => numeric_match(tok.as_ref(), "min", 2, 0..=60).and_then(|v| {
-                out.minute = Some(v as u32);
-                Ok(())
-            }),
-            "ordinal" => numeric_match(tok.as_ref(), "ordinal", 3, 1..=366).and_then(|v| {
-                out.ordinal = Some(v as u32);
-                Ok(())
-            }),
-            "isoyear" => numeric_match(tok.as_ref(), "isoyear", 4, 0..=9999).and_then(|v| {
-                out.isoyear = Some(v);
-                Ok(())
-            }),
-            "isoweek" => numeric_match(tok.as_ref(), "isoweek", 2, 1..=53).and_then(|v| {
-                out.isoweek = Some(v as u32);
-                Ok(())
-            }),
-            "unix" => numeric_match(tok.as_ref(), "unix", 0, 0..=i32::MAX).and_then(|v| {
-                out.timestamp = Some(v as i64);
-                Ok(())
-            }),
-            "year" => {
+            DateMatch::IsoYear => {
                 advance = false;
                 let x = take!(DateToken::Dash | DateToken::Plus | DateToken::Number(_, None));
                 let (sign, num) = match x {
@@ -145,30 +247,53 @@ where
                 };
                 let value = i32::from_str_radix(&*num, 10);
                 if let Ok(value) = value {
-                    out.year = Some(value * sign);
+                    out.iso_year = Some(value * sign);
                     Ok(())
                 } else {
-                    Err(format!("Expected year, got out of range value"))
+                    Err(format!("Expected isoyear, got out of range value"))
                 }
             }
-            "adbc" => match tok {
+            DateMatch::Era => match tok {
                 Some(DateToken::Literal(ref s))
                     if { s.to_lowercase() == "ad" || s.to_lowercase() == "ce" } =>
                 {
+                    out.era = Some(Era::CE);
                     Ok(())
                 }
                 Some(DateToken::Literal(ref s))
                     if { s.to_lowercase() == "bc" || s.to_lowercase() == "bce" } =>
                 {
-                    out.year = out.year.map(|x| -x + 1);
+                    out.era = Some(Era::BCE);
                     Ok(())
                 }
                 x => Err(format!("Expected AD/BC or CE/BCE, got {}", ts(x))),
             },
-            "hour12" => match tok {
+            DateMatch::Hour12 => match tok {
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 0, 1..=12) {
+                        out.hour12 = Some(value);
+                        Ok(())
+                    } else {
+                        Err(format!("Expected hour12, got out of range value {}", s))
+                    }
+                }
+                x => Err(format!("Expected hour12, got {}", ts(x))),
+            },
+            DateMatch::Hour24 => match tok {
+                Some(DateToken::Number(ref s, None)) => {
+                    if let Some(value) = parse_range(s, 0, 0..=23) {
+                        out.hour = Some(value);
+                        Ok(())
+                    } else {
+                        Err(format!("Expected hour24, got out of range value {}", s))
+                    }
+                }
+                x => Err(format!("Expected hour24, got {}", ts(x))),
+            },
+            DateMatch::FullHour12 => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 2, 1..=12) {
-                        out.hour_mod_12 = Some(value as u32 % 12);
+                        out.hour12 = Some(value);
                         Ok(())
                     } else {
                         Err(format!(
@@ -179,11 +304,10 @@ where
                 }
                 x => Err(format!("Expected 2-digit hour12, got {}", ts(x))),
             },
-            "hour24" => match tok {
+            DateMatch::FullHour24 => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 2, 0..=23) {
-                        out.hour_div_12 = Some(value as u32 / 12);
-                        out.hour_mod_12 = Some(value as u32 % 12);
+                        out.hour = Some(value);
                         Ok(())
                     } else {
                         Err(format!(
@@ -194,21 +318,21 @@ where
                 }
                 x => Err(format!("Expected 2-digit hour24, got {}", ts(x))),
             },
-            "meridiem" => match tok {
+            DateMatch::Meridiem => match tok {
                 Some(DateToken::Literal(ref s)) if s.to_lowercase() == "am" => {
-                    out.hour_div_12 = Some(0);
+                    out.meridiem = Some(Meridiem::AM);
                     Ok(())
                 }
                 Some(DateToken::Literal(ref s)) if s.to_lowercase() == "pm" => {
-                    out.hour_div_12 = Some(1);
+                    out.meridiem = Some(Meridiem::PM);
                     Ok(())
                 }
                 x => Err(format!("Expected AM/PM, got {}", ts(x))),
             },
-            "sec" => match tok {
+            DateMatch::Sec => match tok {
                 Some(DateToken::Number(ref s, None)) => {
                     if let Some(value) = parse_range(s, 2, 0..=60) {
-                        out.second = Some(value as u32);
+                        out.second = Some(value);
                         Ok(())
                     } else {
                         Err(format!("Expected 2-digit sec in range 0..=60, got {}", s))
@@ -219,8 +343,8 @@ where
                     let nsecs = u32::from_str_radix(&**f, 10);
                     if let (Ok(secs), Ok(nsecs)) = (secs, nsecs) {
                         let nsecs = nsecs * 10u32.pow(9 - f.len() as u32);
-                        out.second = Some(secs);
-                        out.nanosecond = Some(nsecs);
+                        out.second = Some(secs as i32);
+                        out.nanosecond = Some(nsecs as i32);
                         Ok(())
                     } else {
                         Err(format!("Expected 2-digit sec, got {}.{}", s, f))
@@ -228,12 +352,16 @@ where
                 }
                 x => Err(format!("Expected 2-digit sec, got {}", ts(x))),
             },
-            "offset" => {
+            DateMatch::Offset => {
                 advance = false;
                 if let Some(DateToken::Literal(ref s)) = date.peek().cloned() {
                     date.next();
-                    if let Ok(tz) = Tz::from_str(s) {
-                        *out_tz = Some(tz);
+                    let s = s
+                        .strip_prefix('[')
+                        .and_then(|s| s.strip_suffix(']'))
+                        .unwrap_or(s);
+                    if let Ok(tz) = TimeZone::get(s) {
+                        out.time_zone = Some(tz);
                         Ok(())
                     } else {
                         Err(format!("Invalid timezone {}", s))
@@ -248,13 +376,15 @@ where
                     if let Some(hm) = parse_fixed(&h, 4) {
                         let m = hm % 100;
                         let h = hm / 100;
-                        out.offset = Some(s * (h * 3600 + m * 60));
+                        let offset = Offset::from_seconds(s * (h * 3600 + m * 60)).unwrap();
+                        out.time_zone = Some(TimeZone::fixed(offset));
                         Ok(())
                     } else if let Ok(h) = i32::from_str_radix(&h, 10) {
                         take!(DateToken::Colon);
                         let m = take!(DateToken::Number(s, None), s);
                         if let Some(m) = parse_range(&m, 2, 0..=59) {
-                            out.offset = Some(s * (h * 3600 + m * 60));
+                            let offset = Offset::from_seconds(s * (h * 3600 + m * 60)).unwrap();
+                            out.time_zone = Some(TimeZone::fixed(offset));
                             Ok(())
                         } else {
                             Err(format!("Expected 2 digits after : in offset, got {}", m))
@@ -264,7 +394,7 @@ where
                     }
                 }
             }
-            "monthname" => match tok {
+            DateMatch::MonthName => match tok {
                 Some(DateToken::Literal(ref s)) => {
                     let res = match &*s.to_lowercase() {
                         "jan" | "january" => 1,
@@ -286,16 +416,16 @@ where
                 }
                 x => Err(format!("Expected month name, got {}", ts(x))),
             },
-            "weekday" => match tok {
+            DateMatch::WeekDay => match tok {
                 Some(DateToken::Literal(ref s)) => {
                     let res = match &*s.to_lowercase() {
-                        "mon" | "monday" => Weekday::Mon,
-                        "tue" | "tuesday" => Weekday::Tue,
-                        "wed" | "wednesday" => Weekday::Wed,
-                        "thu" | "thursday" => Weekday::Thu,
-                        "fri" | "friday" => Weekday::Fri,
-                        "sat" | "saturday" => Weekday::Sat,
-                        "sun" | "sunday" => Weekday::Sun,
+                        "mon" | "monday" => Weekday::Monday,
+                        "tue" | "tuesday" => Weekday::Tuesday,
+                        "wed" | "wednesday" => Weekday::Wednesday,
+                        "thu" | "thursday" => Weekday::Thursday,
+                        "fri" | "friday" => Weekday::Friday,
+                        "sat" | "saturday" => Weekday::Saturday,
+                        "sun" | "sunday" => Weekday::Sunday,
                         x => return Err(format!("Unknown weekday: {}", x)),
                     };
                     out.weekday = Some(res);
@@ -303,12 +433,11 @@ where
                 }
                 x => Err(format!("Expected weekday, got {}", ts(x))),
             },
-            x => Err(format!("Unknown match pattern `{}`", x)),
         },
         Some(&DatePattern::Optional(ref pats)) => {
             advance = false;
             let mut iter = date.clone();
-            if let Ok(()) = parse_date(out, out_tz, &mut iter, &pats[..]) {
+            if let Ok(()) = parse_date(out, &mut iter, &pats[..]) {
                 *date = iter
             }
             Ok(())
@@ -329,18 +458,17 @@ where
     if advance {
         date.next();
     }
-    res.and_then(|_| parse_date(out, out_tz, date, &pat[1..]))
+    res.and_then(|_| parse_date(out, date, &pat[1..]))
 }
 
 fn attempt(
-    now: DateTime<Local>,
+    now: &DateTime,
     date: &[DateToken],
     pat: &[DatePattern],
-) -> Result<GenericDateTime, (String, usize)> {
-    let mut parsed = Parsed::new();
-    let mut tz = None;
+) -> Result<DateTime, (String, usize)> {
+    let mut parsed = Fields::default();
     let mut iter = date.iter().cloned().peekable();
-    let res = parse_date(&mut parsed, &mut tz, &mut iter, pat);
+    let res = parse_date(&mut parsed, &mut iter, pat);
     let count = iter.count();
     let res = if count > 0 && res.is_ok() {
         Err(format!(
@@ -355,72 +483,28 @@ fn attempt(
         res
     };
     res.map_err(|e| (e, count))?;
-    let time = parsed.to_naive_time();
-    let date = parsed.to_naive_date();
-    if let Some(tz) = tz {
-        match (time, date) {
-            (Ok(time), Ok(date)) => tz
-                .from_local_datetime(&date.and_time(time))
-                .earliest()
-                .ok_or_else(|| {
-                    (
-                        "Datetime does not represent a valid moment in time".to_string(),
-                        count,
-                    )
-                })
-                .map(GenericDateTime::Timezone),
-            (Ok(time), Err(_)) => {
-                Ok(now.with_timezone(&tz).with_time(time).unwrap()).map(GenericDateTime::Timezone)
-            }
-            (Err(_), Ok(date)) => tz
-                .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
-                .earliest()
-                .ok_or_else(|| {
-                    (
-                        "Datetime does not represent a valid moment in time".to_string(),
-                        count,
-                    )
-                })
-                .map(GenericDateTime::Timezone),
-            _ => Err(("Failed to construct a useful datetime".to_string(), count)),
-        }
-    } else {
-        let offset = parsed
-            .to_fixed_offset()
-            .unwrap_or_else(|_| FixedOffset::east_opt(0).unwrap());
-        match (time, date) {
-            (Ok(time), Ok(date)) => offset
-                .from_local_datetime(&date.and_time(time))
-                .earliest()
-                .ok_or_else(|| {
-                    (
-                        "Datetime does not represent a valid moment in time".to_string(),
-                        count,
-                    )
-                })
-                .map(GenericDateTime::Fixed),
-            (Ok(time), Err(_)) => Ok(GenericDateTime::Fixed(
-                now.with_timezone(&offset).with_time(time).unwrap(),
-            )),
-            (Err(_), Ok(date)) => offset
-                .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
-                .earliest()
-                .ok_or_else(|| {
-                    (
-                        "Datetime does not represent a valid moment in time".to_string(),
-                        count,
-                    )
-                })
-                .map(GenericDateTime::Fixed),
-            _ => Err(("Failed to construct a useful datetime".to_string(), count)),
-        }
+
+    let date = parsed.to_date(now.year());
+    let time = parsed.to_time();
+    let tz = parsed.time_zone.unwrap_or(now.dt.time_zone().clone());
+
+    let dt = match (date, time) {
+        (Some(date), Some(time)) => jiff::civil::DateTime::from_parts(date, time),
+        (Some(date), None) => date.into(),
+        (None, Some(time)) => jiff::civil::DateTime::from_parts(now.dt.date(), time),
+        (None, None) => return Err(("Can't make a valid datetime".to_owned(), count)),
+    };
+
+    match dt.to_zoned(tz) {
+        Ok(zoned) => Ok(zoned.into()),
+        Err(err) => Err((err.to_string(), count)),
     }
 }
 
-pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTime, String> {
+pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime, String> {
     let mut best = None;
     for pat in &context.registry.datepatterns {
-        match attempt(context.now, date, pat) {
+        match attempt(&context.now, date, pat) {
             Ok(datetime) => return Ok(datetime),
             Err((e, c)) => {
                 //println!("{}", e);
@@ -446,34 +530,32 @@ pub fn try_decode(date: &[DateToken], context: &Context) -> Result<GenericDateTi
     }
 }
 
-pub fn to_duration(num: &Number) -> Result<Duration, String> {
+pub fn to_duration(num: &Number) -> Result<SignedDuration, String> {
     if num.unit != Dimensionality::base_unit(BaseUnit::new("s")) {
         return Err("Expected seconds".to_string());
     }
-    let max = Numeric::from(i64::max_value() / 1000);
+    let max = Numeric::from(i64::max_value());
     if num.value.abs() > max {
         return Err(format!(
-            "Implementation error: Number is out of range ({:?})",
-            max
+            "Implementation error: Duration is too large, max is 2^63 seconds",
         ));
     }
-    let ms = &num.value * &Numeric::from(1000);
-    let (ms, rem) = ms.div_rem(&Numeric::from(1));
-    let ns = &rem * &Numeric::from(1_000_000_000);
-    Ok(Duration::milliseconds(ms.to_int().unwrap()) + Duration::nanoseconds(ns.to_int().unwrap()))
+    let (seconds, rem) = num.value.div_rem(&Numeric::from(1));
+    let nanos = &rem * &Numeric::from(1_000_000_000);
+    let seconds = seconds.to_int().unwrap();
+    let nanos = nanos.to_int().unwrap();
+    Ok(SignedDuration::new(seconds, nanos as i32))
 }
 
-pub fn from_duration(duration: &Duration) -> Result<Number, String> {
-    let ms = duration.num_milliseconds();
-    let ns = (*duration - Duration::milliseconds(ms))
-        .num_nanoseconds()
-        .unwrap();
-    let ms_div = BigInt::from(1_000u64);
-    let ns_div = BigInt::from(1_000_000_000u64);
-    let ms = BigRat::ratio(&BigInt::from(ms), &ms_div);
-    let ns = BigRat::ratio(&BigInt::from(ns), &ns_div);
+pub fn from_duration(duration: &SignedDuration) -> Result<Number, String> {
+    let seconds = duration.as_secs();
+    let nanos = duration.subsec_nanos();
+    let seconds_div = BigInt::one();
+    let nanos_div = BigInt::from(1_000_000_000u64);
+    let seconds = BigRat::ratio(&BigInt::from(seconds), &seconds_div);
+    let nanos = BigRat::ratio(&BigInt::from(nanos), &nanos_div);
     Ok(Number::new_unit(
-        Numeric::Rational(&ms + &ns),
+        Numeric::Rational(&seconds + &nanos),
         BaseUnit::new("s"),
     ))
 }
@@ -527,7 +609,10 @@ where
                         break;
                     }
                 }
-                out.push(DatePattern::Match(buf));
+                match DateMatch::from_str(&buf) {
+                    Some(dm) => out.push(DatePattern::Match(dm)),
+                    None => return Err(format!("Unknown date pattern `{}`", buf)),
+                }
                 continue;
             }
             x => return Err(format!("Unrecognized character {}", x)),
@@ -555,17 +640,6 @@ pub fn parse_datefile(file: &str) -> Vec<Vec<DatePattern>> {
     defs
 }
 
-pub fn humanize<Tz: TimeZone>(now: DateTime<Local>, date: DateTime<Tz>) -> Option<String> {
-    if cfg!(feature = "chrono-humanize") {
-        use chrono_humanize::HumanTime;
-        let now = now.with_timezone(&date.timezone());
-        let duration = date - now;
-        Some(HumanTime::from(duration).to_string())
-    } else {
-        None
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -574,102 +648,90 @@ mod tests {
         parse_datepattern(&mut s.chars().peekable()).unwrap()
     }
 
-    fn parse_with_tz(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Parsed, Option<Tz>) {
-        let mut parsed = Parsed::new();
-        let mut tz = None;
+    fn parse_with_tz(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Fields) {
+        let mut parsed = Fields::default();
         let pat = pattern(pat);
-        let res = parse_date(&mut parsed, &mut tz, &mut date.into_iter().peekable(), &pat);
+        let res = parse_date(&mut parsed, &mut date.into_iter().peekable(), &pat);
 
-        (res, parsed, tz)
+        (res, parsed)
     }
 
-    fn parse(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Parsed) {
-        let (res, parsed, _) = parse_with_tz(date, pat);
+    fn parse(date: Vec<DateToken>, pat: &str) -> (Result<(), String>, Fields) {
+        let (res, parsed) = parse_with_tz(date, pat);
         (res, parsed)
     }
 
     #[test]
     fn test_literal() {
         let date = vec![DateToken::Literal("abc".into())];
-        let (res, parsed) = parse(date.clone(), "'abc'");
-        assert_eq!(parsed, Parsed::new());
+        let (res, _parsed) = parse(date.clone(), "'abc'");
         assert!(res.is_ok());
 
-        let (res, parsed) = parse(date, "'def'");
-        assert_eq!(parsed, Parsed::new());
+        let (res, _parsed) = parse(date, "'def'");
         assert_eq!(res, Err("Expected `def`, got `abc`".into()));
     }
 
     #[test]
     fn test_year_plus() {
-        let mut expected = Parsed::new();
-        expected.set_year(123).unwrap();
-
-        let date = vec![
-            DateToken::Plus,
-            DateToken::Number(expected.year.unwrap().to_string(), None),
-        ];
-        let (res, parsed) = parse(date.clone(), "year");
+        let date = vec![DateToken::Plus, DateToken::Number("123".into(), None)];
+        let (res, parsed) = parse(date.clone(), "isoyear");
         assert!(res.is_ok());
-        assert_eq!(parsed, expected);
+        assert_eq!(parsed.iso_year, Some(123));
 
-        let date = vec![DateToken::Number(expected.year.unwrap().to_string(), None)];
+        let date = vec![DateToken::Number("123".into(), None)];
         let (res, parsed2) = parse(date.clone(), "year");
         assert!(res.is_ok());
-        assert_eq!(parsed2, parsed);
+        assert_eq!(parsed2.year, Some(123));
     }
 
     #[test]
     fn test_complicated_date_input() {
-        let mut expected = Parsed::new();
-        expected.set_year(123).unwrap();
-        expected.set_month(5).unwrap();
-        expected.set_day(2).unwrap();
-        expected.set_ampm(true).unwrap();
-        expected.set_hour(13).unwrap();
-        expected.set_minute(57).unwrap();
-
         let date = vec![
-            DateToken::Number(expected.day.unwrap().to_string(), None),
+            DateToken::Number("2".to_owned(), None),
             DateToken::Space,
             DateToken::Literal("Pm".into()),
             DateToken::Dash,
-            DateToken::Number(format!("{:02}", expected.month.unwrap()), None),
+            DateToken::Number("05".to_owned(), None),
             DateToken::Colon,
-            DateToken::Number(expected.year.unwrap().to_string(), None),
+            DateToken::Number("123".to_owned(), None),
             DateToken::Space,
-            DateToken::Number(format!("{:02}", expected.hour_mod_12.unwrap()), None),
+            DateToken::Number("01".to_owned(), None),
             DateToken::Dash,
-            DateToken::Number(format!("{:02}", expected.minute.unwrap()), None),
+            DateToken::Number("57".to_owned(), None),
             DateToken::Space,
             DateToken::Literal("May".into()),
         ];
 
         let (res, parsed) = parse(date, "day meridiem-monthnum:year hour12-min monthname");
-        assert!(res.is_ok());
-        assert_eq!(parsed, expected);
+        assert_eq!(res, Ok(()));
+        assert_eq!(parsed.year, Some(123));
+        assert_eq!(parsed.month, Some(5));
+        assert_eq!(parsed.day, Some(2));
+        assert_eq!(parsed.hour12, Some(1));
+        assert_eq!(parsed.meridiem, Some(Meridiem::PM));
+        assert_eq!(parsed.get_hour(), Some(13));
+        assert_eq!(parsed.minute, Some(57));
     }
 
     #[test]
     fn ad_bc() {
-        let year = -100;
-        let mut expected = Parsed::new();
-        expected.set_year(year + 1).unwrap();
-        expected.set_hour(7).unwrap();
-
         let date = vec![
-            DateToken::Number(year.abs().to_string(), None),
+            DateToken::Number("100".to_owned(), None),
             DateToken::Space,
             DateToken::Literal("bce".into()),
             DateToken::Space,
-            DateToken::Number(format!("{:02}", expected.hour_mod_12.unwrap()), None),
+            DateToken::Number("07".to_owned(), None),
             DateToken::Space,
             DateToken::Literal("am".into()),
         ];
 
         let (res, parsed) = parse(date, "year adbc hour12 meridiem");
         assert!(res.is_ok(), "{}", res.unwrap_err());
-        assert_eq!(parsed, expected);
+        assert_eq!(parsed.year, Some(100));
+        assert_eq!(parsed.era, Some(Era::BCE));
+        assert_eq!(parsed.get_year(), Some(-101));
+        assert_eq!(parsed.hour12, Some(7));
+        assert_eq!(parsed.meridiem, Some(Meridiem::AM));
     }
 
     #[test]
@@ -684,9 +746,16 @@ mod tests {
     }
 
     #[test]
-    fn wrong_length_24h() {
+    fn short_hour() {
         let date = vec![DateToken::Number("7".into(), None)];
         let (res, _) = parse(date, "hour24");
+        assert_eq!(res, Ok(()));
+    }
+
+    #[test]
+    fn wrong_length_24h() {
+        let date = vec![DateToken::Number("7".into(), None)];
+        let (res, _) = parse(date, "fullhour24");
         assert_eq!(
             res,
             Err(format!("Expected 2-digit hour24, got out of range value 7"))
@@ -697,26 +766,22 @@ mod tests {
     fn test_24h() {
         let (res, parsed) = parse(vec![DateToken::Number("23".into(), None)], "hour24");
         assert!(res.is_ok());
-        assert_eq!(parsed.hour_div_12, Some(1));
-        assert_eq!(parsed.hour_mod_12, Some(11));
+        assert_eq!(parsed.hour, Some(23));
     }
 
     #[test]
     fn seconds() {
-        let mut expected = Parsed::new();
-        expected.set_second(27).unwrap();
-        expected.set_nanosecond(12345).unwrap();
-
         let date = vec![DateToken::Number("27".into(), Some("000012345".into()))];
         let (res, parsed) = parse(date, "sec");
         assert!(res.is_ok());
-        assert_eq!(parsed, expected);
+        assert_eq!(parsed.second, Some(27));
+        assert_eq!(parsed.nanosecond, Some(12345));
 
         let date = vec![DateToken::Number("27".into(), None)];
         let (res, parsed) = parse(date, "sec");
         assert!(res.is_ok());
-        expected.nanosecond = None;
-        assert_eq!(parsed, expected);
+        assert_eq!(parsed.second, Some(27));
+        assert_eq!(parsed.nanosecond, None);
     }
 
     #[test]
@@ -724,7 +789,10 @@ mod tests {
         let date = vec![DateToken::Plus, DateToken::Number("0200".into(), None)];
         let (res, parsed) = parse(date, "offset");
         assert!(res.is_ok());
-        assert_eq!(parsed.offset, Some(2 * 3600));
+        assert_eq!(
+            parsed.time_zone,
+            Some(TimeZone::fixed(Offset::from_seconds(2 * 3600).unwrap()))
+        );
 
         let date = vec![
             DateToken::Dash,
@@ -734,13 +802,20 @@ mod tests {
         ];
         let (res, parsed) = parse(date, "offset");
         assert!(res.is_ok());
-        assert_eq!(parsed.offset, Some(-(1 * 60 + 23) * 60));
+        assert_eq!(
+            parsed.time_zone,
+            Some(TimeZone::fixed(
+                Offset::from_seconds(-(1 * 60 + 23) * 60).unwrap()
+            ))
+        );
 
         let date = vec![DateToken::Literal("Europe/London".into())];
-        let (res, parsed, tz) = parse_with_tz(date, "offset");
+        let (res, parsed) = parse_with_tz(date, "offset");
         assert!(res.is_ok(), "{}", res.unwrap_err());
-        assert_eq!(tz.unwrap(), Tz::Europe__London);
-        assert_eq!(parsed.offset, None);
+        assert_eq!(
+            parsed.time_zone,
+            Some(TimeZone::get("Europe/London").unwrap())
+        );
     }
 
     #[test]
@@ -748,7 +823,7 @@ mod tests {
         let date = vec![DateToken::Literal("saturday".into())];
         let (res, parsed) = parse(date, "weekday");
         assert!(res.is_ok());
-        assert_eq!(parsed.weekday, Some(Weekday::Sat));
+        assert_eq!(parsed.weekday, Some(Weekday::Saturday));
 
         let date = vec![DateToken::Literal("sun".into())];
         assert!(parse(date, "weekday").0.is_ok());
@@ -769,7 +844,7 @@ mod tests {
             let date = vec![DateToken::Literal(s.into())];
             let (res, parsed) = parse(date, "monthname");
             assert!(res.is_ok());
-            assert_eq!(parsed.month, Some(i as u32 + 1));
+            assert_eq!(parsed.month, Some(i as i32 + 1));
         }
 
         let date = vec![DateToken::Literal("foobar".into())];
@@ -801,12 +876,12 @@ mod tests {
             Number(x.into(), None)
         }
 
-        let now = Local::now();
+        let now = DateTime::default();
 
         macro_rules! check_attempt {
             ($date:expr, $pat:expr) => {{
                 let pat = parse_datepattern(&mut $pat.chars().peekable()).unwrap();
-                attempt(now, $date, pat.as_ref())
+                attempt(&now, $date, pat.as_ref())
             }};
         }
 
@@ -818,13 +893,226 @@ mod tests {
 
         let date = &[n("23"), Space, tz.clone()];
         let res = check_attempt!(date, "hour24 offset");
-        assert_eq!(
-            res,
-            Err(("Failed to construct a useful datetime".into(), 0))
-        );
+        let res = res.expect("should have parsed");
+        assert_eq!(res.hour(), 23);
+        assert_eq!(res.dt.time_zone(), &TimeZone::get("Europe/London").unwrap());
 
         let date = &[n("2018"), Space, n("01"), Space, n("01"), Space, tz.clone()];
         let res = check_attempt!(date, "year monthnum day offset");
         assert!(res.is_ok(), "{:?}", res);
+    }
+
+    #[test]
+    fn test_ordinal() {
+        let date = vec![DateToken::Number("227".into(), None)];
+        let (res, parsed) = parse(date, "ordinal");
+        assert!(res.is_ok());
+        assert_eq!(
+            parsed.to_ordinal_date(2025),
+            Some(Date::new(2025, 8, 15).unwrap())
+        );
+    }
+
+    #[test]
+    fn test_week_date() {
+        let date = vec![
+            DateToken::Literal("fri".into()),
+            DateToken::Space,
+            DateToken::Number("33".into(), None),
+        ];
+        let (res, parsed) = parse(date, "weekday isoweek");
+        assert!(res.is_ok());
+        assert_eq!(
+            parsed.to_week_date(2025),
+            Some(Date::new(2025, 8, 15).unwrap())
+        );
+    }
+
+    #[test]
+    fn test_meridiem() {
+        let date = vec![
+            DateToken::Number("8".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, parsed) = parse(date, "hour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(8, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("8".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("pm".into()),
+        ];
+        let (res, parsed) = parse(date, "hour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(20, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, parsed) = parse(date, "hour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(0, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("pm".into()),
+        ];
+        let (res, parsed) = parse(date, "hour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(12, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("asdf".into()),
+        ];
+        let (res, _parsed) = parse(date, "hour12:min meridiem");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Number("13".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, _parsed) = parse(date, "hour12:min meridiem");
+        assert!(!res.is_ok());
+    }
+
+    #[test]
+    fn test_full_hour12() {
+        let date = vec![
+            DateToken::Number("08".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(8, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("8".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, _parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Literal("b".into()),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, _parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Number("08".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("pm".into()),
+        ];
+        let (res, parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(20, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("am".into()),
+        ];
+        let (res, parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(0, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("12".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+            DateToken::Space,
+            DateToken::Literal("pm".into()),
+        ];
+        let (res, parsed) = parse(date, "fullhour12:min meridiem");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(12, 0, 0, 0).unwrap()));
+    }
+
+    #[test]
+    fn test_full_hour24() {
+        let date = vec![
+            DateToken::Number("23".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+        ];
+        let (res, parsed) = parse(date, "fullhour24");
+        assert!(res.is_ok());
+        assert_eq!(parsed.to_time(), Some(Time::new(23, 0, 0, 0).unwrap()));
+
+        let date = vec![
+            DateToken::Number("9".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+        ];
+        let (res, _parsed) = parse(date, "fullhour24");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Number("25".into(), None),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+        ];
+        let (res, _parsed) = parse(date, "fullhour24");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Literal("b".into()),
+            DateToken::Colon,
+            DateToken::Number("00".into(), None),
+        ];
+        let (res, _parsed) = parse(date, "fullhour24");
+        assert!(!res.is_ok());
+    }
+
+    #[test]
+    fn test_isoyear() {
+        let date = vec![DateToken::Dash, DateToken::Number("7".into(), None)];
+        let (res, parsed) = parse(date, "isoyear");
+        assert!(res.is_ok());
+        assert_eq!(parsed.iso_year, Some(-7));
+
+        let date = vec![DateToken::Number("0".into(), None)];
+        let (res, parsed) = parse(date, "isoyear");
+        assert!(res.is_ok());
+        assert_eq!(parsed.iso_year, Some(0));
+
+        let date = vec![DateToken::Plus, DateToken::Number("2025".into(), None)];
+        let (res, parsed) = parse(date, "isoyear");
+        assert!(res.is_ok());
+        assert_eq!(parsed.iso_year, Some(2025));
     }
 }

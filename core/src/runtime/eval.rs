@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use jiff::tz::{Offset, TimeZone};
+
 use super::{Show, SubstanceGetError, Value};
 use crate::ast::{BinOpExpr, BinOpType, Conversion, Expr, Function, Query, UnaryOpType};
 use crate::commands;
@@ -12,8 +14,7 @@ use crate::output::{
     UnitsForReply, UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::types::{BaseUnit, BigInt, Dimensionality, GenericDateTime, Number, Numeric};
-use chrono::FixedOffset;
+use crate::types::{BaseUnit, BigInt, Dimensionality, Number, Numeric};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::rc::Rc;
@@ -24,9 +25,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
     use std::ops::*;
 
     match *expr {
-        Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(GenericDateTime::Fixed(
-            ctx.now.fixed_offset(),
-        ))),
+        Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(ctx.now.clone())),
         Expr::Unit { ref name } => ctx
             .lookup(name)
             .map(Value::Number)
@@ -1015,10 +1014,11 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            let top = top.with_timezone(&FixedOffset::east_opt(off as i32).unwrap());
+            let offset = TimeZone::fixed(Offset::from_seconds(off as i32).unwrap());
+            let top = top.convert_to_timezone(offset);
             Ok(QueryReply::Date(DateReply::new(ctx, top)))
         }
-        Query::Convert(ref top, Conversion::Timezone(tz), None, Digits::Default) => {
+        Query::Convert(ref top, Conversion::Timezone(ref tz), None, Digits::Default) => {
             let top = eval_expr(ctx, top)?;
             let top = match top {
                 Value::DateTime(date) => date,
@@ -1030,7 +1030,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            let top = top.with_timezone(&tz);
+            let top = top.convert_to_timezone(tz.clone());
             Ok(QueryReply::Date(DateReply::new(ctx, top)))
         }
         Query::Convert(ref top, Conversion::Degree(ref deg), None, digits) => {
@@ -1253,10 +1253,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     })))
                 }
                 Value::Number(n) => Ok(QueryReply::Number(n.to_parts(ctx))),
-                Value::DateTime(d) => match d {
-                    GenericDateTime::Fixed(d) => Ok(QueryReply::Date(DateReply::new(ctx, d))),
-                    GenericDateTime::Timezone(d) => Ok(QueryReply::Date(DateReply::new(ctx, d))),
-                },
+                Value::DateTime(d) => Ok(QueryReply::Date(DateReply::new(ctx, d))),
                 Value::Substance(s) => Ok(QueryReply::Substance(
                     s.to_reply(ctx).map_err(QueryError::generic)?,
                 )),

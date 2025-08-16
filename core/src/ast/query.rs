@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::types::TimeZone;
+
 use super::*;
 use serde_derive::Serialize;
 
@@ -13,7 +15,7 @@ pub enum Conversion {
     List(Vec<String>),
     Offset(i64),
     #[serde(skip)]
-    Timezone(Tz),
+    Timezone(TimeZone),
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -43,16 +45,28 @@ impl fmt::Display for Conversion {
                 write!(fmt, "{}", list)
             }
             Conversion::Offset(off) => write!(fmt, "{:02}:{:02}", off / 3600, (off / 60) % 60),
-            Conversion::Timezone(ref tz) => write!(fmt, "{:?}", tz),
+            Conversion::Timezone(ref tz) => {
+                if let Some(name) = tz.iana_name() {
+                    write!(fmt, "{}", name)
+                } else if let Ok(offset) = tz.to_fixed_offset() {
+                    write!(fmt, "{}", offset)
+                } else {
+                    write!(fmt, "unknown")
+                }
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use jiff::tz::Offset;
+
     use super::Conversion;
-    use crate::ast::{Degree, Expr};
-    use chrono_tz::Tz;
+    use crate::{
+        ast::{Degree, Expr},
+        types::TimeZone,
+    };
 
     #[test]
     fn conversion_display() {
@@ -68,8 +82,13 @@ mod tests {
         );
         assert_eq!(Conversion::Offset(3600 * 7).to_string(), "07:00");
         assert_eq!(
-            Conversion::Timezone(Tz::US__Pacific).to_string(),
+            Conversion::Timezone(TimeZone::get("US/Pacific").unwrap()).to_string(),
             "US/Pacific"
+        );
+        assert_eq!(
+            Conversion::Timezone(TimeZone::fixed(Offset::from_seconds(3600 * 7).unwrap()))
+                .to_string(),
+            "+07"
         );
     }
 }

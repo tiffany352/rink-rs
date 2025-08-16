@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use chrono::{FixedOffset, TimeZone};
+use jiff::Zoned;
 use rink_core::parsing::text_query;
 use rink_core::Context;
 
@@ -12,11 +12,23 @@ thread_local! {
         // Use a fixed time, this one is the timestamp of the first
         // commit to Rink (in -04:00 originally, but use local time here
         // for determinism.)
-        let date = FixedOffset::east_opt(-4*60*60).unwrap().with_ymd_and_hms(2016, 8, 2, 15, 33, 19).unwrap();
+        let date: Zoned = "2016-08-02 15:33:19[America/New_York]".parse().unwrap();
         ctx.set_time(date.into());
         ctx.use_humanize = true;
         ctx
     };
+}
+
+fn exec(input: &str) -> String {
+    let mut iter = text_query::TokenIterator::new(input.trim()).peekable();
+    let expr = text_query::parse_query(&mut iter);
+    CONTEXT.with(|ctx| {
+        let res = ctx.eval_query(&expr);
+        match res {
+            Ok(v) => v.to_string(),
+            Err(v) => v.to_string(),
+        }
+    })
 }
 
 fn test(input: &str, output: &str) {
@@ -115,7 +127,7 @@ fn negative_prefixes() {
 fn negative_now() {
     test(
         "-#jan 01, 1970#",
-        "Operation is not defined: - <1970-01-01 00:00:00 +00:00 (46 years ago)>",
+        "Operation is not defined: - <1970-01-01 00:00:00 [America/New_York] (46 years ago)>",
     );
 }
 
@@ -176,7 +188,7 @@ fn test_conformance() {
 fn test_dates() {
     test(
         "#jan 01, 1970#",
-        "1970-01-01 00:00:00 +00:00 (46 years ago)",
+        "1970-01-01 00:00:00 [America/New_York] (46 years ago)",
     );
 }
 
@@ -201,8 +213,8 @@ fn test_volume_prefix() {
 #[test]
 fn test_offset_conversion() {
     test(
-        "#jan 01, 1970# -> -05:00",
-        "1969-12-31 19:00:00 -05:00 (46 years ago)",
+        "#1970-01-01 00:00:00 +00:00# -> -05:00",
+        "1969-12-31 19:00:00 [-05:00] (46 years ago)",
     );
 }
 
@@ -283,12 +295,18 @@ fn test_substance_add() {
 fn test_duration_add() {
     test(
         "#jan 01, 1970# + 1 s",
-        "1970-01-01 00:00:01 +00:00 (46 years ago)",
+        "1970-01-01 00:00:01 [America/New_York] (46 years ago)",
     );
     test(
         "#jan 01, 1970# + 1.123 s",
-        "1970-01-01 00:00:01.123 +00:00 (46 years ago)",
+        "1970-01-01 00:00:01 [America/New_York] (46 years ago)",
     );
+}
+
+#[test]
+fn test_duration_errors() {
+    test("#jan 01, 1970# + 1m", "Expected seconds: <1970-01-01 00:00:00 [America/New_York] (46 years ago)> + <1 meter (length)>");
+    test("#jan 01, 1970# + 2^65s", "Implementation error: Duration is too large, max is 2^63 seconds: <1970-01-01 00:00:00 [America/New_York] (46 years ago)> + <approx. 36.89348 exasecond (time)>");
 }
 
 #[test]
@@ -443,7 +461,7 @@ fn test_of_non_substance() {
 fn test_mul_not_defined() {
     test(
         "#2018-10-03# * kg",
-        "Operation is not defined: <1 (dimensionless)> * <2018-10-03 00:00:00 +00:00 (in 2 years)>",
+        "Operation is not defined: <1 (dimensionless)> * <2018-10-03 00:00:00 [America/New_York] (in 2 years)>",
     );
 }
 
@@ -496,7 +514,7 @@ fn test_underscores_in_number() {
 fn test_date_input() {
     test_starts_with(
         "#2018-10-04T09:13:25.123   +2:00#",
-        "2018-10-04 09:13:25.123 +02:00",
+        "2018-10-04 09:13:25 [+02:00] (in 2 years)",
     );
 }
 
@@ -559,17 +577,29 @@ fn test_missing_bracket() {
 fn test_to_timezone() {
     test_starts_with(
         "#2000-01-01 12:46 Asia/Tokyo# -> GMT",
-        "2000-01-01 03:46:00 GMT",
+        "2000-01-01 03:46:00 [GMT] (16 years ago)",
     );
 }
 
 #[test]
 fn test_time_range_checking() {
-    test("#00:00#", "2016-08-02 00:00:00 +00:00 (19 hours ago)");
-    test("#23:59#", "2016-08-02 23:59:00 +00:00 (in 4 hours)");
-    test("#12:00 am#", "2016-08-02 00:00:00 +00:00 (19 hours ago)");
-    test("#12:00 pm#", "2016-08-02 12:00:00 +00:00 (7 hours ago)");
-    test("#24:00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected `-`, got `:`");
+    test(
+        "#00:00#",
+        "2016-08-02 00:00:00 [America/New_York] (15 hours ago)",
+    );
+    test(
+        "#23:59#",
+        "2016-08-02 23:59:00 [America/New_York] (in 8 hours)",
+    );
+    test(
+        "#12:00 am#",
+        "2016-08-02 00:00:00 [America/New_York] (15 hours ago)",
+    );
+    test(
+        "#12:00 pm#",
+        "2016-08-02 12:00:00 [America/New_York] (3 hours ago)",
+    );
+    test("#24:00#", "Most likely pattern `isoyear-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected `-`, got `:`");
     test(
         "#00:00 pm",
         "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got  pm",
@@ -578,15 +608,18 @@ fn test_time_range_checking() {
         "#13:00 am#",
         "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got  am",
     );
-    test("#0000-00-00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected monthnum in range 1..=12, got 00");
-    test("#0000-01-00#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected fullday in range 1..=31, got 00");
-    test("#00:00:00#", "2016-08-02 00:00:00 +00:00 (19 hours ago)");
+    test("#0000-00-00#", "Most likely pattern `isoyear-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected monthnum in range 1..=12, got 00");
+    test("#0000-01-00#", "Most likely pattern `isoyear-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected fullday in range 1..=31, got 00");
+    test(
+        "#00:00:00#",
+        "2016-08-02 00:00:00 [America/New_York] (15 hours ago)",
+    );
     test(
         "#00:00:61#",
         "Most likely pattern `hour24:min[:sec][ offset]` failed: Expected eof, got :61",
     );
     // used to panic
-    test("#99999999999999#", "Most likely pattern `year-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected year, got out of range value");
+    test("#99999999999999#", "Most likely pattern `isoyear-monthnum-fullday['T'hour24:min[:sec][ offset]]` failed: Expected isoyear, got out of range value");
 }
 
 #[test]
@@ -609,7 +642,10 @@ fn test_date_difference() {
 
 #[test]
 fn test_date_time_formats() {
-    test_starts_with("#1970-01-01 10:30 GMT#", "1970-01-01 10:30:00 GMT");
+    test_starts_with(
+        "#1970-01-01 10:30 GMT#",
+        "1970-01-01 10:30:00 [GMT] (46 years ago)",
+    );
     test_starts_with("(now-#10:30#) - (now-#11:30#)", "1 hour, 0 second (time)");
 }
 
@@ -655,8 +691,8 @@ fn test_definition_with_doc() {
 fn test_try_decode_fail() {
     test(
         "#abc#",
-        "Most likely pattern `--monthnum-day[ hour24:min[:sec][ offset]]` failed: \
-         Expected `-`, got `abc`",
+        "Most likely pattern `year adbc monthname day[ hour12:min[:sec] meridiem[ offset]]` failed: \
+         Expected 0-digit year, got abc",
     )
 }
 
@@ -901,5 +937,92 @@ fn test_factorial() {
     test(
         "fac(0.5)",
         "fac() passed a value that is out of range: fac(0.5 (dimensionless))",
+    );
+}
+
+#[test]
+fn date_roundtrip() {
+    assert_eq!(exec("now"), "2016-08-02 15:33:19 [America/New_York] (now)");
+    assert_eq!(
+        exec("#2016-08-02 15:33:19 [America/New_York]#"),
+        "2016-08-02 15:33:19 [America/New_York] (now)"
+    );
+}
+
+#[test]
+fn date_formats() {
+    // isoyear-monthnum-fullday['T'hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025-07-29T20:16:14 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // isoyear-monthnum-fullday[ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025-07-29 20:16:14 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // isoyear-ordinal[ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025-210 20:16:14 UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+
+    // monthname day[[','] year adbc][ hour12:min[:sec] meridiem[ offset]]
+    assert_eq!(
+        exec("#jul 29, 2025 CE 8:16:14 PM UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // monthname day[[','] year adbc][ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#jul 29, 2025 CE 20:16:14 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // monthname day[[','] isoyear][ hour12:min[:sec] meridiem[ offset]]
+    assert_eq!(
+        exec("#jul 29, 2025 8:16:14 PM UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // monthname day[[','] isoyear][ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#jul 29, 2025 20:16:14 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+
+    // weekday monthname day[ hour24:min[:sec]] fullyear[ offset]
+    assert_eq!(
+        exec("#tuesday jul 29 20:16:14 2025 UTC#"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+
+    // year adbc monthname day[ hour12:min[:sec] meridiem[ offset]]
+    assert_eq!(
+        exec("#2025 CE jul 29 8:16:14 PM UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // year adbc monthname day[ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025 CE jul 29 20:16:14 UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // isoyear monthname day[ hour12:min[:sec] meridiem[ offset]]
+    assert_eq!(
+        exec("#2025 jul 29 8:16:14 PM UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+    // isoyear monthname day[ hour24:min[:sec][ offset]]
+    assert_eq!(
+        exec("#2025 jul 29 20:16:14 UTC"),
+        "2025-07-29 20:16:14 [UTC] (in 8 years)"
+    );
+
+    // hour12:min[:sec] meridiem[ offset]
+    assert_eq!(
+        exec("#08:16:14 PM UTC#"),
+        "2016-08-02 20:16:14 [UTC] (in 42 minutes)"
+    );
+    // hour24:min[:sec][ offset]
+    assert_eq!(
+        exec("#20:16:14 UTC#"),
+        "2016-08-02 20:16:14 [UTC] (in 42 minutes)"
     );
 }

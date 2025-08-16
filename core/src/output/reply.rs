@@ -6,7 +6,7 @@ use super::fmt::{flat_join, join, Span, TokenFmt};
 use super::{DocString, NumberParts};
 use crate::ast::{Expr, Precedence, UnaryOpType};
 use crate::output::Digits;
-use chrono::{DateTime, TimeZone};
+use crate::types::DateTime;
 use serde_derive::Serialize;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter, Result as FmtResult};
@@ -319,12 +319,7 @@ impl Display for ConformanceError {
 }
 
 impl DateReply {
-    pub fn new<Tz>(ctx: &crate::loader::Context, date: DateTime<Tz>) -> DateReply
-    where
-        Tz: TimeZone,
-        Tz::Offset: Display,
-    {
-        use chrono::{Datelike, Timelike};
+    pub fn new(ctx: &crate::loader::Context, date: DateTime) -> DateReply {
         DateReply {
             string: date.to_string(),
             rfc3339: date.to_rfc3339(),
@@ -335,7 +330,7 @@ impl DateReply {
             minute: date.minute() as i32,
             second: date.second() as i32,
             nanosecond: date.nanosecond() as i32,
-            human: ctx.humanize(date),
+            human: ctx.humanize(&date),
         }
     }
 }

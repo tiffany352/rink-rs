@@ -18,7 +18,7 @@ bundle-files = ["rink-core/bundle-files"]
 clap = "4.5"
 dirs = "4"
 curl = "0.4.46"
-chrono = { version = "0.4.19", default-features = false }
+jiff = "0.2.15"
 toml = "0.5"
 serde_derive = "1"
 serde = { version = "1", default-features = false }

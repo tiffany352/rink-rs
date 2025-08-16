@@ -6,7 +6,6 @@
 
 use crate::output::Digits;
 use crate::types::Numeric;
-use chrono_tz::Tz;
 use serde_derive::Serialize;
 use std::fmt;
 
@@ -16,7 +15,7 @@ mod query;
 #[cfg(test)]
 mod test;
 
-pub use def::{DatePattern, Def, DefEntry, Defs, ExprString, Property};
+pub use def::{DateMatch, DatePattern, Def, DefEntry, Defs, ExprString, Property};
 pub use expr::{Expr, Precedence};
 pub use query::{Conversion, Query};
 
