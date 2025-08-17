@@ -485,6 +485,13 @@ Inputting a time with an offset:
 	> #apr 1, 2016 12:00:00 +01:00#
 	2016-04-01 12:00:00 +01:00 (6 years ago)
 
+Calendar-aware relative dates:
+
+	> #today#
+	2025-08-16 00:00:00 [US/Pacific] (23 hours ago)
+	> #today+1mon#
+	2025-09-16 00:00:00 [US/Pacific] (in 30 days)
+
 Substances
 ~~~~~~~~~~
 

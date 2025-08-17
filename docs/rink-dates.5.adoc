@@ -55,10 +55,6 @@ The valid keywords are:
 	The ISO year, like -0001. Must be exactly 4 digits. ISO year unifies
 	CE and BCE such that 1BC is year 0, and 2BCE is year -1.
 
-**unix**::
-	Unix timestamp, i.e. the number of 1/86400ths of a day elapsed since
-	January 1st, 1970. Can be any number of digits.
-
 **year**::
 	The current year, like 2024. Can be any number of digits.
 
@@ -94,6 +90,19 @@ The valid keywords are:
 	Makes English weekday names, case insensitive. Recognizes 3-letter
 	names (like mon, tue, wed) and full names.
 
+**today**:: 
+	Use the current date, but not the time. Most useful when combined
+	with `relative`.
+
+**now**::
+	Use the current time and date. Most useful when combined with
+	`relative`.
+
+**relative**::
+	Matches a relative unit, like `+1h` to add 1 hour, or `-7week` to
+	subtract 7 weeks. This is calendar aware, instead of working in
+	seconds.
+
 **`-`**::
 	Matches a literal `-` character.
 
@@ -102,6 +111,10 @@ The valid keywords are:
 
 ` `::
 	A single space will match any amount of whitespace.
+
+`&`::
+	Allows putting two terms directly next to each other without spaces
+	in between.
 
 **`'`** <__anything__> **`'`**::
 	Wrapping text in single quotes will match that text literally.

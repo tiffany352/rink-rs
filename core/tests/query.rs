@@ -1033,3 +1033,49 @@ fn date_formats() {
         "2016-08-02 20:16:14 [UTC] (in 42 minutes)"
     );
 }
+
+#[test]
+fn test_relative() {
+    // today&relative hour12:min[:sec] meridiem[ offset]
+    assert_eq!(
+        exec("#today+2months 08:00 am"),
+        "2016-10-02 08:00:00 [America/New_York] (in 1 month)"
+    );
+    assert_eq!(
+        exec("#today+2months 08:00 am US/Pacific"),
+        "2016-10-02 08:00:00 [US/Pacific] (in 1 month)"
+    );
+    // today&relative hour24:min[:sec][ offset]
+    assert_eq!(
+        exec("#today+2months 13:00"),
+        "2016-10-02 13:00:00 [America/New_York] (in 1 month)"
+    );
+    // today&relative
+    assert_eq!(
+        exec("#today+1d#"),
+        "2016-08-03 00:00:00 [America/New_York] (in 8 hours)"
+    );
+    assert_eq!(
+        exec("#today-3w#"),
+        "2016-07-12 00:00:00 [America/New_York] (3 weeks ago)"
+    );
+    // now&relative
+    assert_eq!(
+        exec("#now+1h#"),
+        "2016-08-02 16:33:19 [America/New_York] (in 1 hour)"
+    );
+    assert_eq!(
+        exec("#now-30min#"),
+        "2016-08-02 15:03:19 [America/New_York] (30 minutes ago)"
+    );
+    // today
+    assert_eq!(
+        exec("#today#"),
+        "2016-08-02 00:00:00 [America/New_York] (15 hours ago)"
+    );
+    // now
+    assert_eq!(
+        exec("#now#"),
+        "2016-08-02 15:33:19 [America/New_York] (now)"
+    );
+}
