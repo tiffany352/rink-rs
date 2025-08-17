@@ -3,15 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::config::Config;
-use crate::fmt::print_fmt;
-use crate::service::RinkService;
+use crate::runner::Runner;
 use crate::RinkHelper;
 use eyre::Result;
 use rink_core::one_line;
-use rink_sandbox::Sandbox;
 use rustyline::{config::Configurer, error::ReadlineError, CompletionType, Editor};
 use std::io::{BufRead, ErrorKind};
-use std::sync::{Arc, Mutex};
 
 pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) -> Result<()> {
     use std::io::{stdout, Write};
@@ -40,16 +37,14 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
     }
 }
 
-const HELP_TEXT: &'static str = "The rink manual can be found with `man 7 rink`, or online:
+pub const HELP_TEXT: &'static str = "The rink manual can be found with `man 7 rink`, or online:
 https://rinkcalc.app/manual
 To quit, type `quit` or press Ctrl+D.";
 
-pub fn interactive(config: &Config) -> Result<()> {
+pub fn interactive(config: Config) -> Result<()> {
+    let mut runner = Runner::new(config.clone())?;
     let mut rl = Editor::<RinkHelper>::new();
-
-    let ctx = crate::config::load(config)?;
-    let ctx = Arc::new(Mutex::new(ctx));
-    let helper = RinkHelper::new(ctx.clone(), config.clone());
+    let helper = RinkHelper::new(runner.local.clone(), config.clone());
     rl.set_helper(Some(helper));
     rl.set_completion_type(CompletionType::List);
 
@@ -63,78 +58,7 @@ pub fn interactive(config: &Config) -> Result<()> {
             // Ignore file not found errors.
             Err(ReadlineError::Io(ref err)) if err.kind() == ErrorKind::NotFound => (),
             Err(err) => eprintln!("Loading history failed: {}", err),
-            _ => (),
-        };
-    }
-
-    let save_history = |rl: &mut Editor<RinkHelper>| {
-        if let Some(ref path) = hpath {
-            // ignore error - if this fails, the next line will as well.
-            let _ = std::fs::create_dir_all(path.parent().unwrap());
-            rl.save_history(path).unwrap_or_else(|e| {
-                eprintln!("Saving history failed: {}", e);
-            });
-        }
-    };
-
-    loop {
-        let readline = rl.readline(&config.rink.prompt);
-        match readline {
-            Ok(ref line) if line == "help" => {
-                println!("{}", HELP_TEXT);
-            }
-            Ok(ref line) if line == "quit" || line == ":q" || line == "exit" => {
-                save_history(&mut rl);
-                break;
-            }
-            Ok(line) => {
-                match rink_core::eval(&mut *ctx.lock().unwrap(), &*line) {
-                    Ok(v) => {
-                        rl.add_history_entry(line);
-                        print_fmt(config, &v)
-                    }
-                    Err(e) => {
-                        rl.add_history_entry(line);
-                        print_fmt(config, &e)
-                    }
-                };
-                println!();
-            }
-            Err(ReadlineError::Interrupted) => {}
-            Err(ReadlineError::Eof) => {
-                save_history(&mut rl);
-                break;
-            }
-            Err(err) => {
-                println!("Readline: {:?}", err);
-                break;
-            }
-        }
-    }
-    Ok(())
-}
-
-pub fn interactive_sandboxed(config: Config) -> Result<()> {
-    let ctx = crate::config::load(&config)?;
-    let ctx = Arc::new(Mutex::new(ctx));
-    let mut rl = Editor::<RinkHelper>::new();
-    let helper = RinkHelper::new(ctx.clone(), config.clone());
-    rl.set_helper(Some(helper));
-    rl.set_completion_type(CompletionType::List);
-
-    let mut sandbox = Sandbox::<RinkService>::new(config.clone())?;
-
-    let mut hpath = dirs::data_local_dir().map(|mut path| {
-        path.push("rink");
-        path.push("history.txt");
-        path
-    });
-    if let Some(ref mut path) = hpath {
-        match rl.load_history(path) {
-            // Ignore file not found errors.
-            Err(ReadlineError::Io(ref err)) if err.kind() == ErrorKind::NotFound => (),
-            Err(err) => eprintln!("Loading history failed: {}", err),
-            _ => (),
+            Ok(()) => (),
         };
     }
 
@@ -160,25 +84,15 @@ pub fn interactive_sandboxed(config: Config) -> Result<()> {
             }
             Ok(line) => {
                 rl.add_history_entry(&line);
-                let config = config.clone();
 
-                let result = sandbox.execute(line);
+                let (result, metrics) = runner.execute(line);
                 match result {
-                    Ok(res) => {
-                        match res.result {
-                            Ok(line) => println!("{}", line),
-                            Err(line) => println!("{}", line),
-                        }
-                        if config.limits.show_metrics {
-                            println!(
-                                "Finished in {:?} using {}K of memory",
-                                res.time_taken,
-                                res.memory_used / 1_000
-                            );
-                        }
-                    }
-                    Err(err) => println!("{:#}", eyre::eyre!(err)),
-                };
+                    Ok(line) => println!("{}", line),
+                    Err(line) => println!("{}", line),
+                }
+                if let Some(metrics) = metrics {
+                    println!("{}", metrics);
+                }
             }
             Err(ReadlineError::Interrupted) => {}
             Err(ReadlineError::Eof) => {
@@ -192,7 +106,7 @@ pub fn interactive_sandboxed(config: Config) -> Result<()> {
         }
     }
 
-    sandbox.terminate()?;
+    runner.terminate()?;
 
     Ok(())
 }

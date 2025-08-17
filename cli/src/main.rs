@@ -4,22 +4,11 @@
 
 use clap::{Arg, ArgAction, Command};
 use eyre::{Result, WrapErr};
-use rink_sandbox::Alloc;
 use std::fs::File;
 use std::io::{stdin, BufReader};
 use std::process::ExitCode;
 
-pub use helper::RinkHelper;
-
-pub mod config;
-pub(crate) mod fmt;
-pub mod helper;
-pub mod repl;
-pub(crate) mod service;
-pub(crate) mod style_ser;
-
-#[global_allocator]
-pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
+use rink::{config, repl, service};
 
 fn main() -> Result<ExitCode> {
     let matches = Command::new("Rink")
@@ -65,6 +54,12 @@ fn main() -> Result<ExitCode> {
                 .action(ArgAction::SetTrue)
                 .hide(true)
         )
+        .arg(
+            Arg::new("config")
+                .short('c')
+                .num_args(1)
+                .long("config").action(ArgAction::Set).help("Set path to config.toml")
+        )
         .get_matches();
 
     if matches.get_flag("service") {
@@ -73,7 +68,7 @@ fn main() -> Result<ExitCode> {
     // The panic handler can't be installed if entering service mode, so
     // it's placed after that check.
     color_eyre::install()?;
-    let config = config::read_config()?;
+    let config = config::read_config(matches.get_one::<String>("config").map(|s| &**s))?;
 
     if let Some(filename) = matches.get_one::<String>("dump") {
         use std::io::Write;
@@ -105,7 +100,8 @@ fn main() -> Result<ExitCode> {
                 repl::noninteractive(stdin_handle.lock(), &config, false).map(|_| ExitCode::SUCCESS)
             }
             _ => {
-                let file = File::open(&filename).wrap_err("Failed to open input file")?;
+                let file = File::open(&filename)
+                    .wrap_err(format!("Failed to open input file `{filename}`"))?;
                 repl::noninteractive(BufReader::new(file), &config, false)
                     .map(|_| ExitCode::SUCCESS)
             }
@@ -124,9 +120,7 @@ fn main() -> Result<ExitCode> {
             }
         }
         Ok(exit_code)
-    } else if config.limits.enabled {
-        repl::interactive_sandboxed(config).map(|_| ExitCode::SUCCESS)
     } else {
-        repl::interactive(&config).map(|_| ExitCode::SUCCESS)
+        repl::interactive(config).map(|_| ExitCode::SUCCESS)
     }
 }
