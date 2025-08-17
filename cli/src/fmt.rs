@@ -102,12 +102,6 @@ pub(crate) fn to_ansi_string<'a>(config: &Config, obj: &'a dyn TokenFmt<'a>) -> 
     format!("{}", strings)
 }
 
-pub(crate) fn print_fmt<'a>(config: &Config, obj: &'a dyn TokenFmt<'a>) {
-    let strings = to_ansi(config, obj);
-    let strings = AnsiStrings(&strings);
-    print!("{}", strings);
-}
-
 #[cfg(test)]
 mod tests {
     use nu_ansi_term::{AnsiString, AnsiStrings, Style};

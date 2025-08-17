@@ -10,11 +10,12 @@ use std::io::{stdin, BufReader};
 use std::process::ExitCode;
 
 pub use helper::RinkHelper;
-
 pub mod config;
-pub(crate) mod fmt;
 pub mod helper;
 pub mod repl;
+
+pub(crate) mod fmt;
+pub(crate) mod runner;
 pub(crate) mod service;
 pub(crate) mod style_ser;
 
@@ -131,9 +132,7 @@ fn main() -> Result<ExitCode> {
             }
         }
         Ok(exit_code)
-    } else if config.limits.enabled {
-        repl::interactive_sandboxed(config).map(|_| ExitCode::SUCCESS)
     } else {
-        repl::interactive(&config).map(|_| ExitCode::SUCCESS)
+        repl::interactive(config).map(|_| ExitCode::SUCCESS)
     }
 }
