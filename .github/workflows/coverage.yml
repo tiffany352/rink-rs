@@ -23,8 +23,8 @@ jobs:
       - name: Generate code coverage
         # rink-sandbox causes corrupted .profraw files for some reason,
         # so don't test it. test everything else.
-        run: cargo llvm-cov --all-features -p rink-core -p rink -p rink-js --lcov --output-path lcov.info
+        run: cargo llvm-cov --all-features -p rink-core -p rink -p rink-js --cobertura --output-path coverage.xml
       - name: Code Coverage Summary Report
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          filename: lcov.info
+          filename: coverage.xml
