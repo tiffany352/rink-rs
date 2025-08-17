@@ -69,4 +69,9 @@ coverage:
 	$(CARGO) llvm-cov --all --lcov --output-path lcov.info
 
 coverage-report:
-	uv tool run diff-cover lcov.info --format markdown:report.md --compare-branch master
+	uv tool run diff-cover lcov.info --format markdown:report.md --compare-branch origin/master
+	$(CARGO) llvm-cov report --html
+	echo '<details summary="Full report">' >> report.md
+	grep -Go "<table>.*</table>" target/llvm-cov/html/index.html >> report.md
+	echo '</details>' >> report.md
+

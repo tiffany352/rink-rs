@@ -16,6 +16,8 @@ jobs:
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
+      - name: Get master branch
+        run: git fetch origin master --depth 1
       - name: Install Rust
         run: rustup update stable
       - name: Install cargo-llvm-cov
