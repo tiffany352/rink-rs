@@ -122,8 +122,7 @@ pub fn interactive_sandboxed(config: Config) -> Result<()> {
     rl.set_helper(Some(helper));
     rl.set_completion_type(CompletionType::List);
 
-    let sandbox = smol::block_on(Sandbox::<RinkService>::new(config.clone()))?;
-    let sandbox = Arc::new(sandbox);
+    let mut sandbox = Sandbox::<RinkService>::new(config.clone())?;
 
     let mut hpath = dirs::data_local_dir().map(|mut path| {
         path.push("rink");
@@ -163,7 +162,7 @@ pub fn interactive_sandboxed(config: Config) -> Result<()> {
                 rl.add_history_entry(&line);
                 let config = config.clone();
 
-                let result = smol::block_on(sandbox.execute(line));
+                let result = sandbox.execute(line);
                 match result {
                     Ok(res) => {
                         match res.result {
@@ -193,7 +192,7 @@ pub fn interactive_sandboxed(config: Config) -> Result<()> {
         }
     }
 
-    smol::block_on(sandbox.terminate())?;
+    sandbox.terminate()?;
 
     Ok(())
 }

@@ -4,8 +4,9 @@
 
 use core::fmt;
 use serde_derive::{Deserialize, Serialize};
-use smol::channel::RecvError;
-use std::{io::Error as IoError, time::Duration};
+use std::io::Error as IoError;
+use std::sync::mpsc::RecvError;
+use std::time::Duration;
 use thiserror::Error;
 
 /// All of the errors that can result while managing the child process.
@@ -36,6 +37,8 @@ pub enum Error {
     Crashed,
     /// Interrupted
     Interrupted,
+    /// Read channel disconnected
+    Disconnected,
 }
 
 impl fmt::Display for Error {
@@ -53,6 +56,7 @@ impl fmt::Display for Error {
             Error::HandshakeFailure(err) => write!(f, "Failed to start child process: {err}"),
             Error::Crashed => write!(f, "Child process crashed"),
             Error::Interrupted => write!(f, "Interrupted"),
+            Error::Disconnected => write!(f, "Disconnected"),
         }
     }
 }

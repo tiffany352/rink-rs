@@ -2,18 +2,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::{
-    alloc::{GlobalAlloc, Layout, System},
-    ptr,
-    sync::atomic::{AtomicUsize, Ordering},
-};
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Wraps an allocator, adding memory use limits and tracking for peak
 /// memory usage.
 pub struct Alloc<A = System> {
     parent: A,
     used: AtomicUsize,
-    max: AtomicUsize,
+    peak: AtomicUsize,
     limit: AtomicUsize,
 }
 
@@ -23,7 +20,7 @@ impl Alloc<System> {
         Alloc {
             parent: System,
             used: AtomicUsize::new(0),
-            max: AtomicUsize::new(0),
+            peak: AtomicUsize::new(0),
             limit: AtomicUsize::new(limit),
         }
     }
@@ -41,21 +38,21 @@ where
         Alloc {
             parent,
             used: AtomicUsize::new(0),
-            max: AtomicUsize::new(0),
+            peak: AtomicUsize::new(0),
             limit: AtomicUsize::new(limit),
         }
     }
 
     /// Clears the current peak value.
-    pub fn reset_max(&self) {
-        self.max
+    pub fn clear_peak(&self) {
+        self.peak
             .store(self.used.load(Ordering::Acquire), Ordering::Release);
     }
 
     /// Returns the peak memory that's been used since startup or since
     /// `reset_max()` was called.
-    pub fn get_max(&self) -> usize {
-        self.max.load(Ordering::Acquire)
+    pub fn get_peak(&self) -> usize {
+        self.peak.load(Ordering::Acquire)
     }
 
     /// Sets the maximum amount of memory that can be used. This should
@@ -71,7 +68,7 @@ unsafe impl GlobalAlloc for Alloc {
         let limit = self.limit.load(Ordering::Acquire);
         let new_size = self.used.fetch_add(size, Ordering::Acquire) + size;
         if new_size <= limit {
-            self.max.fetch_max(new_size, Ordering::Relaxed);
+            self.peak.fetch_max(new_size, Ordering::Relaxed);
             let result = self.parent.alloc(layout);
             if result.is_null() {
                 self.used.fetch_sub(size, Ordering::Release);
@@ -79,7 +76,7 @@ unsafe impl GlobalAlloc for Alloc {
             result
         } else {
             self.used.fetch_sub(size, Ordering::Release);
-            ptr::null_mut()
+            std::ptr::null_mut()
         }
     }
 
@@ -94,7 +91,7 @@ unsafe impl GlobalAlloc for Alloc {
         let limit = self.limit.load(Ordering::Acquire);
         let new_size = self.used.fetch_add(size, Ordering::Acquire) + size;
         if new_size <= limit {
-            self.max.fetch_max(new_size, Ordering::Relaxed);
+            self.peak.fetch_max(new_size, Ordering::Relaxed);
             let result = self.parent.alloc_zeroed(layout);
             if result.is_null() {
                 self.used.fetch_sub(size, Ordering::Release);
@@ -102,7 +99,7 @@ unsafe impl GlobalAlloc for Alloc {
             result
         } else {
             self.used.fetch_sub(size, Ordering::Release);
-            ptr::null_mut()
+            std::ptr::null_mut()
         }
     }
 
@@ -122,7 +119,7 @@ unsafe impl GlobalAlloc for Alloc {
             result
         } else {
             self.used.fetch_sub(new_size, Ordering::Release);
-            ptr::null_mut()
+            std::ptr::null_mut()
         }
     }
 }
