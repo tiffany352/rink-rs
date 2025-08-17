@@ -2,10 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::config::Config;
+use crate::config::CurrencyBehavior;
 use crate::runner::Runner;
 use crate::RinkHelper;
+use crate::{config::Config, service::EvalResult};
 use eyre::Result;
+use jiff::{Timestamp, Unit};
 use rink_core::one_line;
 use rustyline::{config::Configurer, error::ReadlineError, CompletionType, Editor};
 use std::io::{BufRead, ErrorKind};
@@ -40,6 +42,50 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
 pub const HELP_TEXT: &'static str = "The rink manual can be found with `man 7 rink`, or online:
 https://rinkcalc.app/manual
 To quit, type `quit` or press Ctrl+D.";
+
+fn prompt_load_currency(endpoint: &str, rl: &mut Editor<RinkHelper>) -> Result<bool> {
+    let prompt = format!("Download currency data from <{}>? [y/n] ", endpoint);
+    loop {
+        let line = rl.readline(&prompt);
+        match line {
+            Ok(line) => match &line.trim().to_lowercase()[..] {
+                "y" | "yes" => return Ok(true),
+                "n" | "no" => return Ok(false),
+                _ => println!("Unknown answer. Please type `y` or `n`."),
+            },
+            Err(ReadlineError::Interrupted) => return Ok(false),
+            Err(ReadlineError::Eof) => return Ok(false),
+            Err(err) => return Err(eyre::eyre!(err)),
+        }
+    }
+}
+
+fn on_missing_deps(config: &Config, rl: &mut Editor<RinkHelper>) -> Result<Option<String>> {
+    let should_fetch = match config.currency.behavior {
+        CurrencyBehavior::Always => {
+            println!("Downloading {}...", config.currency.endpoint);
+            true
+        }
+        CurrencyBehavior::Disabled => false,
+        CurrencyBehavior::Default | CurrencyBehavior::Prompt => {
+            prompt_load_currency(&config.currency.endpoint, rl)?
+        }
+    };
+    if should_fetch {
+        let start = Timestamp::now();
+        let res = crate::config::load_live_currency(&config.currency)?;
+        let stop = Timestamp::now();
+        let delta = stop - start;
+        println!(
+            "Fetched {}kB in {:#}",
+            res.len() / 1000,
+            delta.round(Unit::Millisecond).unwrap()
+        );
+        Ok(Some(res))
+    } else {
+        Ok(None)
+    }
+}
 
 pub fn interactive(config: Config) -> Result<()> {
     let mut runner = Runner::new(config.clone())?;
@@ -85,13 +131,31 @@ pub fn interactive(config: Config) -> Result<()> {
             Ok(line) => {
                 rl.add_history_entry(&line);
 
-                let (result, metrics) = runner.execute(line);
+                let (result, metrics) = runner.execute(line.clone());
                 match result {
-                    Ok(line) => println!("{}", line),
-                    Err(line) => println!("{}", line),
-                }
-                if let Some(metrics) = metrics {
-                    println!("{}", metrics);
+                    EvalResult::AnsiString(line) => {
+                        println!("{}", line);
+                        if let Some(metrics) = metrics {
+                            println!("{}", metrics);
+                        }
+                    }
+                    EvalResult::MissingDeps(_deps) => {
+                        let res = on_missing_deps(&config, &mut rl)?;
+                        if res.is_some() {
+                            runner.restart()?;
+                            let (result, metrics) = runner.execute(line);
+                            match result {
+                                EvalResult::AnsiString(line) => println!("{}", line),
+                                EvalResult::MissingDeps(deps) => println!(
+                                    "Still missing dependencies after fetch. Dependencies: {}",
+                                    deps
+                                ),
+                            }
+                            if let Some(metrics) = metrics {
+                                println!("{}", metrics);
+                            }
+                        }
+                    }
                 }
             }
             Err(ReadlineError::Interrupted) => {}

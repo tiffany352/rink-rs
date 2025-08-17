@@ -179,6 +179,9 @@ pub enum Def {
         #[serde(rename = "displayName")]
         display_name: String,
     },
+    Dependency {
+        name: String,
+    },
     Error {
         message: String,
     },

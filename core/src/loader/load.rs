@@ -5,7 +5,7 @@
 use super::Context;
 use crate::ast::{BinOpExpr, BinOpType, Def, DefEntry, Defs, Expr, UnaryOpExpr, UnaryOpType};
 use crate::output::DocString;
-use crate::runtime::{Properties, Property, Substance, Value};
+use crate::runtime::{MissingDeps, Properties, Property, Substance, Value};
 use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 use std::collections::{BTreeMap, BTreeSet};
 use std::convert::TryInto;
@@ -428,9 +428,23 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
                             .push(format!("Warning: Conflicting substances for {}", id));
                     }
                 }
+                Ok(Value::MissingDeps(deps)) => {
+                    ctx.registry.missing_deps.insert(name.clone(), deps);
+                }
                 Ok(_) => resolver.errors.push(format!("{} is not a number", id)),
                 Err(e) => resolver.errors.push(format!("{} is malformed: {}", id, e)),
             },
+            Def::Dependency {
+                name: ref other_name,
+            } => {
+                let already_exists = ctx.registry.units.contains_key(other_name)
+                    || ctx.registry.substances.contains_key(other_name);
+                if !already_exists {
+                    ctx.registry
+                        .missing_deps
+                        .insert(name.clone(), MissingDeps::new(other_name));
+                }
+            }
             Def::Prefix { ref expr, is_long } => match eval_prefix(&prefix_lookup, &expr.0) {
                 Ok(value) => {
                     prefix_lookup.insert(name.clone(), value.clone());
@@ -597,9 +611,11 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
             .categories
             .insert(name.clone(), category_name.clone())
         {
-            resolver.errors.push(format!(
-                "Category conflict: {id} is in both {category_name} and {existing_category}"
-            ));
+            if category_name != existing_category {
+                resolver.errors.push(format!(
+                    "Category conflict: {id} is in both {category_name} and {existing_category}"
+                ));
+            }
         }
     }
 

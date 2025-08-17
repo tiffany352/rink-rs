@@ -1,7 +1,39 @@
 !category currencies "Currencies"
 
-EUR                     !euro
-money                 ? EUR
+# Declare dependencies
+BTC                     dependency BTC
+bitcoin                 dependency bitcoin
+USD                     dependency USD
+JPY                     dependency JPY
+BGN                     dependency BGN
+CZK                     dependency CZK
+DKK                     dependency DKK
+GBP                     dependency GBP
+HUF                     dependency HUF
+PLN                     dependency PLN
+RON                     dependency RON
+SEK                     dependency SEK
+CHF                     dependency CHF
+ISK                     dependency ISK
+NOK                     dependency NOK
+TRY                     dependency TRY
+AUD                     dependency AUD
+BRL                     dependency BRL
+CAD                     dependency CAD
+CNY                     dependency CNY
+HKD                     dependency HKD
+IDR                     dependency IDR
+ILS                     dependency ILS
+INR                     dependency INR
+KRW                     dependency KRW
+MXN                     dependency MXN
+MYR                     dependency MYR
+NZD                     dependency NZD
+PHP                     dependency PHP
+SGD                     dependency SGD
+THB                     dependency THB
+ZAR                     dependency ZAR
+RUB                     dependency RUB
 
 # Symbols + names
 # EU

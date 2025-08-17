@@ -6,13 +6,49 @@ use super::Substance;
 use crate::loader::Context;
 use crate::parsing::datetime;
 use crate::types::{DateTime, Number};
+use serde_derive::{Deserialize, Serialize};
 use std::ops::{Add, Div, Mul, Neg, Sub};
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialOrd, Ord, PartialEq, Eq)]
+pub struct MissingDeps {
+    needed: Vec<String>,
+}
+
+impl MissingDeps {
+    pub fn new(name: &str) -> MissingDeps {
+        MissingDeps {
+            needed: vec![name.into()],
+        }
+    }
+
+    pub fn combine(left: &MissingDeps, right: &MissingDeps) -> MissingDeps {
+        MissingDeps {
+            needed: left
+                .needed
+                .iter()
+                .chain(right.needed.iter())
+                .cloned()
+                .collect(),
+        }
+    }
+
+    pub fn needed(&self) -> &[String] {
+        &self.needed
+    }
+}
+
+impl std::fmt::Display for MissingDeps {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "missing {}", self.needed.join(", "))
+    }
+}
 
 #[derive(Clone, Debug)]
 pub enum Value {
     Number(Number),
     DateTime(DateTime),
     Substance(Substance),
+    MissingDeps(MissingDeps),
 }
 
 pub trait Show {
@@ -36,6 +72,7 @@ impl Show for Value {
             Value::Number(ref num) => num.show(context),
             Value::DateTime(ref dt) => dt.show(context),
             Value::Substance(ref v) => v.show(context),
+            Value::MissingDeps(ref d) => format!("{d}"),
         }
     }
 }
@@ -45,6 +82,12 @@ impl Value {
         match (self, exp) {
             (&Value::Number(ref left), &Value::Number(ref right)) => {
                 left.pow(right).map(Value::Number)
+            }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
             }
             (_, _) => Err("Operation is not defined".to_string()),
         }
@@ -88,6 +131,12 @@ impl<'a, 'b> Add<&'b Value> for &'a Value {
             (&Value::Substance(ref left), &Value::Substance(ref right)) => {
                 left.add(right).map(Value::Substance)
             }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
+            }
             (_, _) => Err("Operation is not defined".to_string()),
         }
     }
@@ -114,6 +163,12 @@ impl<'a, 'b> Sub<&'b Value> for &'a Value {
             (&Value::DateTime(ref left), &Value::DateTime(ref right)) => {
                 datetime::from_duration(&(left - right)).map(Value::Number)
             }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
+            }
             (_, _) => Err("Operation is not defined".to_string()),
         }
     }
@@ -127,6 +182,7 @@ impl<'a> Neg for &'a Value {
             Value::Number(ref num) => (-num)
                 .ok_or_else(|| "Bug: Negation should not fail".to_string())
                 .map(Value::Number),
+            Value::MissingDeps(ref d) => Ok(Value::MissingDeps(d.clone())),
             _ => Err("Operation is not defined".to_string()),
         }
     }
@@ -144,6 +200,12 @@ impl<'a, 'b> Mul<&'b Value> for &'a Value {
             | (&Value::Substance(ref sub), &Value::Number(ref co)) => {
                 (sub * co).map(Value::Substance)
             }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
+            }
             (_, _) => Err("Operation is not defined".to_string()),
         }
     }
@@ -160,6 +222,12 @@ impl<'a, 'b> Div<&'b Value> for &'a Value {
             (&Value::Substance(ref sub), &Value::Number(ref co)) => {
                 (sub / co).map(Value::Substance)
             }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
+            }
             (_, _) => Err("Operation is not defined".to_string()),
         }
     }
@@ -171,6 +239,12 @@ impl Value {
             (&Value::Number(ref left), &Value::Number(ref right)) => {
                 left.shl(right).map(Value::Number)
             }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
+            }
             (_, _) => Err("Operation is not defined".to_string()),
         }
     }
@@ -179,6 +253,12 @@ impl Value {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) => {
                 left.shr(right).map(Value::Number)
+            }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
             }
             (_, _) => Err("Operation is not defined".to_string()),
         }
@@ -189,6 +269,12 @@ impl Value {
             (&Value::Number(ref left), &Value::Number(ref right)) => {
                 left.rem(right).map(Value::Number)
             }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
+            }
             (_, _) => Err("Operation is not defined".to_string()),
         }
     }
@@ -197,6 +283,12 @@ impl Value {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) => {
                 left.and(right).map(Value::Number)
+            }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
             }
             (_, _) => Err("Operation is not defined".to_string()),
         }
@@ -207,6 +299,12 @@ impl Value {
             (&Value::Number(ref left), &Value::Number(ref right)) => {
                 left.or(right).map(Value::Number)
             }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
+            }
             (_, _) => Err("Operation is not defined".to_string()),
         }
     }
@@ -215,6 +313,12 @@ impl Value {
         match (self, other) {
             (&Value::Number(ref left), &Value::Number(ref right)) => {
                 left.xor(right).map(Value::Number)
+            }
+            (&Value::MissingDeps(ref a), &Value::MissingDeps(ref b)) => {
+                Ok(Value::MissingDeps(MissingDeps::combine(a, b)))
+            }
+            (&Value::MissingDeps(ref a), _) | (_, &Value::MissingDeps(ref a)) => {
+                Ok(Value::MissingDeps(a.clone()))
             }
             (_, _) => Err("Operation is not defined".to_string()),
         }

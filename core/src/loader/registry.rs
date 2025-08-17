@@ -1,6 +1,6 @@
 use crate::ast::{DatePattern, Expr};
 use crate::output::DocString;
-use crate::runtime::Substance;
+use crate::runtime::{MissingDeps, Substance};
 use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
 use crate::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -35,15 +35,20 @@ pub struct Registry {
     /// Maps elemental names (like `He`) to substance names (`helium`),
     /// used for parsing molecular formulas, e.g. `H2O`.
     pub substance_symbols: BTreeMap<String, String>,
+    /// Missing dependencies, throws a dependency error if used
+    pub missing_deps: BTreeMap<String, MissingDeps>,
 }
 
 impl Registry {
-    fn lookup_exact(&self, name: &str) -> Option<Value> {
+    pub fn lookup_exact(&self, name: &str) -> Option<Value> {
         if let Some(k) = self.base_units.get(name) {
             return Some(Value::Number(Number::one_unit(k.to_owned())));
         }
         if let Some(v) = self.units.get(name).cloned() {
             return Some(Value::Number(v));
+        }
+        if let Some(deps) = self.missing_deps.get(name) {
+            return Some(Value::MissingDeps(deps.clone()));
         }
         None
     }

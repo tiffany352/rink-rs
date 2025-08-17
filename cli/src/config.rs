@@ -59,9 +59,20 @@ pub struct Rink {
     pub long_output: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum CurrencyBehavior {
+    Default,
+    Prompt,
+    Always,
+    Disabled,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(default, deny_unknown_fields)]
 pub struct Currency {
+    /// Set behavior for currency fetching, whether to prompt.
+    pub behavior: CurrencyBehavior,
     /// Set to false to disable currency loading entirely.
     pub enabled: bool,
     /// Set to false to only reuse the existing cached currency data.
@@ -177,12 +188,19 @@ impl Default for Config {
 impl Default for Currency {
     fn default() -> Self {
         Currency {
+            behavior: CurrencyBehavior::Default,
             enabled: true,
             fetch_on_startup: true,
             endpoint: "https://rinkcalc.app/data/currency.json".to_owned(),
             cache_duration: Duration::from_secs(60 * 60), // 1 hour
             timeout: Duration::from_secs(2),
         }
+    }
+}
+
+impl Currency {
+    pub fn should_load_defs(&self) -> bool {
+        self.enabled && self.behavior != CurrencyBehavior::Disabled
     }
 }
 
@@ -279,7 +297,7 @@ pub fn force_refresh_currency(config: &Currency) -> Result<String> {
     ))
 }
 
-fn load_live_currency(config: &Currency) -> Result<String> {
+pub(crate) fn load_live_currency(config: &Currency) -> Result<String> {
     let duration = if config.fetch_on_startup {
         Some(config.cache_duration)
     } else {
@@ -295,8 +313,14 @@ fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBu
         .into_iter()
         .collect::<Vec<_>>()
         .join("\n");
-    let live_defs = load_live_currency(config)?;
-    ctx.load_currency(&live_defs, &base.as_str())
+    let duration = config.cache_duration;
+    let cached = cached_nofetch("currency.json", Some(duration))?;
+    let contents = if let Some(cached) = cached {
+        Some(file_to_string(cached)?)
+    } else {
+        None
+    };
+    ctx.load_currency(contents.as_ref().map(|s| &s[..]), &base.as_str())
         .map_err(|err| eyre!("{err}"))?;
     Ok(())
 }
@@ -360,7 +384,7 @@ pub fn load(config: &Config) -> Result<Context> {
     ctx.load_dates(datetime::parse_datefile(&dates));
 
     // Load currency data.
-    if config.currency.enabled {
+    if config.currency.should_load_defs() {
         match try_load_currency(&config.currency, &mut ctx, &search_path) {
             Ok(()) => (),
             Err(err) => {
@@ -439,6 +463,23 @@ pub fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<Fil
     temp_file
         .persist(path)
         .wrap_err("Failed to write to cache dir")
+}
+
+fn cached_nofetch(filename: &str, expiration: Option<Duration>) -> Result<Option<File>> {
+    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
+    path.push("rink");
+    path.push(filename);
+
+    // 1. Return file if it exists and is up to date.
+    // 2. Try to download a new version of the file and return it.
+    // 3. If that fails, return the stale file if it exists.
+
+    if let Ok(file) = File::open(&path) {
+        if let Ok(result) = read_if_current(file, expiration) {
+            return Ok(Some(result));
+        }
+    }
+    Ok(None)
 }
 
 fn cached(

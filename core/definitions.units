@@ -234,6 +234,10 @@ bit       !
 ?? WHO TRS 932, Annex 2.
 IU                              !
 
+?? The Euro is used as the base unit for money in Rink because
+?? currency data is fetched from the European Central Bank.
+EUR                     !euro
+
 !endcategory
 
 ###########################################################################
@@ -697,6 +701,7 @@ fuel_efficiency         ? area^-1
 molar_mass              ? mass / amount
 flow_rate               ? volume / time
 pressure_column         ? pressure / length
+money                   ? EUR
 
 # XXX: conflates “biological activity” and “immunological activity” to
 # avoid a conflicting quantities warning; some biological agents have

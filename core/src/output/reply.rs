@@ -6,6 +6,7 @@ use super::fmt::{flat_join, join, Span, TokenFmt};
 use super::{DocString, NumberParts};
 use crate::ast::{Expr, Precedence, UnaryOpType};
 use crate::output::Digits;
+use crate::runtime::MissingDeps;
 use crate::types::DateTime;
 use serde_derive::Serialize;
 use std::collections::BTreeMap;
@@ -166,6 +167,7 @@ pub struct NotFoundError {
 pub enum QueryError {
     Conformance(Box<ConformanceError>),
     NotFound(NotFoundError),
+    MissingDeps(MissingDeps),
     Generic { message: String },
 }
 
@@ -189,6 +191,7 @@ impl ExprReply {
             }
             match *expr {
                 Expr::Unit { ref name } => parts.push(ExprParts::Unit { name: name.clone() }),
+                Expr::Dependency { ref name } => literal!(format!("dependency {name}")),
                 Expr::Quote { ref string } => literal!(format!("'{}'", string)),
                 Expr::Const { ref value } => {
                     let (_exact, val) = value.to_string(10, Digits::Default);
@@ -597,11 +600,23 @@ impl<'a> TokenFmt<'a> for SearchReply {
     }
 }
 
+impl<'a> TokenFmt<'a> for MissingDeps {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        once(Span::list_begin("Missing dependencies: "))
+            .chain(join(
+                self.needed().iter().map(|x| Span::unit(x)),
+                Span::list_sep(", "),
+            ))
+            .collect()
+    }
+}
+
 impl<'a> TokenFmt<'a> for QueryError {
     fn to_spans(&'a self) -> Vec<Span<'a>> {
         match self {
             QueryError::Conformance(err) => err.to_spans(),
             QueryError::NotFound(err) => err.to_spans(),
+            QueryError::MissingDeps(err) => err.to_spans(),
             QueryError::Generic { message } => vec![Span::plain(message)],
         }
     }

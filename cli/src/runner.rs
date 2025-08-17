@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::config::Config;
 use crate::fmt::to_ansi_string;
 use crate::service::RinkService;
+use crate::{config::Config, service::EvalResult};
 use eyre::Result;
+use rink_core::output::QueryError;
 use rink_sandbox::Sandbox;
 use std::sync::{Arc, Mutex};
 
@@ -35,10 +36,7 @@ impl Runner {
         })
     }
 
-    pub(crate) fn execute(
-        &mut self,
-        line: String,
-    ) -> (std::result::Result<String, String>, Option<String>) {
+    pub(crate) fn execute(&mut self, line: String) -> (EvalResult, Option<String>) {
         if let Some(ref mut sandbox) = self.sandbox {
             match sandbox.execute(line) {
                 Ok(res) => (
@@ -53,14 +51,35 @@ impl Runner {
                         None
                     },
                 ),
-                Err(e) => (Err(format!("{e}")), None),
+                Err(e) => (EvalResult::AnsiString(format!("{e}")), None),
             }
         } else {
             match rink_core::eval(&mut *self.local.lock().unwrap(), &*line) {
-                Ok(v) => (Ok(to_ansi_string(&self.config, &v)), None),
-                Err(e) => (Err(to_ansi_string(&self.config, &e)), None),
+                Ok(v) => (
+                    EvalResult::AnsiString(to_ansi_string(&self.config, &v)),
+                    None,
+                ),
+                Err(QueryError::MissingDeps(deps)) => (EvalResult::MissingDeps(deps), None),
+                Err(e) => (
+                    EvalResult::AnsiString(to_ansi_string(&self.config, &e)),
+                    None,
+                ),
             }
         }
+    }
+
+    pub(crate) fn restart(&mut self) -> Result<()> {
+        let ctx = crate::config::load(&self.config)?;
+        *self.local.lock().unwrap() = ctx;
+        if let Some(mut existing) = self.sandbox.take() {
+            existing.terminate()?;
+        }
+        if self.config.limits.enabled {
+            let mut sandbox = Sandbox::new(self.config.clone())?;
+            sandbox.restart()?;
+            self.sandbox = Some(sandbox);
+        };
+        Ok(())
     }
 
     pub(crate) fn terminate(&mut self) -> Result<()> {

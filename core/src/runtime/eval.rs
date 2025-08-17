@@ -14,6 +14,7 @@ use crate::output::{
     UnitsForReply, UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
+use crate::runtime::MissingDeps;
 use crate::types::{BaseUnit, BigInt, Dimensionality, Number, Numeric};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -40,6 +41,29 @@ fn expect_number(ctx: &Context, value: Value) -> Result<Number, QueryError> {
     }
 }
 
+fn lookup_unit(ctx: &Context, name: &str) -> Option<Value> {
+    ctx.lookup(name)
+        .or_else(|| {
+            ctx.registry
+                .substances
+                .get(name)
+                .cloned()
+                .map(Value::Substance)
+        })
+        .or_else(|| {
+            ctx.registry
+                .substance_symbols
+                .get(name)
+                .and_then(|full_name| {
+                    ctx.registry
+                        .substances
+                        .get(full_name)
+                        .cloned()
+                        .map(Value::Substance)
+                })
+        })
+}
+
 /// Evaluates an expression to compute its value, *excluding* `->`
 /// conversions.
 pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError> {
@@ -47,27 +71,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
 
     match *expr {
         Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(ctx.now.clone())),
-        Expr::Unit { ref name } => ctx
-            .lookup(name)
-            .or_else(|| {
-                ctx.registry
-                    .substances
-                    .get(name)
-                    .cloned()
-                    .map(Value::Substance)
-            })
-            .or_else(|| {
-                ctx.registry
-                    .substance_symbols
-                    .get(name)
-                    .and_then(|full_name| {
-                        ctx.registry
-                            .substances
-                            .get(full_name)
-                            .cloned()
-                            .map(Value::Substance)
-                    })
-            })
+        Expr::Unit { ref name } => lookup_unit(ctx, name)
             .or_else(|| {
                 formula::substance_from_formula(
                     name,
@@ -77,6 +81,9 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                 .map(Value::Substance)
             })
             .ok_or_else(|| QueryError::NotFound(ctx.unknown_unit_err(name))),
+        Expr::Dependency { ref name } => Ok(
+            lookup_unit(ctx, name).unwrap_or_else(|| Value::MissingDeps(MissingDeps::new(name)))
+        ),
         Expr::Quote { ref string } => Ok(Value::Number(Number::one_unit(BaseUnit::new(string)))),
         Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
         Expr::Date { ref tokens } => match datetime::try_decode(tokens, ctx) {
@@ -168,6 +175,7 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
             let expr = eval_expr(ctx, expr)?;
             let expr = match expr {
                 Value::Substance(sub) => sub,
+                Value::MissingDeps(deps) => return Ok(Value::MissingDeps(deps)),
                 x => {
                     return Err(QueryError::generic(format!(
                         "Not defined: {} of <{}>",
@@ -463,6 +471,9 @@ pub fn eval_unit_name(
     match *expr {
         Expr::Call { .. } => Err(QueryError::generic(
             "Calls are not allowed in the right hand side of conversions".to_string(),
+        )),
+        Expr::Dependency { .. } => Err(QueryError::generic(
+            "Dependencies are not allowed in the right hand side of conversions".to_string(),
         )),
         Expr::Unit { ref name } | Expr::Quote { string: ref name } => {
             let mut map = BTreeMap::new();
@@ -1257,6 +1268,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 Value::Substance(s) => Ok(QueryReply::Substance(
                     s.to_reply(ctx).map_err(QueryError::generic)?,
                 )),
+                Value::MissingDeps(d) => Err(QueryError::MissingDeps(d)),
             }
         }
         Query::Error(ref e) => Err(QueryError::generic(e.clone())),
