@@ -76,7 +76,7 @@ fn try_load_currency(config: &Currency, ctx: &mut Context) {
     let base = rink_core::CURRENCY_FILE.unwrap();
     let live = std::fs::read_to_string(&config.path).unwrap();
 
-    ctx.load_currency(&live, &base).unwrap();
+    ctx.load_currency(Some(&live), &base).unwrap();
 }
 
 /// Creates a context by searching standard directories

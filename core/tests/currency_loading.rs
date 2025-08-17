@@ -3,7 +3,7 @@ fn load_currency() {
     let mut ctx = rink_core::simple_context().unwrap();
     let live_data = include_str!("../tests/currency.snapshot.json");
     let base_defs = rink_core::CURRENCY_FILE.unwrap();
-    ctx.load_currency(&live_data, base_defs).unwrap();
+    ctx.load_currency(Some(&live_data), base_defs).unwrap();
 
     let result = rink_core::one_line(&mut ctx, "USD");
     assert_eq!(
