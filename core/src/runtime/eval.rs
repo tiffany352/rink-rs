@@ -19,6 +19,27 @@ use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::rc::Rc;
 
+fn lookup_number(ctx: &Context, name: &str) -> Result<Number, QueryError> {
+    match ctx.lookup(name) {
+        Some(Value::Number(number)) => Ok(number),
+        Some(x) => Err(QueryError::generic(format!(
+            "Expected `{name}` to be a number, got: <{}>",
+            x.show(ctx)
+        ))),
+        None => Err(QueryError::NotFound(ctx.unknown_unit_err(name))),
+    }
+}
+
+fn expect_number(ctx: &Context, value: Value) -> Result<Number, QueryError> {
+    match value {
+        Value::Number(value) => Ok(value),
+        _ => Err(QueryError::generic(format!(
+            "Expected number, got: <{}>",
+            value.show(ctx)
+        ))),
+    }
+}
+
 /// Evaluates an expression to compute its value, *excluding* `->`
 /// conversions.
 pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError> {
@@ -28,7 +49,6 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
         Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(ctx.now.clone())),
         Expr::Unit { ref name } => ctx
             .lookup(name)
-            .map(Value::Number)
             .or_else(|| {
                 ctx.registry
                     .substances
@@ -115,38 +135,21 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                 (-&v).map_err(|e| QueryError::generic(format!("{}: - <{}>", e, v.show(ctx))))
             }),
             UnaryOpType::Degree(ref suffix) => {
-                let (name, base, scale) = suffix.name_base_scale();
+                let (_name, base, scale) = suffix.name_base_scale();
 
-                let expr = eval_expr(ctx, &unaryop.expr)?;
-                let expr = match expr {
-                    Value::Number(expr) => expr,
-                    _ => {
-                        return Err(QueryError::generic(format!(
-                            "Expected number, got: <{}> °{}",
-                            expr.show(ctx),
-                            name
-                        )))
-                    }
-                };
-                if expr.unit != Dimensionality::new() {
-                    Err(QueryError::generic(format!(
+                let result = eval_expr(ctx, &unaryop.expr)?;
+                let result = expect_number(ctx, result)?;
+                if result.unit != Dimensionality::new() {
+                    return Err(QueryError::generic(format!(
                         "Expected dimensionless, got: <{}>",
-                        expr.show(ctx)
-                    )))
-                } else {
-                    let expr = (&expr
-                        * &ctx
-                            .lookup(scale)
-                            .expect(&*format!("Missing {} unit", scale)))
-                        .unwrap();
-                    Ok(Value::Number(
-                        (&expr
-                            + &ctx
-                                .lookup(base)
-                                .expect(&*format!("Missing {} constant", base)))
-                            .unwrap(),
-                    ))
+                        result.show(ctx)
+                    )));
                 }
+                let scale = lookup_number(ctx, scale)?;
+                let base = lookup_number(ctx, base)?;
+                let result: Number = (&result * &scale).unwrap();
+                let result = (&result + &base).unwrap();
+                Ok(Value::Number(result))
             }
         },
 
@@ -664,7 +667,7 @@ fn conformance_err(ctx: &Context, top: &Number, bottom: &Number) -> ConformanceE
 fn to_list(ctx: &Context, top: &Number, list: &[&str]) -> Result<Vec<NumberParts>, QueryError> {
     let units = list
         .iter()
-        .map(|x| ctx.lookup(x).ok_or_else(|| ctx.unknown_unit_err(x)))
+        .map(|name| lookup_number(ctx, name))
         .collect::<Result<Vec<Number>, _>>()?;
     {
         let first = units
@@ -846,7 +849,9 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     (
                         def.as_ref().map(|x| x.to_string()),
                         def,
-                        ctx.lookup(&name).map(|x| x.to_parts(ctx)),
+                        ctx.lookup(&name)
+                            .and_then(|v| v.to_number())
+                            .map(|x| x.to_parts(ctx)),
                     )
                 };
             Ok(QueryReply::Def(Box::new(DefReply {
@@ -1047,25 +1052,20 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            let bottom = ctx
-                .lookup(scale)
-                .expect(&*format!("Unit {} missing", scale));
-            if top.unit != bottom.unit {
+            let scale = lookup_number(ctx, scale)?;
+            let base = lookup_number(ctx, base)?;
+            if top.unit != scale.unit {
                 Err(QueryError::Conformance(Box::new(conformance_err(
-                    ctx, top, &bottom,
+                    ctx, top, &scale,
                 ))))
             } else {
-                let res = (top
-                    - &ctx
-                        .lookup(base)
-                        .expect(&*format!("Constant {} missing", base)))
-                    .unwrap();
-                let res = (&res / &bottom).unwrap();
+                let res = (top - &base).unwrap();
+                let res = (&res / &scale).unwrap();
                 let mut name = BTreeMap::new();
                 name.insert(deg.to_string(), 1);
                 Ok(QueryReply::Conversion(Box::new(ctx.show(
                     &res,
-                    &bottom,
+                    &scale,
                     name,
                     Numeric::one(),
                     10,

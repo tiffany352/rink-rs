@@ -29,7 +29,7 @@ pub struct Context {
     /// as the `ans` variable.
     pub save_previous_result: bool,
     /// The previous query result.
-    pub previous_result: Option<Number>,
+    pub previous_result: Option<Value>,
 }
 
 impl Default for Context {
@@ -67,12 +67,12 @@ impl Context {
 
     /// Given a unit name, returns its value if it exists. Supports SI
     /// prefixes, plurals, bare dimensions like length, and quantities.
-    pub fn lookup(&self, name: &str) -> Option<Number> {
+    pub fn lookup(&self, name: &str) -> Option<Value> {
         if name == "ans" || name == "ANS" || name == "_" {
             return self.previous_result.clone();
         }
         if let Some(v) = self.temporaries.get(name).cloned() {
-            return Some(v);
+            return Some(Value::Number(v));
         }
 
         self.registry.lookup(name)

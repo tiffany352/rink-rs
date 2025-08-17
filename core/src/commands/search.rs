@@ -2,11 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::{
-    loader::Context,
-    output::{NumberParts, SearchReply},
-    types::{BaseUnit, Dimensionality},
-};
+use crate::loader::Context;
+use crate::output::{NumberParts, SearchReply};
+use crate::types::{BaseUnit, Dimensionality};
 
 pub(crate) fn search_internal<'a>(
     ctx: &'a Context,
@@ -28,6 +26,7 @@ pub fn search(ctx: &Context, query: &str, num_results: usize) -> SearchReply {
             .map(|name| {
                 let parts = ctx
                     .lookup(name)
+                    .and_then(|v| v.to_number())
                     .map(|x| x.to_parts(ctx))
                     .or_else(|| {
                         if ctx.registry.substances.get(name).is_some() {

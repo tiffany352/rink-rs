@@ -49,6 +49,22 @@ impl Value {
             (_, _) => Err("Operation is not defined".to_string()),
         }
     }
+
+    pub fn as_number(&self) -> Option<&Number> {
+        if let Value::Number(ref num) = self {
+            Some(num)
+        } else {
+            None
+        }
+    }
+
+    pub fn to_number(&self) -> Option<Number> {
+        if let Value::Number(ref num) = self {
+            Some(num.clone())
+        } else {
+            None
+        }
+    }
 }
 
 impl<'a, 'b> Add<&'b Value> for &'a Value {
