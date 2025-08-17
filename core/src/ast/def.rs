@@ -30,6 +30,9 @@ pub enum DateMatch {
     Sec,
     WeekDay,
     Year,
+    Today,
+    Now,
+    Relative,
 }
 
 impl DateMatch {
@@ -54,6 +57,9 @@ impl DateMatch {
             "sec" => Some(DateMatch::Sec),
             "weekday" => Some(DateMatch::WeekDay),
             "year" => Some(DateMatch::Year),
+            "today" => Some(DateMatch::Today),
+            "now" => Some(DateMatch::Now),
+            "relative" => Some(DateMatch::Relative),
             _ => None,
         }
     }
@@ -79,6 +85,9 @@ impl DateMatch {
             DateMatch::Sec => "sec",
             DateMatch::WeekDay => "weekday",
             DateMatch::Year => "year",
+            DateMatch::Today => "today",
+            DateMatch::Now => "now",
+            DateMatch::Relative => "relative",
         }
     }
 }

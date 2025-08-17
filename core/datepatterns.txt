@@ -25,3 +25,11 @@ isoyear monthname day[ hour24:min[:sec][ offset]]
 # Today dates
 hour12:min[:sec] meridiem[ offset]
 hour24:min[:sec][ offset]
+
+# Relative offsets
+today&relative hour12:min[:sec] meridiem[ offset]
+today&relative hour24:min[:sec][ offset]
+today&relative
+now&relative
+today
+now

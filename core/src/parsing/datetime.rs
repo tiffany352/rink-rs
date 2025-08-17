@@ -5,7 +5,7 @@
 use jiff::civil::{Date, Era, ISOWeekDate, Time, Weekday};
 use jiff::fmt::strtime::Meridiem;
 use jiff::tz::Offset;
-use jiff::SignedDuration;
+use jiff::{SignedDuration, Span, Unit, Zoned};
 
 use crate::ast::{DateMatch, DatePattern, DateToken};
 use crate::loader::Context;
@@ -39,6 +39,12 @@ fn numeric_match(
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct Relative {
+    unit: Unit,
+    value: i32,
+}
+
 pub(crate) struct Fields {
     era: Option<Era>,
     year: Option<i32>,
@@ -55,6 +61,10 @@ pub(crate) struct Fields {
     minute: Option<i32>,
     second: Option<i32>,
     nanosecond: Option<i32>,
+
+    is_today: bool,
+    is_now: bool,
+    relative: Option<Relative>,
 
     time_zone: Option<TimeZone>,
 }
@@ -142,6 +152,9 @@ impl Default for Fields {
             minute: None,
             second: None,
             nanosecond: None,
+            is_today: false,
+            is_now: false,
+            relative: None,
             time_zone: None,
         }
     }
@@ -433,6 +446,67 @@ where
                 }
                 x => Err(format!("Expected weekday, got {}", ts(x))),
             },
+            DateMatch::Today => match tok {
+                Some(DateToken::Literal(ref lit)) if lit == "today" => {
+                    out.is_today = true;
+                    Ok(())
+                }
+                x => Err(format!("Expected `today`, got {}", ts(x))),
+            },
+            DateMatch::Now => match tok {
+                Some(DateToken::Literal(ref lit)) if lit == "now" => {
+                    out.is_now = true;
+                    Ok(())
+                }
+                x => Err(format!("Expected `now`, got {}", ts(x))),
+            },
+            DateMatch::Relative => match tok {
+                Some(sign @ DateToken::Plus | sign @ DateToken::Dash) => {
+                    date.next();
+                    let number = match date.peek() {
+                        Some(DateToken::Number(n, None)) => n,
+                        x => return Err(format!("Expected integer, got {}", ts(x))),
+                    };
+                    let value = i32::from_str_radix(number, 10)
+                        .map_err(|e| format!("Invalid integer: {e}"))?;
+                    let value = if sign == DateToken::Dash {
+                        -value
+                    } else {
+                        value
+                    };
+                    date.next();
+                    let unit = match date.peek() {
+                        Some(DateToken::Literal(lit)) => match &lit.to_lowercase()[..] {
+                            "ns" | "nano" | "nanos" | "nanosecond" | "nanoseconds" => {
+                                Unit::Nanosecond
+                            }
+                            "us" | "µs" | "micro" | "micros" | "microsecond" | "microseconds" => {
+                                Unit::Microsecond
+                            }
+                            "ms" | "milli" | "millis" | "millisecond" | "milliseconds" => {
+                                Unit::Millisecond
+                            }
+                            "s" | "sec" | "secs" | "second" | "seconds" => Unit::Second,
+                            "mi" | "min" | "mins" | "minute" | "minutes" => Unit::Minute,
+                            "h" | "hr" | "hrs" | "hour" | "hours" => Unit::Hour,
+                            "d" | "dy" | "day" | "days" => Unit::Day,
+                            "w" | "wk" | "week" | "weeks" => Unit::Week,
+                            "mo" | "mon" | "month" | "months" => Unit::Month,
+                            "y" | "yr" | "yrs" | "year" | "years" => Unit::Year,
+                            "m" => {
+                                return Err(format!(
+                                    "`m` is ambiguous, did you mean `minutes` or `months`?"
+                                ))
+                            }
+                            _ => return Err(format!("Unknown unit `{}`", lit)),
+                        },
+                        x => return Err(format!("Expected unit, got {}", ts(x))),
+                    };
+                    out.relative = Some(Relative { unit, value });
+                    Ok(())
+                }
+                x => Err(format!("Expected + or -, got {}", ts(x))),
+            },
         },
         Some(&DatePattern::Optional(ref pats)) => {
             advance = false;
@@ -484,8 +558,16 @@ fn attempt(
     };
     res.map_err(|e| (e, count))?;
 
-    let date = parsed.to_date(now.year());
-    let time = parsed.to_time();
+    let mut date = parsed.to_date(now.year());
+    let mut time = parsed.to_time();
+
+    if (parsed.is_now || parsed.is_today) && date.is_none() {
+        date = Some(now.dt.date());
+    }
+    if parsed.is_now && time.is_none() {
+        time = Some(now.dt.time());
+    }
+
     let tz = parsed.time_zone.unwrap_or(now.dt.time_zone().clone());
 
     let dt = match (date, time) {
@@ -495,10 +577,32 @@ fn attempt(
         (None, None) => return Err(("Can't make a valid datetime".to_owned(), count)),
     };
 
-    match dt.to_zoned(tz) {
-        Ok(zoned) => Ok(zoned.into()),
-        Err(err) => Err((err.to_string(), count)),
+    let mut zoned: Zoned = match dt.to_zoned(tz) {
+        Ok(zoned) => zoned,
+        Err(err) => return Err((err.to_string(), count)),
+    };
+
+    if let Some(relative) = parsed.relative {
+        let span = Span::new();
+        let span = match relative.unit {
+            Unit::Year => span.years(relative.value),
+            Unit::Month => span.months(relative.value),
+            Unit::Week => span.weeks(relative.value),
+            Unit::Day => span.days(relative.value),
+            Unit::Hour => span.hours(relative.value),
+            Unit::Minute => span.minutes(relative.value),
+            Unit::Second => span.seconds(relative.value),
+            Unit::Millisecond => span.milliseconds(relative.value),
+            Unit::Microsecond => span.microseconds(relative.value),
+            Unit::Nanosecond => span.nanoseconds(relative.value),
+        };
+        zoned = match zoned.checked_add(span) {
+            Ok(zoned) => zoned,
+            Err(err) => return Err((err.to_string(), count)),
+        };
     }
+
+    Ok(zoned.into())
 }
 
 pub fn try_decode(date: &[DateToken], context: &Context) -> Result<DateTime, String> {
@@ -591,6 +695,11 @@ where
                     }
                 }
                 DatePattern::Literal(buf)
+            }
+            // Separator that allows putting patterns next to each other without a space.
+            '&' => {
+                iter.next();
+                continue;
             }
             x if x.is_whitespace() => {
                 while iter.peek().map(|c| c.is_whitespace()).unwrap_or(false) {
@@ -1114,5 +1223,170 @@ mod tests {
         let (res, parsed) = parse(date, "isoyear");
         assert!(res.is_ok());
         assert_eq!(parsed.iso_year, Some(2025));
+    }
+
+    #[test]
+    fn test_today() {
+        let date = vec![DateToken::Literal("today".into())];
+        let (res, parsed) = parse(date, "today");
+        assert!(res.is_ok());
+        assert_eq!(parsed.is_today, true);
+
+        let date = vec![DateToken::Literal("am".into())];
+        let (res, parsed) = parse(date, "today");
+        assert!(!res.is_ok());
+        assert_eq!(parsed.is_today, false);
+    }
+
+    #[test]
+    fn test_now() {
+        let date = vec![DateToken::Literal("now".into())];
+        let (res, parsed) = parse(date, "now");
+        assert!(res.is_ok());
+        assert_eq!(parsed.is_now, true);
+
+        let date = vec![DateToken::Literal("am".into())];
+        let (res, parsed) = parse(date, "now");
+        assert!(!res.is_ok());
+        assert_eq!(parsed.is_now, false);
+    }
+
+    #[test]
+    fn test_relative() {
+        let date = vec![
+            DateToken::Plus,
+            DateToken::Number("3".into(), None),
+            DateToken::Literal("d".into()),
+        ];
+        let (res, parsed) = parse(date, "relative");
+        assert!(res.is_ok());
+        assert_eq!(
+            parsed.relative,
+            Some(Relative {
+                unit: Unit::Day,
+                value: 3,
+            })
+        );
+
+        let date = vec![
+            DateToken::Dash,
+            DateToken::Number("7".into(), None),
+            DateToken::Literal("w".into()),
+        ];
+        let (res, parsed) = parse(date, "relative");
+        assert!(res.is_ok());
+        assert_eq!(
+            parsed.relative,
+            Some(Relative {
+                unit: Unit::Week,
+                value: -7,
+            })
+        );
+
+        let cases = [
+            (Unit::Nanosecond, "ns"),
+            (Unit::Nanosecond, "nano"),
+            (Unit::Nanosecond, "nanos"),
+            (Unit::Nanosecond, "nanosecond"),
+            (Unit::Nanosecond, "nanoseconds"),
+            (Unit::Microsecond, "us"),
+            (Unit::Microsecond, "µs"),
+            (Unit::Microsecond, "micro"),
+            (Unit::Microsecond, "micros"),
+            (Unit::Microsecond, "microsecond"),
+            (Unit::Microsecond, "microseconds"),
+            (Unit::Millisecond, "ms"),
+            (Unit::Millisecond, "milli"),
+            (Unit::Millisecond, "millis"),
+            (Unit::Millisecond, "millisecond"),
+            (Unit::Millisecond, "milliseconds"),
+            (Unit::Second, "s"),
+            (Unit::Second, "sec"),
+            (Unit::Second, "secs"),
+            (Unit::Second, "second"),
+            (Unit::Second, "seconds"),
+            (Unit::Minute, "mi"),
+            (Unit::Minute, "min"),
+            (Unit::Minute, "mins"),
+            (Unit::Minute, "minute"),
+            (Unit::Minute, "minutes"),
+            (Unit::Hour, "h"),
+            (Unit::Hour, "hr"),
+            (Unit::Hour, "hrs"),
+            (Unit::Hour, "hour"),
+            (Unit::Hour, "hours"),
+            (Unit::Day, "d"),
+            (Unit::Day, "dy"),
+            (Unit::Day, "day"),
+            (Unit::Day, "days"),
+            (Unit::Week, "w"),
+            (Unit::Week, "wk"),
+            (Unit::Week, "week"),
+            (Unit::Week, "weeks"),
+            (Unit::Month, "mo"),
+            (Unit::Month, "mon"),
+            (Unit::Month, "month"),
+            (Unit::Month, "months"),
+            (Unit::Year, "y"),
+            (Unit::Year, "yr"),
+            (Unit::Year, "yrs"),
+            (Unit::Year, "year"),
+            (Unit::Year, "years"),
+        ];
+
+        for (unit, name) in cases {
+            let date = vec![
+                DateToken::Dash,
+                DateToken::Number("2".into(), None),
+                DateToken::Literal(name.into()),
+            ];
+            let (res, parsed) = parse(date, "relative");
+            assert!(res.is_ok());
+            assert_eq!(parsed.relative, Some(Relative { unit, value: -2 }));
+        }
+
+        // Error cases
+        let date = vec![
+            DateToken::Dash,
+            DateToken::Number("5".into(), None),
+            DateToken::Literal("m".into()),
+        ];
+        let (res, _parsed) = parse(date, "relative");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Dash,
+            DateToken::Number("5".into(), None),
+            DateToken::Literal("asdf".into()),
+        ];
+        let (res, _parsed) = parse(date, "relative");
+        assert!(!res.is_ok());
+
+        let date = vec![DateToken::Dash, DateToken::Number("5".into(), None)];
+        let (res, _parsed) = parse(date, "relative");
+        assert!(!res.is_ok());
+
+        let date = vec![DateToken::Dash];
+        let (res, _parsed) = parse(date, "relative");
+        assert!(!res.is_ok());
+
+        let date = vec![DateToken::Dash, DateToken::Literal("hr".into())];
+        let (res, _parsed) = parse(date, "relative");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Number("1".into(), None),
+            DateToken::Literal("hr".into()),
+        ];
+        let (res, _parsed) = parse(date, "relative");
+        assert!(!res.is_ok());
+
+        let date = vec![
+            DateToken::Plus,
+            DateToken::Number("1".into(), Some("5".into())),
+            DateToken::Literal("hr".into()),
+        ];
+        let (res, _parsed) = parse(date, "relative");
+        assert!(!res.is_ok());
     }
 }
