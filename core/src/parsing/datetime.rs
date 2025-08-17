@@ -1389,4 +1389,80 @@ mod tests {
         let (res, _parsed) = parse(date, "relative");
         assert!(!res.is_ok());
     }
+
+    fn dt(input: &str) -> DateTime {
+        input.parse::<Zoned>().unwrap().into()
+    }
+
+    fn now_plus_xy(value: i32, unit: &str) -> [DateToken; 4] {
+        [
+            DateToken::Literal("now".into()),
+            if value > 0 {
+                DateToken::Plus
+            } else {
+                DateToken::Dash
+            },
+            DateToken::Number(format!("{}", value.abs()), None),
+            DateToken::Literal(unit.into()),
+        ]
+    }
+
+    #[test]
+    fn test_attempt_relative() {
+        let now = dt("2016-08-02 15:33:19[America/New_York]");
+        let pattern = &[
+            DatePattern::Match(DateMatch::Now),
+            DatePattern::Match(DateMatch::Relative),
+        ];
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "ns"), pattern),
+            Ok(dt("2016-08-02 15:33:19.000000001[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "us"), pattern),
+            Ok(dt("2016-08-02 15:33:19.000001[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "ms"), pattern),
+            Ok(dt("2016-08-02 15:33:19.001[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "s"), pattern),
+            Ok(dt("2016-08-02 15:33:20[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "min"), pattern),
+            Ok(dt("2016-08-02 15:34:19[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "hr"), pattern),
+            Ok(dt("2016-08-02 16:33:19[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "d"), pattern),
+            Ok(dt("2016-08-03 15:33:19[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "w"), pattern),
+            Ok(dt("2016-08-09 15:33:19[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "mon"), pattern),
+            Ok(dt("2016-09-02 15:33:19[America/New_York]"))
+        );
+
+        assert_eq!(
+            attempt(&now, &now_plus_xy(1, "y"), pattern),
+            Ok(dt("2017-08-02 15:33:19[America/New_York]"))
+        );
+    }
 }

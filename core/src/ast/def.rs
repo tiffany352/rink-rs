@@ -295,4 +295,36 @@ mod tests {
             "['a']"
         );
     }
+
+    #[test]
+    fn roundtrip() {
+        let all_patterns = [
+            DateMatch::Day,
+            DateMatch::Era,
+            DateMatch::FullDay,
+            DateMatch::FullHour12,
+            DateMatch::FullHour24,
+            DateMatch::FullYear,
+            DateMatch::Hour12,
+            DateMatch::Hour24,
+            DateMatch::IsoWeek,
+            DateMatch::IsoYear,
+            DateMatch::Meridiem,
+            DateMatch::Min,
+            DateMatch::MonthName,
+            DateMatch::MonthNum,
+            DateMatch::Offset,
+            DateMatch::Ordinal,
+            DateMatch::Sec,
+            DateMatch::WeekDay,
+            DateMatch::Year,
+            DateMatch::Today,
+            DateMatch::Now,
+            DateMatch::Relative,
+        ];
+
+        for pattern in all_patterns {
+            assert_eq!(DateMatch::from_str(pattern.name()), Some(pattern));
+        }
+    }
 }
