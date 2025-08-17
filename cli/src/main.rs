@@ -65,6 +65,12 @@ fn main() -> Result<ExitCode> {
                 .action(ArgAction::SetTrue)
                 .hide(true)
         )
+        .arg(
+            Arg::new("config")
+                .short('c')
+                .num_args(1)
+                .long("config").action(ArgAction::Set).help("Set path to config.toml")
+        )
         .get_matches();
 
     if matches.get_flag("service") {
@@ -73,7 +79,7 @@ fn main() -> Result<ExitCode> {
     // The panic handler can't be installed if entering service mode, so
     // it's placed after that check.
     color_eyre::install()?;
-    let config = config::read_config()?;
+    let config = config::read_config(matches.get_one::<String>("config").map(|s| &**s))?;
 
     if let Some(filename) = matches.get_one::<String>("dump") {
         use std::io::Write;
@@ -105,7 +111,8 @@ fn main() -> Result<ExitCode> {
                 repl::noninteractive(stdin_handle.lock(), &config, false).map(|_| ExitCode::SUCCESS)
             }
             _ => {
-                let file = File::open(&filename).wrap_err("Failed to open input file")?;
+                let file = File::open(&filename)
+                    .wrap_err(format!("Failed to open input file `{filename}`"))?;
                 repl::noninteractive(BufReader::new(file), &config, false)
                     .map(|_| ExitCode::SUCCESS)
             }

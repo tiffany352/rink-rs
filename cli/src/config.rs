@@ -30,7 +30,7 @@ fn file_to_string(mut file: File) -> Result<String> {
     Ok(string)
 }
 
-pub fn config_path(name: &'static str) -> Result<PathBuf> {
+pub fn config_path(name: &str) -> Result<PathBuf> {
     let mut path = dirs::config_dir().ok_or_else(|| eyre!("Could not find config directory"))?;
     path.push("rink");
     path.push(name);
@@ -301,12 +301,27 @@ fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBu
     Ok(())
 }
 
-pub fn read_config() -> Result<Config> {
-    match read_to_string(config_path("config.toml")?) {
+pub fn read_config(override_path: Option<&str>) -> Result<Config> {
+    let path = if let Some(path) = override_path {
+        PathBuf::from(path)
+    } else {
+        config_path("config.toml")?
+    };
+    match read_to_string(path) {
         // Hard fail if the file has invalid TOML.
         Ok(result) => toml::from_str(&result).wrap_err("While parsing config.toml"),
-        // Use default config if it doesn't exist.
-        Err(err) if err.kind() == ErrorKind::NotFound => Ok(Config::default()),
+        Err(err) if err.kind() == ErrorKind::NotFound => {
+            if let Some(override_path) = override_path {
+                // Hard fail if user-provided config path doesn't exist
+                Err(eyre!(err).wrap_err(format!(
+                    "Failed to read provided config file `{}`",
+                    override_path
+                )))
+            } else {
+                // Use default config if it doesn't exist.
+                Ok(Config::default())
+            }
+        }
         // Hard fail for other IO errors (e.g. permissions).
         Err(err) => Err(eyre!(err).wrap_err("Failed to read config.toml")),
     }
