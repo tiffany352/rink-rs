@@ -69,4 +69,4 @@ coverage:
 	$(CARGO) llvm-cov --all --lcov --output-path lcov.info
 
 coverage-report:
-	uv tool run diff-cover lcov.info --format markdown:report.md --compare-branch origin/master
+	uv tool run diff-cover lcov.info --format markdown:report.md --compare-branch master
