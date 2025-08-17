@@ -1441,6 +1441,11 @@ mod tests {
         );
 
         assert_eq!(
+            attempt(&now, &now_plus_xy(-1, "min"), pattern),
+            Ok(dt("2016-08-02 15:32:19[America/New_York]"))
+        );
+
+        assert_eq!(
             attempt(&now, &now_plus_xy(1, "hr"), pattern),
             Ok(dt("2016-08-02 16:33:19[America/New_York]"))
         );
