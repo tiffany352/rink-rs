@@ -10,3 +10,5 @@
 /web/data
 # created by unit tests
 /cli/currency.json
+report.md
+lcov.info

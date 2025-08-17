@@ -1,0 +1,44 @@
+name: Code Coverage
+
+on:
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+      - name: Get master branch
+        run: git fetch origin master --depth 1
+      - name: Install Rust
+        run: rustup update stable
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Generate coverage
+        run: make coverage
+      - name: Generate report
+        run: make coverage-report
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Diff Coverage
+      - name: Create PR comment
+        uses: peter-evans/create-or-update-comment@v4.0.0
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: report.md
+          edit-mode: replace
