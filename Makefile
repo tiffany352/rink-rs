@@ -64,3 +64,9 @@ installfiles:
 	$(INSTALL) -m 0644 $(srcdir)/core/currency.units $(datadir)/rink/currency.units
 
 install: installbin installman installfiles
+
+coverage:
+	$(CARGO) llvm-cov --all --lcov --output-path lcov.info
+
+coverage-report:
+	uv tool run diff-cover lcov.info --format markdown:report.md --compare-branch origin/master

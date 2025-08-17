@@ -20,11 +20,13 @@ jobs:
         run: rustup update stable
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Generate code coverage
-        # rink-sandbox causes corrupted .profraw files for some reason,
-        # so don't test it. test everything else.
-        run: cargo llvm-cov --all-features -p rink-core -p rink -p rink-js --cobertura --output-path coverage.xml
-      - name: Code Coverage Summary Report
-        uses: irongut/CodeCoverageSummary@v1.3.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Generate coverage
+        run: make coverage
+      - name: Generate report
+        run: make coverage-report
+      - name: Create PR comment
+        uses: peter-evans/create-or-update-comment@v4.0.0
         with:
-          filename: coverage.xml
+          body-path: report.md
