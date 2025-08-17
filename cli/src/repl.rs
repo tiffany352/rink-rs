@@ -58,7 +58,7 @@ pub fn interactive(config: Config) -> Result<()> {
             // Ignore file not found errors.
             Err(ReadlineError::Io(ref err)) if err.kind() == ErrorKind::NotFound => (),
             Err(err) => eprintln!("Loading history failed: {}", err),
-            _ => (),
+            Ok(()) => (),
         };
     }
 
