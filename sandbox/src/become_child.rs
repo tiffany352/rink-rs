@@ -63,7 +63,7 @@ where
         let response = Response {
             result,
             time_taken: Instant::now() - start,
-            memory_used: alloc.get_max(),
+            memory_used: alloc.get_peak(),
         };
 
         frame
@@ -77,7 +77,7 @@ where
     };
 
     loop {
-        alloc.reset_max();
+        alloc.clear_peak();
 
         let start = Arc::new(Mutex::new(Instant::now()));
         let result = std::panic::catch_unwind(|| {
@@ -94,7 +94,7 @@ where
         })
         .map_err(|_| ErrorResponse::Panic(panic_message.lock().unwrap().clone()));
 
-        let memory_used = alloc.get_max();
+        let memory_used = alloc.get_peak();
         let time_taken = Instant::now() - *start.lock().unwrap();
         let should_exit = result.is_err();
 

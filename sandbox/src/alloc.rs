@@ -44,14 +44,14 @@ where
     }
 
     /// Clears the current peak value.
-    pub fn reset_max(&self) {
+    pub fn clear_peak(&self) {
         self.peak
             .store(self.used.load(Ordering::Acquire), Ordering::Release);
     }
 
     /// Returns the peak memory that's been used since startup or since
     /// `reset_max()` was called.
-    pub fn get_max(&self) -> usize {
+    pub fn get_peak(&self) -> usize {
         self.peak.load(Ordering::Acquire)
     }
 
