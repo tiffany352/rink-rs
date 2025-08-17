@@ -260,7 +260,7 @@ fn read_from_search_path(
     }
 }
 
-pub(crate) fn force_refresh_currency(config: &Currency) -> Result<String> {
+pub fn force_refresh_currency(config: &Currency) -> Result<String> {
     println!("Fetching...");
     let start = std::time::Instant::now();
     let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;

@@ -4,23 +4,11 @@
 
 use clap::{Arg, ArgAction, Command};
 use eyre::{Result, WrapErr};
-use rink_sandbox::Alloc;
 use std::fs::File;
 use std::io::{stdin, BufReader};
 use std::process::ExitCode;
 
-pub use helper::RinkHelper;
-pub mod config;
-pub mod helper;
-pub mod repl;
-
-pub(crate) mod fmt;
-pub(crate) mod runner;
-pub(crate) mod service;
-pub(crate) mod style_ser;
-
-#[global_allocator]
-pub(crate) static GLOBAL: Alloc = Alloc::new(usize::MAX);
+use rink::{config, repl, service};
 
 fn main() -> Result<ExitCode> {
     let matches = Command::new("Rink")
