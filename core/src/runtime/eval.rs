@@ -14,7 +14,6 @@ use crate::output::{
     UnitsForReply, UnitsInCategory,
 };
 use crate::parsing::{datetime, formula};
-use crate::runtime::MissingDeps;
 use crate::types::{BaseUnit, BigInt, Dimensionality, Number, Numeric};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -81,9 +80,6 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
                 .map(Value::Substance)
             })
             .ok_or_else(|| QueryError::NotFound(ctx.unknown_unit_err(name))),
-        Expr::Dependency { ref name } => Ok(
-            lookup_unit(ctx, name).unwrap_or_else(|| Value::MissingDeps(MissingDeps::new(name)))
-        ),
         Expr::Quote { ref string } => Ok(Value::Number(Number::one_unit(BaseUnit::new(string)))),
         Expr::Const { ref value } => Ok(Value::Number(Number::new(value.clone()))),
         Expr::Date { ref tokens } => match datetime::try_decode(tokens, ctx) {
@@ -471,9 +467,6 @@ pub fn eval_unit_name(
     match *expr {
         Expr::Call { .. } => Err(QueryError::generic(
             "Calls are not allowed in the right hand side of conversions".to_string(),
-        )),
-        Expr::Dependency { .. } => Err(QueryError::generic(
-            "Dependencies are not allowed in the right hand side of conversions".to_string(),
         )),
         Expr::Unit { ref name } | Expr::Quote { string: ref name } => {
             let mut map = BTreeMap::new();

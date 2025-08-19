@@ -10,7 +10,6 @@ use serde_derive::Serialize;
 #[serde(tag = "type")]
 pub enum Expr {
     Unit { name: String },
-    Dependency { name: String },
     Quote { string: String },
     Const { value: Numeric },
     Date { tokens: Vec<DateToken> },
@@ -33,10 +32,6 @@ impl Expr {
 
     pub fn new_unit(name: String) -> Expr {
         Expr::Unit { name }
-    }
-
-    pub fn new_dependency(name: String) -> Expr {
-        Expr::Dependency { name }
     }
 
     pub fn new_call(func: Function, args: Vec<Expr>) -> Expr {
@@ -152,7 +147,6 @@ impl fmt::Display for Expr {
         fn recurse(expr: &Expr, fmt: &mut fmt::Formatter<'_>, prec: Precedence) -> fmt::Result {
             match *expr {
                 Expr::Unit { ref name } => write!(fmt, "{}", name),
-                Expr::Dependency { ref name } => write!(fmt, "dependency {}", name),
                 Expr::Quote { ref string } => write!(fmt, "'{}'", string),
                 Expr::Const { ref value } => {
                     let (_exact, val) = value.to_string(10, Digits::Default);

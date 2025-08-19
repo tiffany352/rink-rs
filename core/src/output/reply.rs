@@ -191,7 +191,6 @@ impl ExprReply {
             }
             match *expr {
                 Expr::Unit { ref name } => parts.push(ExprParts::Unit { name: name.clone() }),
-                Expr::Dependency { ref name } => literal!(format!("dependency {name}")),
                 Expr::Quote { ref string } => literal!(format!("'{}'", string)),
                 Expr::Const { ref value } => {
                     let (_exact, val) = value.to_string(10, Digits::Default);
