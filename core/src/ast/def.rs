@@ -141,7 +141,7 @@ impl Deref for ExprString {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Property {
     pub name: String,
@@ -152,7 +152,7 @@ pub struct Property {
     pub doc: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
 pub enum Def {
@@ -187,7 +187,7 @@ pub enum Def {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct DefEntry {
     pub name: String,
     #[serde(flatten)]
