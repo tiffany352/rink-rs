@@ -89,7 +89,7 @@ making it available later when using rink offline.
 
 *timeout* = <__duration__>::
 	How long to wait for currency fetching before giving up.
-	Default: `"2s"`
+	Default: `"15s"`
 
 *cache_duration* = <__duration__>::
 	How long to wait before considering the cached currency data stale.

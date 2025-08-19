@@ -192,7 +192,7 @@ impl Default for Currency {
             cache_expiration_enabled: true,
             endpoint: "https://rinkcalc.app/data/currency.json".to_owned(),
             cache_duration: Duration::from_secs(60 * 60), // 1 hour
-            timeout: Duration::from_secs(2),
+            timeout: Duration::from_secs(15),
         }
     }
 }
