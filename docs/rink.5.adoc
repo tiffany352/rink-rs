@@ -65,7 +65,7 @@ The `[currency]` section.
 	will give a "not found" error.
 	Default: `true`
 
-*behavior* = <__"prompt"__ | _"always"_ | __"disabled"__>::
+*behavior* = <__"prompt"__ | __"always"__>::
 	Default: `"prompt"`. When attempting to use a currency unit, Rink will
 	ask if you'd like to download the currency data.
 +

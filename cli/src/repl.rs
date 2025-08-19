@@ -66,10 +66,7 @@ fn on_missing_deps(config: &Config, rl: &mut Editor<RinkHelper>) -> Result<Optio
             println!("Downloading {}...", config.currency.endpoint);
             true
         }
-        CurrencyBehavior::Disabled => false,
-        CurrencyBehavior::Default | CurrencyBehavior::Prompt => {
-            prompt_load_currency(&config.currency.endpoint, rl)?
-        }
+        CurrencyBehavior::Prompt => prompt_load_currency(&config.currency.endpoint, rl)?,
     };
     if should_fetch {
         let start = Timestamp::now();

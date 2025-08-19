@@ -62,10 +62,8 @@ pub struct Rink {
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum CurrencyBehavior {
-    Default,
     Prompt,
     Always,
-    Disabled,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -188,19 +186,13 @@ impl Default for Config {
 impl Default for Currency {
     fn default() -> Self {
         Currency {
-            behavior: CurrencyBehavior::Default,
+            behavior: CurrencyBehavior::Prompt,
             enabled: true,
             fetch_on_startup: true,
             endpoint: "https://rinkcalc.app/data/currency.json".to_owned(),
             cache_duration: Duration::from_secs(60 * 60), // 1 hour
             timeout: Duration::from_secs(2),
         }
-    }
-}
-
-impl Currency {
-    pub fn should_load_defs(&self) -> bool {
-        self.enabled && self.behavior != CurrencyBehavior::Disabled
     }
 }
 
@@ -384,7 +376,7 @@ pub fn load(config: &Config) -> Result<Context> {
     ctx.load_dates(datetime::parse_datefile(&dates));
 
     // Load currency data.
-    if config.currency.should_load_defs() {
+    if config.currency.enabled {
         match try_load_currency(&config.currency, &mut ctx, &search_path) {
             Ok(()) => (),
             Err(err) => {
