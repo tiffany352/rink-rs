@@ -66,7 +66,7 @@ installfiles:
 install: installbin installman installfiles
 
 coverage:
-	$(CARGO) llvm-cov --all --lcov --output-path lcov.info
+	$(CARGO) llvm-cov --all --lcov --output-path lcov.info --all-features
 
 coverage-report:
 	uv tool run diff-cover lcov.info --format markdown:report.md --compare-branch origin/master

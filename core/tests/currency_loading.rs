@@ -55,4 +55,85 @@ fn load_currency_without_live_data() {
     // Unit list with missing dep in list only
     let result = rink_core::one_line(&mut ctx, "EUR to $, cent");
     assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    // Operators
+    let result = rink_core::one_line(&mut ctx, "£ + $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ + $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ + €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ - $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ - $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ - €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ * $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ * $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ * €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ / $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ / $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ / €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ ^ $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ ^ $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ ^ €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ << $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ << $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ << €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ >> $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ >> $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ >> €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ mod $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ mod $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ mod €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ and $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ and $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ and €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ xor $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ xor $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ xor €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "£ or $");
+    assert_eq!(result, Err("Missing dependencies: GBP, USD".into()));
+    let result = rink_core::one_line(&mut ctx, "€ or $");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+    let result = rink_core::one_line(&mut ctx, "$ or €");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    let result = rink_core::one_line(&mut ctx, "-£");
+    assert_eq!(result, Err("Missing dependencies: GBP".into()));
 }
