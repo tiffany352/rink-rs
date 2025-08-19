@@ -1,9 +1,10 @@
+use assert_cmd::Command;
+use once_cell::sync::Lazy;
+use predicates::prelude::*;
 use std::io::Read;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-
-use once_cell::sync::Lazy;
 use tiny_http::{Response, Server, StatusCode};
 
 static SERVER: Lazy<Mutex<Arc<Server>>> = Lazy::new(|| {
@@ -147,6 +148,48 @@ fn test_force_refresh_timeout() {
     let result = rink::config::force_refresh_currency(&config);
     let result = result.expect_err("this should timeout");
     assert_eq!(result.to_string(), "Fetching currency data failed");
+    thread_handle.join().unwrap();
+    drop(server);
+}
+
+#[test]
+fn test_run_with_currency() {
+    let server = SERVER.lock().unwrap();
+    let server2 = server.clone();
+
+    // first, make sure the app runs
+    let mut cmd = Command::cargo_bin("rink").unwrap();
+    cmd.arg("-c")
+        .arg("tests/config_sandboxed_local_server.toml")
+        .write_stdin("3 feet to meters\n")
+        .env("NO_COLOR", "true")
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with(
+            "0.9144 meter (length)\nFinished in ",
+        ));
+
+    let thread_handle = std::thread::spawn(move || {
+        let request = server2.recv().expect("the request should not fail");
+        assert_eq!(request.url(), "/data/currency.json");
+        let mut data = include_bytes!("../../core/tests/currency.snapshot.json").to_owned();
+        let cursor = std::io::Cursor::new(&mut data);
+        request
+            .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
+            .expect("the response should go through");
+    });
+
+    let mut cmd = Command::cargo_bin("rink").unwrap();
+    cmd.arg("-c")
+        .arg("tests/config_sandboxed_local_server.toml")
+        .write_stdin("$\ny\n")
+        .env("NO_COLOR", "true")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "\nDefinition: USD = (1 / 1.0852) EUR = approx. 921.4891 millieuro (money; EUR). Sourced from European Central Bank. Current as of 2024-05-31.\nFinished in ",
+        ));
+
     thread_handle.join().unwrap();
     drop(server);
 }
