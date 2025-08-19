@@ -72,11 +72,10 @@ The `[currency]` section.
 Seting it to `"always"` will download immediately when a currency unit
 is used.
 
-*fetch_on_startup* = <__bool__>::
-	Default: `true`. Despite the name, Rink doesn't fetch currency on
-	startup anymore. Setting this to `false` causes rink to behave as
-	if `cache_duration` was infinite. If the currency file doesn't exist,
-	it will fetch it, otherwise it will use it indefinitely. Rink can be
+*cache_expiration_enabled* = <__bool__>::
+	Default: `true`. Setting this to `false` causes rink to behave as if
+	`cache_duration` was infinite. If the currency file doesn't exist, it
+	will fetch it, otherwise it will use it indefinitely. Rink can be
 	invoked with `--fetch-currency` to download the latest version.
 +
 This setting might be useful for intermittent internet access. You can

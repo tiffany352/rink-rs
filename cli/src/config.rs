@@ -74,7 +74,8 @@ pub struct Currency {
     /// Set to false to disable currency loading entirely.
     pub enabled: bool,
     /// Set to false to only reuse the existing cached currency data.
-    pub fetch_on_startup: bool,
+    #[serde(alias = "fetch_on_startup")]
+    pub cache_expiration_enabled: bool,
     /// Which web endpoint should be used to download currency data?
     pub endpoint: String,
     /// How long to cache for.
@@ -188,7 +189,7 @@ impl Default for Currency {
         Currency {
             behavior: CurrencyBehavior::Prompt,
             enabled: true,
-            fetch_on_startup: true,
+            cache_expiration_enabled: true,
             endpoint: "https://rinkcalc.app/data/currency.json".to_owned(),
             cache_duration: Duration::from_secs(60 * 60), // 1 hour
             timeout: Duration::from_secs(2),
@@ -290,7 +291,7 @@ pub fn force_refresh_currency(config: &Currency) -> Result<String> {
 }
 
 pub(crate) fn load_live_currency(config: &Currency) -> Result<String> {
-    let duration = if config.fetch_on_startup {
+    let duration = if config.cache_expiration_enabled {
         Some(config.cache_duration)
     } else {
         None

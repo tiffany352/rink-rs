@@ -101,7 +101,7 @@ fn test_force_refresh_success() {
     let config = rink::config::Currency {
         enabled: true,
         behavior: rink::config::CurrencyBehavior::Prompt,
-        fetch_on_startup: false,
+        cache_expiration_enabled: false,
         endpoint: "http://127.0.0.1:3090/data/currency.json".to_owned(),
         cache_duration: Duration::ZERO,
         timeout: Duration::from_millis(2000),
@@ -131,7 +131,7 @@ fn test_force_refresh_timeout() {
     let config = rink::config::Currency {
         enabled: true,
         behavior: rink::config::CurrencyBehavior::Prompt,
-        fetch_on_startup: false,
+        cache_expiration_enabled: false,
         endpoint: "http://127.0.0.1:3090/data/currency.json".to_owned(),
         cache_duration: Duration::ZERO,
         timeout: Duration::from_millis(5),
