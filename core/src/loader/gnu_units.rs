@@ -308,15 +308,6 @@ pub fn parse_expr(iter: &mut Iter<'_>) -> Expr {
     parse_add(iter)
 }
 
-fn is_dependency_kw(token: Option<&Token>) -> bool {
-    if let Some(Token::Ident(id)) = token {
-        if id == "dependency" {
-            return true;
-        }
-    }
-    false
-}
-
 pub fn parse(iter: &mut Iter<'_>) -> Defs {
     let mut map = vec![];
     let mut line = 1;
@@ -355,6 +346,21 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                         }
                         _ => println!("Malformed symbol directive"),
                     }
+                }
+                Token::Ident(ref s) if s == "dependency" => {
+                    let name = if let Some(Token::Ident(ref name)) = iter.next() {
+                        name.clone()
+                    } else {
+                        println!("Expected ident after `!dependency`");
+                        continue;
+                    };
+
+                    map.push(DefEntry {
+                        name: name.clone(),
+                        def: Rc::new(Def::Dependency { name }),
+                        doc: doc.take(),
+                        category: category.clone(),
+                    });
                 }
                 Token::Ident(ref s) => {
                     println!("Unknown directive !{s}");
@@ -441,22 +447,6 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             def: Rc::new(Def::Quantity {
                                 expr: ExprString(expr),
                             }),
-                            doc: doc.take(),
-                            category: category.clone(),
-                        });
-                    } else if is_dependency_kw(iter.peek()) {
-                        iter.next();
-                        let name = if let Some(Token::Ident(ref name)) = iter.peek().cloned() {
-                            iter.next();
-                            name.clone()
-                        } else {
-                            println!("Expected ident after `dependency`");
-                            continue;
-                        };
-
-                        map.push(DefEntry {
-                            name: name.clone(),
-                            def: Rc::new(Def::Dependency { name }),
                             doc: doc.take(),
                             category: category.clone(),
                         });
