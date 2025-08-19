@@ -57,11 +57,12 @@ impl Registry {
         if let Some(v) = self.lookup_exact(name) {
             return Some(v);
         }
-        for &(ref pre, ref value) in &self.prefixes {
-            if name.starts_with(pre) {
-                if let Some(Value::Number(v)) = self.lookup_exact(&name[pre.len()..]) {
-                    return Some(Value::Number((&v * &Number::new(value.clone())).unwrap()));
-                }
+        for &(ref pre, ref pre_value) in &self.prefixes {
+            if !name.starts_with(pre) {
+                continue;
+            }
+            if let Some(v) = self.lookup_exact(&name[pre.len()..]) {
+                return Some((&v * &Value::Number(Number::new(pre_value.clone()))).unwrap());
             }
         }
         None
