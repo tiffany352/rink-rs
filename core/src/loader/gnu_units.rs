@@ -9,7 +9,7 @@ use std::iter::Peekable;
 use std::rc::Rc;
 use std::str::Chars;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
     Eof,
     Newline,
@@ -176,7 +176,11 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Ident(buf)
             }
-            x if is_ident(x) => {
+            x => {
+                // All of the is_ident==false patterns should have already been handled. This can
+                // be verified by adding all of the is_ident=false patterns as a branch and seeing
+                // that it is unreachable.
+                assert!(is_ident(x));
                 let mut buf = String::new();
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
@@ -188,7 +192,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Ident(buf)
             }
-            x => Token::Error(format!("Unknown character: '{}'", x)),
         };
         Some(res)
     }
@@ -484,11 +487,11 @@ pub fn parse(iter: &mut Iter<'_>) -> (Defs, Vec<String>) {
                                     let input_name = match iter.next().unwrap() {
                                         Token::Ident(name) => name,
                                         x => {
-                                            println!(
+                                            errors.push(format!(
                                                 "Expected property input \
                                                  name, got {:?}",
                                                 x
-                                            );
+                                            ));
                                             break;
                                         }
                                     };

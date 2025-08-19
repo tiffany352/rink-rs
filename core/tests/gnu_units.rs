@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use rink_core::ast::{Def, DefEntry, Defs, Expr, UnaryOpExpr, UnaryOpType};
-use rink_core::loader::gnu_units::{parse, parse_expr, TokenIterator};
+use rink_core::loader::gnu_units::{parse, parse_expr, tokens, Token, TokenIterator};
 use rink_core::types::{BigRat, Numeric};
 
 fn do_parse_expr(s: &str) -> Expr {
@@ -111,6 +111,15 @@ fn test_category_directive() {
     let (defs, errors) = do_parse("!category");
     assert_eq!(defs.defs, vec![]);
     assert_eq!(errors, vec!["Malformed category directive"]);
+
+    let (_defs, errors) = do_parse("!endcategory");
+    assert_eq!(errors, vec!["Stray endcategory directive"]);
+}
+
+#[test]
+fn test_symbol_directive() {
+    let (_defs, errors) = do_parse("!symbol");
+    assert_eq!(errors, vec!["Malformed symbol directive"]);
 }
 
 #[test]
@@ -143,4 +152,78 @@ fn test_invalid_directive() {
     let (defs, errors) = do_parse("!4 xyz");
     assert_eq!(errors, vec!["syntax error: expected ident after !"]);
     assert_eq!(defs.defs, vec![]);
+}
+
+#[test]
+fn test_invalid() {
+    let (defs, errors) = do_parse("4");
+    assert_eq!(
+        errors,
+        vec!["Expected definition on line 1, got Number(\"4\", None, None)"]
+    );
+    assert_eq!(defs.defs, vec![]);
+}
+
+#[test]
+fn test_substances() {
+    let (defs, errors) = do_parse("foo {\nconst 4");
+    assert_eq!(
+        defs.defs,
+        vec![DefEntry {
+            name: "foo".into(),
+            def: Rc::new(Def::Substance {
+                symbol: None,
+                properties: vec![],
+            }),
+            doc: None,
+            category: None,
+        }]
+    );
+    assert_eq!(
+        errors,
+        vec!["Expected property input name, got Number(\"4\", None, None)"]
+    );
+}
+
+#[test]
+fn currency_units_parses() {
+    let (defs, errors) = do_parse(include_str!("../currency.units"));
+    assert!(defs.defs.len() != 0);
+    assert_eq!(errors, Vec::<String>::new());
+}
+
+#[test]
+fn test_tokenize_newlines() {
+    let mut iter = TokenIterator::new("foo\r\nbar\rbaz").peekable();
+    let res = tokens(&mut iter);
+    assert_eq!(
+        res,
+        vec![
+            Token::Ident("foo".into()),
+            Token::Newline,
+            Token::Ident("bar".into()),
+            Token::Newline,
+            Token::Ident("baz".into()),
+        ]
+    );
+}
+
+#[test]
+fn test_tokenize_numbers() {
+    let mut iter = TokenIterator::new("1.0\n1e5\n1e+5\n1e-4\n1.").peekable();
+    let res = tokens(&mut iter);
+    assert_eq!(
+        res,
+        vec![
+            Token::Number("1".into(), Some("0".into()), None),
+            Token::Newline,
+            Token::Number("1".into(), None, Some("5".into())),
+            Token::Newline,
+            Token::Number("1".into(), None, Some("5".into())),
+            Token::Newline,
+            Token::Number("1".into(), None, Some("-4".into())),
+            Token::Newline,
+            Token::Number("1".into(), None, None)
+        ]
+    );
 }
