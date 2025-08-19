@@ -22,6 +22,7 @@ use std::rc::Rc;
 fn lookup_number(ctx: &Context, name: &str) -> Result<Number, QueryError> {
     match ctx.lookup(name) {
         Some(Value::Number(number)) => Ok(number),
+        Some(Value::MissingDeps(deps)) => Err(QueryError::MissingDeps(deps)),
         Some(x) => Err(QueryError::generic(format!(
             "Expected `{name}` to be a number, got: <{}>",
             x.show(ctx)
@@ -988,6 +989,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             let top = eval_expr(ctx, top)?;
             let top = match top {
                 Value::Number(num) => num,
+                Value::MissingDeps(d) => return Err(QueryError::MissingDeps(d)),
                 _ => {
                     return Err(QueryError::generic(format!(
                         "Cannot convert <{}> to {:?}",
@@ -996,20 +998,20 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                     )))
                 }
             };
-            to_list(
+
+            let list = to_list(
                 ctx,
                 &top,
                 &list.iter().map(|x| &**x).collect::<Vec<_>>()[..],
-            )
-            .map(|list| {
-                QueryReply::UnitList(UnitListReply {
-                    rest: NumberParts {
-                        quantity: ctx.registry.quantities.get(&top.unit).cloned(),
-                        ..Default::default()
-                    },
-                    list,
-                })
-            })
+            )?;
+
+            Ok(QueryReply::UnitList(UnitListReply {
+                rest: NumberParts {
+                    quantity: ctx.registry.quantities.get(&top.unit).cloned(),
+                    ..Default::default()
+                },
+                list,
+            }))
         }
         Query::Convert(ref top, Conversion::Offset(off), None, Digits::Default) => {
             let top = eval_expr(ctx, top)?;

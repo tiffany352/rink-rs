@@ -47,4 +47,12 @@ fn load_currency_without_live_data() {
     // Prefix
     let result = rink_core::one_line(&mut ctx, "mBTC");
     assert_eq!(result, Err("Missing dependencies: BTC".to_owned()));
+
+    // Unit list conversion
+    let result = rink_core::one_line(&mut ctx, "5.5$ to $, cent");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
+
+    // Unit list with missing dep in list only
+    let result = rink_core::one_line(&mut ctx, "EUR to $, cent");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
 }
