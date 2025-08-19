@@ -155,7 +155,6 @@ fn test_force_refresh_timeout() {
 #[test]
 fn test_run_with_currency() {
     let server = SERVER.lock().unwrap();
-    let server2 = server.clone();
 
     // first, make sure the app runs
     let mut cmd = Command::cargo_bin("rink").unwrap();
@@ -169,6 +168,16 @@ fn test_run_with_currency() {
             "0.9144 meter (length)\nFinished in ",
         ));
 
+    // clear out any cached currency json
+    let mut currency_cache = dirs::cache_dir().expect("Could not find cache directory");
+    currency_cache.push("rink");
+    currency_cache.push("currency.json");
+
+    let _ = std::fs::remove_file(&currency_cache);
+
+    // test that currency can be fetched successfully
+
+    let server2 = server.clone();
     let thread_handle = std::thread::spawn(move || {
         let request = server2.recv().expect("the request should not fail");
         assert_eq!(request.url(), "/data/currency.json");
@@ -191,5 +200,36 @@ fn test_run_with_currency() {
         ));
 
     thread_handle.join().unwrap();
+
+    let _ = std::fs::remove_file(&currency_cache);
+
+    // test if the server returns a 503
+
+    let server2 = server.clone();
+    let thread_handle = std::thread::spawn(move || {
+        let request = server2.recv().expect("the request should not fail");
+        assert_eq!(request.url(), "/data/currency.json");
+        let mut data = b"Internal Server Error".to_owned();
+        let cursor = std::io::Cursor::new(&mut data);
+        request
+            .respond(Response::new(StatusCode(503), vec![], cursor, None, None))
+            .expect("the response should go through");
+    });
+
+    let mut cmd = Command::cargo_bin("rink").unwrap();
+    cmd.arg("-c")
+        .arg("tests/config_sandboxed_local_server.toml")
+        .write_stdin("$\ny\n1.5 feet\n")
+        .env("NO_COLOR", "true")
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::starts_with(
+                "Failed to fetch http://127.0.0.1:3090/data/currency.json: Received status 503 while downloading http://127.0.0.1:3090/data/currency.json\n457.2 millimeter (length)\nFinished in",
+            )
+        );
+
+    thread_handle.join().unwrap();
+
     drop(server);
 }

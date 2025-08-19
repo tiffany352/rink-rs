@@ -73,7 +73,13 @@ fn on_missing_deps(config: &Config, rl: &mut Editor<RinkHelper>) -> Result<Optio
     };
     if should_fetch {
         let start = Timestamp::now();
-        let res = crate::config::load_live_currency(&config.currency)?;
+        let res = match crate::config::load_live_currency(&config.currency) {
+            Ok(res) => res,
+            Err(err) => {
+                println!("{err:#}");
+                return Ok(None);
+            }
+        };
         let stop = Timestamp::now();
         let delta = stop - start;
         println!(
