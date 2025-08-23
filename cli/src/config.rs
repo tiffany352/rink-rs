@@ -2,38 +2,36 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::currency::try_load_currency;
 use crate::style_ser;
 use color_eyre::Result;
-use curl::easy::Easy;
-use eyre::{eyre, Report, WrapErr};
+use eyre::{eyre, WrapErr};
 use nu_ansi_term::{Color, Style};
+use rink_core::loader::gnu_units;
 use rink_core::output::fmt::FmtToken;
 use rink_core::parsing::datetime;
 use rink_core::Context;
-use rink_core::{loader::gnu_units, CURRENCY_FILE, DATES_FILE, DEFAULT_FILE};
+use rink_core::{DATES_FILE, DEFAULT_FILE};
 use serde_derive::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::env;
-use std::ffi::OsString;
-use std::io::{ErrorKind, Read, Seek, SeekFrom, Write};
-use std::path::Path;
+use std::fs::read_to_string;
+use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::time::Duration;
-use std::{
-    collections::HashMap,
-    fs::{read_to_string, File},
-};
 use ubyte::ByteUnit;
 
-fn file_to_string(mut file: File) -> Result<String> {
-    let mut string = String::new();
-    let _ = file.read_to_string(&mut string)?;
-    Ok(string)
-}
-
-pub fn config_path(name: &str) -> Result<PathBuf> {
+pub fn config_toml_path() -> Result<PathBuf> {
     let mut path = dirs::config_dir().ok_or_else(|| eyre!("Could not find config directory"))?;
     path.push("rink");
-    path.push(name);
+    path.push("config.toml");
+    Ok(path)
+}
+
+pub fn currency_json_path() -> Result<PathBuf> {
+    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
+    path.push("rink");
+    path.push("currency.json");
     Ok(path)
 }
 
@@ -241,7 +239,7 @@ impl Config {
     }
 }
 
-fn read_from_search_path(
+pub(crate) fn read_from_search_path(
     filename: &str,
     paths: &[PathBuf],
     default: Option<&'static str>,
@@ -271,58 +269,11 @@ fn read_from_search_path(
     }
 }
 
-pub fn force_refresh_currency(config: &Currency) -> Result<String> {
-    println!("Fetching...");
-    let start = std::time::Instant::now();
-    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
-    path.push("rink");
-    path.push("currency.json");
-    let file = download_to_file(&path, &config.endpoint, config.timeout)
-        .wrap_err("Fetching currency data failed")?;
-    let delta = std::time::Instant::now() - start;
-    let metadata = file
-        .metadata()
-        .wrap_err("Fetched currency file, but failed to read file metadata")?;
-    let len = metadata.len();
-    Ok(format!(
-        "Fetched {len} byte currency file after {}ms",
-        delta.as_millis()
-    ))
-}
-
-pub(crate) fn load_live_currency(config: &Currency) -> Result<String> {
-    let duration = if config.cache_expiration_enabled {
-        Some(config.cache_duration)
-    } else {
-        None
-    };
-    let file = cached("currency.json", &config.endpoint, duration, config.timeout)?;
-    let contents = file_to_string(file)?;
-    Ok(contents)
-}
-
-fn try_load_currency(config: &Currency, ctx: &mut Context, search_path: &[PathBuf]) -> Result<()> {
-    let base = read_from_search_path("currency.units", search_path, CURRENCY_FILE)?
-        .into_iter()
-        .collect::<Vec<_>>()
-        .join("\n");
-    let duration = config.cache_duration;
-    let cached = cached_nofetch("currency.json", Some(duration))?;
-    let contents = if let Some(cached) = cached {
-        Some(file_to_string(cached)?)
-    } else {
-        None
-    };
-    ctx.load_currency(contents.as_ref().map(|s| &s[..]), &base.as_str())
-        .map_err(|err| eyre!("{err}"))?;
-    Ok(())
-}
-
 pub fn read_config(override_path: Option<&str>) -> Result<Config> {
     let path = if let Some(path) = override_path {
         PathBuf::from(path)
     } else {
-        config_path("config.toml")?
+        config_toml_path()?
     };
     match read_to_string(path) {
         // Hard fail if the file has invalid TOML.
@@ -378,139 +329,10 @@ pub fn load(config: &Config) -> Result<Context> {
 
     // Load currency data.
     if config.currency.enabled {
-        match try_load_currency(&config.currency, &mut ctx, &search_path) {
-            Ok(()) => (),
-            Err(err) => {
-                println!("{:?}", err.wrap_err("Failed to load currency data"));
-            }
+        if let Err(err) = try_load_currency(&config.currency, &mut ctx, &search_path) {
+            println!("{:?}", err.wrap_err("Failed to load currency data"));
         }
     }
 
     Ok(ctx)
-}
-
-fn read_if_current(file: File, expiration: Option<Duration>) -> Result<File> {
-    use std::time::SystemTime;
-
-    let stats = file.metadata()?;
-    let mtime = stats.modified()?;
-    let now = SystemTime::now();
-    let elapsed = now.duration_since(mtime)?;
-    if let Some(expiration) = expiration {
-        if elapsed > expiration {
-            return Err(eyre!("File is out of date"));
-        }
-    }
-    Ok(file)
-}
-
-pub fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
-    use std::fs::create_dir_all;
-
-    create_dir_all(path.parent().unwrap())?;
-
-    // Given a filename like `foo.json`, names the temp file something
-    // similar, like `foo.ABCDEF.json`.
-    let mut prefix = path.file_stem().unwrap().to_owned();
-    prefix.push(".");
-    let mut suffix = OsString::from(".");
-    suffix.push(path.extension().unwrap());
-
-    // The temp file should be created in the same directory as its
-    // final home, as the default temporary file directory might not be
-    // the same filesystem.
-    let mut temp_file = tempfile::Builder::new()
-        .prefix(&prefix)
-        .suffix(&suffix)
-        .tempfile_in(path.parent().unwrap())?;
-
-    let mut easy = Easy::new();
-    easy.url(url)?;
-    easy.useragent(&format!(
-        "rink-cli {} <{}>",
-        env!("CARGO_PKG_VERSION"),
-        env!("CARGO_PKG_REPOSITORY")
-    ))?;
-    easy.timeout(timeout)?;
-
-    let mut write_handle = temp_file.as_file_mut().try_clone()?;
-    easy.write_function(move |data| {
-        write_handle
-            .write(data)
-            .map_err(|_| curl::easy::WriteError::Pause)
-    })?;
-    easy.perform()?;
-
-    let status = easy.response_code()?;
-    if status != 200 {
-        return Err(eyre!(
-            "Received status {} while downloading {}",
-            status,
-            url
-        ));
-    }
-
-    temp_file.as_file_mut().sync_all()?;
-    temp_file.as_file_mut().seek(SeekFrom::Start(0))?;
-
-    temp_file
-        .persist(path)
-        .wrap_err("Failed to write to cache dir")
-}
-
-fn cached_nofetch(filename: &str, expiration: Option<Duration>) -> Result<Option<File>> {
-    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
-    path.push("rink");
-    path.push(filename);
-
-    // 1. Return file if it exists and is up to date.
-    // 2. Try to download a new version of the file and return it.
-    // 3. If that fails, return the stale file if it exists.
-
-    if let Ok(file) = File::open(&path) {
-        if let Ok(result) = read_if_current(file, expiration) {
-            return Ok(Some(result));
-        }
-    }
-    Ok(None)
-}
-
-fn cached(
-    filename: &str,
-    url: &str,
-    expiration: Option<Duration>,
-    timeout: Duration,
-) -> Result<File> {
-    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
-    path.push("rink");
-    path.push(filename);
-
-    // 1. Return file if it exists and is up to date.
-    // 2. Try to download a new version of the file and return it.
-    // 3. If that fails, return the stale file if it exists.
-
-    if let Ok(file) = File::open(&path) {
-        if let Ok(result) = read_if_current(file, expiration) {
-            return Ok(result);
-        }
-    }
-
-    let err = match download_to_file(&path, url, timeout) {
-        Ok(result) => return Ok(result),
-        Err(err) => err,
-    };
-
-    if let Ok(file) = File::open(&path) {
-        // Indicate error even though we're returning success.
-        println!(
-            "{:?}",
-            Report::wrap_err(
-                err,
-                format!("Failed to refresh {}, using stale version", url)
-            )
-        );
-        Ok(file)
-    } else {
-        Err(err).wrap_err_with(|| format!("Failed to fetch {}", url))
-    }
 }

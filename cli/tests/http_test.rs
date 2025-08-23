@@ -23,7 +23,7 @@ fn test_download_timeout() {
         assert_eq!(request.url(), "/data/currency.json");
         std::thread::sleep(Duration::from_millis(100));
     });
-    let result = rink::config::download_to_file(
+    let result = rink::currency::download_to_file(
         &PathBuf::from("currency.json"),
         "http://127.0.0.1:3090/data/currency.json",
         Duration::from_millis(5),
@@ -50,7 +50,7 @@ fn test_download_404() {
             .respond(Response::new(StatusCode(404), vec![], cursor, None, None))
             .expect("the response should go through");
     });
-    let result = rink::config::download_to_file(
+    let result = rink::currency::download_to_file(
         &PathBuf::from("currency.json"),
         "http://127.0.0.1:3090/data/currency.json",
         Duration::from_millis(2000),
@@ -78,7 +78,7 @@ fn test_download_success() {
             .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
             .expect("the response should go through");
     });
-    let result = rink::config::download_to_file(
+    let result = rink::currency::download_to_file(
         &PathBuf::from("currency.json"),
         "http://127.0.0.1:3090/data/currency.json",
         Duration::from_millis(2000),
@@ -119,7 +119,7 @@ fn test_force_refresh_success() {
             .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
             .expect("the response should go through");
     });
-    let result = rink::config::force_refresh_currency(&config);
+    let result = rink::currency::force_refresh_currency(&config);
     let result = result.expect("this should succeed");
     assert!(result.starts_with("Fetched 6599 byte currency file after "));
     thread_handle.join().unwrap();
@@ -145,7 +145,7 @@ fn test_force_refresh_timeout() {
         assert_eq!(request.url(), "/data/currency.json");
         std::thread::sleep(Duration::from_millis(100));
     });
-    let result = rink::config::force_refresh_currency(&config);
+    let result = rink::currency::force_refresh_currency(&config);
     let result = result.expect_err("this should timeout");
     assert_eq!(result.to_string(), "Fetching currency data failed");
     thread_handle.join().unwrap();

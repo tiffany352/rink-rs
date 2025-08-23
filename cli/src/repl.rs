@@ -70,7 +70,7 @@ fn on_missing_deps(config: &Config, rl: &mut Editor<RinkHelper>) -> Result<Optio
     };
     if should_fetch {
         let start = Timestamp::now();
-        let res = match crate::config::load_live_currency(&config.currency) {
+        let res = match crate::currency::load_live_currency(&config.currency) {
             Ok(res) => res,
             Err(err) => {
                 println!("{err:#}");
@@ -144,19 +144,32 @@ pub fn interactive(config: Config) -> Result<()> {
                     }
                     EvalResult::MissingDeps(_deps) => {
                         let res = on_missing_deps(&config, &mut rl)?;
-                        if res.is_some() {
-                            runner.restart()?;
-                            let (result, metrics) = runner.execute(line);
-                            match result {
-                                EvalResult::AnsiString(line) => println!("{}", line),
-                                EvalResult::MissingDeps(deps) => println!(
-                                    "Still missing dependencies after fetch. Dependencies: {}",
-                                    deps
-                                ),
+                        if res.is_none() {
+                            continue;
+                        }
+                        let path = crate::currency::get_cache_file("currency.json")?;
+                        match std::fs::exists(&path) {
+                            Ok(true) => (),
+                            Ok(false) => {
+                                println!("File downloaded to {path:?} successfully, but could not be found again after writing.");
+                                continue;
                             }
-                            if let Some(metrics) = metrics {
-                                println!("{}", metrics);
+                            Err(err) => {
+                                println!("Failed to find currency file after downloading: {err}");
+                                continue;
                             }
+                        }
+                        runner.restart()?;
+                        let (result, metrics) = runner.execute(line);
+                        match result {
+                            EvalResult::AnsiString(line) => println!("{}", line),
+                            EvalResult::MissingDeps(deps) => println!(
+                                "Still missing dependencies after fetch. Dependencies: {}",
+                                deps
+                            ),
+                        }
+                        if let Some(metrics) = metrics {
+                            println!("{}", metrics);
                         }
                     }
                 }
