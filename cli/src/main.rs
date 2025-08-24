@@ -65,9 +65,6 @@ fn main() -> Result<ExitCode> {
     if matches.get_flag("service") {
         return service::run_service().map(|_| ExitCode::SUCCESS);
     }
-    // The panic handler can't be installed if entering service mode, so
-    // it's placed after that check.
-    color_eyre::install()?;
     let config = config::read_config(matches.get_one::<String>("config").map(|s| &**s))?;
 
     if let Some(filename) = matches.get_one::<String>("dump") {
