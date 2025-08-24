@@ -4,17 +4,17 @@
 
 use core::fmt;
 use serde_derive::{Deserialize, Serialize};
+use std::error::Error as StdError;
 use std::io::Error as IoError;
 use std::sync::mpsc::RecvError;
 use std::time::Duration;
-use thiserror::Error;
 
 /// All of the errors that can result while managing the child process.
-#[derive(Error, Debug)]
+#[derive(Debug)]
 #[non_exhaustive]
 pub enum Error {
     /// IO error
-    Io(#[source] IoError),
+    Io(IoError),
     /// {0}
     Recv(RecvError),
     /// Failed to send {0}
@@ -22,15 +22,19 @@ pub enum Error {
     /// Timed out after {0:?}
     Timeout(Duration),
     /// Bincode
-    Bincode(#[source] bincode::Error),
+    Bincode(bincode::Error),
     /// Panic: {0}
     Panic(String),
     /// Failed to start child process
-    InitFailure(#[source] IoError),
+    InitFailure(IoError),
     /// Failed to read from child
-    ReadFailed(#[source] IoError),
+    ReadFailed(IoError),
     /// Failed to write to child
-    WriteFailed(#[source] IoError),
+    WriteFailed(IoError),
+    /// Failed to call std::io::pipe()
+    CreatePipeFailed(IoError),
+    /// Failed to kill child process
+    KillFailed(IoError),
     /// Failed to start child process: {0}
     HandshakeFailure(String),
     /// Child process crashed
@@ -53,17 +57,13 @@ impl fmt::Display for Error {
             Error::InitFailure(_) => write!(f, "Failed to start child process"),
             Error::ReadFailed(_) => write!(f, "Failed to read from child"),
             Error::WriteFailed(_) => write!(f, "Failed to write to child"),
-            Error::HandshakeFailure(err) => write!(f, "Failed to start child process: {err}"),
+            Error::CreatePipeFailed(_) => write!(f, "Failed to create pipe"),
+            Error::KillFailed(_) => write!(f, "Failed to terminate subprocess"),
+            Error::HandshakeFailure(err) => write!(f, "Failed to start subprocess: {err}"),
             Error::Crashed => write!(f, "Child process crashed"),
             Error::Interrupted => write!(f, "Interrupted"),
             Error::Disconnected => write!(f, "Disconnected"),
         }
-    }
-}
-
-impl From<IoError> for Error {
-    fn from(err: IoError) -> Self {
-        Error::Io(err)
     }
 }
 
@@ -96,4 +96,24 @@ impl From<Error> for IoError {
 #[derive(Serialize, Deserialize)]
 pub(crate) enum ErrorResponse {
     Panic(String),
+}
+
+impl StdError for Error {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            Error::Io(error) => Some(error),
+            Error::Recv(error) => Some(error),
+            Error::Bincode(error) => Some(error),
+            Error::InitFailure(error) => Some(error),
+            Error::ReadFailed(error) => Some(error),
+            Error::WriteFailed(error) => Some(error),
+            Error::CreatePipeFailed(error) => Some(error),
+            Error::KillFailed(error) => Some(error),
+            _ => None,
+        }
+    }
+
+    fn cause(&self) -> Option<&dyn StdError> {
+        self.source()
+    }
 }

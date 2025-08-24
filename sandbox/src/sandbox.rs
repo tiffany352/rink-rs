@@ -75,8 +75,8 @@ where
             .expect("Couldn't find executable");
         let args = S::args(&self.config);
 
-        let (child_reader, mut parent_writer) = std::io::pipe()?;
-        let (mut parent_reader, child_writer) = std::io::pipe()?;
+        let (child_reader, mut parent_writer) = std::io::pipe().map_err(Error::CreatePipeFailed)?;
+        let (mut parent_reader, child_writer) = std::io::pipe().map_err(Error::CreatePipeFailed)?;
 
         let process = ChildGuard(
             std::process::Command::new(program)
@@ -108,7 +108,7 @@ where
     /// Kills the child process
     pub fn stop(&mut self) -> Result<(), Error> {
         if let Some(mut worker) = self.worker.take() {
-            worker.process.kill()?;
+            worker.process.kill().map_err(Error::KillFailed)?;
             let _ = worker.reader_thread.join();
         }
         Ok(())

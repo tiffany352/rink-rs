@@ -1866,7 +1866,6 @@ dependencies = [
  "ctrlc",
  "serde",
  "serde_derive",
- "thiserror",
 ]
 
 [[package]]
