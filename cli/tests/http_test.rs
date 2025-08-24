@@ -1,6 +1,7 @@
 use assert_cmd::Command;
 use once_cell::sync::Lazy;
 use predicates::prelude::*;
+use rink::currency::currency_json_path;
 use std::io::Read;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -119,7 +120,7 @@ fn test_force_refresh_success() {
             .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
             .expect("the response should go through");
     });
-    let result = rink::currency::force_refresh_currency(&config);
+    let result = rink::currency::force_fetch_currency(&config);
     let result = result.expect("this should succeed");
     assert!(result.starts_with("Fetched 6599 byte currency file after "));
     thread_handle.join().unwrap();
@@ -145,7 +146,7 @@ fn test_force_refresh_timeout() {
         assert_eq!(request.url(), "/data/currency.json");
         std::thread::sleep(Duration::from_millis(100));
     });
-    let result = rink::currency::force_refresh_currency(&config);
+    let result = rink::currency::force_fetch_currency(&config);
     let result = result.expect_err("this should timeout");
     assert_eq!(result.to_string(), "Fetching currency data failed");
     thread_handle.join().unwrap();
@@ -169,14 +170,9 @@ fn test_run_with_currency() {
         ));
 
     // clear out any cached currency json
-    let mut currency_cache = dirs::cache_dir().expect("Could not find cache directory");
-    currency_cache.push("rink");
-    currency_cache.push("currency.json");
-
-    let _ = std::fs::remove_file(&currency_cache);
+    let _ = std::fs::remove_file(&currency_json_path().unwrap());
 
     // test that currency can be fetched successfully
-
     let server2 = server.clone();
     let thread_handle = std::thread::spawn(move || {
         let request = server2.recv().expect("the request should not fail");
@@ -200,8 +196,14 @@ fn test_run_with_currency() {
         ));
 
     thread_handle.join().unwrap();
+}
 
-    let _ = std::fs::remove_file(&currency_cache);
+#[test]
+fn test_run_with_currency_503() {
+    let server = SERVER.lock().unwrap();
+
+    // clear out any cached currency json
+    let _ = std::fs::remove_file(&currency_json_path().unwrap());
 
     // test if the server returns a 503
 

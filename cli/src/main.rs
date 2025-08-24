@@ -80,7 +80,7 @@ fn main() -> Result<ExitCode> {
     }
 
     if matches.get_flag("fetch-currency") {
-        let result = rink::currency::force_refresh_currency(&config.currency);
+        let result = rink::currency::force_fetch_currency(&config.currency);
         match result {
             Ok(msg) => {
                 println!("{msg}");

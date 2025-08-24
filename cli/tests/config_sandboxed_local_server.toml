@@ -6,4 +6,4 @@ show_metrics = true
 enabled = true
 behavior = "prompt"
 endpoint = "http://127.0.0.1:3090/data/currency.json"
-cache_duration = "1s"
+cache_duration = "10s"

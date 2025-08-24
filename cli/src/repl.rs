@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::config::CurrencyBehavior;
+use crate::currency::CurrencyStatus;
 use crate::runner::Runner;
 use crate::RinkHelper;
 use crate::{config::Config, service::EvalResult};
@@ -60,7 +61,7 @@ fn prompt_load_currency(endpoint: &str, rl: &mut Editor<RinkHelper>) -> Result<b
     }
 }
 
-fn on_missing_deps(config: &Config, rl: &mut Editor<RinkHelper>) -> Result<Option<String>> {
+fn prompt_fetch_currency(config: &Config, rl: &mut Editor<RinkHelper>) -> Result<bool> {
     let should_fetch = match config.currency.behavior {
         CurrencyBehavior::Always => {
             println!("Downloading {}...", config.currency.endpoint);
@@ -68,26 +69,26 @@ fn on_missing_deps(config: &Config, rl: &mut Editor<RinkHelper>) -> Result<Optio
         }
         CurrencyBehavior::Prompt => prompt_load_currency(&config.currency.endpoint, rl)?,
     };
-    if should_fetch {
-        let start = Timestamp::now();
-        let res = match crate::currency::load_live_currency(&config.currency) {
-            Ok(res) => res,
-            Err(err) => {
-                println!("{err:#}");
-                return Ok(None);
-            }
-        };
-        let stop = Timestamp::now();
-        let delta = stop - start;
-        println!(
-            "Fetched {}kB in {:#}",
-            res.len() / 1000,
-            delta.round(Unit::Millisecond).unwrap()
-        );
-        Ok(Some(res))
-    } else {
-        Ok(None)
+    if !should_fetch {
+        return Ok(false);
     }
+    let start = Timestamp::now();
+    let file = match crate::currency::load_live_currency(&config.currency) {
+        Ok(file) => file,
+        Err(err) => {
+            println!("{err:#}");
+            return Ok(false);
+        }
+    };
+    let metadata = file.metadata()?;
+    let stop = Timestamp::now();
+    let delta = stop - start;
+    println!(
+        "Fetched {}kB in {:#}",
+        metadata.len() / 1000,
+        delta.round(Unit::Millisecond).unwrap()
+    );
+    Ok(true)
 }
 
 pub fn interactive(config: Config) -> Result<()> {
@@ -143,19 +144,20 @@ pub fn interactive(config: Config) -> Result<()> {
                         }
                     }
                     EvalResult::MissingDeps(_deps) => {
-                        let res = on_missing_deps(&config, &mut rl)?;
-                        if res.is_none() {
+                        let did_fetch = prompt_fetch_currency(&config, &mut rl)?;
+                        if !did_fetch {
                             continue;
                         }
-                        let path = crate::currency::get_cache_file("currency.json")?;
-                        match std::fs::exists(&path) {
-                            Ok(true) => (),
-                            Ok(false) => {
-                                println!("File downloaded to {path:?} successfully, but could not be found again after writing.");
+                        let status =
+                            crate::currency::load_cached_if_current(config.currency.expiration())?;
+                        match status {
+                            CurrencyStatus::Found(_file) => (),
+                            CurrencyStatus::NotFound => {
+                                println!("Couldn't find file again after downloading");
                                 continue;
                             }
-                            Err(err) => {
-                                println!("Failed to find currency file after downloading: {err}");
+                            CurrencyStatus::Expired => {
+                                println!("File was expired immediately after downloading");
                                 continue;
                             }
                         }

@@ -10,6 +10,14 @@ use curl::easy::Easy;
 use eyre::{eyre, Context as _, Report};
 use rink_core::{Context, CURRENCY_FILE};
 
+/// Returns path to currency.json
+pub fn currency_json_path() -> Result<PathBuf> {
+    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
+    path.push("rink");
+    path.push("currency.json");
+    Ok(path)
+}
+
 fn file_to_string(mut file: File) -> Result<String> {
     let mut string = String::new();
     let _size = file.read_to_string(&mut string)?;
@@ -17,12 +25,10 @@ fn file_to_string(mut file: File) -> Result<String> {
 }
 
 /// Used when rink is run with `--fetch-currency`
-pub fn force_refresh_currency(config: &Currency) -> Result<String> {
+pub fn force_fetch_currency(config: &Currency) -> Result<String> {
     println!("Fetching...");
     let start = std::time::Instant::now();
-    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
-    path.push("rink");
-    path.push("currency.json");
+    let path = currency_json_path()?;
     let file = download_to_file(&path, &config.endpoint, config.timeout)
         .wrap_err("Fetching currency data failed")?;
     let delta = std::time::Instant::now() - start;
@@ -36,18 +42,8 @@ pub fn force_refresh_currency(config: &Currency) -> Result<String> {
     ))
 }
 
-pub(crate) fn load_live_currency(config: &Currency) -> Result<String> {
-    let duration = if config.cache_expiration_enabled {
-        Some(config.cache_duration)
-    } else {
-        None
-    };
-    let file = cached("currency.json", &config.endpoint, duration, config.timeout)?;
-    let contents = file_to_string(file)?;
-    Ok(contents)
-}
-
-pub(crate) fn try_load_currency(
+/// Loads currency units into the Context. Uses live data if it's fresh.
+pub(crate) fn load_cached_currency_if_current(
     config: &Currency,
     ctx: &mut Context,
     search_path: &[PathBuf],
@@ -56,9 +52,8 @@ pub(crate) fn try_load_currency(
         .into_iter()
         .collect::<Vec<_>>()
         .join("\n");
-    let duration = config.cache_duration;
-    let cached = cached_nofetch("currency.json", Some(duration))?;
-    let contents = if let Some(cached) = cached {
+    let cached = load_cached_if_current(config.expiration())?;
+    let contents = if let CurrencyStatus::Found(cached) = cached {
         Some(file_to_string(cached)?)
     } else {
         None
@@ -68,12 +63,22 @@ pub(crate) fn try_load_currency(
     Ok(())
 }
 
-fn read_if_current(path: &Path, expiration: Option<Duration>) -> Result<Option<File>> {
+pub enum CurrencyStatus {
+    Found(File),
+    NotFound,
+    Expired,
+}
+
+/// Returns the cached currency.json if it was found and it wasn't expired.
+pub fn load_cached_if_current(expiration: Option<Duration>) -> Result<CurrencyStatus> {
     use std::time::SystemTime;
 
+    let path = currency_json_path()?;
     let file = match File::open(&path) {
         Ok(file) => file,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(CurrencyStatus::NotFound)
+        }
         Err(err) => return Err(err.into()),
     };
     let stats = file.metadata()?;
@@ -82,10 +87,10 @@ fn read_if_current(path: &Path, expiration: Option<Duration>) -> Result<Option<F
     let elapsed = now.duration_since(mtime)?;
     if let Some(expiration) = expiration {
         if elapsed > expiration {
-            return Ok(None);
+            return Ok(CurrencyStatus::Expired);
         }
     }
-    Ok(Some(file))
+    Ok(CurrencyStatus::Found(file))
 }
 
 pub fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<File> {
@@ -142,34 +147,17 @@ pub fn download_to_file(path: &Path, url: &str, timeout: Duration) -> Result<Fil
         .wrap_err("Failed to write to cache dir")
 }
 
-pub fn get_cache_file(filename: &str) -> Result<PathBuf> {
-    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
-    path.push("rink");
-    path.push(filename);
-    Ok(path)
-}
-
-fn cached_nofetch(filename: &str, expiration: Option<Duration>) -> Result<Option<File>> {
-    let path = get_cache_file(filename)?;
-    read_if_current(&path, expiration)
-}
-
-fn cached(
-    filename: &str,
-    url: &str,
-    expiration: Option<Duration>,
-    timeout: Duration,
-) -> Result<File> {
-    // 1. Return file if it exists and is up to date.
-    // 2. Try to download a new version of the file and return it.
-    // 3. If that fails, return the stale file if it exists.
-
-    let path = get_cache_file(filename)?;
-    if let Ok(Some(file)) = read_if_current(&path, expiration) {
+/// Returns the cached currency.json if it's fresh,
+/// otherwise tries to download it.
+/// If the download fails, tries to use the stale cached version.
+pub(crate) fn load_live_currency(config: &Currency) -> Result<File> {
+    let expiration = config.expiration();
+    if let Ok(CurrencyStatus::Found(file)) = load_cached_if_current(expiration) {
         return Ok(file);
     }
 
-    let err = match download_to_file(&path, url, timeout) {
+    let path = currency_json_path()?;
+    let err = match download_to_file(&path, &config.endpoint, config.timeout) {
         Ok(result) => return Ok(result),
         Err(err) => err,
     };
@@ -180,11 +168,11 @@ fn cached(
             "{:?}",
             Report::wrap_err(
                 err,
-                format!("Failed to refresh {}, using stale version", url)
+                format!("Failed to fetch {}, using stale version", config.endpoint)
             )
         );
         Ok(file)
     } else {
-        Err(err).wrap_err_with(|| format!("Failed to fetch {}", url))
+        Err(err).wrap_err_with(|| format!("Failed to fetch {}", config.endpoint))
     }
 }

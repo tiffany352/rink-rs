@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::currency::try_load_currency;
+use crate::currency::load_cached_currency_if_current;
 use crate::style_ser;
 use color_eyre::Result;
 use eyre::{eyre, WrapErr};
@@ -25,13 +25,6 @@ pub fn config_toml_path() -> Result<PathBuf> {
     let mut path = dirs::config_dir().ok_or_else(|| eyre!("Could not find config directory"))?;
     path.push("rink");
     path.push("config.toml");
-    Ok(path)
-}
-
-pub fn currency_json_path() -> Result<PathBuf> {
-    let mut path = dirs::cache_dir().ok_or_else(|| eyre!("Could not find cache directory"))?;
-    path.push("rink");
-    path.push("currency.json");
     Ok(path)
 }
 
@@ -195,6 +188,16 @@ impl Default for Currency {
     }
 }
 
+impl Currency {
+    pub fn expiration(&self) -> Option<Duration> {
+        if self.cache_expiration_enabled {
+            Some(self.cache_duration)
+        } else {
+            None
+        }
+    }
+}
+
 impl Default for Rink {
     fn default() -> Self {
         Rink {
@@ -329,7 +332,8 @@ pub fn load(config: &Config) -> Result<Context> {
 
     // Load currency data.
     if config.currency.enabled {
-        if let Err(err) = try_load_currency(&config.currency, &mut ctx, &search_path) {
+        let res = load_cached_currency_if_current(&config.currency, &mut ctx, &search_path);
+        if let Err(err) = res {
             println!("{:?}", err.wrap_err("Failed to load currency data"));
         }
     }
