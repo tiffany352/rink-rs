@@ -122,7 +122,8 @@ submitted for inclusion in the work will grant the rights lined out in
 the MPL, including larger works with secondary licenses.
 
 Check out [ARCHITECTURE.md](./ARCHITECTURE.md) for an overview of how
-the project is structured.
+the project is structured, and [DEVELOPMENT.md](./DEVELOPMENT.md) for
+local dev setup.
 
 ## Security
 
