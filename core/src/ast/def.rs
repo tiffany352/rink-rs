@@ -36,7 +36,7 @@ pub enum DateMatch {
 }
 
 impl DateMatch {
-    pub(crate) fn from_str(input: &str) -> Option<DateMatch> {
+    pub fn from_str(input: &str) -> Option<DateMatch> {
         match input {
             "day" => Some(DateMatch::Day),
             "adbc" => Some(DateMatch::Era),
@@ -64,7 +64,7 @@ impl DateMatch {
         }
     }
 
-    fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             DateMatch::Day => "day",
             DateMatch::Era => "adbc",
@@ -252,82 +252,5 @@ impl DatePattern {
             write!(buf, "{}", p).unwrap();
         }
         String::from_utf8(buf).unwrap()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{DatePattern, ExprString};
-    use crate::ast::{def::DateMatch, Expr};
-    use std::convert::TryFrom;
-
-    #[test]
-    fn test_try_from() {
-        assert_eq!(
-            ExprString::try_from("abc".to_owned()),
-            Ok(ExprString(Expr::new_unit("abc".to_owned())))
-        );
-        assert_eq!(
-            ExprString::try_from("".to_owned()),
-            Ok(ExprString(Expr::new_error(
-                "Expected term, got eof".to_owned()
-            )))
-        );
-        assert_eq!(
-            ExprString::try_from("a -> ->".to_owned()),
-            Err("Expected EOF".to_owned())
-        )
-    }
-
-    #[test]
-    fn date_pattern_fmt() {
-        assert_eq!(format!("{}", DatePattern::Dash), "-");
-        assert_eq!(format!("{}", DatePattern::Colon), ":");
-        assert_eq!(format!("{}", DatePattern::Space), " ");
-        assert_eq!(format!("{}", DatePattern::Literal("a".to_owned())), "'a'");
-        assert_eq!(
-            format!("{}", DatePattern::Match(DateMatch::IsoYear)),
-            "isoyear"
-        );
-
-        assert_eq!(
-            format!(
-                "{}",
-                DatePattern::Optional(vec![DatePattern::Literal("a".to_owned())])
-            ),
-            "['a']"
-        );
-    }
-
-    #[test]
-    fn roundtrip() {
-        let all_patterns = [
-            DateMatch::Day,
-            DateMatch::Era,
-            DateMatch::FullDay,
-            DateMatch::FullHour12,
-            DateMatch::FullHour24,
-            DateMatch::FullYear,
-            DateMatch::Hour12,
-            DateMatch::Hour24,
-            DateMatch::IsoWeek,
-            DateMatch::IsoYear,
-            DateMatch::Meridiem,
-            DateMatch::Min,
-            DateMatch::MonthName,
-            DateMatch::MonthNum,
-            DateMatch::Offset,
-            DateMatch::Ordinal,
-            DateMatch::Sec,
-            DateMatch::WeekDay,
-            DateMatch::Year,
-            DateMatch::Today,
-            DateMatch::Now,
-            DateMatch::Relative,
-        ];
-
-        for pattern in all_patterns {
-            assert_eq!(DateMatch::from_str(pattern.name()), Some(pattern));
-        }
     }
 }

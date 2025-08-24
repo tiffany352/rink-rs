@@ -137,6 +137,11 @@ pub fn interactive(config: Config) -> Result<()> {
             Ok(line) => {
                 rl.add_history_entry(&line);
 
+                if config.rink.show_interpretation {
+                    let query = rink_core::reformat(&mut runner.local.lock().unwrap(), &line);
+                    println!("Input: {}", crate::fmt::to_ansi_string(&config, &query));
+                }
+
                 let (result, metrics) = runner.execute(line.clone());
                 match result {
                     EvalResult::AnsiString(line) => {

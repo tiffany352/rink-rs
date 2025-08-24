@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::output::fmt::{Span, TokenFmt};
+
 use super::*;
 use serde_derive::Serialize;
 
@@ -142,126 +144,116 @@ impl Precedence {
     }
 }
 
-impl fmt::Display for Expr {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fn recurse(expr: &Expr, fmt: &mut fmt::Formatter<'_>, prec: Precedence) -> fmt::Result {
-            match *expr {
-                Expr::Unit { ref name } => write!(fmt, "{}", name),
-                Expr::Quote { ref string } => write!(fmt, "'{}'", string),
-                Expr::Const { ref value } => {
-                    let (_exact, val) = value.to_string(10, Digits::Default);
-                    write!(fmt, "{}", val)
-                }
-                Expr::Date { .. } => write!(fmt, "NYI: date expr Display"),
-                Expr::BinOp(ref binop) => {
-                    let op_prec = Precedence::from(binop.op);
-                    let succ = Precedence::next(binop.op);
-                    if prec < op_prec {
-                        write!(fmt, "(")?;
-                    }
-                    recurse(&binop.left, fmt, succ)?;
-                    write!(fmt, "{}", binop.op.symbol())?;
-                    recurse(&binop.right, fmt, op_prec)?;
-                    if prec < op_prec {
-                        write!(fmt, ")")?;
-                    }
-                    Ok(())
-                }
-                Expr::UnaryOp(ref unaryop) => match unaryop.op {
-                    UnaryOpType::Positive => {
-                        write!(fmt, "+")?;
-                        recurse(&unaryop.expr, fmt, Precedence::Plus)
-                    }
-                    UnaryOpType::Negative => {
-                        write!(fmt, "-")?;
-                        recurse(&unaryop.expr, fmt, Precedence::Plus)
-                    }
-                    UnaryOpType::Degree(ref suffix) => {
-                        if prec < Precedence::Mul {
-                            write!(fmt, "(")?;
-                        }
-                        recurse(&unaryop.expr, fmt, Precedence::Mul)?;
-                        write!(fmt, " {}", suffix)?;
-                        if prec < Precedence::Mul {
-                            write!(fmt, ")")?;
-                        }
-                        Ok(())
-                    }
-                },
-                Expr::Mul { ref exprs } => {
-                    if prec < Precedence::Mul {
-                        write!(fmt, "(")?;
-                    }
-                    if let Some(first) = exprs.first() {
-                        recurse(first, fmt, Precedence::Pow)?;
-                    }
-                    for expr in exprs.iter().skip(1) {
-                        write!(fmt, " ")?;
-                        recurse(expr, fmt, Precedence::Pow)?;
-                    }
-                    if prec < Precedence::Mul {
-                        write!(fmt, ")")?;
-                    }
-                    Ok(())
-                }
-                Expr::Call { ref func, ref args } => {
-                    write!(fmt, "{}(", func.name())?;
-                    if let Some(first) = args.first() {
-                        recurse(first, fmt, Precedence::Equals)?;
-                    }
-                    for arg in args.iter().skip(1) {
-                        write!(fmt, ", ")?;
-                        recurse(arg, fmt, Precedence::Equals)?;
-                    }
-                    write!(fmt, ")")
-                }
-                Expr::Of {
-                    ref property,
-                    ref expr,
-                } => {
-                    if prec < Precedence::Add {
-                        write!(fmt, "(")?;
-                    }
-                    write!(fmt, "{} of ", property)?;
-                    recurse(expr, fmt, Precedence::Div)?;
-                    if prec < Precedence::Add {
-                        write!(fmt, ")")?;
-                    }
-                    Ok(())
-                }
-                Expr::Error { ref message } => write!(fmt, "<error: {}>", message),
+fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) {
+    match *expr {
+        Expr::Unit { ref name } => out.push(Span::unit(name)),
+        Expr::Quote { ref string } => out.push(Span::unit(format!("'{}'", string))),
+        Expr::Const { ref value } => {
+            let (_exact, val) = value.to_string(10, Digits::Default);
+            out.push(Span::number(format!("{}", val)))
+        }
+        Expr::Date { .. } => todo!("NYI: date expr to_spans"),
+        Expr::BinOp(ref binop) => {
+            let op_prec = Precedence::from(binop.op);
+            let succ = Precedence::next(binop.op);
+            if prec < op_prec {
+                out.push(Span::plain("("));
+            }
+            to_spans_impl(out, &binop.left, succ);
+            out.push(Span::plain(binop.op.symbol()));
+            to_spans_impl(out, &binop.right, op_prec);
+            if prec < op_prec {
+                out.push(Span::plain(")"));
             }
         }
+        Expr::UnaryOp(ref unaryop) => match unaryop.op {
+            UnaryOpType::Positive => {
+                out.push(Span::plain("+"));
+                to_spans_impl(out, &unaryop.expr, Precedence::Plus);
+            }
+            UnaryOpType::Negative => {
+                out.push(Span::plain("-"));
+                to_spans_impl(out, &unaryop.expr, Precedence::Plus);
+            }
+            UnaryOpType::Degree(ref suffix) => {
+                if prec < Precedence::Mul {
+                    out.push(Span::plain("("));
+                }
+                to_spans_impl(out, &unaryop.expr, Precedence::Mul);
+                out.push(Span::plain(" "));
+                out.push(Span::plain(suffix.as_str()));
+                if prec < Precedence::Mul {
+                    out.push(Span::plain(")"));
+                }
+            }
+        },
+        Expr::Mul { ref exprs } => {
+            if prec < Precedence::Mul {
+                out.push(Span::plain("("));
+            }
+            if let Some(first) = exprs.first() {
+                to_spans_impl(out, first, Precedence::Pow);
+            }
+            for expr in exprs.iter().skip(1) {
+                out.push(Span::plain(" "));
+                to_spans_impl(out, expr, Precedence::Pow);
+            }
+            if prec < Precedence::Mul {
+                out.push(Span::plain(")"));
+            }
+        }
+        Expr::Call { ref func, ref args } => {
+            out.push(Span::plain(func.name())); // TODO: keyword
+            out.push(Span::plain("("));
+            if let Some(first) = args.first() {
+                to_spans_impl(out, first, Precedence::Equals);
+            }
+            for arg in args.iter().skip(1) {
+                out.push(Span::plain(", "));
+                to_spans_impl(out, arg, Precedence::Equals);
+            }
+            out.push(Span::plain(")"))
+        }
+        Expr::Of {
+            ref property,
+            ref expr,
+        } => {
+            if prec < Precedence::Add {
+                out.push(Span::plain("("));
+            }
+            out.push(Span::prop_name(property));
+            out.push(Span::plain(" "));
+            out.push(Span::keyword("of"));
+            out.push(Span::plain(" "));
+            to_spans_impl(out, expr, Precedence::Div);
+            if prec < Precedence::Add {
+                out.push(Span::plain(")"));
+            }
+        }
+        Expr::Error { ref message } => {
+            out.push(Span::error("<error: "));
+            out.push(Span::error(message));
+            out.push(Span::error(">"));
+        }
+    }
+}
 
-        recurse(self, fmt, Precedence::Equals)
+impl<'a> TokenFmt<'a> for Expr {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        let mut res = vec![];
+        to_spans_impl(&mut res, self, Precedence::Equals);
+        res
+    }
+}
+
+impl fmt::Display for Expr {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(fmt, "{}", self.spans_to_string())
     }
 }
 
 impl From<i64> for Expr {
     fn from(x: i64) -> Self {
         Expr::new_const(x.into())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::parsing::text_query::{parse_expr, TokenIterator};
-
-    fn parse_then_pretty(input: &str) -> String {
-        let mut iter = TokenIterator::new(&input).peekable();
-        let expr = parse_expr(&mut iter);
-        expr.to_string()
-    }
-
-    #[test]
-    fn expr_display() {
-        assert_eq!(parse_then_pretty("meter"), "meter");
-        assert_eq!(parse_then_pretty("'hello world'"), "'hello world'");
-        assert_eq!(parse_then_pretty("234234"), "234234");
-        assert_eq!(parse_then_pretty("1 + 2"), "1 + 2");
-        assert_eq!(parse_then_pretty("speed of light"), "speed of light");
-        assert_eq!(parse_then_pretty("1 + 2 * 3"), "1 + 2 3");
-        assert_eq!(parse_then_pretty("(1 + 2) * 3"), "(1 + 2) 3");
-        assert_eq!(parse_then_pretty("a = 2"), "a = 2");
     }
 }

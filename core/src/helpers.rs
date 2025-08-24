@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::ast::Query;
 use crate::output::{QueryError, QueryReply};
 use crate::parsing::text_query;
 use crate::types::DateTime;
@@ -67,6 +68,14 @@ pub fn one_line(ctx: &mut Context, line: &str) -> Result<String, String> {
         .as_ref()
         .map(ToString::to_string)
         .map_err(ToString::to_string)
+}
+
+/// Reformats a query based on Rink's interpretation (e.g. expanding mg to milligrams).
+pub fn reformat(ctx: &mut Context, line: &str) -> Query {
+    let mut iter = text_query::TokenIterator::new(line.trim()).peekable();
+    let query = text_query::parse_query(&mut iter);
+    let query = ctx.canonicalize_query(query);
+    query
 }
 
 /// Tries to create a context that has core definitions only (contents

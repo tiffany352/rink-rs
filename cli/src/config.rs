@@ -47,6 +47,8 @@ pub struct Rink {
     pub prompt: String,
     /// Use multi-line output for lists.
     pub long_output: bool,
+    /// Whether to show input interpretation
+    pub show_interpretation: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -124,6 +126,10 @@ pub struct Theme {
     date_time: Style,
     #[serde(with = "style_ser")]
     link: Style,
+    #[serde(with = "style_ser")]
+    keyword: Style,
+    #[serde(with = "style_ser")]
+    timezone: Style,
 }
 
 impl Theme {
@@ -140,10 +146,14 @@ impl Theme {
             FmtToken::PropName => self.prop_name,
             FmtToken::DateTime => self.date_time,
             FmtToken::Link => self.link,
+            FmtToken::Keyword => self.keyword,
+            FmtToken::TimeZone => self.timezone,
 
             // Default styling since these are handled specially.
             FmtToken::ListBegin => self.plain,
             FmtToken::ListSep => self.plain,
+
+            _ => self.plain,
         }
     }
 }
@@ -168,6 +178,8 @@ impl Default for Config {
                 prop_name: Style::new().fg(Color::Cyan),
                 date_time: Style::default(),
                 link: Style::new().fg(Color::Blue),
+                keyword: Style::new().fg(Color::Yellow).bold(),
+                timezone: Style::new().fg(Color::Cyan),
             },
             disabled_theme: Theme::default(),
         }
@@ -202,6 +214,7 @@ impl Default for Rink {
         Rink {
             prompt: "> ".to_owned(),
             long_output: false,
+            show_interpretation: true,
         }
     }
 }

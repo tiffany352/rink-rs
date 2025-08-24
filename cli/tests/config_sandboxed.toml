@@ -1,3 +1,6 @@
+[rink]
+show_interpretation = false
+
 [limits]
 enabled = true
 show_metrics = true

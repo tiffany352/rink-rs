@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use super::Registry;
-use crate::ast::{DatePattern, Expr, Query};
+use crate::ast::{Conversion, DatePattern, Expr, Query};
 use crate::output::{ConversionReply, Digits, NotFoundError, NumberParts, QueryError, QueryReply};
 use crate::types::{BaseUnit, BigInt, DateTime, Dimensionality, Number, Numeric};
 use crate::{commands, Value};
@@ -225,6 +225,64 @@ impl Context {
         let base_defs = crate::loader::gnu_units::parse_str(currency_units);
         self.load(base_defs)?;
         Ok(())
+    }
+
+    fn canonicalize_expr(&self, expr: Expr) -> Expr {
+        match expr {
+            Expr::Unit { name } => Expr::Unit {
+                name: self.canonicalize(&name).unwrap_or(name),
+            },
+            //Expr::Date { tokens } => todo!(),
+            Expr::BinOp(expr) => Expr::BinOp(crate::ast::BinOpExpr {
+                op: expr.op,
+                left: Box::new(self.canonicalize_expr(*expr.left)),
+                right: Box::new(self.canonicalize_expr(*expr.right)),
+            }),
+            Expr::UnaryOp(expr) => Expr::UnaryOp(crate::ast::UnaryOpExpr {
+                op: expr.op,
+                expr: Box::new(self.canonicalize_expr(*expr.expr)),
+            }),
+            Expr::Mul { exprs } => Expr::Mul {
+                exprs: exprs
+                    .into_iter()
+                    .map(|expr| self.canonicalize_expr(expr))
+                    .collect(),
+            },
+            Expr::Of { property, expr } => Expr::Of {
+                property,
+                expr: Box::new(self.canonicalize_expr(*expr)),
+            },
+            Expr::Call { func, args } => Expr::Call {
+                func,
+                args: args
+                    .into_iter()
+                    .map(|expr| self.canonicalize_expr(expr))
+                    .collect(),
+            },
+            x => x,
+        }
+    }
+
+    pub fn canonicalize_query(&self, query: Query) -> Query {
+        match query {
+            Query::Expr(expr) => Query::Expr(self.canonicalize_expr(expr)),
+            Query::Convert(expr, conversion, base, digits) => {
+                let conversion = match conversion {
+                    Conversion::Expr(expr) => Conversion::Expr(self.canonicalize_expr(expr)),
+                    Conversion::List(items) => Conversion::List(
+                        items
+                            .into_iter()
+                            .map(|unit| self.canonicalize(&unit).unwrap_or(unit))
+                            .collect(),
+                    ),
+                    x => x,
+                };
+                Query::Convert(self.canonicalize_expr(expr), conversion, base, digits)
+            }
+            Query::Factorize(expr) => Query::Factorize(self.canonicalize_expr(expr)),
+            Query::UnitsFor(expr) => Query::UnitsFor(self.canonicalize_expr(expr)),
+            x => x,
+        }
     }
 
     /// Evaluates an expression to compute its value, *excluding* `->`
