@@ -1,9 +1,11 @@
+use assert_cmd::Command;
+use once_cell::sync::Lazy;
+use predicates::prelude::*;
+use rink::currency::currency_json_path;
 use std::io::Read;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-
-use once_cell::sync::Lazy;
 use tiny_http::{Response, Server, StatusCode};
 
 static SERVER: Lazy<Mutex<Arc<Server>>> = Lazy::new(|| {
@@ -22,7 +24,7 @@ fn test_download_timeout() {
         assert_eq!(request.url(), "/data/currency.json");
         std::thread::sleep(Duration::from_millis(100));
     });
-    let result = rink::config::download_to_file(
+    let result = rink::currency::download_to_file(
         &PathBuf::from("currency.json"),
         "http://127.0.0.1:3090/data/currency.json",
         Duration::from_millis(5),
@@ -49,7 +51,7 @@ fn test_download_404() {
             .respond(Response::new(StatusCode(404), vec![], cursor, None, None))
             .expect("the response should go through");
     });
-    let result = rink::config::download_to_file(
+    let result = rink::currency::download_to_file(
         &PathBuf::from("currency.json"),
         "http://127.0.0.1:3090/data/currency.json",
         Duration::from_millis(2000),
@@ -77,7 +79,7 @@ fn test_download_success() {
             .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
             .expect("the response should go through");
     });
-    let result = rink::config::download_to_file(
+    let result = rink::currency::download_to_file(
         &PathBuf::from("currency.json"),
         "http://127.0.0.1:3090/data/currency.json",
         Duration::from_millis(2000),
@@ -99,7 +101,8 @@ fn test_download_success() {
 fn test_force_refresh_success() {
     let config = rink::config::Currency {
         enabled: true,
-        fetch_on_startup: false,
+        behavior: rink::config::CurrencyBehavior::Prompt,
+        cache_expiration_enabled: false,
         endpoint: "http://127.0.0.1:3090/data/currency.json".to_owned(),
         cache_duration: Duration::ZERO,
         timeout: Duration::from_millis(2000),
@@ -117,7 +120,7 @@ fn test_force_refresh_success() {
             .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
             .expect("the response should go through");
     });
-    let result = rink::config::force_refresh_currency(&config);
+    let result = rink::currency::force_fetch_currency(&config);
     let result = result.expect("this should succeed");
     assert!(result.starts_with("Fetched 6599 byte currency file after "));
     thread_handle.join().unwrap();
@@ -128,7 +131,8 @@ fn test_force_refresh_success() {
 fn test_force_refresh_timeout() {
     let config = rink::config::Currency {
         enabled: true,
-        fetch_on_startup: false,
+        behavior: rink::config::CurrencyBehavior::Prompt,
+        cache_expiration_enabled: false,
         endpoint: "http://127.0.0.1:3090/data/currency.json".to_owned(),
         cache_duration: Duration::ZERO,
         timeout: Duration::from_millis(5),
@@ -142,9 +146,92 @@ fn test_force_refresh_timeout() {
         assert_eq!(request.url(), "/data/currency.json");
         std::thread::sleep(Duration::from_millis(100));
     });
-    let result = rink::config::force_refresh_currency(&config);
+    let result = rink::currency::force_fetch_currency(&config);
     let result = result.expect_err("this should timeout");
     assert_eq!(result.to_string(), "Fetching currency data failed");
     thread_handle.join().unwrap();
+    drop(server);
+}
+
+#[test]
+fn test_run_with_currency() {
+    let server = SERVER.lock().unwrap();
+
+    // first, make sure the app runs
+    let mut cmd = Command::cargo_bin("rink").unwrap();
+    cmd.arg("-c")
+        .arg("tests/config_sandboxed_local_server.toml")
+        .write_stdin("3 feet to meters\n")
+        .env("NO_COLOR", "true")
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with(
+            "0.9144 meter (length)\nFinished in ",
+        ));
+
+    // clear out any cached currency json
+    let _ = std::fs::remove_file(&currency_json_path().unwrap());
+
+    // test that currency can be fetched successfully
+    let server2 = server.clone();
+    let thread_handle = std::thread::spawn(move || {
+        let request = server2.recv().expect("the request should not fail");
+        assert_eq!(request.url(), "/data/currency.json");
+        let mut data = include_bytes!("../../core/tests/currency.snapshot.json").to_owned();
+        let cursor = std::io::Cursor::new(&mut data);
+        request
+            .respond(Response::new(StatusCode(200), vec![], cursor, None, None))
+            .expect("the response should go through");
+    });
+
+    let mut cmd = Command::cargo_bin("rink").unwrap();
+    cmd.arg("-c")
+        .arg("tests/config_sandboxed_local_server.toml")
+        .write_stdin("$\ny\n")
+        .env("NO_COLOR", "true")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "\nDefinition: USD = (1 / 1.0852) EUR = approx. 921.4891 millieuro (money; EUR). Sourced from European Central Bank. Current as of 2024-05-31.\nFinished in ",
+        ));
+
+    thread_handle.join().unwrap();
+}
+
+#[test]
+fn test_run_with_currency_503() {
+    let server = SERVER.lock().unwrap();
+
+    // clear out any cached currency json
+    let _ = std::fs::remove_file(&currency_json_path().unwrap());
+
+    // test if the server returns a 503
+
+    let server2 = server.clone();
+    let thread_handle = std::thread::spawn(move || {
+        let request = server2.recv().expect("the request should not fail");
+        assert_eq!(request.url(), "/data/currency.json");
+        let mut data = b"Internal Server Error".to_owned();
+        let cursor = std::io::Cursor::new(&mut data);
+        request
+            .respond(Response::new(StatusCode(503), vec![], cursor, None, None))
+            .expect("the response should go through");
+    });
+
+    let mut cmd = Command::cargo_bin("rink").unwrap();
+    cmd.arg("-c")
+        .arg("tests/config_sandboxed_local_server.toml")
+        .write_stdin("$\ny\n1.5 feet\n")
+        .env("NO_COLOR", "true")
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::starts_with(
+                "Failed to fetch http://127.0.0.1:3090/data/currency.json: Received status 503 while downloading http://127.0.0.1:3090/data/currency.json\n457.2 millimeter (length)\nFinished in",
+            )
+        );
+
+    thread_handle.join().unwrap();
+
     drop(server);
 }

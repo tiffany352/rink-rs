@@ -6,6 +6,7 @@ use rink_sandbox::Alloc;
 
 pub use helper::RinkHelper;
 pub mod config;
+pub mod currency;
 pub mod fmt;
 pub mod helper;
 pub mod repl;

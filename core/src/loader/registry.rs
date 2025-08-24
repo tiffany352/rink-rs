@@ -1,11 +1,9 @@
+use crate::ast::{DatePattern, Expr};
+use crate::output::DocString;
+use crate::runtime::{MissingDeps, Substance};
+use crate::types::{BaseUnit, Dimensionality, Number, Numeric};
+use crate::Value;
 use std::collections::{BTreeMap, BTreeSet};
-
-use crate::{
-    ast::{DatePattern, Expr},
-    output::DocString,
-    runtime::Substance,
-    types::{BaseUnit, Dimensionality, Number, Numeric},
-};
 
 #[derive(Default, Debug)]
 pub struct Registry {
@@ -37,34 +35,40 @@ pub struct Registry {
     /// Maps elemental names (like `He`) to substance names (`helium`),
     /// used for parsing molecular formulas, e.g. `H2O`.
     pub substance_symbols: BTreeMap<String, String>,
+    /// Missing dependencies, throws a dependency error if used
+    pub missing_deps: BTreeMap<String, MissingDeps>,
 }
 
 impl Registry {
-    fn lookup_exact(&self, name: &str) -> Option<Number> {
+    pub fn lookup_exact(&self, name: &str) -> Option<Value> {
         if let Some(k) = self.base_units.get(name) {
-            return Some(Number::one_unit(k.to_owned()));
+            return Some(Value::Number(Number::one_unit(k.to_owned())));
         }
         if let Some(v) = self.units.get(name).cloned() {
-            return Some(v);
+            return Some(Value::Number(v));
+        }
+        if let Some(deps) = self.missing_deps.get(name) {
+            return Some(Value::MissingDeps(deps.clone()));
         }
         None
     }
 
-    fn lookup_with_prefix(&self, name: &str) -> Option<Number> {
+    fn lookup_with_prefix(&self, name: &str) -> Option<Value> {
         if let Some(v) = self.lookup_exact(name) {
             return Some(v);
         }
-        for &(ref pre, ref value) in &self.prefixes {
-            if name.starts_with(pre) {
-                if let Some(v) = self.lookup_exact(&name[pre.len()..]) {
-                    return Some((&v * &Number::new(value.clone())).unwrap());
-                }
+        for &(ref pre, ref pre_value) in &self.prefixes {
+            if !name.starts_with(pre) {
+                continue;
+            }
+            if let Some(v) = self.lookup_exact(&name[pre.len()..]) {
+                return Some((&v * &Value::Number(Number::new(pre_value.clone()))).unwrap());
             }
         }
         None
     }
 
-    pub(crate) fn lookup(&self, name: &str) -> Option<Number> {
+    pub(crate) fn lookup(&self, name: &str) -> Option<Value> {
         let res = self.lookup_with_prefix(name);
         if res.is_some() {
             return res;

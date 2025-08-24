@@ -2,12 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::{
-    output::{QueryError, QueryReply},
-    parsing::text_query,
-    types::DateTime,
-    Context,
-};
+use crate::output::{QueryError, QueryReply};
+use crate::parsing::text_query;
+use crate::types::DateTime;
+use crate::{Context, Value};
 
 /// The default `definitions.units` file that contains all of the base
 /// units, units, prefixes, quantities, and substances.
@@ -56,7 +54,7 @@ pub fn eval(ctx: &mut Context, line: &str) -> Result<QueryReply, QueryError> {
     if ctx.save_previous_result {
         if let QueryReply::Number(ref number_parts) = res {
             if let Some(ref raw) = number_parts.raw_value {
-                ctx.previous_result = Some(raw.clone());
+                ctx.previous_result = Some(Value::Number(raw.clone()));
             }
         }
     }

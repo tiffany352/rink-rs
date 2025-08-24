@@ -80,7 +80,7 @@ fn main() -> Result<ExitCode> {
     }
 
     if matches.get_flag("fetch-currency") {
-        let result = config::force_refresh_currency(&config.currency);
+        let result = rink::currency::force_fetch_currency(&config.currency);
         match result {
             Ok(msg) => {
                 println!("{msg}");
@@ -91,7 +91,7 @@ fn main() -> Result<ExitCode> {
     }
 
     if matches.get_flag("config-path") {
-        println!("{}", config::config_path("config.toml").unwrap().display());
+        println!("{}", config::config_toml_path().unwrap().display());
         Ok(ExitCode::SUCCESS)
     } else if let Some(filename) = matches.get_one::<String>("file") {
         match &filename[..] {

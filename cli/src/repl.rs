@@ -2,12 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::config::Config;
+use crate::config::{Config, CurrencyBehavior};
+use crate::currency::CurrencyStatus;
 use crate::runner::Runner;
+use crate::service::EvalResult;
 use crate::RinkHelper;
 use eyre::Result;
+use jiff::{Timestamp, Unit};
 use rink_core::one_line;
-use rustyline::{config::Configurer, error::ReadlineError, CompletionType, Editor};
+use rustyline::config::Configurer;
+use rustyline::error::ReadlineError;
+use rustyline::{CompletionType, Editor};
 use std::io::{BufRead, ErrorKind};
 
 pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) -> Result<()> {
@@ -40,6 +45,53 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
 pub const HELP_TEXT: &'static str = "The rink manual can be found with `man 7 rink`, or online:
 https://rinkcalc.app/manual
 To quit, type `quit` or press Ctrl+D.";
+
+fn prompt_load_currency(endpoint: &str, rl: &mut Editor<RinkHelper>) -> Result<bool> {
+    let prompt = format!("Download currency data from <{}>? [y/n] ", endpoint);
+    loop {
+        let line = rl.readline(&prompt);
+        match line {
+            Ok(line) => match &line.trim().to_lowercase()[..] {
+                "y" | "yes" => return Ok(true),
+                "n" | "no" => return Ok(false),
+                _ => println!("Unknown answer. Please type `y` or `n`."),
+            },
+            Err(ReadlineError::Interrupted) => return Ok(false),
+            Err(ReadlineError::Eof) => return Ok(false),
+            Err(err) => return Err(eyre::eyre!(err)),
+        }
+    }
+}
+
+fn prompt_fetch_currency(config: &Config, rl: &mut Editor<RinkHelper>) -> Result<bool> {
+    let should_fetch = match config.currency.behavior {
+        CurrencyBehavior::Always => {
+            println!("Downloading {}...", config.currency.endpoint);
+            true
+        }
+        CurrencyBehavior::Prompt => prompt_load_currency(&config.currency.endpoint, rl)?,
+    };
+    if !should_fetch {
+        return Ok(false);
+    }
+    let start = Timestamp::now();
+    let file = match crate::currency::load_live_currency(&config.currency) {
+        Ok(file) => file,
+        Err(err) => {
+            println!("{err:#}");
+            return Ok(false);
+        }
+    };
+    let metadata = file.metadata()?;
+    let stop = Timestamp::now();
+    let delta = stop - start;
+    println!(
+        "Fetched {}kB in {:#}",
+        metadata.len() / 1000,
+        delta.round(Unit::Millisecond).unwrap()
+    );
+    Ok(true)
+}
 
 pub fn interactive(config: Config) -> Result<()> {
     let mut runner = Runner::new(config.clone())?;
@@ -85,13 +137,45 @@ pub fn interactive(config: Config) -> Result<()> {
             Ok(line) => {
                 rl.add_history_entry(&line);
 
-                let (result, metrics) = runner.execute(line);
+                let (result, metrics) = runner.execute(line.clone());
                 match result {
-                    Ok(line) => println!("{}", line),
-                    Err(line) => println!("{}", line),
-                }
-                if let Some(metrics) = metrics {
-                    println!("{}", metrics);
+                    EvalResult::AnsiString(line) => {
+                        println!("{}", line);
+                        if let Some(metrics) = metrics {
+                            println!("{}", metrics);
+                        }
+                    }
+                    EvalResult::MissingDeps(_deps) => {
+                        let did_fetch = prompt_fetch_currency(&config, &mut rl)?;
+                        if !did_fetch {
+                            continue;
+                        }
+                        let status =
+                            crate::currency::load_cached_if_current(config.currency.expiration())?;
+                        match status {
+                            CurrencyStatus::Found(_file) => (),
+                            CurrencyStatus::NotFound => {
+                                println!("Couldn't find file again after downloading");
+                                continue;
+                            }
+                            CurrencyStatus::Expired => {
+                                println!("File was expired immediately after downloading");
+                                continue;
+                            }
+                        }
+                        runner.restart()?;
+                        let (result, metrics) = runner.execute(line);
+                        match result {
+                            EvalResult::AnsiString(line) => println!("{}", line),
+                            EvalResult::MissingDeps(deps) => println!(
+                                "Still missing dependencies after fetch. Dependencies: {}",
+                                deps
+                            ),
+                        }
+                        if let Some(metrics) = metrics {
+                            println!("{}", metrics);
+                        }
+                    }
                 }
             }
             Err(ReadlineError::Interrupted) => {}

@@ -3,11 +3,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use js_sys::Date;
-use rink_core::ast;
 use rink_core::output::fmt::{FmtToken, Span, TokenFmt};
 use rink_core::output::QueryReply;
 use rink_core::parsing::text_query;
 use rink_core::types::DateTime;
+use rink_core::{ast, Value};
 use serde_derive::*;
 use wasm_bindgen::prelude::*;
 
@@ -124,7 +124,7 @@ impl Context {
     #[wasm_bindgen(js_name = loadCurrency)]
     pub fn load_currency(&mut self, live_defs: String) -> Result<(), JsValue> {
         let base_defs = rink_core::CURRENCY_FILE.unwrap();
-        self.context.load_currency(&live_defs, base_defs)?;
+        self.context.load_currency(Some(&live_defs), base_defs)?;
 
         Ok(())
     }
@@ -135,7 +135,7 @@ impl Context {
         if self.context.save_previous_result {
             if let Ok(QueryReply::Number(ref number_parts)) = value {
                 if let Some(ref raw) = number_parts.raw_value {
-                    self.context.previous_result = Some(raw.clone());
+                    self.context.previous_result = Some(Value::Number(raw.clone()));
                 }
             }
         }
@@ -152,7 +152,7 @@ impl Context {
         if self.context.save_previous_result {
             if let Ok(QueryReply::Number(ref number_parts)) = value {
                 if let Some(ref raw) = number_parts.raw_value {
-                    self.context.previous_result = Some(raw.clone());
+                    self.context.previous_result = Some(Value::Number(raw.clone()));
                 }
             }
         }

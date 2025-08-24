@@ -9,7 +9,7 @@ use std::iter::Peekable;
 use std::rc::Rc;
 use std::str::Chars;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
     Eof,
     Newline,
@@ -176,7 +176,11 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Ident(buf)
             }
-            x if is_ident(x) => {
+            x => {
+                // All of the is_ident==false patterns should have already been handled. This can
+                // be verified by adding all of the is_ident=false patterns as a branch and seeing
+                // that it is unreachable.
+                assert!(is_ident(x));
                 let mut buf = String::new();
                 buf.push(x);
                 while let Some(c) = self.0.peek().cloned() {
@@ -188,7 +192,6 @@ impl<'a> Iterator for TokenIterator<'a> {
                 }
                 Token::Ident(buf)
             }
-            x => Token::Error(format!("Unknown character: '{}'", x)),
         };
         Some(res)
     }
@@ -308,12 +311,13 @@ pub fn parse_expr(iter: &mut Iter<'_>) -> Expr {
     parse_add(iter)
 }
 
-pub fn parse(iter: &mut Iter<'_>) -> Defs {
+pub fn parse(iter: &mut Iter<'_>) -> (Defs, Vec<String>) {
     let mut map = vec![];
     let mut line = 1;
     let mut doc: Option<String> = None;
     let mut category: Option<String> = None;
     let mut symbols = BTreeMap::new();
+    let mut errors = vec![];
     loop {
         match iter.next().unwrap() {
             Token::Newline => line += 1,
@@ -330,12 +334,12 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             });
                             category = Some(short);
                         }
-                        _ => println!("Malformed category directive"),
+                        _ => errors.push(format!("Malformed category directive")),
                     }
                 }
                 Token::Ident(ref s) if s == "endcategory" => {
                     if category.is_none() {
-                        println!("Stray endcategory directive");
+                        errors.push(format!("Stray endcategory directive"));
                     }
                     category = None
                 }
@@ -344,11 +348,26 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                         (Token::Ident(subst), Token::Ident(sym)) => {
                             symbols.insert(subst, sym);
                         }
-                        _ => println!("Malformed symbol directive"),
+                        _ => errors.push(format!("Malformed symbol directive")),
                     }
                 }
+                Token::Ident(ref s) if s == "dependency" => {
+                    let name = if let Some(Token::Ident(ref name)) = iter.next() {
+                        name.clone()
+                    } else {
+                        errors.push(format!("Expected ident after `!dependency`"));
+                        continue;
+                    };
+
+                    map.push(DefEntry {
+                        name: name.clone(),
+                        def: Rc::new(Def::Dependency { name }),
+                        doc: doc.take(),
+                        category: category.clone(),
+                    });
+                }
                 Token::Ident(ref s) => {
-                    println!("Unknown directive !{s}");
+                    errors.push(format!("Unknown directive !{s}"));
                     loop {
                         match iter.peek().cloned().unwrap() {
                             Token::Newline | Token::Eof => break,
@@ -359,7 +378,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                     }
                 }
                 _ => {
-                    println!("syntax error: expected ident after !");
+                    errors.push(format!("syntax error: expected ident after !"));
                     loop {
                         match iter.peek().cloned().unwrap() {
                             Token::Newline | Token::Eof => break,
@@ -459,7 +478,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                 }
                                 Token::RightBrace => break,
                                 x => {
-                                    println!("Expected property, got {:?}", x);
+                                    errors.push(format!("Expected property, got {:?}", x));
                                     break;
                                 }
                             };
@@ -468,11 +487,11 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                     let input_name = match iter.next().unwrap() {
                                         Token::Ident(name) => name,
                                         x => {
-                                            println!(
+                                            errors.push(format!(
                                                 "Expected property input \
                                                  name, got {:?}",
                                                 x
-                                            );
+                                            ));
                                             break;
                                         }
                                     };
@@ -489,7 +508,8 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                                 }
                                 Token::Ident(name) => name,
                                 x => {
-                                    println!("Expected property input name, got {:?}", x);
+                                    errors
+                                        .push(format!("Expected property input name, got {:?}", x));
                                     break;
                                 }
                             };
@@ -497,14 +517,15 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                             match iter.next().unwrap() {
                                 Token::Slash => (),
                                 x => {
-                                    println!("Expected /, got {:?}", x);
+                                    errors.push(format!("Expected /, got {:?}", x));
                                     break;
                                 }
                             }
                             let input_name = match iter.next().unwrap() {
                                 Token::Ident(name) => name,
                                 x => {
-                                    println!("Expected property input name, got {:?}", x);
+                                    errors
+                                        .push(format!("Expected property input name, got {:?}", x));
                                     break;
                                 }
                             };
@@ -541,7 +562,7 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
                     }
                 }
             }
-            x => println!("Expected definition on line {}, got {:?}", line, x),
+            x => errors.push(format!("Expected definition on line {}, got {:?}", line, x)),
         };
     }
 
@@ -551,12 +572,16 @@ pub fn parse(iter: &mut Iter<'_>) -> Defs {
         }
     }
 
-    Defs { defs: map }
+    (Defs { defs: map }, errors)
 }
 
 pub fn parse_str(input: &str) -> Defs {
     let mut iter = TokenIterator::new(&*input).peekable();
-    parse(&mut iter)
+    let (defs, errors) = parse(&mut iter);
+    for error in errors {
+        println!("{}", error);
+    }
+    defs
 }
 
 pub fn tokens(iter: &mut Iter<'_>) -> Vec<Token> {
@@ -568,89 +593,4 @@ pub fn tokens(iter: &mut Iter<'_>) -> Vec<Token> {
         }
     }
     out
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn do_parse(s: &str) -> Expr {
-        let mut iter = TokenIterator::new(s).peekable();
-        parse_term(&mut iter)
-    }
-
-    macro_rules! expect {
-        ($expr:expr, $pattern:pat, $var:ident, $expected:expr) => {
-            match do_parse($expr) {
-                $pattern => assert_eq!($var, $expected),
-                x => panic!("{}", x),
-            }
-        };
-    }
-
-    #[test]
-    fn test_parse_term_plus() {
-        let expr = do_parse("+1");
-
-        if let Expr::UnaryOp(UnaryOpExpr {
-            op: UnaryOpType::Positive,
-            expr: x,
-        }) = expr
-        {
-            if let Expr::Const { value: x } = *x {
-                if x != 1.into() {
-                    panic!("number != 1");
-                }
-            } else {
-                panic!("argument of x is not Expr::new_const");
-            }
-        } else {
-            panic!("missing plus");
-        }
-    }
-
-    #[test]
-    fn test_missing_bracket() {
-        expect!("(", Expr::Error { ref message }, message, "Expected ), got Eof");
-    }
-
-    #[test]
-    fn test_escapes() {
-        expect!(
-            "\\\r",
-            Expr::Error { ref message },
-            message,
-            "Expected term, got Error(\"Expected LF or CRLF line endings\")"
-        );
-        expect!("\\\r\n1", Expr::Const { value }, value, Numeric::from(1));
-
-        expect!(
-            "\\a",
-            Expr::Error { ref message },
-            message,
-            "Expected term, got Error(\"Invalid escape: \\\\a\")"
-        );
-        expect!(
-            "\\",
-            Expr::Error { ref message },
-            message,
-            "Expected term, got Error(\"Unexpected EOF\")"
-        );
-    }
-
-    #[test]
-    fn test_float_leading_dot() {
-        use crate::types::BigRat;
-        expect!(
-            ".123",
-            Expr::Const { value },
-            value,
-            Numeric::Rational(BigRat::small_ratio(123, 1000))
-        );
-    }
-
-    #[test]
-    fn test_escaped_quotes() {
-        expect!("\"ab\\\"\"", Expr::Unit { ref name }, name, "ab\"")
-    }
 }

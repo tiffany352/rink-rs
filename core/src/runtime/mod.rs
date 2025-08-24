@@ -12,4 +12,5 @@ pub(crate) use eval::{eval_expr, eval_query};
 pub(crate) use value::Show;
 
 pub use substance::{Properties, Property, Substance, SubstanceGetError};
+pub use value::MissingDeps;
 pub use value::Value;

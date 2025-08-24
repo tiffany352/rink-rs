@@ -54,7 +54,7 @@
 //! // enabled. Otherwise, you'll need to install and load this file
 //! // yourself.
 //! let base_defs = rink_core::CURRENCY_FILE.expect("bundle-files feature to be enabled");
-//! ctx.load_currency(&live_data, base_defs)?;
+//! ctx.load_currency(Some(&live_data), base_defs)?;
 //!
 //! println!("{}", rink_core::one_line(&mut ctx, "USD").unwrap());
 //! // Definition: USD = (1 / 1.0843) EUR = approx. 922.2539 millieuro (money; EUR).
@@ -62,6 +62,10 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! If `None` is passed as the live data, then attempting to use any currency
+//! units will return `QueryError::MissingDeps` to indicate that currency data
+//! needs fetching.
 //!
 //! ## Markup
 //!

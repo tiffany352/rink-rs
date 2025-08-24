@@ -1,0 +1,9 @@
+[limits]
+enabled = true
+show_metrics = true
+
+[currency]
+enabled = true
+behavior = "prompt"
+endpoint = "http://127.0.0.1:3090/data/currency.json"
+cache_duration = "10s"

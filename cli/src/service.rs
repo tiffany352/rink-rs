@@ -2,9 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::{config::Config, fmt::to_ansi_string, GLOBAL};
+use crate::config::Config;
+use crate::fmt::to_ansi_string;
+use crate::GLOBAL;
+use rink_core::output::QueryError;
+use rink_core::runtime::MissingDeps;
 use rink_core::{eval, Context};
 use rink_sandbox::Service;
+use serde_derive::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
 pub struct RinkService {
@@ -12,9 +17,15 @@ pub struct RinkService {
     ctx: Arc<Mutex<Context>>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub enum EvalResult {
+    AnsiString(String),
+    MissingDeps(MissingDeps),
+}
+
 impl Service for RinkService {
     type Req = String;
-    type Res = Result<String, String>;
+    type Res = EvalResult;
     type Config = Config;
 
     fn args(_config: &Self::Config) -> Vec<std::ffi::OsString> {
@@ -38,8 +49,9 @@ impl Service for RinkService {
     fn handle(&self, request: Self::Req) -> Self::Res {
         let mut ctx = self.ctx.lock().unwrap();
         match eval(&mut ctx, &request) {
-            Ok(value) => Ok(to_ansi_string(&self.config, &value)),
-            Err(err) => Err(to_ansi_string(&self.config, &err)),
+            Ok(value) => EvalResult::AnsiString(to_ansi_string(&self.config, &value)),
+            Err(QueryError::MissingDeps(deps)) => EvalResult::MissingDeps(deps),
+            Err(err) => EvalResult::AnsiString(to_ansi_string(&self.config, &err)),
         }
     }
 

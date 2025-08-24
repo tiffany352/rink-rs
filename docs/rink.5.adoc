@@ -60,16 +60,27 @@ Currency
 The `[currency]` section.
 
 *enabled* = <__bool__>::
-	Currency fetching can be disabled for those that don't want it.
+	Currency support can be disabled entirely. When set to false, the
+	`currency.json` will not be loaded, and trying to use currency units
+	will give a "not found" error.
 	Default: `true`
 
-*fetch_on_startup* = <__bool__>::
-	Setting this to `false` causes rink to behave as if
-	`cache_duration` was infinite. If the currency file doesn't
-	exist, it will fetch it, otherwise it will use it indefinitely.
-	Rink can be invoked with `--fetch-currency` to download the
-	latest version.
-	Default: `true`
+*behavior* = <__"prompt"__ | __"always"__>::
+	Default: `"prompt"`. When attempting to use a currency unit, Rink will
+	ask if you'd like to download the currency data.
++
+Seting it to `"always"` will download immediately when a currency unit
+is used.
+
+*cache_expiration_enabled* = <__bool__>::
+	Default: `true`. Setting this to `false` causes rink to behave as if
+	`cache_duration` was infinite. If the currency file doesn't exist, it
+	will fetch it, otherwise it will use it indefinitely. Rink can be
+	invoked with `--fetch-currency` to download the latest version.
++
+This setting might be useful for intermittent internet access. You can
+setup a cron job to fetch the currency data while the network is up,
+making it available later when using rink offline.
 
 *endpoint* = <__url__>::
 	Allows pointing to alternate Rink-Web instances, or to any other API
@@ -78,7 +89,7 @@ The `[currency]` section.
 
 *timeout* = <__duration__>::
 	How long to wait for currency fetching before giving up.
-	Default: `"2s"`
+	Default: `"15s"`
 
 *cache_duration* = <__duration__>::
 	How long to wait before considering the cached currency data stale.

@@ -14,7 +14,9 @@ fn canonicalizations() {
         };
         let cvalue = ctx
             .lookup(&*canon)
-            .expect(&*format!("Failed to lookup {}", canon));
+            .expect(&*format!("Failed to lookup {}", canon))
+            .to_number()
+            .expect("should have been number");
         assert_eq!(cvalue, *value, "{} == {}", name, canon);
     }
 }
