@@ -70,6 +70,17 @@ The two syntax variants for properties are:
  [name] const [output name] [expression]
  [name] [input name] [input expression] / [output name] [output expression]
 
+The input name and output name can get very confusing. The idea with
+these is to allow for contextual properties to be calculated from ratios
+such as the density. For example, `mass of 1ml water`. For this to work,
+`density` (mass divided by volume) is defined with 3 names: `density`
+(the ratio itself), `mass`, and `volume`.
+
+[listing]
+ density mass 1g / volume cm^3
+
+These conversions work the other direction too: `volume of 1g water`.
+
 Categories
 ~~~~~~~~~~
 
@@ -144,6 +155,13 @@ other prefixes, and not units.
 kilo-                   1e3
 k--                     kilo
 
+Miscellaneous
+~~~~~~~~~~~~~
+
+There is a special `!dependency` pragma that's used in `currency.units`
+to declare dependencies on live currency data. This can be used if a new
+currency or other live-updating data source is being added.
+
 Guidelines
 ----------
 
@@ -154,9 +172,15 @@ The units database should generally be wrapped so that it fits within
 80 columns, for ease of reading. Similarly, units definitions should
 generally be aligned vertically using spaces.
 
-Non-trivial units should generally have a documentation comment. This
-comment can explain what the unit means, as well as providing a citation
-for its value.
+Definitions are normally indented to 20 columns, sometimes 25. The
+important thing is that adjacent units are aligned. The definitions file
+uses spaces for indentation, so keep it consistent instead of mixing
+them.
+
+Units whose meaning and origin isn't obvious from their definition
+should generally have a documentation comment. This comment can explain
+what the unit means, the error bars (if applicable), as well as
+providing a citation for its value.
 
 If there are multiple ways to interpret how a unit should be defined,
 then mention which interpretation is being used. Unless it's implied by
@@ -193,7 +217,7 @@ and the `!category` pragma should immediately follow the last category's
 folds. The display name of a category should be in sentence case, and
 should be aligned to the 70th column.
 
-NAMING
+Naming
 ~~~~~~
 
 English names should be lowercase without separators. Words may be
@@ -223,7 +247,7 @@ should be the "canonical name". The canonical version should have the
 full definition, and the other names should be added as aliases pointing
 to the canonical version. Avoid duplicating the definition.
 
-DEFINITIONS
+Definitions
 ~~~~~~~~~~~
 
 Units should be defined in terms of other related units when possible.
@@ -244,6 +268,24 @@ Universal constants that are measured experimentally should have as many
 significant figures as are currently known. For example, if a number is
 known to ±0.000003, then it should be listed to 6 digits after the
 decimal point.
+
+Sources
+~~~~~~~
+
+The best sources are standards documents, such as those published by
+CGPM, ISO, NIST.
+
+Fact sheets published by trusted organizations such as NASA, ESA are
+also good.
+
+High quality resources and database such as Engineering Toolbox are good
+for values that are known empirically.
+
+Books are good for historical units, but it's best to stick to ones
+which can be viewed/verified online using sites like Google Books.
+
+Directly citing Wikipedia should be avoided when practical. Instead,
+figure out what Wikipedia is citing and use that.
 
 Files
 -----
