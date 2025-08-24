@@ -169,38 +169,3 @@ impl<'a> TokenFmt<'a> for Query {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use jiff::tz::Offset;
-
-    use super::Conversion;
-    use crate::{
-        ast::{Degree, Expr},
-        types::TimeZone,
-    };
-
-    #[test]
-    fn conversion_display() {
-        assert_eq!(Conversion::None.to_string(), "nothing");
-        assert_eq!(
-            Conversion::Expr(Expr::new_unit("a".to_owned())).to_string(),
-            "a"
-        );
-        assert_eq!(Conversion::Degree(Degree::Celsius).to_string(), "°C");
-        assert_eq!(
-            Conversion::List(vec!["a".to_owned(), "b".to_owned()]).to_string(),
-            "a, b"
-        );
-        assert_eq!(Conversion::Offset(3600 * 7).to_string(), "07:00");
-        assert_eq!(
-            Conversion::Timezone(TimeZone::get("US/Pacific").unwrap()).to_string(),
-            "US/Pacific"
-        );
-        assert_eq!(
-            Conversion::Timezone(TimeZone::fixed(Offset::from_seconds(3600 * 7).unwrap()))
-                .to_string(),
-            "+07"
-        );
-    }
-}

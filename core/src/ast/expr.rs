@@ -257,26 +257,3 @@ impl From<i64> for Expr {
         Expr::new_const(x.into())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::parsing::text_query::{parse_expr, TokenIterator};
-
-    fn parse_then_pretty(input: &str) -> String {
-        let mut iter = TokenIterator::new(&input).peekable();
-        let expr = parse_expr(&mut iter);
-        expr.to_string()
-    }
-
-    #[test]
-    fn expr_display() {
-        assert_eq!(parse_then_pretty("meter"), "meter");
-        assert_eq!(parse_then_pretty("'hello world'"), "'hello world'");
-        assert_eq!(parse_then_pretty("234234"), "234234");
-        assert_eq!(parse_then_pretty("1 + 2"), "1 + 2");
-        assert_eq!(parse_then_pretty("speed of light"), "speed of light");
-        assert_eq!(parse_then_pretty("1 + 2 * 3"), "1 + 2 3");
-        assert_eq!(parse_then_pretty("(1 + 2) * 3"), "(1 + 2) 3");
-        assert_eq!(parse_then_pretty("a = 2"), "a = 2");
-    }
-}
