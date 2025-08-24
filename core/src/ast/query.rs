@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::types::TimeZone;
-
 use super::*;
+use crate::output::fmt::{Span, TokenFmt};
+use crate::types::TimeZone;
 use serde_derive::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
@@ -54,6 +54,118 @@ impl fmt::Display for Conversion {
                     write!(fmt, "unknown")
                 }
             }
+        }
+    }
+}
+
+impl<'a> TokenFmt<'a> for Conversion {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        match self {
+            Conversion::None => vec![],
+            Conversion::Expr(ref expr) => expr.to_spans(),
+            Conversion::Degree(ref deg) => vec![Span::keyword(deg.as_str())],
+            Conversion::List(ref list) => crate::output::fmt::join(
+                list.iter().map(|name| Span::unit(name)),
+                Span::plain(", "),
+            )
+            .collect(),
+            Conversion::Offset(off) => {
+                vec![Span::number(format!(
+                    "{:+02}:{:02}",
+                    off / 3600,
+                    (off / 60) % 60
+                ))]
+            }
+            Conversion::Timezone(ref tz) => {
+                if let Some(name) = tz.iana_name() {
+                    vec![Span::timezone(format!("[{}]", name))]
+                } else if let Ok(offset) = tz.to_fixed_offset() {
+                    let seconds = offset.seconds();
+                    vec![Span::number(format!(
+                        "{:+02}:{:02}",
+                        seconds / 3600,
+                        (seconds / 60) % 60
+                    ))]
+                } else {
+                    vec![Span::error("<failed to format timezone>")]
+                }
+            }
+        }
+    }
+}
+
+impl<'a> TokenFmt<'a> for Query {
+    fn to_spans(&'a self) -> Vec<Span<'a>> {
+        match self {
+            Query::Expr(ref expr) => expr.to_spans(),
+            Query::Convert(ref expr, ref conversion, base, digits) => {
+                let mut res = vec![
+                    Span::child(expr),
+                    Span::plain(" "),
+                    Span::plain("->"),
+                    Span::plain(" "),
+                ];
+
+                match digits {
+                    Digits::Default => (),
+                    Digits::FullInt => {
+                        res.push(Span::keyword("digits"));
+                        res.push(Span::plain(" "));
+                    }
+                    Digits::Digits(digits) => {
+                        res.push(Span::keyword("digits"));
+                        res.push(Span::plain(" "));
+                        res.push(Span::number(format!("{}", digits)));
+                        res.push(Span::plain(" "));
+                    }
+                    Digits::Fraction => {
+                        res.push(Span::keyword("fraction"));
+                        res.push(Span::plain(" "));
+                    }
+                    Digits::Scientific => {
+                        res.push(Span::keyword("scientific"));
+                        res.push(Span::plain(" "));
+                    }
+                    Digits::Engineering => {
+                        res.push(Span::keyword("engineering"));
+                        res.push(Span::plain(" "));
+                    }
+                }
+
+                if let Some(base) = base {
+                    match base {
+                        2 => res.push(Span::keyword("binary")),
+                        8 => res.push(Span::keyword("octal")),
+                        16 => res.push(Span::keyword("hexadecimal")),
+                        x => res.push(Span::number(format!("{}", x))),
+                    }
+                    res.push(Span::plain(" "));
+                }
+
+                if let Conversion::None = *conversion {
+                    // do nothing
+                } else {
+                    res.push(Span::child(conversion));
+                }
+
+                res
+            }
+            Query::Factorize(ref expr) => vec![
+                Span::keyword("factorize"),
+                Span::plain(" "),
+                Span::child(expr),
+            ],
+            Query::UnitsFor(expr) => vec![
+                Span::keyword("units for"),
+                Span::plain(" "),
+                Span::child(expr),
+            ],
+            Query::Search(ref term) => vec![
+                Span::keyword("search"),
+                Span::plain(" "),
+                Span::user_input(term),
+            ],
+            Query::Error(ref message) => vec![Span::error(message)],
         }
     }
 }

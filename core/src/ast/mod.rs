@@ -181,18 +181,22 @@ impl Function {
 
 impl fmt::Display for Degree {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Degree::Celsius => write!(fmt, "°C"),
-            Degree::Fahrenheit => write!(fmt, "°F"),
-            Degree::Newton => write!(fmt, "°N"),
-            Degree::Reaumur => write!(fmt, "°Ré"),
-            Degree::Romer => write!(fmt, "°Rø"),
-            Degree::Delisle => write!(fmt, "°De"),
-        }
+        write!(fmt, "{}", self.as_str())
     }
 }
 
 impl Degree {
+    pub fn as_str(&self) -> &'static str {
+        match *self {
+            Degree::Celsius => "°C",
+            Degree::Fahrenheit => "°F",
+            Degree::Newton => "°N",
+            Degree::Reaumur => "°Ré",
+            Degree::Romer => "°Rø",
+            Degree::Delisle => "°De",
+        }
+    }
+
     pub fn name_base_scale(&self) -> (&str, &str, &str) {
         match *self {
             Degree::Celsius => ("C", "zerocelsius", "kelvin"),
