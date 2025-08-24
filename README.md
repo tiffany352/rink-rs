@@ -121,8 +121,12 @@ Unless you explicitly state otherwise, any contribution intentionally
 submitted for inclusion in the work will grant the rights lined out in
 the MPL, including larger works with secondary licenses.
 
-If you plan on making edits to `definitions.units`, check out the
-documentation here: [docs/rink-defs.5.adoc](./docs/rink-defs.5.adoc)
+Check out [ARCHITECTURE.md](./ARCHITECTURE.md) for an overview of how
+the project is structured.
+
+## Security
+
+See [SECURITY.md](./SECURITY.md)
 
 ## Changelog
 
