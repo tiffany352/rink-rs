@@ -17,13 +17,13 @@ jobs:
         config:
           - os: ubuntu-latest
             input-name: rink
-            artifact-name: Rink CLI - Linux
+            artifact-name: Rink.CLI.Linux
           - os: macos-latest
             input-name: rink
-            artifact-name: Rink CLI - macOS
+            artifact-name: Rink.CLI.macOS
           - os: windows-latest
             input-name: rink.exe
-            artifact-name: Rink CLI - Windows
+            artifact-name: Rink.CLI.Windows
 
     steps:
       - uses: actions/checkout@v4

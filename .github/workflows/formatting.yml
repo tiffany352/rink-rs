@@ -1,8 +1,6 @@
-name: Checks
+name: Formatting
 
 on:
-  push:
-    branches: [master]
   pull_request:
     branches: [master]
 
@@ -15,9 +13,5 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Build
-        run: cargo build --workspace --verbose
-      - name: Run tests
-        run: cargo test --workspace --verbose
       - name: Check formatting
         run: cargo fmt --all -- --check
