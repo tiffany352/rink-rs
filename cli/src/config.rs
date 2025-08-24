@@ -4,8 +4,7 @@
 
 use crate::currency::load_cached_currency_if_current;
 use crate::style_ser;
-use color_eyre::Result;
-use eyre::{eyre, WrapErr};
+use eyre::{eyre, Result, WrapErr};
 use nu_ansi_term::{Color, Style};
 use rink_core::loader::gnu_units;
 use rink_core::output::fmt::FmtToken;

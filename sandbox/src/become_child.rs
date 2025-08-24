@@ -2,20 +2,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use color_eyre::config::HookBuilder;
+use crate::error::{ErrorResponse, LocationInfo, PanicInfo, SerializableError};
+use crate::frame::Frame;
+use crate::response::Response;
+use crate::service::{
+    HandshakeRequest, HandshakeResponse, MessageRequest, MessageResponse, Service,
+};
+use crate::Alloc;
 use std::alloc::GlobalAlloc;
+use std::backtrace::{Backtrace, BacktraceStatus};
 use std::io::{stdin, stdout};
 use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
-
-use crate::{
-    error::ErrorResponse,
-    frame::Frame,
-    response::Response,
-    service::{HandshakeRequest, HandshakeResponse, MessageRequest, MessageResponse, Service},
-    Alloc,
-};
 
 /// When your app is passed the arguments returned by [`Service::args`],
 /// it should call this function to begin servicing requests.
@@ -29,17 +28,45 @@ where
     let stdout = stdout();
     let mut stdout = stdout.lock();
 
-    let (panic_hook, _) = HookBuilder::default().into_hooks();
-
-    let panic_message = Arc::new(Mutex::new(String::new()));
+    let panic_message = Arc::new(Mutex::new(PanicInfo {
+        message: None,
+        location: None,
+        backtrace: None,
+    }));
     std::panic::set_hook({
         let panic_message = panic_message.clone();
-        Box::new(move |info| {
+        Box::new(move |panic_info| {
             let mut panic_message = panic_message.lock().unwrap();
 
-            let report = panic_hook.panic_report(info);
-            let message = format!("{}", report);
-            *panic_message = message;
+            let message = if let Some(&s) = panic_info.payload().downcast_ref::<&str>() {
+                Some(s.to_owned())
+            } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+                Some(s.clone())
+            } else {
+                None
+            };
+
+            let location = if let Some(location) = panic_info.location() {
+                Some(LocationInfo {
+                    file: location.file().to_owned(),
+                    line: location.line(),
+                })
+            } else {
+                None
+            };
+
+            let backtrace = Backtrace::capture();
+            let backtrace = match backtrace.status() {
+                BacktraceStatus::Disabled => None,
+                BacktraceStatus::Unsupported => Some("Backtrace unsupported".into()),
+                BacktraceStatus::Captured | _ => Some(format!("{}", backtrace)),
+            };
+
+            *panic_message = PanicInfo {
+                message,
+                location,
+                backtrace,
+            };
         })
     });
 
@@ -57,7 +84,7 @@ where
 
         let (result, service) = match service {
             Ok(service) => (Ok(()), Some(service)),
-            Err(err) => (Err(format!("{}", err)), None),
+            Err(err) => (Err(SerializableError::new(err)), None),
         };
 
         let response = Response {

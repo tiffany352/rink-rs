@@ -6,9 +6,8 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::config::{read_from_search_path, Currency};
-use color_eyre::Result;
 use curl::easy::Easy;
-use eyre::{eyre, Context as _, Report};
+use eyre::{eyre, Context as _, Report, Result};
 use rink_core::{Context, CURRENCY_FILE};
 
 /// Returns path to currency.json

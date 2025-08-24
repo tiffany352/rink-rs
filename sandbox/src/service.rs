@@ -5,7 +5,8 @@ use std::panic::RefUnwindSafe;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use crate::{error::ErrorResponse, response::Response};
+use crate::error::{ErrorResponse, SerializableError};
+use crate::response::Response;
 
 /// In order to sandbox some logic, there needs to be an implementation
 /// of this trait for it.
@@ -41,4 +42,4 @@ pub trait Service: Sized + RefUnwindSafe + 'static {
 pub(crate) type MessageRequest<S> = <S as Service>::Req;
 pub(crate) type MessageResponse<S> = Response<Result<<S as Service>::Res, ErrorResponse>>;
 pub(crate) type HandshakeRequest<S> = <S as Service>::Config;
-pub(crate) type HandshakeResponse = Response<Result<(), String>>;
+pub(crate) type HandshakeResponse = Response<Result<(), SerializableError>>;

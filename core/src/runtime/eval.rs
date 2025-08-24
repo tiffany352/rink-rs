@@ -71,6 +71,10 @@ pub(crate) fn eval_expr(ctx: &Context, expr: &Expr) -> Result<Value, QueryError>
 
     match *expr {
         Expr::Unit { ref name } if name == "now" => Ok(Value::DateTime(ctx.now.clone())),
+        // Useful for testing the panic handler in rink-sandbox
+        Expr::Unit { ref name } if name == "__super_secret_plz_crash" => {
+            panic!("Thank you for playing Wing Commander")
+        }
         Expr::Unit { ref name } => lookup_unit(ctx, name)
             .or_else(|| {
                 formula::substance_from_formula(

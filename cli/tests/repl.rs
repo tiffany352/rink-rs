@@ -61,3 +61,29 @@ fn test_sandboxed() {
             "No such unit doesnt_exist\nFinished in ",
         ));
 }
+
+// Causes a 100% repro for a bug that causes code coverage to fail.
+// "invalid instrumentation profile data (file header is corrupt)"
+#[test]
+#[ignore]
+fn test_sandboxed_panic_handler() {
+    let mut cmd = Command::cargo_bin("rink").unwrap();
+    cmd.arg("-c")
+        .arg("tests/config_sandboxed.toml")
+        .write_stdin("__super_secret_plz_crash\n")
+        .env("NO_COLOR", "true")
+        .assert()
+        .success()
+        .stdout(
+            predicate::eq(
+                "The subprocess panicked (crashed).
+Message: Thank you for playing Wing Commander
+Location: core/src/runtime/eval.rs:76
+
+Backtrace omitted.
+Run with RUST_BACKTRACE=1 environment variable to display it.
+Run with RUST_BACKTRACE=full to include source snippets.",
+            )
+            .trim(),
+        );
+}
