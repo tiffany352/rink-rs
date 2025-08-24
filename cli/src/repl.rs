@@ -2,15 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::config::CurrencyBehavior;
+use crate::config::{Config, CurrencyBehavior};
 use crate::currency::CurrencyStatus;
 use crate::runner::Runner;
+use crate::service::EvalResult;
 use crate::RinkHelper;
-use crate::{config::Config, service::EvalResult};
 use eyre::Result;
 use jiff::{Timestamp, Unit};
 use rink_core::one_line;
-use rustyline::{config::Configurer, error::ReadlineError, CompletionType, Editor};
+use rustyline::config::Configurer;
+use rustyline::error::ReadlineError;
+use rustyline::{CompletionType, Editor};
 use std::io::{BufRead, ErrorKind};
 
 pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) -> Result<()> {

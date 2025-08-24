@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::config::Config;
 use crate::fmt::to_ansi_string;
-use crate::service::RinkService;
-use crate::{config::Config, service::EvalResult};
+use crate::service::{EvalResult, RinkService};
 use eyre::Result;
 use rink_core::output::QueryError;
 use rink_sandbox::Sandbox;

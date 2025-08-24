@@ -1,8 +1,9 @@
 use std::ffi::OsString;
+use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
-use std::{fs::File, path::Path};
 
 use crate::config::{read_from_search_path, Currency};
 use color_eyre::Result;

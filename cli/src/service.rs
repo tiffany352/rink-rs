@@ -2,7 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::{config::Config, fmt::to_ansi_string, GLOBAL};
+use crate::config::Config;
+use crate::fmt::to_ansi_string;
+use crate::GLOBAL;
 use rink_core::output::QueryError;
 use rink_core::runtime::MissingDeps;
 use rink_core::{eval, Context};
