@@ -27,7 +27,7 @@ impl Frame {
         self.buf.resize(len as usize, 0);
         Read::read_exact(reader, &mut self.buf).map_err(Error::ReadFailed)?;
 
-        let value = bincode::deserialize(&self.buf)?;
+        let value = bincode::deserialize(&self.buf).map_err(Error::DeserializeFailed)?;
 
         Ok(value)
     }
@@ -37,7 +37,7 @@ impl Frame {
         W: Write,
         V: Serialize,
     {
-        let bytes = bincode::serialize(value)?;
+        let bytes = bincode::serialize(value).map_err(Error::SerializeFailed)?;
         let len = u32::to_ne_bytes(bytes.len() as u32);
         writer.write_all(&len).map_err(Error::WriteFailed)?;
         writer.write_all(&bytes).map_err(Error::WriteFailed)?;
