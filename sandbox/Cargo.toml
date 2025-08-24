@@ -14,7 +14,6 @@ categories = ["command-line-utilities"]
 bincode = "1.3.3"
 serde_derive = "1"
 serde = { version = "1", default-features = false }
-byteorder = { version = "1", default-features = false }
 color-eyre = "0.5"
 ctrlc = "3.4.7"
 
