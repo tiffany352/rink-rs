@@ -6090,7 +6090,7 @@ light {
 # Celestial bodies
 #
 
-# Gravitational constants (GM or µ) values from JPL DE440 ephemerides.
+# Gravitational constants (GM or µ) values used for JPL DE440 ephemerides.
 # <https://ssd.jpl.nasa.gov/doc/Park.2021.AJ.DE440.pdf>
 
 # Planets
