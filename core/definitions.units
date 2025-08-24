@@ -6090,6 +6090,41 @@ light {
 # Celestial bodies
 #
 
+# Gravitational constants (GM or µ) values from JPL DE440 ephemerides.
+# <https://ssd.jpl.nasa.gov/doc/Park.2021.AJ.DE440.pdf>
+
+# Planets
+?? Value used in JPL DE440
+GM_sun     132712440041.279419 km^3/s^2
+?? Value used in JPL DE440
+GM_mercury        22031.868551 km^3/s^2
+?? Value used in JPL DE440
+GM_venus         324858.592000 km^3/s^2
+?? Value used in JPL DE440
+GM_earth         398600.435507 km^3/s^2
+
+# Values that include moons
+?? Value used in JPL DE440. Includes moons.
+GM_mars           42828.375816 km^3/s^2
+?? Value used in JPL DE440. Includes moons.
+GM_jupiter    126712764.100000 km^3/s^2
+?? Value used in JPL DE440. Includes moons.
+GM_saturn      37940584.841800 km^3/s^2
+?? Value used in JPL DE440. Includes moons.
+GM_uranus       5794556.400000 km^3/s^2
+?? Value used in JPL DE440. Includes moons.
+GM_neptune      6836527.100580 km^3/s^2
+?? Value used in JPL DE440. Includes moons.
+GM_pluto            975.500000 km^3/s^2
+
+# Moons
+?? Value used in JPL DE440
+GM_moon            4902.800118 km^3/s^2
+?? Value used in JPL DE440
+GM_ceres             62.62890  km^3/s^2
+?? Value used in JPL DE440
+GM_vesta             17.288245 km^3/s^2
+
 # Sidereal years from <http://ssd.jpl.nasa.gov/phys_props_planets.html>. Data
 # was updated in May 2001 based on the 1992 Explanatory Supplement to the
 # Astronomical Almanac and the mean longitude rates.  Apparently the table of
