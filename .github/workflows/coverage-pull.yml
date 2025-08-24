@@ -24,6 +24,8 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+      - name: Fetch dependencies
+        run: make fetch
       - name: Run tests
         run: make coverage
       - name: Generate coverage report
