@@ -28,7 +28,7 @@ Options
 **--fetch-currency**:
 	Fetches the latest version of the currency data, then exits. Can be
 	used as part of a cron job, possibly together with setting
-	`currency.fetch_on_startup` to false.
+	`currency.cache_expiration_enabled` to false.
 
 **-f**::
 **--file** <__file__>::
