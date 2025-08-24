@@ -25,18 +25,12 @@ fn write_irc_string(out: &mut String, config: &Config, spans: &[Span]) {
 
 fn write_irc_token(out: &mut String, _config: &Config, text: &str, token: FmtToken) {
     let (prefix, postfix) = match token {
-        FmtToken::Plain => ("", ""),
         FmtToken::Error => ("\x0304", "\x03"),
         FmtToken::Unit | FmtToken::PropName => ("\x0311", "\x03"),
         FmtToken::Quantity => ("\x0310", "\x03"),
-        FmtToken::Number => ("", ""),
         FmtToken::UserInput => ("\x02", "\x02"),
-        FmtToken::ListBegin => ("", ""),
-        FmtToken::ListSep => ("", ""),
         FmtToken::DocString => ("\x1D", "\x1D"),
-        FmtToken::Pow => ("", ""),
-        FmtToken::DateTime => ("", ""),
-        FmtToken::Link => ("", ""),
+        _ => ("", ""),
     };
     out.push_str(prefix);
     out.push_str(text);
