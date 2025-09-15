@@ -152,7 +152,15 @@ fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) 
             let (_exact, val) = value.to_string(10, Digits::Default);
             out.push(Span::number(format!("{}", val)))
         }
-        Expr::Date { .. } => todo!("NYI: date expr to_spans"),
+        Expr::Date { ref tokens } => {
+            let mut res = String::new();
+            res.push('#');
+            for token in tokens {
+                res.push_str(&format!("{}", token));
+            }
+            res.push('#');
+            out.push(Span::date_time(res));
+        }
         Expr::BinOp(ref binop) => {
             let op_prec = Precedence::from(binop.op);
             let succ = Precedence::next(binop.op);

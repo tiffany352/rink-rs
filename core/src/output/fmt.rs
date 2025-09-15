@@ -201,6 +201,28 @@ pub enum FmtToken {
     TimeZone,
 }
 
+impl FmtToken {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            FmtToken::Plain => "plain",
+            FmtToken::Error => "error",
+            FmtToken::Unit => "unit",
+            FmtToken::Quantity => "quantity",
+            FmtToken::Number => "number",
+            FmtToken::UserInput => "user_input",
+            FmtToken::ListBegin => "list_begin",
+            FmtToken::ListSep => "list_sep",
+            FmtToken::DocString => "doc_string",
+            FmtToken::Pow => "pow",
+            FmtToken::PropName => "prop_name",
+            FmtToken::DateTime => "date_time",
+            FmtToken::Link => "link",
+            FmtToken::Keyword => "keyword",
+            FmtToken::TimeZone => "time_zone",
+        }
+    }
+}
+
 pub(crate) fn write_spans_string(out: &mut String, spans: &[Span]) {
     for span in spans {
         match span {

@@ -80,6 +80,8 @@ impl<'a> TokenFmt<'a> for Conversion {
                 if let Some(name) = tz.iana_name() {
                     vec![Span::timezone(format!("[{}]", name))]
                 } else if let Ok(offset) = tz.to_fixed_offset() {
+                    // This branch is probably unreachable,
+                    // but is implemented anyway.
                     let seconds = offset.seconds();
                     vec![Span::number(format!(
                         "{:+02}:{:02}",
@@ -99,52 +101,52 @@ impl<'a> TokenFmt<'a> for Query {
         match self {
             Query::Expr(ref expr) => expr.to_spans(),
             Query::Convert(ref expr, ref conversion, base, digits) => {
-                let mut res = vec![
-                    Span::child(expr),
-                    Span::plain(" "),
-                    Span::plain("->"),
-                    Span::plain(" "),
-                ];
+                let mut res = vec![Span::child(expr), Span::plain(" "), Span::plain("->")];
 
                 match digits {
                     Digits::Default => (),
                     Digits::FullInt => {
-                        res.push(Span::keyword("digits"));
                         res.push(Span::plain(" "));
+                        res.push(Span::keyword("digits"));
                     }
                     Digits::Digits(digits) => {
+                        res.push(Span::plain(" "));
                         res.push(Span::keyword("digits"));
                         res.push(Span::plain(" "));
                         res.push(Span::number(format!("{}", digits)));
-                        res.push(Span::plain(" "));
                     }
                     Digits::Fraction => {
-                        res.push(Span::keyword("fraction"));
                         res.push(Span::plain(" "));
+                        res.push(Span::keyword("fraction"));
                     }
                     Digits::Scientific => {
-                        res.push(Span::keyword("scientific"));
                         res.push(Span::plain(" "));
+                        res.push(Span::keyword("scientific"));
                     }
                     Digits::Engineering => {
-                        res.push(Span::keyword("engineering"));
                         res.push(Span::plain(" "));
+                        res.push(Span::keyword("engineering"));
                     }
                 }
 
                 if let Some(base) = base {
+                    res.push(Span::plain(" "));
                     match base {
                         2 => res.push(Span::keyword("binary")),
                         8 => res.push(Span::keyword("octal")),
                         16 => res.push(Span::keyword("hexadecimal")),
-                        x => res.push(Span::number(format!("{}", x))),
+                        x => {
+                            res.push(Span::keyword("base"));
+                            res.push(Span::plain(" "));
+                            res.push(Span::number(format!("{}", x)))
+                        }
                     }
-                    res.push(Span::plain(" "));
                 }
 
                 if let Conversion::None = *conversion {
                     // do nothing
                 } else {
+                    res.push(Span::plain(" "));
                     res.push(Span::child(conversion));
                 }
 
