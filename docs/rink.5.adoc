@@ -55,6 +55,11 @@ The `[rink]` section.
 	a Unicode-capable terminal.
 	Default: `false`
 
+*show_interpretation* = <__bool__>::
+	Shows the input query reformatted based on how Rink interpreted it.
+	Supports syntax highlighting.
+	Default: `true`
+
 Currency
 ~~~~~~~~
 The `[currency]` section.
@@ -159,6 +164,14 @@ created as `[themes.my_theme]`. These options are specific to each.
 
 *link* = <__color__>::
 	A hyperlink, typically found inside of doc strings.
+	Default: `"cyan"`
+
+*keyword* = <__color__>::
+	Special words in Rink's query language, like `of`, `digits`, etc.
+	Default: `"yellow"`
+
+*timezone* = <__color__>::
+	Timezones, like `[US/Pacific]`.
 	Default: `"cyan"`
 
 Files
