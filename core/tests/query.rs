@@ -456,7 +456,10 @@ fn test_reciprocal_conversion() {
 
 #[test]
 fn test_non_conversion_input() {
-    test("g", "Definition: gram = (1 / 1000) kg = 1 gram (mass; kg)");
+    test(
+        "g",
+        "Definition: gram = (1 / 1000) * kg = 1 gram (mass; kg)",
+    );
 }
 
 #[test]

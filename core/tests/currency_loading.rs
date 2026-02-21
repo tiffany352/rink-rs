@@ -9,7 +9,7 @@ fn load_currency_with_live_data() {
     let result = rink_core::one_line(&mut ctx, "USD");
     assert_eq!(
         result,
-        Ok("Definition: USD = (1 / 1.0852) EUR = \
+        Ok("Definition: USD = (1 / 1.0852) * EUR = \
             approx. 921.4891 millieuro (money; EUR). \
             Sourced from European Central Bank. \
             Current as of 2024-05-31."

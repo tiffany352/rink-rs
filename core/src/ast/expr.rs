@@ -144,6 +144,42 @@ impl Precedence {
     }
 }
 
+fn as_terminal(expr: &Expr) -> Option<&Expr> {
+    match expr {
+        Expr::Unit { .. } => Some(expr),
+        Expr::Const { .. } => Some(expr),
+        Expr::UnaryOp(unary) => {
+            if let UnaryOpType::Degree(_) = unary.op {
+                None
+            } else {
+                as_terminal(&*unary.expr)
+            }
+        }
+        Expr::BinOp(BinOpExpr {
+            op: BinOpType::Pow,
+            left,
+            right,
+        }) => {
+            if let Some(Expr::Const { .. }) = as_terminal(right) {
+                Some(left)
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
+fn should_use_just(left: &Expr, right: &Expr) -> bool {
+    let left = as_terminal(left);
+    let right = as_terminal(right);
+    match (left, right) {
+        (Some(Expr::Unit { .. }), Some(Expr::Unit { .. })) => true,
+        (Some(Expr::Const { .. }), Some(Expr::Unit { .. })) => true,
+        _ => false,
+    }
+}
+
 fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) {
     match *expr {
         Expr::Unit { ref name } => out.push(Span::unit(name)),
@@ -202,9 +238,15 @@ fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) 
             if let Some(first) = exprs.first() {
                 to_spans_impl(out, first, Precedence::Pow);
             }
-            for expr in exprs.iter().skip(1) {
-                out.push(Span::plain(" "));
-                to_spans_impl(out, expr, Precedence::Pow);
+            for (prev_expr, next_expr) in exprs.iter().zip(exprs.iter().skip(1)) {
+                if should_use_just(prev_expr, next_expr) {
+                    out.push(Span::plain(" "));
+                } else {
+                    out.push(Span::plain(" "));
+                    out.push(Span::plain("*"));
+                    out.push(Span::plain(" "));
+                }
+                to_spans_impl(out, next_expr, Precedence::Pow);
             }
             if prec < Precedence::Mul {
                 out.push(Span::plain(")"));

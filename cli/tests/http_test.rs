@@ -192,7 +192,7 @@ fn test_run_with_currency() {
         .assert()
         .success()
         .stdout(predicate::str::contains(
-            "\nDefinition: USD = (1 / 1.0852) EUR = approx. 921.4891 millieuro (money; EUR). Sourced from European Central Bank. Current as of 2024-05-31.\nFinished in ",
+            "\nDefinition: USD = (1 / 1.0852) * EUR = approx. 921.4891 millieuro (money; EUR). Sourced from European Central Bank. Current as of 2024-05-31.\nFinished in ",
         ));
 
     thread_handle.join().unwrap();

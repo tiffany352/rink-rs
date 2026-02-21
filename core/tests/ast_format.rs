@@ -22,8 +22,8 @@ fn expr_display() {
     assert_eq!(parse_then_pretty("234234"), "234234");
     assert_eq!(parse_then_pretty("1 + 2"), "1 + 2");
     assert_eq!(parse_then_pretty("speed of light"), "speed of light");
-    assert_eq!(parse_then_pretty("1 + 2 * 3"), "1 + 2 3");
-    assert_eq!(parse_then_pretty("(1 + 2) * 3"), "(1 + 2) 3");
+    assert_eq!(parse_then_pretty("1 + 2 * 3"), "1 + 2 * 3");
+    assert_eq!(parse_then_pretty("(1 + 2) * 3"), "(1 + 2) * 3");
     assert_eq!(parse_then_pretty("a = 2"), "a = 2");
 }
 
