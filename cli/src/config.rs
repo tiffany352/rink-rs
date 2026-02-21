@@ -178,7 +178,7 @@ impl Default for Config {
                 prop_name: Style::new().fg(Color::Cyan),
                 date_time: Style::default(),
                 link: Style::new().fg(Color::Blue),
-                keyword: Style::new().fg(Color::Yellow).bold(),
+                keyword: Style::new().bold(),
                 timezone: Style::new().fg(Color::Cyan),
             },
             disabled_theme: Theme::default(),
