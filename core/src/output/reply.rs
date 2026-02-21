@@ -221,13 +221,12 @@ impl ExprReply {
                 }
                 Expr::BinOp(ref binop) => {
                     let op_prec = Precedence::from(binop.op);
-                    let succ = Precedence::next(binop.op);
                     if prec < op_prec {
                         literal!("(");
                     }
-                    recurse(&binop.left, parts, succ);
+                    recurse(&binop.left, parts, Precedence::left(binop.op));
                     literal!(binop.op.symbol());
-                    recurse(&binop.right, parts, op_prec);
+                    recurse(&binop.right, parts, Precedence::right(binop.op));
                     if prec < op_prec {
                         literal!(")");
                     }

@@ -127,7 +127,7 @@ impl Precedence {
         }
     }
 
-    pub fn next(binop_type: BinOpType) -> Precedence {
+    pub fn left(binop_type: BinOpType) -> Precedence {
         match binop_type {
             BinOpType::Add => Precedence::Div,
             BinOpType::Sub => Precedence::Div,
@@ -140,6 +140,13 @@ impl Precedence {
             BinOpType::Or => Precedence::Mul,
             BinOpType::Xor => Precedence::Mul,
             BinOpType::Equals => Precedence::Add,
+        }
+    }
+
+    pub fn right(binop_type: BinOpType) -> Precedence {
+        match binop_type {
+            BinOpType::Pow => Precedence::Term,
+            _ => Self::from(binop_type),
         }
     }
 }
@@ -199,13 +206,12 @@ fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) 
         }
         Expr::BinOp(ref binop) => {
             let op_prec = Precedence::from(binop.op);
-            let succ = Precedence::next(binop.op);
             if prec < op_prec {
                 out.push(Span::plain("("));
             }
-            to_spans_impl(out, &binop.left, succ);
+            to_spans_impl(out, &binop.left, Precedence::left(binop.op));
             out.push(Span::plain(binop.op.symbol()));
-            to_spans_impl(out, &binop.right, op_prec);
+            to_spans_impl(out, &binop.right, Precedence::right(binop.op));
             if prec < op_prec {
                 out.push(Span::plain(")"));
             }
