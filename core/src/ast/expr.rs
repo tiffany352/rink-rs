@@ -190,7 +190,7 @@ fn as_terminal(expr: &Expr) -> Option<&Expr> {
     }
 }
 
-fn should_use_just(left: &Expr, right: &Expr) -> bool {
+fn should_use_juxt(left: &Expr, right: &Expr) -> bool {
     let left = as_terminal(left);
     let right = as_terminal(right);
     match (left, right) {
@@ -266,7 +266,7 @@ fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) 
             let use_juxt_for_all = exprs
                 .iter()
                 .zip(exprs.iter().skip(1))
-                .all(|(prev, next)| should_use_just(prev, next));
+                .all(|(prev, next)| should_use_juxt(prev, next));
             let necessary_prec = if use_juxt_for_all {
                 Precedence::Mul
             } else {
@@ -280,7 +280,7 @@ fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) 
                 to_spans_impl(out, first, Precedence::Pow);
             }
             for (prev_expr, next_expr) in exprs.iter().zip(exprs.iter().skip(1)) {
-                if should_use_just(prev_expr, next_expr) {
+                if should_use_juxt(prev_expr, next_expr) {
                     out.push(Span::plain(" "));
                 } else {
                     out.push(Span::plain(" "));
