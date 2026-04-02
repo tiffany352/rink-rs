@@ -108,6 +108,10 @@ fn main() -> Result<ExitCode> {
         let mut exit_code = ExitCode::SUCCESS;
         for expr in exprs {
             println!("> {}", expr);
+            if config.rink.show_interpretation {
+                let query = rink_core::reformat(&mut ctx, expr);
+                println!("Input: {}", rink::fmt::to_ansi_string(&config, &query));
+            }
             match rink_core::one_line(&mut ctx, expr) {
                 Ok(v) => println!("{}", v),
                 Err(e) => {

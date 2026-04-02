@@ -34,6 +34,10 @@ pub fn noninteractive<T: BufRead>(mut f: T, config: &Config, show_prompt: bool) 
         if line.find('\n').is_none() {
             return Ok(());
         }
+        if config.rink.show_interpretation {
+            let query = rink_core::reformat(&mut ctx, &line);
+            println!("Input: {}", crate::fmt::to_ansi_string(&config, &query));
+        }
         match one_line(&mut ctx, &*line) {
             Ok(v) => println!("{}", v),
             Err(e) => println!("{}", e),
