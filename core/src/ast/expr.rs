@@ -229,35 +229,39 @@ fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) 
                 out.push(Span::plain(")"));
             }
         }
-        Expr::UnaryOp(ref unaryop) => {
-            if prec < Precedence::Pow {
-                out.push(Span::plain("("));
-            }
-            match unaryop.op {
-                UnaryOpType::Positive => {
-                    out.push(Span::plain("+"));
-                    to_spans_impl(out, &unaryop.expr, Precedence::Plus);
+        Expr::UnaryOp(ref unaryop) => match unaryop.op {
+            UnaryOpType::Positive => {
+                if prec < Precedence::Pow {
+                    out.push(Span::plain("("));
                 }
-                UnaryOpType::Negative => {
-                    out.push(Span::plain("-"));
-                    to_spans_impl(out, &unaryop.expr, Precedence::Plus);
-                }
-                UnaryOpType::Degree(ref suffix) => {
-                    if prec < Precedence::Mul {
-                        out.push(Span::plain("("));
-                    }
-                    to_spans_impl(out, &unaryop.expr, Precedence::Mul);
-                    out.push(Span::plain(" "));
-                    out.push(Span::plain(suffix.as_str()));
-                    if prec < Precedence::Mul {
-                        out.push(Span::plain(")"));
-                    }
+                out.push(Span::plain("+"));
+                to_spans_impl(out, &unaryop.expr, Precedence::Plus);
+                if prec < Precedence::Pow {
+                    out.push(Span::plain(")"));
                 }
             }
-            if prec < Precedence::Pow {
-                out.push(Span::plain(")"));
+            UnaryOpType::Negative => {
+                if prec < Precedence::Pow {
+                    out.push(Span::plain("("));
+                }
+                out.push(Span::plain("-"));
+                to_spans_impl(out, &unaryop.expr, Precedence::Plus);
+                if prec < Precedence::Pow {
+                    out.push(Span::plain(")"));
+                }
             }
-        }
+            UnaryOpType::Degree(ref suffix) => {
+                if prec < Precedence::Mul {
+                    out.push(Span::plain("("));
+                }
+                to_spans_impl(out, &unaryop.expr, Precedence::Mul);
+                out.push(Span::plain(" "));
+                out.push(Span::plain(suffix.as_str()));
+                if prec < Precedence::Mul {
+                    out.push(Span::plain(")"));
+                }
+            }
+        },
         Expr::Mul { ref exprs } => {
             let use_juxt_for_all = exprs
                 .iter()
