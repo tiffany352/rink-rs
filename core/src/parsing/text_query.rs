@@ -954,7 +954,7 @@ mod test {
 
     #[test]
     fn add_assoc() {
-        assert_eq!(parse("a + b - c + d - e"), "(((a + b) - c) + d) - e");
+        assert_eq!(parse("a + b - c + d - e"), "((a + b) - c + d) - e");
     }
 
     #[test]
@@ -966,9 +966,9 @@ mod test {
     fn mul_assoc() {
         assert_eq!(
             parse("a b * c / d / e f * g h"),
-            "(((a b) * c / d) / e f) * (g h)"
+            "((((a b) * c) / d) / e f) * (g h)"
         );
-        assert_eq!(parse("a|b c / g e|f"), "(a / b) * c / g * (e / f)");
+        assert_eq!(parse("a|b c / g e|f"), "((a / b) * c) / (g * (e / f))");
         assert_eq!(parse("a / b / c"), "(a / b) / c");
     }
 

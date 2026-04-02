@@ -199,3 +199,69 @@ fn test_canonicalizations() {
 fn test_dates() {
     assert_eq!(reformat("#jan 01, 1970#"), "<date_time>#jan 01, 1970#");
 }
+
+#[test]
+fn test_unaryop_prec() {
+    // LHS
+    assert_eq!(reformat("(-5)^2"), "(-<number>5<plain>)^<number>2");
+    assert_eq!(
+        reformat("5 * (-1)^2"),
+        "<number>5<plain> * (-<number>1<plain>)^<number>2"
+    );
+    assert_eq!(reformat("(-meter)^2"), "(-<unit>meter<plain>)^<number>2");
+
+    // RHS
+    assert_eq!(reformat("5^(-2)"), "<number>5<plain>^(-<number>2<plain>)");
+    assert_eq!(
+        reformat("meter^(-1)"),
+        "<unit>meter<plain>^(-<number>1<plain>)"
+    );
+}
+
+#[test]
+fn test_associativity_prec() {
+    assert_eq!(
+        reformat("1 - (2 - 3)"),
+        "<number>1<plain> - (<number>2<plain> - <number>3<plain>)"
+    );
+    assert_eq!(
+        reformat("1 - (2 + 3)"),
+        "<number>1<plain> - (<number>2<plain> + <number>3<plain>)"
+    );
+    assert_eq!(
+        reformat("1 / (2 / 3)"),
+        "<number>1<plain> / (<number>2<plain> / <number>3<plain>)"
+    );
+    assert_eq!(
+        reformat("10 / (meter/second)"),
+        "<number>10<plain> / (<unit>meter<plain> / <unit>second<plain>)"
+    );
+    assert_eq!(
+        reformat("5 << (2 << 1)"),
+        "<number>5<plain> << (<number>2<plain> << <number>1<plain>)"
+    );
+    assert_eq!(
+        reformat("5 >> (2 >> 1)"),
+        "<number>5<plain> >> (<number>2<plain> >> <number>1<plain>)"
+    );
+    assert_eq!(
+        reformat("5 and (2 or 1)"),
+        "<number>5<plain> and (<number>2<plain> or <number>1<plain>)"
+    );
+}
+
+#[test]
+fn test_mul_juxt_or_not() {
+    assert_eq!(
+        reformat("5 / (m s)"),
+        "<number>5<plain> / <unit>meter<plain> <unit>second"
+    );
+    assert_eq!(
+        reformat("5 / (2 m s)"),
+        "<number>5<plain> / <number>2<plain> <unit>meter<plain> <unit>second"
+    );
+    assert_eq!(
+        reformat("5 / (2 3)"),
+        "<number>5<plain> / (<number>2<plain> * <number>3<plain>)"
+    );
+}

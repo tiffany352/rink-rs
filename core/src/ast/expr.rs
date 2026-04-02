@@ -128,8 +128,8 @@ impl Precedence {
     }
 
     pub fn left(binop_type: BinOpType) -> Precedence {
+        // non-commutative operators need to return one tighter
         match binop_type {
-            BinOpType::Add => Precedence::Div,
             BinOpType::Sub => Precedence::Div,
             BinOpType::Pow => Precedence::Term,
             BinOpType::Frac => Precedence::Mul,
@@ -140,13 +140,26 @@ impl Precedence {
             BinOpType::Or => Precedence::Mul,
             BinOpType::Xor => Precedence::Mul,
             BinOpType::Equals => Precedence::Add,
+            // Add is commutative
+            BinOpType::Add => Precedence::Add,
         }
     }
 
     pub fn right(binop_type: BinOpType) -> Precedence {
+        // left-associative operators that aren't commutative need to return one tighter
         match binop_type {
             BinOpType::Pow => Precedence::Term,
-            _ => Self::from(binop_type),
+            BinOpType::Sub => Precedence::Div,
+            BinOpType::Frac => Precedence::Mul,
+            BinOpType::ShiftL => Precedence::Mul,
+            BinOpType::ShiftR => Precedence::Mul,
+            BinOpType::Mod => Precedence::Mul,
+            BinOpType::And => Precedence::Mul,
+            BinOpType::Or => Precedence::Mul,
+            BinOpType::Xor => Precedence::Mul,
+            BinOpType::Equals => Precedence::Add,
+            // Add is commutative
+            BinOpType::Add => Precedence::Add,
         }
     }
 }
@@ -216,29 +229,47 @@ fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) 
                 out.push(Span::plain(")"));
             }
         }
-        Expr::UnaryOp(ref unaryop) => match unaryop.op {
-            UnaryOpType::Positive => {
-                out.push(Span::plain("+"));
-                to_spans_impl(out, &unaryop.expr, Precedence::Plus);
+        Expr::UnaryOp(ref unaryop) => {
+            if prec < Precedence::Pow {
+                out.push(Span::plain("("));
             }
-            UnaryOpType::Negative => {
-                out.push(Span::plain("-"));
-                to_spans_impl(out, &unaryop.expr, Precedence::Plus);
-            }
-            UnaryOpType::Degree(ref suffix) => {
-                if prec < Precedence::Mul {
-                    out.push(Span::plain("("));
+            match unaryop.op {
+                UnaryOpType::Positive => {
+                    out.push(Span::plain("+"));
+                    to_spans_impl(out, &unaryop.expr, Precedence::Plus);
                 }
-                to_spans_impl(out, &unaryop.expr, Precedence::Mul);
-                out.push(Span::plain(" "));
-                out.push(Span::plain(suffix.as_str()));
-                if prec < Precedence::Mul {
-                    out.push(Span::plain(")"));
+                UnaryOpType::Negative => {
+                    out.push(Span::plain("-"));
+                    to_spans_impl(out, &unaryop.expr, Precedence::Plus);
+                }
+                UnaryOpType::Degree(ref suffix) => {
+                    if prec < Precedence::Mul {
+                        out.push(Span::plain("("));
+                    }
+                    to_spans_impl(out, &unaryop.expr, Precedence::Mul);
+                    out.push(Span::plain(" "));
+                    out.push(Span::plain(suffix.as_str()));
+                    if prec < Precedence::Mul {
+                        out.push(Span::plain(")"));
+                    }
                 }
             }
-        },
+            if prec < Precedence::Pow {
+                out.push(Span::plain(")"));
+            }
+        }
         Expr::Mul { ref exprs } => {
-            if prec < Precedence::Mul {
+            let use_juxt_for_all = exprs
+                .iter()
+                .zip(exprs.iter().skip(1))
+                .all(|(prev, next)| should_use_just(prev, next));
+            let necessary_prec = if use_juxt_for_all {
+                Precedence::Mul
+            } else {
+                Precedence::Div
+            };
+
+            if prec < necessary_prec {
                 out.push(Span::plain("("));
             }
             if let Some(first) = exprs.first() {
@@ -254,7 +285,7 @@ fn to_spans_impl<'a>(out: &mut Vec<Span<'a>>, expr: &'a Expr, prec: Precedence) 
                 }
                 to_spans_impl(out, next_expr, Precedence::Pow);
             }
-            if prec < Precedence::Mul {
+            if prec < necessary_prec {
                 out.push(Span::plain(")"));
             }
         }

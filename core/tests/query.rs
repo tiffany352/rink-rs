@@ -804,7 +804,7 @@ fn test_tim() {
     // Issue #151, rink crashing due to stack overflow
     test(
         "Tim",
-        "Definition: Tim = 12^-4 hour = 173.6[1]... millisecond (time; s)",
+        "Definition: Tim = 12^(-4) hour = 173.6[1]... millisecond (time; s)",
     );
 }
 
