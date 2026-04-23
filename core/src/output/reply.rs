@@ -171,6 +171,8 @@ pub enum QueryError {
     Generic { message: String },
 }
 
+impl std::error::Error for QueryError {}
+
 impl QueryError {
     pub fn generic(message: String) -> QueryError {
         QueryError::Generic { message }
