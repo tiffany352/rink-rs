@@ -875,6 +875,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             let top = eval_expr(ctx, top)?;
             let top = match top {
                 Value::Number(top) => top,
+                Value::MissingDeps(d) => return Err(QueryError::MissingDeps(d)),
                 _ => {
                     return Err(QueryError::generic(format!(
                         "<{}> in base {} is not defined",
@@ -907,6 +908,7 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
             let top = eval_expr(ctx, top)?;
             let top = match top {
                 Value::Number(top) => top,
+                Value::MissingDeps(d) => return Err(QueryError::MissingDeps(d)),
                 _ => {
                     return Err(QueryError::generic(format!(
                         "<{}> to {} is not defined",
@@ -982,6 +984,9 @@ pub(crate) fn eval_query(ctx: &Context, expr: &Query) -> Result<QueryReply, Quer
                 )
                 .map_err(QueryError::generic)
                 .map(QueryReply::Substance)
+            }
+            (Value::MissingDeps(d), _, _) | (_, Value::MissingDeps(d), _) => {
+                Err(QueryError::MissingDeps(d))
             }
             (x, y, _) => Err(QueryError::generic(format!(
                 "Operation is not defined: <{}> -> <{}>",
