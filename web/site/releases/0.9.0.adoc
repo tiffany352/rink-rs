@@ -1,4 +1,5 @@
 = Rink v0.9.0
+:published: 2026-04-25 06:11:53
 
 == Migration to Codeberg
 
