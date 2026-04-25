@@ -1,6 +1,5 @@
 # Rink
 
-[![codecov](https://codecov.io/gh/tiffany352/rink-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/tiffany352/rink-rs)
 [![crates.io](https://img.shields.io/crates/v/rink)](https://crates.io/crates/rink)
 [![downloads](https://img.shields.io/crates/d/rink)](https://crates.io/crates/rink)
 

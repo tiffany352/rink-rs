@@ -51,6 +51,6 @@ server = "irc.libera.chat"
 port = 6697
 use_tls = true
 version = "Rink IRC bot v0.8"
-source = "https://github.com/tiffany352/rink-rs"
+source = "https://codeberg.org/tiffany/rink"
 channels = ["#rink"]
 ```

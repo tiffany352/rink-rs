@@ -69,7 +69,7 @@ Downloaded currency data is saved in
 Bugs
 ----
 
-<https://github.com/tiffany352/rink-rs/issues>
+<https://codeberg.org/tiffany/rink/issues>
 
 ifndef::website[]
 See also
