@@ -1,6 +1,6 @@
 [package]
 name = "rink-core"
-version = "0.8.0"
+version = "0.9.0"
 description = "Unit conversion library behind rink"
 homepage = "https://rinkcalc.app/about"
 repository = "https://codeberg.org/tiffany/rink"

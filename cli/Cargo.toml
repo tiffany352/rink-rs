@@ -1,6 +1,6 @@
 [package]
 name = "rink"
-version = "0.8.0"
+version = "0.9.0"
 description = "Unit conversion tool, similar to frink"
 homepage = "https://rinkcalc.app/about"
 repository = "https://codeberg.org/tiffany/rink"
@@ -30,12 +30,12 @@ nu-ansi-term = "0.50"
 ubyte = { version = "0.10.3", features = ["serde"] }
 
 [dependencies.rink-core]
-version = "0.8"
+version = "0.9"
 path = "../core"
 features = [ "serde_json" ]
 
 [dependencies.rink-sandbox]
-version = "0.6"
+version = "0.9"
 path = "../sandbox"
 
 [dev-dependencies]

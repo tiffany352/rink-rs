@@ -1,6 +1,6 @@
 [package]
 name = "rink-irc"
-version = "0.8.0"
+version = "0.9.0"
 description = "IRC bot for Rink"
 homepage = "https://rinkcalc.app/about"
 repository = "https://codeberg.org/tiffany/rink"
@@ -8,11 +8,12 @@ license = "MPL-2.0"
 edition = "2018"
 
 [dependencies.rink-core]
-version = "0.8"
+version = "0.9"
 path = "../core"
 features = [ "bundle-files", "serde_json" ]
 
 [dependencies.rink-sandbox]
+version = "0.9"
 path = "../sandbox"
 
 [dependencies]

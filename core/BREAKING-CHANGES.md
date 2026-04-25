@@ -1,4 +1,4 @@
-## Next version
+## Rink 0.9.0
 
 Doc strings are now wrapped in a DocString type rather than being raw
 strings. The TokenFmt output is now slightly different as a result.

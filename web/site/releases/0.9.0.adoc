@@ -1,0 +1,82 @@
+= Rink v0.9.0
+
+== Migration to Codeberg
+
+https://codeberg.org/tiffany/rink
+
+Codeberg will become the new upstream. This release, and any hotfix versions, will be the last ones made on GitHub.
+
+== Deferred currency fetching (pr:217[])
+
+Previously, Rink would always fetch currency on startup when enabled. This blocked startup, and also caused an unwanted web request. If the request failed, it would take a bit to time out, and then print an error message.
+
+Now, Rink will only try to fetch currency when actually using currency units, and will prompt by default whether to fetch.
+
+----
+> cents
+Download currency data from <https://rinkcalc.app/data/currency.json>? [y/n] y
+Fetched 6kB in 207ms
+Definition: cent = approx. 8.614748 millieuro (money; EUR)
+----
+
+It's also possible to fetch currency data from a cron job using `--fetch-currency`. (pr:181[])
+
+== Input interpretation (pr:226[])
+
+Adds a `show_interpretation` config setting, enabled by default. This can help when Rink does something really confusing:
+
+----
+> inches as feet
+Input: inch attosecond foot
+7.74192e-21 meter^2 second
+> hell
+Input: hectoenglishell
+approx. 114.2998 meter (length)
+----
+
+== Smaller binary size
+
+Rink 0.8.0 was 5.57 megabytes, Rink 0.9.0 is 3.28 megabytes (41% smaller). This was done mostly by removing dependencies.
+
+== Custom definition files
+
+You can now have a local `~/.config/rink/definitions.units` with definitions that get added on top of (rather than replacing) the default definitions file. (pr:172[])
+
+The same also applies for `currency.units`. (pr:202[] by @4z3)
+
+== Syntax changes
+
+* New number formatting options: `to frac`, `to sci`, and `to eng`
+* Relative dates: `#today+1w` (pr:216[] originally by @dtomvan)
+* Factorial function: `fac(x)` (pr:205[] by @Naxdy)
+* Prefixed currency symbols: `$5`, `£7` (pr:206[])
+* `-5^2` is now equivalent to `-(5^2)` instead of `(-5)^2` (pr:212[])
+* Accept Unicode symbols as operators: `⋅`, `×`, `÷`, superscripts (pr:235[] by @db48x)
+
+== Units
+
+* Added `floppydisk` and `phoot` (pr:173[])
+* Added `buttload` (pr:178[])
+* Added `As` (amp-seconds) and `Ah` (amp-hours) (pr:187[])
+* `steradian` is now equal to `radian^2` instead of a base unit (pr:207[])
+* Added `GM_sun`, `GM_mercury`, `GM_venus`, `GM_earth`, `GM_mars`, `GM_jupiter`, `GM_saturn`, `GM_uranus`, `GM_neptune`, `GM_pluto`, `GM_moon`, `GM_ceres`, and `GM_vesta` (pr:220[])
+
+== Other improvements
+
+* Now outputs bytes by default, instead of bits, when working with `information` units (pr:174[])
+* The IRC bot has been rewritten and is now being tested in CI (pr:169[])
+* Switched from `chrono` to `jiff` as the time handling library, and fixing several bugs in the process (pr:210[])
+* QueryError now implements `std::error::Error` (pr:240[] by @db48x)
+* Added `load_definitions()`, `load_currency()` helpers to Context, and ToSpans for `Result<QueryReply, QueryError>`. (pr:184[])
+* Added an link:https://codeberg.org/tiffany/rink/src/branch/master/cli/rink.desktop[example `.desktop` file]. (pr:168[])
+
+== Website
+
+* Permalinks are now escaped properly (pr:233[] by @smason)
+
+== Bugfixes
+
+* Fixed compilation on OpenBSD
+* Passing expressions via CLI args now returns a failure exit code if there was an error (pr:208[])
+
+**Full Changelog**: https://codeberg.org/tiffany/rink/compare/v0.8.0...v0.9.0

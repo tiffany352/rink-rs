@@ -2,7 +2,7 @@
 	"type": "module",
 	"author": "Tiffany Bennett (https://tiffnix.com)",
 	"name": "rink-currency-updater",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"repository": "https://codeberg.org/tiffany/rink",
 	"homepage": "https://rinkcalc.app/about",
 	"description": "Fetches currency data for rink",

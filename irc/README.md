@@ -50,7 +50,7 @@ realname = "rinkcalc.app"
 server = "irc.libera.chat"
 port = 6697
 use_tls = true
-version = "Rink IRC bot v0.8"
+version = "Rink IRC bot v0.9"
 source = "https://codeberg.org/tiffany/rink"
 channels = ["#rink"]
 ```
