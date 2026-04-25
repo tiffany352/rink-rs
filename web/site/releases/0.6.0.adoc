@@ -1,0 +1,35 @@
+= Rink v0.6.0
+:published: 2021-04-06 01:03:53
+
+== Rink CLI
+
+* New currency fetching behavior. (pr:76[])
+* Optional colored output mode. (Disabled by default.)
+* link:/configuration[Config file] support for controlling both. (pr:86[])
+* Switched from linefeed to rustyline.
+
+Previously, Rink fetched currency by separately hitting link:https://api.blockchain.info/stats[blockchain.info] and the link:https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml[European Central Bank]. The ECB's servers in particular can be quite slow to respond, often several seconds. Now, currency data is fetched by hitting this endpoint: <https://rinkcalc.app/data/currency.json>, which returns both the bitcoin and ECB data. This should be significantly faster than the old endpoints, although it may depend on your location.
+
+== Rink Web
+
+If you use rinkcalc.app, that tends to track master rather than releases like this one.
+
+* Switched from polka to express, fixing a bug with some queries returning errors.
+* Fixed durations showing incorrectly.
+* Fixed a one-month offset in dates (pr:84[]), thanks to orzFly.
+
+== Other changes
+
+* Updated various dependencies to latest. (pr:89[])
+
+== Breaking API changes
+
+* Many AST types were changed from tuple variants to struct fields, also affecting Serde output.
+* Added an ExprString wrapper in several places, replacing previous uses of Expr.
+* Currency data parsing code has been removed from rink-core. Loading this data is a bit different now, link:https://gist.github.com/tiffany352/622be553bf72da1afd73a887a3f6d3e7[an example can be found here].
+
+== Downloads
+
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.0/Rink.CLI.Linux.zip[Rink.CLI.Linux.zip] (3.94 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.0/Rink.CLI.macOS.zip[Rink.CLI.macOS.zip] (2.85 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.0/Rink.CLI.Windows.zip[Rink.CLI.Windows.zip] (2.46 MB) 

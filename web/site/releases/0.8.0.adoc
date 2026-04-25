@@ -1,0 +1,57 @@
+= Rink v0.8.0
+:published: 2024-04-21 03:03:47
+
+== Features
+
+Rink has been updated to link:https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units[New SI] in pr:157[]. This changes several fundamental physical constants to now have exact definitions, rather than experimentally measured ones. Included in this change are updates to several CODATA constants, 4 new SI prefixes, as well as updating the definition of the parsec to the 2015 IAU resolution.
+
+The binary size of Rink is now smaller, by as much as half, changed in pr:163[]. Rink now links to the system libcurl when possible, instead of using reqwest.
+
+Rink now has a set of manpages, intended to be installed as part of distro packages. The `definitions.units` and other files can now be installed to a location like `/usr/share/rink` as well. The documentation is now stored in-repo in the docs/ directory, which makes pull requests to the docs possible going forward. See link:https://codeberg.org/tiffany/rink/src/branch/master/PACKAGING.md[PACKAGING.md] for how to build and install these. Added in pr:158[].
+
+Rink now supports several additional operators: `<<` logical shift left, `>>` logical shift right, `mod` modulo/remainder, `and` bitwise and, `or` bitwise or, `xor` bitwise exclusive-or. (pr:161[])
+
+Recurring digits are now detected and displayed automatically. This change also made the default behavior of `to digits` show up to 1000 digits, as most numbers will be rendered significantly shorter, and usually you want the extra precision. Added in pr:162[].
+
+```
+> 1/17 to digits
+0.[0588235294117647, period 16]...  (dimensionless)
+```
+
+== Bugfixes
+
+Invalid dates should no longer cause Rink to crash. (pr:160[])
+
+Trig functions like `sin()` should now handle units correctly. (pr:164[])
+
+Converting to `GB` is now interpreted as gigabytes, not a British timezone. (pr:129[])
+
+Specific heat is no longer expressed in terms of `gray`, which is the SI unit of ionizing radiation. (pr:13[])
+
+== New website
+
+https://rinkcalc.app/about
+
+Rink's website has been updated. It now contains documentation, releases, and an updated web version of Rink.
+
+The web version is now a proper REPL, so the page contains the history of queries you ran. It also has a number of usability improvements like keeping the input bar focused, up/down arrows to access history, and a progress indicator on downloading the WASM blob on slow connections.
+
+== Other changes
+
+The git tag for this release is signed with my GPG key. I'll try doing this going forward.
+
+**Full Changelog**: https://codeberg.org/tiffany/rink/compare/v0.7.0...v0.8.0
+
+== SHA256 hashes
+
+```
+47cbdb551bcd73246ca7cb8e6223934fe6c6ace476a1ff5a3d960183069adf81  Rink.CLI.Linux.zip
+be4ae1036cd23c8aae3d95b831f8e3d651cb057135a57363833ccce439d12b9d  Rink.CLI.Windows.zip
+39e5f57dab48e6d3b3e5592bdf9cc711656e0db8c76d67106e27f8d7628c2ef1  Rink.CLI.macOS.zip
+```
+
+== Downloads
+
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.8.0/Rink.CLI.Linux.zip[Rink.CLI.Linux.zip] (1.81 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.8.0/Rink.CLI.macOS.zip[Rink.CLI.macOS.zip] (1.44 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.8.0/Rink.CLI.Windows.zip[Rink.CLI.Windows.zip] (1.59 MB) 

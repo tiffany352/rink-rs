@@ -19,8 +19,21 @@ const authors = {
 	},
 };
 
+// Inline macro for `pr:123[]` to create a link to PR 123
+function inlinePullRequestLinks(registry) {
+	registry.inlineMacro(function () {
+		let self = this;
+		self.named('pr');
+		self.process(function (parent, target) {
+			var url = `https://codeberg.org/tiffany/rink/pulls/${target}`;
+			return `<a href="${url}">#${target}</a>`;
+		});
+	});
+}
+
 let asciidoctor = Asciidoctor();
 let registry = asciidoctor.Extensions.create();
+inlinePullRequestLinks(registry);
 let options = {
 	extension_registry: registry,
 	// Turn off section IDs, because I use soupault to generate them

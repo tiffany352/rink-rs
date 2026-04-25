@@ -28,6 +28,29 @@ page_character_encoding = "utf-8"
 [preprocessors]
 adoc = "node scripts/asciidoc.js"
 
+[index]
+date_formats = ["%F %T", "%F"]
+
+[index.fields.title]
+selector = ["h1#post-title", "h1"]
+
+[index.fields.published]
+selector = ["time.dt-published"]
+extract_attribute = "datetime"
+
+[index.fields.published_fmt]
+selector = ["time.dt-published"]
+fallback_to_content = true
+
+[index.views.releases]
+index_selector = "#releases-index"
+index_item_template = """
+<article class="h-entry">
+<h2 class="p-name linkheader"><a href="{{url}}">{{title}}</a></h2>
+<time class="dt-published" datetime="{{published}}">{{published_fmt}}</time>
+</article>
+"""
+
 [widgets.page-title]
 widget = "title"
 selector = "h1"
@@ -48,10 +71,6 @@ ignore_heading_selectors = [".linkheader"]
 
 [widgets.deuglify]
 widget = "deuglify"
-
-[widgets.fetch-releases]
-widget = "fetch-releases"
-page = "releases.html"
 
 [widgets.vite]
 widget = "vite"

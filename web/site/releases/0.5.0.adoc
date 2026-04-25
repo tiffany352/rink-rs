@@ -1,0 +1,9 @@
+= Rink v0.5.0
+:published: 2020-07-18 09:33:01
+
+* Definition for common hormones have been added.
+* Dates with offsets should parse correctly now.
+* Cargo.lock is now included, which should help avoid build failures on computers other than mine.
+* Several dependencies updated.
+* Removed dependency on GMP, which makes it dramatically easier to build and develop Rink on Windows. Num is now used instead.
+* CLI uses clap now and allows passing expressions to evaluate as arguments.

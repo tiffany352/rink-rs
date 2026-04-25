@@ -1,0 +1,22 @@
+= Rink v0.6.2
+:published: 2021-10-31 22:27:03
+
+== Rink Core
+
+* Provide result of previous calculation with `ans` by @leftshift (pr:107[])
+* Fixed some display issues when using syntax colored output. (pr:91[])
+* Updated to the permanent names for elements 113, 115, 117, and 118. (pr:105[])
+
+== Rink CLI
+
+* Fixed CTRL+C behaviour by @kittywitch. (pr:95[])
+* Added support for CPU/memory limits, can be enabled in link:/configuration[the config]. (pr:100[])
+* Make `now` respect system timezone by @deviant (pr:101[])
+
+**Full Changelog**: https://codeberg.org/tiffany/rink/compare/v0.6.1...v0.6.2
+
+== Downloads
+
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.2/Rink.CLI.Linux.zip[Rink.CLI.Linux.zip] (4.21 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.2/Rink.CLI.macOS.zip[Rink.CLI.macOS.zip] (3.08 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.2/Rink.CLI.Windows.zip[Rink.CLI.Windows.zip] (2.64 MB) 

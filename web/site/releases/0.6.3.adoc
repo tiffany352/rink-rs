@@ -1,0 +1,26 @@
+= Rink v0.6.3
+:published: 2022-03-25 02:50:41
+
+== Rink CLI
+
+* Save history on error as well as success by @RX14 in pr:112[]
+* Fixed failing build on systems with OpenSSL 3.0 (pr:121[])
+* Respects link:https://no-color.org/[`NO_COLOR`] environment variable (pr:120[])
+
+== Rink Web
+
+* Fixed errors caused by the Ruble being deleted from the ECB currency API (pr:115[])
+
+== New Contributors
+
+* @RX14 made her first contribution in pr:112[]
+
+No changes to rink-core in this release.
+
+**Full Changelog**: https://codeberg.org/tiffany/rink/compare/v0.6.2...v0.6.3
+
+== Downloads
+
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.3/Rink.CLI.Linux.zip[Rink.CLI.Linux.zip] (4.27 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.3/Rink.CLI.macOS.zip[Rink.CLI.macOS.zip] (3.10 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.3/Rink.CLI.Windows.zip[Rink.CLI.Windows.zip] (2.67 MB) 

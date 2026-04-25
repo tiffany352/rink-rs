@@ -1,0 +1,6 @@
+= Rink v0.5.1
+:published: 2020-08-30 05:08:42
+
+* Rink web 2.0, which resulted in several refactors in rink-core.
+* Fix crash when processing NaN values (pr:68[]).
+* Fix large floating point values causing a panic due to division by zero (pr:67[]).

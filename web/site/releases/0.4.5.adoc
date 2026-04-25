@@ -1,0 +1,7 @@
+= Rink v0.4.5
+:published: 2019-10-31 04:18:43
+
+* Fixed some warnings
+* Fixed potential future breakage (pr:41[])
+* Replaced hyper with reqwest, using more up to date versions (pr:42[])
+* Parse unicode minus sign as a minus sign (pr:33[])

@@ -1,0 +1,26 @@
+= Rink v0.7.0
+:published: 2024-01-07 04:06:45
+
+== Rink Core
+
+* Fixed a hang when using certain units like `Tim` and `Tm` (pr:151[])
+* Adjust Croatian kuna after euro adoption (pr:152[]) by @kotarac
+* Quantities are now in their own namespace (pr:125[])
+
+== Breaking Changes
+
+For the full details see link:https://codeberg.org/tiffany/rink/src/commit/a2bb73c2db8c60e7b0a2f86891aa0c43fd09c732/core/BREAKING-CHANGES.md[BREAKING-CHANGES.md]
+
+* Code reorganization (pr:123[])
+* Context refactor (pr:124[])
+
+== New Contributors
+* @kotarac made their first contribution in pr:152[]
+
+**Full Changelog**: https://codeberg.org/tiffany/rink/compare/v0.6.3...v0.7.0
+
+== Downloads
+
+- link:https://codeberg.org/tiffany/rink/releases/download/v0.7.0/Rink.CLI.Linux.zip[Rink.CLI.Linux.zip] (4.56 MB)
+- link:https://codeberg.org/tiffany/rink/releases/download/v0.7.0/Rink.CLI.macOS.zip[Rink.CLI.macOS.zip] (3.30 MB)
+- link:https://codeberg.org/tiffany/rink/releases/download/v0.7.0/Rink.CLI.Windows.zip[Rink.CLI.Windows.zip] (2.76 MB) 

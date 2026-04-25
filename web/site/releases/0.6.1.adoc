@@ -1,0 +1,16 @@
+= Rink v0.6.1
+:published: 2021-04-25 21:34:46
+
+== Rink CLI
+
+Fixes errors when downloading currency data (pr:92[]). This was caused by trying to rename a file across filesystems.
+
+== Other Changes
+
+This release only includes the CLI, 0.6.0 is still the current version for rink-core and rink-web.
+
+== Downloads
+
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.1/Rink.CLI.Linux.zip[Rink.CLI.Linux.zip] (3.94 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.1/Rink.CLI.macOS.zip[Rink.CLI.macOS.zip] (2.85 MB)
+* link:https://codeberg.org/tiffany/rink/releases/download/v0.6.1/Rink.CLI.Windows.zip[Rink.CLI.Windows.zip] (2.46 MB) 
