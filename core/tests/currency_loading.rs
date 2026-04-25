@@ -136,4 +136,7 @@ fn load_currency_without_live_data() {
 
     let result = rink_core::one_line(&mut ctx, "-£");
     assert_eq!(result, Err("Missing dependencies: GBP".into()));
+
+    let result = rink_core::one_line(&mut ctx, "5 cents to £");
+    assert_eq!(result, Err("Missing dependencies: USD".into()));
 }
