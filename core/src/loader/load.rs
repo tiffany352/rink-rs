@@ -523,8 +523,19 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
                         unique.insert(&*prop.name);
                         unique.insert(&*prop.input_name);
                         unique.insert(&*prop.output_name);
-                        let unit = (&input / &output).expect("Non-zero property").unit;
-                        let existing = prev.entry(unit).or_insert_with(BTreeSet::new);
+                        // A zero-magnitude value divides as 1/0, which Div for
+                        // &Number returns as None. Surface a load error instead
+                        // of panicking on user input (issue #230).
+                        let value = match &input / &output {
+                            Some(value) => value,
+                            None => {
+                                return Err(format!(
+                                    "Malformed property {} of {}: value must be non-zero",
+                                    prop.name, name
+                                ))
+                            }
+                        };
+                        let existing = prev.entry(value.unit.clone()).or_insert_with(BTreeSet::new);
                         for conflict in existing.intersection(&unique) {
                             errors.push(format!(
                                 "Warning: conflicting \
@@ -533,10 +544,7 @@ pub(crate) fn load_defs(ctx: &mut Context, defs: Defs) -> Vec<String> {
                             ));
                         }
                         existing.append(&mut unique);
-                        ctx.temporaries.insert(
-                            prop.name.clone(),
-                            (&input / &output).expect("Non-zero property"),
-                        );
+                        ctx.temporaries.insert(prop.name.clone(), value);
                         if output == Number::one() {
                             ctx.temporaries
                                 .insert(prop.input_name.clone(), input.clone());

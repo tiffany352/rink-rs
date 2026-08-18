@@ -3,6 +3,7 @@ use std::rc::Rc;
 use rink_core::ast::{Def, DefEntry, Defs, Expr, UnaryOpExpr, UnaryOpType};
 use rink_core::loader::gnu_units::{parse, parse_expr, tokens, Token, TokenIterator};
 use rink_core::types::{BigRat, Numeric};
+use rink_core::Context;
 
 fn do_parse_expr(s: &str) -> Expr {
     let mut iter = TokenIterator::new(s).peekable();
@@ -225,5 +226,23 @@ fn test_tokenize_numbers() {
             Token::Newline,
             Token::Number("1".into(), None, None)
         ]
+    );
+}
+
+#[test]
+fn test_zero_magnitude_const_property_is_load_error_not_panic() {
+    // Regression test for issue #230: a const substance property whose value
+    // has zero magnitude used to evaluate 1/0, which Div for &Number returns
+    // as None, and the loader called `.expect("Non-zero property")` on it,
+    // panicking while loading user definitions. It should now surface a load
+    // error instead of crashing.
+    let mut ctx = Context::new();
+    let err = ctx
+        .load_definitions("example {\n    delay const delay 0\n}\n")
+        .expect_err("expected a load error, not a successful load");
+    assert!(
+        err.contains("Malformed property"),
+        "expected a malformed-property load error, got: {}",
+        err
     );
 }
